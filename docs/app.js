@@ -579,6 +579,26 @@ async function refresh() {
   }
 }
 
+/**
+ * Manual refresh: snapshot + live band + a shell-update check, in one tap.
+ * Cannot run the engine — it re-reads what is already published (rule 2).
+ */
+async function refreshAll() {
+  const btn = document.getElementById('refresh-btn');
+  if (!btn || btn.classList.contains('busy')) return;
+  btn.classList.add('busy');
+  try {
+    await refresh();
+    liveBand.refreshNow(() => state.snapshot);
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
+      if (reg) reg.update().catch(() => {});
+    }
+  } finally {
+    setTimeout(() => btn.classList.remove('busy'), 400);
+  }
+}
+
 /** Start the LIVE band once there is a snapshot telling us what to watch. */
 function startLiveBand() {
   if (!state.snapshot) return;
@@ -595,6 +615,7 @@ async function boot() {
 
   await loadModules();
   await mountAsk();
+  document.getElementById('refresh-btn')?.addEventListener('click', refreshAll);
   await refresh();
   startLiveBand();
 

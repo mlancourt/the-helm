@@ -671,3 +671,14 @@ body {
 .gate-input.bad{border-color:var(--lose,#e5484d)}
 .gate-btn{font:600 14px system-ui,sans-serif;padding:10px 14px;border-radius:8px;border:0;background:var(--accent,#d4a72c);color:#0f141a}
 .gate-btn:focus-visible,.gate-input:focus-visible{outline:2px solid var(--accent,#d4a72c);outline-offset:2px}
+
+/* header refresh — an installed iOS web app has no pull-to-refresh and no address bar */
+.refresh-btn {
+  width: 30px; height: 30px; flex: 0 0 auto; margin-left: auto;
+  border-radius: 50%; border: 1px solid var(--line); background: transparent;
+  color: var(--text-faint); font-size: 18px; line-height: 1; cursor: pointer; padding: 0;
+}
+.refresh-btn:hover, .refresh-btn:focus-visible { color: var(--brass); border-color: var(--brass); outline: none; }
+.refresh-btn.busy { color: var(--brass); animation: helm-spin 0.9s linear infinite; }
+@keyframes helm-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .refresh-btn.busy { animation: none; opacity: 0.6; } }
