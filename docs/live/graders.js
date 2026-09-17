@@ -366,7 +366,8 @@ export function gradeTicket(ticket, game, extras) {
   if (!fn) return r('unsupported', 'N/A', `no grader for "${ticket.market}"`);
 
   if (game.state === 'pre' && ticket.market !== 'anytime_td' && ticket.market !== 'anytime_goal') {
-    return r('pre', 'PRE', game.detail || 'not started');
+    // ESPN's shortDetail is Eastern ("8:15 PM EDT"); the game header already shows the Central kick. Never leak a foreign zone.
+    return r('pre', 'PRE', 'not started');
   }
 
   try {

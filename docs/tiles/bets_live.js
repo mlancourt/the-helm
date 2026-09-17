@@ -31,13 +31,16 @@ const STATE_PILL = {
  * Net units if every current lean held. Tickets with no grade contribute 0 —
  * an ungraded board leans nowhere, which is the honest answer before kickoff.
  */
-function leanUnits(tickets, grades) {
+function leanUnits(tickets, grades, games) {
   if (!grades) return null;
   let net = 0;
   let graded = 0;
   for (const t of tickets) {
     const g = grades.get(t.id);
     if (!g) continue;
+    // A finished game is not a lean any more — it belongs to "closed" below.
+    const game = games ? games.get(String(t.espn_event_id)) : null;
+    if (game && game.state === 'post') continue;
     const stake = Number(t.stake_u) || 0;
     if (g.state === 'win' || g.state === 'lead') {
       net += stake * payoutMultiple(t.price);
@@ -54,19 +57,31 @@ function leanUnits(tickets, grades) {
   return graded ? net : null;
 }
 
+/**
+ * Net units on games ESPN reports as final: +stake×payout on a win, −stake on
+ * a loss, 0 on a push. Still a lean (the book settles), but the game is over.
+ */
+function closedUnits(tickets, grades, games) {
+  if (!games || !grades) return null;
+  let net = 0;
+  let any = false;
+  for (const t of tickets) {
+    const game = games.get(String(t.espn_event_id));
+    if (!game || game.state !== 'post') continue;
+    const g = grades.get(t.id);
+    if (!g) continue;
+    any = true;
+    const stake = Number(t.stake_u) || 0;
+    if (g.state === 'win') net += stake * payoutMultiple(t.price);
+    else if (g.state === 'lose') net -= stake;
+  }
+  return any ? net : 0;
+}
+
 function headerStats(data, grades, games) {
   const tickets = Array.isArray(data.tickets) ? data.tickets : [];
-  const lean = leanUnits(tickets, grades);
-
-  // "Closed" = stake riding on games ESPN reports as final.
-  let closed = 0;
-  if (games) {
-    for (const t of tickets) {
-      const g = games.get(String(t.espn_event_id));
-      if (g && g.state === 'post') closed += Number(t.stake_u) || 0;
-    }
-  }
-
+  const lean = leanUnits(tickets, grades, games);
+  const closed = closedUnits(tickets, grades, games);
   const stat = (label, value, tone = '') =>
     el('div', { cls: `stat ${tone}`.trim() }, [
       el('span', { cls: 'stat-value', text: value }),
@@ -81,7 +96,11 @@ function headerStats(data, grades, games) {
       lean === null ? '—' : `${lean > 0 ? '+' : ''}${units(lean)}`,
       lean === null ? '' : lean > 0 ? 'good' : lean < 0 ? 'bad' : ''
     ),
-    stat('closed', games ? units(closed) : '—'),
+    stat(
+      'closed',
+      closed === null ? '—' : `${closed > 0 ? '+' : ''}${units(closed)}`,
+      closed === null ? '' : closed > 0 ? 'good' : closed < 0 ? 'bad' : ''
+    ),
     stat('record', data.record || '—'),
   ]);
 }
