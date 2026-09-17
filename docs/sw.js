@@ -9,7 +9,7 @@
  * Bump CACHE_VERSION to evict the old shell on deploy.
  */
 
-const CACHE_VERSION = 'helm-v9';
+const CACHE_VERSION = 'helm-v10';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -47,7 +47,11 @@ self.addEventListener('install', (e) => {
       .open(SHELL_CACHE)
       // One missing file must not fail the whole install, so each is added
       // individually and allowed to fail.
-      .then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(() => null))))
+      // cache: 'reload' — precache from the NETWORK, never the HTTP cache.
+      // GitHub Pages serves max-age=600; without this, a new SW version
+      // re-bottles the previous deploy's files under a new cache name and a
+      // deploy never lands on the phone (found 2026-09-17, three deploys deep).
+      .then((c) => Promise.all(SHELL.map((u) => c.add(new Request(u, { cache: 'reload' })).catch(() => null))))
       .then(() => self.skipWaiting())
   );
 });
@@ -92,7 +96,8 @@ self.addEventListener('fetch', (e) => {
   if (url.origin === location.origin) {
     e.respondWith(
       caches.match(req).then((hit) => {
-        const net = fetch(req)
+        // Revalidate against the server, not the 10-minute HTTP cache.
+        const net = fetch(new Request(req, { cache: 'no-cache' }))
           .then((res) => {
             if (res.ok) {
               const copy = res.clone();
