@@ -416,6 +416,36 @@ body {
   line-height: 1.4;
 }
 
+/* --------------------------------------------------------------- reminders */
+
+.rem-heading {
+  margin: 12px 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.rem-heading:first-child { margin-top: 0; }
+.rem-group { display: flex; flex-direction: column; }
+.rem-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.rem-row:last-child { border-bottom: 0; }
+/* A miss gets a rail, so the overdue block reads as a block at arm's length. */
+.rem-overdue { border-left: 2px solid var(--bad); padding-left: 8px; margin-left: -10px; }
+.rem-main { min-width: 0; }
+.rem-title-line { display: flex; gap: 5px; align-items: baseline; }
+.rem-flag { color: var(--brass); font-size: 12px; line-height: 1; flex: none; }
+.rem-title { font-size: 13.5px; color: var(--text); word-break: break-word; }
+.rem-meta { margin-top: 2px; font-size: 11px; color: var(--text-faint); }
+.rem-side { display: flex; gap: 5px; align-items: center; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+
 /* ------------------------------------------------------------ ship status */
 
 .ship-block { display: flex; flex-direction: column; }

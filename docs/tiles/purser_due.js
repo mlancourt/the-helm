@@ -10,16 +10,14 @@
  */
 
 import { el, empty, pill } from '../lib/dom.js';
-import { usd, prettyDate, daysBetween, ctToday } from '../lib/fmt.js';
+import { usd, prettyDate, daysBetween, ctToday, dueLabel } from '../lib/fmt.js';
 
 function dueChip(due, today) {
-  const days = daysBetween(today, due);
-  if (days === null) return pill(String(due ?? '—'), 'neutral');
-  if (days < 0) return pill(`${Math.abs(days)}d overdue`, 'bad');
-  if (days === 0) return pill('due today', 'bad');
-  if (days === 1) return pill('due tomorrow', 'warn');
-  if (days <= 5) return pill(`${days}d`, 'warn');
-  return pill(`${days}d`, 'neutral');
+  // dueLabel is shared with `reminders`, so the two tiles cannot drift about
+  // what counts as amber.
+  const label = dueLabel(daysBetween(today, due));
+  if (!label) return pill(String(due ?? '—'), 'neutral');
+  return pill(label.text, label.tone);
 }
 
 function itemRow(item, today) {

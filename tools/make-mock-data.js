@@ -185,6 +185,25 @@ function snapshot() {
         ],
       }),
 
+      // Invented reminders, chosen to exercise every branch of the sort:
+      // two misses, a today-with-a-time, a tomorrow, a next-week, and two
+      // undated — flagged and unflagged, high priority and none.
+      reminders: tile('DAILY', {
+        count: 7,
+        overdue: 2,
+        due_soon: 4,
+        source: 'mock generator',
+        items: [
+          { title: 'Nearest due date, should sort under the misses', list: 'Shop', due: TODAY, due_time: '16:30', days: 0, overdue: false, flagged: false, priority: 'none' },
+          { title: 'No date at all, and flagged', list: 'Someday', due: null, due_time: null, days: null, overdue: false, flagged: true, priority: 'none' },
+          { title: 'Badly overdue, high priority', list: 'Shop', due: addDays(TODAY, -9), due_time: null, days: -9, overdue: true, flagged: true, priority: 'high' },
+          { title: 'Due next week', list: 'Home', due: addDays(TODAY, 6), due_time: null, days: 6, overdue: false, flagged: false, priority: 'none' },
+          { title: 'Slipped yesterday', list: 'Home', due: addDays(TODAY, -1), due_time: '08:00', days: -1, overdue: true, flagged: false, priority: 'medium' },
+          { title: 'Due tomorrow', list: 'Shop', due: addDays(TODAY, 1), due_time: '09:15', days: 1, overdue: false, flagged: false, priority: 'none' },
+          { title: 'No date at all, not flagged', list: 'Someday', due: null, due_time: null, days: null, overdue: false, flagged: false, priority: null },
+        ],
+      }),
+
       dinner: tile('DAILY', {
         date: TODAY,
         meal: 'Sheet-pan sausage and peppers',

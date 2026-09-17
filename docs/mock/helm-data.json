@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-17T16:35:14.020Z",
-  "run_id": "run-mock-mu5r3aas",
+  "generated_at": "2026-09-17T18:05:44.010Z",
+  "run_id": "run-mock-mu5ubo3u",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T16:35:14.020Z",
+      "updated_at": "2026-09-17T18:05:44.010Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -94,7 +94,7 @@
     },
     "mke_board": {
       "band": "LIVE",
-      "updated_at": "2026-09-17T16:35:14.020Z",
+      "updated_at": "2026-09-17T18:05:44.010Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -120,7 +120,7 @@
     },
     "radar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T16:35:14.020Z",
+      "updated_at": "2026-09-17T18:05:44.010Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -136,7 +136,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T16:35:14.020Z",
+      "updated_at": "2026-09-17T18:05:44.010Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -184,9 +184,93 @@
         ]
       }
     },
+    "reminders": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T18:05:44.010Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "count": 7,
+        "overdue": 2,
+        "due_soon": 4,
+        "source": "mock generator",
+        "items": [
+          {
+            "title": "Nearest due date, should sort under the misses",
+            "list": "Shop",
+            "due": "2026-09-17",
+            "due_time": "16:30",
+            "days": 0,
+            "overdue": false,
+            "flagged": false,
+            "priority": "none"
+          },
+          {
+            "title": "No date at all, and flagged",
+            "list": "Someday",
+            "due": null,
+            "due_time": null,
+            "days": null,
+            "overdue": false,
+            "flagged": true,
+            "priority": "none"
+          },
+          {
+            "title": "Badly overdue, high priority",
+            "list": "Shop",
+            "due": "2026-09-08",
+            "due_time": null,
+            "days": -9,
+            "overdue": true,
+            "flagged": true,
+            "priority": "high"
+          },
+          {
+            "title": "Due next week",
+            "list": "Home",
+            "due": "2026-09-23",
+            "due_time": null,
+            "days": 6,
+            "overdue": false,
+            "flagged": false,
+            "priority": "none"
+          },
+          {
+            "title": "Slipped yesterday",
+            "list": "Home",
+            "due": "2026-09-16",
+            "due_time": "08:00",
+            "days": -1,
+            "overdue": true,
+            "flagged": false,
+            "priority": "medium"
+          },
+          {
+            "title": "Due tomorrow",
+            "list": "Shop",
+            "due": "2026-09-18",
+            "due_time": "09:15",
+            "days": 1,
+            "overdue": false,
+            "flagged": false,
+            "priority": "none"
+          },
+          {
+            "title": "No date at all, not flagged",
+            "list": "Someday",
+            "due": null,
+            "due_time": null,
+            "days": null,
+            "overdue": false,
+            "flagged": false,
+            "priority": null
+          }
+        ]
+      }
+    },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T16:35:14.020Z",
+      "updated_at": "2026-09-17T18:05:44.010Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -198,7 +282,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T16:35:14.020Z",
+      "updated_at": "2026-09-17T18:05:44.010Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -232,11 +316,11 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-17T16:12:14.020Z",
+      "updated_at": "2026-09-17T17:42:44.010Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-17T16:12:14.020Z",
+        "as_of": "2026-09-17T17:42:44.010Z",
         "count": 4,
         "refresh_note": null,
         "source": "mock generator",
@@ -280,18 +364,18 @@
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T16:35:14.020Z",
+      "updated_at": "2026-09-17T18:05:44.010Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-16T10:35:14.020Z",
+        "drift_audit_updated": "2026-09-16T12:05:44.010Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-17T16:27:14.020Z",
+        "worker_published_at": "2026-09-17T17:57:44.010Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -313,7 +397,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-17T15:05:14.020Z",
+      "updated_at": "2026-09-17T16:35:44.010Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

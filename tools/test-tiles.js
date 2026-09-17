@@ -215,6 +215,72 @@ async function main() {
     check('the "more" toggle exists per long synopsis', countOf(root, 'news-more') === 3);
   }
 
+  // -- reminders specifics ---------------------------------------------------
+  console.log('\nreminders');
+  const rem = mods.get('reminders');
+  if (rem) {
+    // Deliberately emitted in the wrong order, including the case the engine's
+    // `overdue` flag exists for: due today at 09:00, already missed.
+    const items = [
+      { title: 'next week', list: 'Home', due: '2026-09-24', due_time: null, days: 7, overdue: false, flagged: false, priority: 'none' },
+      { title: 'undated flagged', list: 'Someday', due: null, due_time: null, days: null, overdue: false, flagged: true, priority: 'none' },
+      { title: 'today later', list: 'Shop', due: '2026-09-17', due_time: '16:30', days: 0, overdue: false, flagged: false, priority: 'none' },
+      { title: 'missed this morning', list: 'Shop', due: '2026-09-17', due_time: '09:00', days: 0, overdue: true, flagged: false, priority: 'high' },
+      { title: 'badly overdue', list: 'Shop', due: '2026-09-08', due_time: null, days: -9, overdue: true, flagged: true, priority: 'high' },
+      { title: 'undated plain', list: 'Someday', due: null, due_time: null, days: null, overdue: false, flagged: false, priority: null },
+      { title: 'tomorrow', list: 'Home', due: '2026-09-18', due_time: '09:15', days: 1, overdue: false, flagged: false, priority: 'none' },
+    ];
+    const root = new El('div');
+    rem.render(root, { band: 'DAILY', status: 'ok', data: { items, count: 7, overdue: 2, due_soon: 4, source: 'test' } }, { id: 'reminders', actions: {} });
+
+    const titles = root.querySelectorAll('.rem-title').map((n) => n.textContent);
+    check(
+      'overdue first, then due-soon by nearest, then undated',
+      titles.join(' | ') === 'badly overdue | missed this morning | today later | tomorrow | next week | undated flagged | undated plain',
+      titles.join(' | ')
+    );
+    check('the worst miss leads the overdue block', titles[0] === 'badly overdue');
+    check('undated sinks to the bottom', titles.slice(-2).every((t) => t.startsWith('undated')));
+    check('a flagged undated item outranks an unflagged one', titles[5] === 'undated flagged');
+
+    // The engine's `overdue` outranks a non-negative day count.
+    const rows = root.querySelectorAll('.rem-row');
+    check('a missed-this-morning item is grouped overdue, not "due today"', rows[1].classList.contains('rem-overdue'));
+    check('an item due later today is NOT marked overdue', !rows[2].classList.contains('rem-overdue'));
+    check('it wears a "past due" chip rather than "due today"', /past due/.test(rows[1].textContent) && !/due today/.test(rows[1].textContent));
+    check('a later-today item still reads "due today"', /due today/.test(rows[2].textContent));
+
+    check('days-out renders as a chip', /9d overdue/.test(rows[0].textContent));
+    check('tomorrow reads as tomorrow', /due tomorrow/.test(root.textContent));
+    check('a far date is a plain day count', /7d/.test(root.textContent));
+    check('flagged items carry the mark', root.querySelectorAll('.rem-flag').length === 2);
+    check('the mark is labelled for screen readers', root.querySelector('.rem-flag').getAttribute('aria-label') === 'flagged');
+    check('an undated item gets no days chip', !/\dd/.test(rows[6].textContent));
+
+    // Rule 7: a Central date-only string is rendered from its parts, verbatim.
+    check('the due date renders as text, never a parsed instant', /Sep 8/.test(rows[0].textContent));
+    check('a due time renders in 12h Central', /9:15 AM/.test(root.textContent));
+    check('priority "none" is not rendered as a chip', !/none/.test(root.textContent));
+    check('a real priority is', /high/.test(root.textContent));
+    check('the engine counts are reported', /7 open/.test(root.textContent) && /2 overdue/.test(root.textContent));
+
+    // Every item undated: no headings for empty groups, no crash.
+    const root2 = new El('div');
+    rem.render(root2, { band: 'DAILY', status: 'ok', data: { items: items.filter((i) => i.days === null) } }, { id: 'reminders', actions: {} });
+    check('an all-undated list renders one group only', root2.querySelectorAll('.rem-heading').length === 1);
+    check('and it is the undated one', root2.querySelector('.rem-heading').textContent === 'No date');
+
+    const root3 = new El('div');
+    rem.render(root3, { band: 'DAILY', status: 'ok', data: { items: [] } }, { id: 'reminders', actions: {} });
+    check('an empty list says so', /Nothing on the list/.test(root3.textContent));
+
+    // A half-built item must not take the tile down.
+    const root4 = new El('div');
+    rem.render(root4, { band: 'DAILY', status: 'ok', data: { items: [{}, null, { title: 'ok' }] } }, { id: 'reminders', actions: {} });
+    check('items with no fields at all still render', root4.querySelectorAll('.rem-row').length === 2);
+    check('a titleless item is labelled, not blank', /\(untitled\)/.test(root4.textContent));
+  }
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));

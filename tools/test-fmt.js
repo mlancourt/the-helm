@@ -125,6 +125,29 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('usdPrecise handles a negative sub-cent', fmt.usdPrecise(-0.0048), '-$0.0048');
   eq('usdPrecise at the cent boundary', fmt.usdPrecise(0.01), '$0.01');
 
+  console.log('\ndue labels (shared by purser_due and reminders)');
+  eq('overdue counts days', fmt.dueLabel(-3).text, '3d overdue');
+  eq('overdue is red', fmt.dueLabel(-3).tone, 'bad');
+  eq('today is today', fmt.dueLabel(0).text, 'due today');
+  eq('today is red', fmt.dueLabel(0).tone, 'bad');
+  eq('tomorrow is tomorrow', fmt.dueLabel(1).text, 'due tomorrow');
+  eq('tomorrow is amber', fmt.dueLabel(1).tone, 'warn');
+  eq('inside five days is amber', fmt.dueLabel(5).tone, 'warn');
+  eq('past five days is neutral', fmt.dueLabel(6).tone, 'neutral');
+  eq('a day count is a day count', fmt.dueLabel(9).text, '9d');
+  eq('no days means no label', fmt.dueLabel(null), null);
+  eq('junk days means no label', fmt.dueLabel('soon'), null);
+
+  console.log('\nCentral wall clock');
+  // 'HH:MM' is Central wall time, not an instant: text in, text out.
+  eq('morning', fmt.ctClock('09:15'), '9:15 AM');
+  eq('afternoon', fmt.ctClock('16:30'), '4:30 PM');
+  eq('noon is PM', fmt.ctClock('12:00'), '12:00 PM');
+  eq('midnight is 12 AM', fmt.ctClock('00:00'), '12:00 AM');
+  eq('junk is blank', fmt.ctClock('half four'), '');
+  eq('an impossible hour is blank', fmt.ctClock('25:00'), '');
+  eq('null is blank', fmt.ctClock(null), '');
+
   console.log(`\n${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 })();

@@ -82,11 +82,11 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 415 assertions, no server needed
+npm test            # 466 assertions, no server needed
 npm run test:worker # 62 assertions, needs `npm run dev` running
 ```
 
-- **`test:fmt`** (57) — every date helper, run under `America/Chicago`,
+- **`test:fmt`** (75) — every date helper, run under `America/Chicago`,
   `Asia/Tokyo`, `UTC` and `Pacific/Kiritimati`, asserting byte-identical output
   in all four. This is the rule-7 tripwire.
 - **`test-graders`** (101) — every market across pre / in / post / push, run
@@ -97,7 +97,7 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   cadence, one summary per game and only once it is under way, one scoreboard
   per league, event-id matching, and that a dead feed keeps the last good
   grades instead of blanking them.
-- **`test:sw`** (37) — the service worker's routing policy: ESPN and `/ask` are
+- **`test:sw`** (38) — the service worker's routing policy: ESPN and `/ask` are
   never cached, `/api/data` is network-first with a cache fallback, the shell is
   stale-while-revalidate, and a 404 in the precache list cannot fail an install.
   It also asserts precache parity: every module the registry names is in `SHELL`.
@@ -108,7 +108,7 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   timeout, upstream error, corrupt snapshot, refusal, truncation). worker.js is
   a plain ES module, so the route runs in Node with no wrangler and no network.
   **No test ever calls a real model** — nothing here can spend money.
-- **`test-tiles`** (84) — every render module, against the mock snapshot and
+- **`test-tiles`** (116) — every render module, against the mock snapshot and
   against deliberately hostile payloads: empty, null, wrong-typed, all-fields-
   missing, and carrying fields no module has heard of. No module may throw at
   any of them, because a module that throws turns one card into "this tile
@@ -604,7 +604,7 @@ tile id renders as a generic key/value card, a registered tile missing from the
 snapshot renders as an empty grey card.
 
 Tiles in the contract today: `bets_live`, `mke_board`, `newsstand`, `radar`,
-`calendar`, `dinner`, `purser_due`, `ship_status`. The page reads their payloads
+`calendar`, `reminders`, `dinner`, `purser_due`, `ship_status`. The page reads their payloads
 field by field and skips what the engine has not sent — a missing field is
 never rendered as a zero, a `false`, or an `Invalid Date`.
 

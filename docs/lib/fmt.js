@@ -77,6 +77,36 @@ export function dayLabel(ymd, today = ctToday()) {
   return prettyDate(ymd);
 }
 
+/**
+ * Days-until -> the chip a due thing wears: {text, tone}, or null when there
+ * is no date to count from.
+ *
+ * Shared by `purser_due` (which computes days from a date) and `reminders`
+ * (where the engine has already counted them in Central). One definition, so
+ * a card due in three days and a reminder due in three days never disagree
+ * about whether that is amber.
+ */
+export function dueLabel(days) {
+  if (days === null || days === undefined || !Number.isFinite(Number(days))) return null;
+  const n = Number(days);
+  if (n < 0) return { text: `${Math.abs(n)}d overdue`, tone: 'bad' };
+  if (n === 0) return { text: 'due today', tone: 'bad' };
+  if (n === 1) return { text: 'due tomorrow', tone: 'warn' };
+  if (n <= 5) return { text: `${n}d`, tone: 'warn' };
+  return { text: `${n}d`, tone: 'neutral' };
+}
+
+/** 'HH:MM' 24h Central -> '3:25 PM'. Text in, text out — never parsed. */
+export function ctClock(hhmm) {
+  const m = String(hhmm ?? '').match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return '';
+  let h = Number(m[1]);
+  if (h > 23 || Number(m[2]) > 59) return '';
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 === 0 ? 12 : h % 12;
+  return `${h}:${m[2]} ${suffix}`;
+}
+
 /** A UTC ISO *instant* -> Central clock time, e.g. '9:26 AM'. */
 export function ctTime(iso) {
   const t = Date.parse(iso);
