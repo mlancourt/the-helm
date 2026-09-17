@@ -43,6 +43,14 @@
   <div id="sheet-body" class="sheet-body"></div>
 </aside>
 
+<!-- The second sheet: same scrim and same mechanics as Ask, its own body, so
+     a tile can open a list without touching Ask's transcript. -->
+<aside id="panel" class="sheet panel" aria-label="Detail panel">
+  <button id="panel-close" class="sheet-close" type="button" aria-label="Close panel">×</button>
+  <h2 id="panel-title" class="panel-title"></h2>
+  <div id="panel-body" class="sheet-body panel-body"></div>
+</aside>
+
 <script type="module" src="./app.js"></script>
 </body>
 </html>

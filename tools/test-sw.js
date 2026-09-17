@@ -98,6 +98,20 @@ function makeWorld({ netOk = true, cacheHas = true } = {}) {
     URL,
     Promise,
     console,
+    // sw.js re-wraps requests to bypass the HTTP cache (`cache: 'reload'` on
+    // precache, `'no-cache'` on revalidate). Node has no Request, so this shim
+    // carries the url and the cache mode through — `c.add()` below asserts on
+    // the string, and the assertions that follow only ever read `.url`.
+    Request: class {
+      constructor(input, init = {}) {
+        this.url = typeof input === 'string' ? input : input.url;
+        this.method = (typeof input === 'object' && input && input.method) || 'GET';
+        this.cache = init.cache || 'default';
+      }
+      toString() {
+        return this.url;
+      }
+    },
     Response: { error: () => ({ marker: 'RESPONSE_ERROR' }) },
     fetch: async () =>
       netOk

@@ -82,14 +82,14 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 466 assertions, no server needed
+npm test            # 495 assertions, no server needed
 npm run test:worker # 62 assertions, needs `npm run dev` running
 ```
 
 - **`test:fmt`** (75) — every date helper, run under `America/Chicago`,
   `Asia/Tokyo`, `UTC` and `Pacific/Kiritimati`, asserting byte-identical output
   in all four. This is the rule-7 tripwire.
-- **`test-graders`** (101) — every market across pre / in / post / push, run
+- **`test-graders`** (111) — every market across pre / in / post / push, run
   against **real ESPN payloads** captured in `tools/fixtures/`. Inventing
   fixtures would only prove the graders agree with my guess about ESPN's shape,
   which is the exact thing worth testing.
@@ -108,7 +108,7 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   timeout, upstream error, corrupt snapshot, refusal, truncation). worker.js is
   a plain ES module, so the route runs in Node with no wrangler and no network.
   **No test ever calls a real model** — nothing here can spend money.
-- **`test-tiles`** (116) — every render module, against the mock snapshot and
+- **`test-tiles`** (145) — every render module, against the mock snapshot and
   against deliberately hostile payloads: empty, null, wrong-typed, all-fields-
   missing, and carrying fields no module has heard of. No module may throw at
   any of them, because a module that throws turns one card into "this tile
@@ -320,7 +320,7 @@ unknown-field payloads.
 
 `tile` is the snapshot entry (`{band, updated_at, status, error, data}`). `ctx`
 carries `{id, title, snapshot, pending, actions, live}`, where `actions` are
-`submitEvent`, `withdrawEvent`, `ask` and `openAsk`.
+`submitEvent`, `withdrawEvent`, `ask`, `openAsk` and `openPanel`.
 
 You never have to do step 2 for the page to survive: an unregistered tile
 renders as a generic key/value card. Step 2 is what gives it a real layout.
@@ -332,23 +332,28 @@ id to match. `mke_board` reads "Local Team Scoreboard"; the id stays
 snapshot that carries its own `data.title` is ignored for the same reason: the
 card head already prints one, and two would say it twice.
 
-### Newsstand category chips
+### Newsstand category menu
 
-The filter chips above the newsstand cards are **derived from the payload**,
-never from a list in the page. Every distinct `category` present gets a chip,
-labelled `<emoji> <category>` with the card's own emoji, in the order the
-payload first mentions them, behind an "All" chip. A category the vault invents
-tomorrow appears on its own with no deploy; two spellings of one category
-(`Tech`, `tech`) are one chip.
+The newsstand tile is a **menu, not a list**: its body is one button per
+category, and the stories live in a sheet. That keeps the tile the same height
+class as everything else on the board — the old inline list dwarfed it.
 
-Tapping a chip hides the other cards rather than rebuilding the list, so a
-synopsis the reader expanded is still expanded when they come back to it. The
-3-line clamp is untouched.
+The buttons are **derived from the payload**, never from a list in the page.
+Every distinct `category` present gets one, labelled `<emoji> <category>` with
+the card's own emoji and a count, in the order the payload first mentions them.
+A category the vault invents tomorrow appears on its own with no deploy; two
+spellings of one category (`Tech`, `tech`) are one button. Cards that arrive
+with no `category` at all collect under one trailing **Uncategorised** button
+rather than falling off the board. Below the grid, one faint line carries the
+`as_of` freshness and the `refresh_note`.
 
-The last-picked chip is remembered in `localStorage` under
-`helm.newsstand.filter` — a per-viewer convenience, not state. Reads and writes
-are both wrapped, and a private window, a blocked store, or a remembered
-category the vault has since dropped all fall back to All.
+Tapping a button opens the **detail panel** — the second sheet, `#panel`. It
+shares the ask sheet's scrim and transitions but has its own body, so Ask's
+transcript is never touched. It closes on the scrim, the ×, or Escape. Nothing
+is remembered: the sheet is transient, so there is no per-viewer state to keep.
+
+Any tile can use it: `ctx.actions.openPanel(title, build)`, where `build(body)`
+fills a cleared body. A builder that throws greys the panel, not the board.
 
 ### Rule 9 — drift in both directions
 

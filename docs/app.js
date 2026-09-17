@@ -187,6 +187,14 @@ const actions = {
     return api('/api/ask', { method: 'POST', body: payload });
   },
 
+  /**
+   * A tile asking for the detail sheet. It hands over a title and a builder
+   * and never touches the sheet itself — Ask's body stays Ask's.
+   */
+  openPanel(title, build) {
+    openPanel(title, build);
+  },
+
   openAsk(tileId, data) {
     openSheet();
     if (askController && tileId) askController.pin(tileId, data);
@@ -483,14 +491,63 @@ async function loadModules() {
 
 // -------------------------------------------------------------- ask sheet
 
+/**
+ * Two sheets share one scrim: Ask, which is mounted once and keeps its
+ * transcript alive in a closure, and the generic detail panel, which any tile
+ * can fill and which is cleared on every open. Nothing is ever rendered into
+ * Ask's body but Ask, and only one sheet is ever up at a time.
+ *
+ * The scrim is DERIVED from the two rather than toggled by each handler — the
+ * version that was not left a dead scrim over the board whenever a sheet
+ * closed underneath it.
+ */
+function syncScrim() {
+  const open =
+    document.getElementById('sheet').classList.contains('open') ||
+    document.getElementById('panel').classList.contains('open');
+  document.getElementById('scrim').classList.toggle('open', open);
+}
+
 function openSheet() {
+  document.getElementById('panel').classList.remove('open');
   document.getElementById('sheet').classList.add('open');
-  document.getElementById('scrim').classList.add('open');
+  syncScrim();
 }
 
 function closeSheet() {
   document.getElementById('sheet').classList.remove('open');
-  document.getElementById('scrim').classList.remove('open');
+  syncScrim();
+}
+
+function closePanel() {
+  document.getElementById('panel').classList.remove('open');
+  syncScrim();
+}
+
+function closeAll() {
+  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+  syncScrim();
+}
+
+/**
+ * The detail panel. `build` fills the body; a builder that throws greys the
+ * panel rather than the board (rule 8).
+ */
+function openPanel(title, build) {
+  const body = document.getElementById('panel-body');
+  clear(body);
+  document.getElementById('panel-title').textContent = String(title || '');
+  try {
+    build(body);
+  } catch (e) {
+    clear(body);
+    body.appendChild(el('p', { cls: 'card-error', text: `This panel failed to render: ${e.message}` }));
+  }
+  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('panel').classList.add('open');
+  syncScrim();
+  body.scrollTop = 0;
 }
 
 async function mountAsk() {
@@ -511,10 +568,11 @@ async function mountAsk() {
     openSheet();
     askController?.focus();
   });
-  document.getElementById('scrim').addEventListener('click', closeSheet);
+  document.getElementById('scrim').addEventListener('click', closeAll);
   document.getElementById('sheet-close').addEventListener('click', closeSheet);
+  document.getElementById('panel-close').addEventListener('click', closePanel);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeSheet();
+    if (e.key === 'Escape') closeAll();
   });
 }
 

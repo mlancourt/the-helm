@@ -1,31 +1,37 @@
 /**
- * newsstand — a compact card list. Links open in a new tab.
+ * newsstand — a category menu. The stories live in a sheet, not on the board.
  *
- * extLink() refuses anything that is not http(s), so a snapshot carrying a
- * javascript: or data: URL renders as inert text instead of a live link.
+ * The tile used to list every card inline, which made it several times the
+ * height of every other tile and turned the board into a scroll. So the tile
+ * body is now a menu: one button per category actually present in the payload,
+ * with a count. Tapping one opens a bottom sheet holding that category's
+ * cards, with the card rendering unchanged — title, source, clamped synopsis,
+ * lens, link.
+ *
+ * The menu is DERIVED from the cards, never from a list in this file — a
+ * category the vault invents tomorrow shows up on its own, wearing its own
+ * emoji, with no page deploy (rule 9). Order is first mention.
+ *
+ * There is no "All" button and nothing is remembered: the sheet is transient,
+ * so there is no per-viewer state worth keeping. Cards the vault left without
+ * a category would have no button to live under, so they get one last bucket
+ * rather than falling off the board — a menu that silently drops stories is
+ * worse than one extra button.
  *
  * Four fields carry the editorial weight, and all four are the engine's:
  *   emoji     drawn straight from the card, never mapped from `category` here.
  *             A new category the vault invents must not arrive on this page
  *             wearing the wrong glyph, or none (rule 9).
- *   category  a chip, tinted by a small palette and falling back to neutral.
+ *   category  a button on the board and a chip in the sheet, tinted by a small
+ *             palette and falling back to neutral.
  *   synopsis  a paragraph, several hundred characters. Clamped to three lines
- *             so twenty-four cards still scan on a phone, and expanded by a
+ *             so a long category still scans on a phone, and expanded by a
  *             tap — nothing is hidden, it is just folded.
  *   lens      why this matters to Matt. Kept last and kept distinct, because
  *             it is the vault's opinion rather than the source's reporting.
  *
- * The filter chips above the list are DERIVED from the cards, never from a
- * list in this file — a category the vault invents tomorrow shows up on its
- * own, wearing its own emoji, with no page deploy (rule 9). The chip set is
- * the categories actually present, in the order the payload first mentions
- * them, behind an "All" chip. Filtering hides cards rather than rebuilding
- * the list, so an expanded synopsis survives a round trip through a chip.
- *
- * The last-picked chip is remembered in localStorage: a per-viewer
- * convenience, not state. Every read and write is wrapped, and a private
- * window, a cleared store, or a remembered category that is no longer in the
- * payload all fall back to All.
+ * extLink() refuses anything that is not http(s), so a snapshot carrying a
+ * javascript: or data: URL renders as inert text instead of a live link.
  *
  * Rule 10: every one of them lands via textContent. An emoji is untrusted text
  * exactly like a headline is.
@@ -35,8 +41,9 @@ import { el, empty, extLink } from '../lib/dom.js';
 import { ago } from '../lib/fmt.js';
 
 /**
- * Chip tints. A category with no entry here renders neutral rather than
- * unstyled — the engine owns this taxonomy and will grow it without asking.
+ * Button and chip tints. A category with no entry here renders neutral rather
+ * than unstyled — the engine owns this taxonomy and will grow it without
+ * asking.
  */
 const CATEGORY_TONE = {
   'local news': 'local',
@@ -48,32 +55,19 @@ const CATEGORY_TONE = {
 };
 
 /**
- * Two spellings of one category are one chip. The payload's own casing is what
- * gets printed; this key only decides sameness.
+ * Two spellings of one category are one button. The payload's own casing is
+ * what gets printed; this key only decides sameness.
  */
 function catKey(category) {
   return String(category).trim().toLowerCase();
 }
 
-const ALL = '*';
-const LS_FILTER = 'helm.newsstand.filter';
-
-function readFilter() {
-  try {
-    return localStorage.getItem(LS_FILTER) || ALL;
-  } catch {
-    // Private window, blocked site data, or no storage at all.
-    return ALL;
-  }
-}
-
-function writeFilter(key) {
-  try {
-    localStorage.setItem(LS_FILTER, key);
-  } catch {
-    /* the filter still works for this visit, it just will not be remembered */
-  }
-}
+/**
+ * The bucket for cards the vault sent without a category. A Symbol, so no
+ * category the engine ever invents can collide with it.
+ */
+const NO_CATEGORY = Symbol('uncategorised');
+const NO_CATEGORY_LABEL = 'Uncategorised';
 
 function categoryChip(category, emoji) {
   const tone = CATEGORY_TONE[catKey(category)] || 'neutral';
@@ -109,19 +103,17 @@ function card(c) {
       attrs: { type: 'button' },
       on: {
         click: (e) => {
-          // Don't let the expand ride up into the card's Explain handler.
           e.stopPropagation();
           const open = body.classList.toggle('clamped') === false;
           more.textContent = open ? 'less' : 'more';
         },
       },
     });
-    // Only offer "more" when there is actually more. The card is not in the
-    // document yet when render() runs, so the overflow test waits a tick —
-    // a timer rather than requestAnimationFrame, because rAF does not fire at
-    // all in a backgrounded tab and the button would never be evaluated. If
-    // there is still no layout (a hidden tile), the button is left alone
-    // rather than hidden on a guess.
+    // Only offer "more" when there is actually more. The card is not laid out
+    // when render() runs, so the overflow test waits a tick — a timer rather
+    // than requestAnimationFrame, because rAF does not fire at all in a
+    // backgrounded tab and the button would never be evaluated. If there is
+    // still no layout, the button is left alone rather than hidden on a guess.
     setTimeout(() => {
       if (body.clientHeight > 0 && body.scrollHeight <= body.clientHeight + 1) {
         more.classList.add('hidden');
@@ -139,118 +131,103 @@ function card(c) {
 }
 
 /**
- * The categories actually present, in first-mention order:
- *   key -> {label, emoji}
+ * The categories actually present, in first-mention order, each carrying its
+ * own cards: [{key, label, emoji, tone, cards}]
  *
  * The label is the payload's own spelling and the emoji is the payload's own
  * glyph — the first one offered for that category, so a card that forgot its
- * emoji does not blank the chip for every card that remembered.
+ * emoji does not blank the button for every card that remembered.
  */
-function categoriesIn(entries) {
-  const cats = new Map();
-  for (const e of entries) {
-    if (!e.key) continue;
-    const emoji = e.card.emoji ? String(e.card.emoji) : '';
-    const seen = cats.get(e.key);
-    if (!seen) cats.set(e.key, { label: String(e.card.category).trim(), emoji });
-    else if (!seen.emoji && emoji) seen.emoji = emoji;
+function groupByCategory(cards) {
+  const groups = new Map();
+  for (const raw of cards) {
+    const c = raw || {};
+    const keyed = !!c.category;
+    const key = keyed ? catKey(c.category) : NO_CATEGORY;
+    let g = groups.get(key);
+    if (!g) {
+      g = {
+        key,
+        label: keyed ? String(c.category).trim() : NO_CATEGORY_LABEL,
+        emoji: keyed && c.emoji ? String(c.emoji) : '',
+        tone: keyed ? CATEGORY_TONE[key] || 'neutral' : 'neutral',
+        cards: [],
+      };
+      groups.set(key, g);
+    } else if (!g.emoji && keyed && c.emoji) {
+      g.emoji = String(c.emoji);
+    }
+    g.cards.push(c);
   }
-  return cats;
+
+  // Uncategorised is a fallback, not a category — it sorts last however early
+  // the payload happened to mention one.
+  const out = [...groups.values()].filter((g) => g.key !== NO_CATEGORY);
+  const rest = groups.get(NO_CATEGORY);
+  if (rest) out.push(rest);
+  return out;
 }
 
-/**
- * The chip row. Returns null when there is nothing to filter by, so a payload
- * of uncategorised cards gets no empty rail above it.
- */
-function filterRow(entries) {
-  const cats = categoriesIn(entries);
-  if (!cats.size) return null;
+/** "Local News" with its glyph — the sheet's title, and the button's wording. */
+function headingFor(group) {
+  return group.emoji ? `${group.emoji} ${group.label}` : group.label;
+}
 
-  // A remembered category the vault has since dropped is not an error — it is
-  // just no longer on offer. Fall back to All.
-  let active = readFilter();
-  if (active !== ALL && !cats.has(active)) active = ALL;
+/** Fills a sheet body with one category's cards. */
+function sheetBody(group) {
+  return (body) => {
+    body.appendChild(el('div', { cls: 'news' }, group.cards.map((c) => card(c))));
+  };
+}
 
-  const chips = [];
-
-  function apply(key) {
-    let last = null;
-    for (const e of entries) {
-      // An uncategorised card belongs to no chip but All.
-      const show = key === ALL || e.key === key;
-      if (show) e.node.classList.remove('hidden');
-      else e.node.classList.add('hidden');
-      // :last-child is structural and a hidden card still holds that slot, so
-      // the last VISIBLE card is marked here to drop its trailing hairline.
-      e.node.classList.remove('news-last');
-      if (show) last = e.node;
-    }
-    if (last) last.classList.add('news-last');
-    for (const c of chips) {
-      const on = c.key === key;
-      if (on) c.node.classList.add('news-filter-on');
-      else c.node.classList.remove('news-filter-on');
-      c.node.setAttribute('aria-pressed', on ? 'true' : 'false');
-    }
-  }
-
-  function chip(key, label, emoji) {
-    const node = el(
-      'button',
-      {
-        cls: 'news-filter',
-        attrs: { type: 'button' },
-        on: {
-          click: (e) => {
-            // Don't let the tap ride up into the card's Explain handler.
-            e.stopPropagation();
-            apply(key);
-            writeFilter(key);
-          },
+function menuButton(group, ctx) {
+  return el(
+    'button',
+    {
+      cls: `news-menu-btn news-menu-${group.tone}`,
+      attrs: { type: 'button' },
+      on: {
+        click: (e) => {
+          // Don't let the tap ride up into the card's Explain handler.
+          e.stopPropagation();
+          const open = ctx && ctx.actions && ctx.actions.openPanel;
+          // No sheet to open (the test harness, an older shell): the menu is
+          // inert rather than broken.
+          if (typeof open === 'function') open(headingFor(group), sheetBody(group));
         },
       },
-      [
-        emoji ? el('span', { cls: 'news-emoji', attrs: { 'aria-hidden': 'true' }, text: emoji }) : null,
-        el('span', { text: label }),
-      ]
-    );
-    chips.push({ key, node });
-    return node;
-  }
-
-  const row = el('div', { cls: 'news-filters', attrs: { role: 'group', 'aria-label': 'Filter by category' } }, [
-    chip(ALL, 'All', ''),
-    ...[...cats].map(([key, { label, emoji }]) => chip(key, label, emoji)),
-  ]);
-
-  apply(active);
-  return row;
+    },
+    [
+      group.emoji
+        ? el('span', { cls: 'news-emoji', attrs: { 'aria-hidden': 'true' }, text: group.emoji })
+        : null,
+      el('span', { cls: 'news-menu-label', text: group.label }),
+      el('span', { cls: 'news-menu-dot', attrs: { 'aria-hidden': 'true' }, text: '·' }),
+      el('span', { cls: 'news-menu-count', text: String(group.cards.length) }),
+    ]
+  );
 }
 
-export function render(el_, tile) {
+export function render(el_, tile, ctx) {
   const data = tile.data || {};
   const cards = Array.isArray(data.cards) ? data.cards : [];
+  const groups = groupByCategory(cards);
 
-  if (!cards.length) {
-    el_.appendChild(empty('No cards.'));
+  if (!groups.length) {
+    el_.appendChild(empty('No paper yet.'));
     return;
   }
 
-  // One entry per card: the node, and the category key it answers to.
-  const entries = cards.map((c) => ({
-    card: c || {},
-    key: c && c.category ? catKey(c.category) : '',
-    node: card(c || {}),
-  }));
-
-  const row = filterRow(entries);
-  if (row) el_.appendChild(row);
-
-  el_.appendChild(el('div', { cls: 'news' }, entries.map((e) => e.node)));
+  el_.appendChild(
+    el(
+      'div',
+      { cls: 'news-menu', attrs: { role: 'group', 'aria-label': 'Newsstand categories' } },
+      groups.map((g) => menuButton(g, ctx))
+    )
+  );
 
   const foot = [];
   if (data.as_of) foot.push(`as of ${ago(data.as_of)}`);
-  if (typeof data.count === 'number') foot.push(`${data.count} cards`);
   if (data.refresh_note) foot.push(String(data.refresh_note));
   if (foot.length) el_.appendChild(el('p', { cls: 'tile-foot', text: foot.join(' · ') }));
 }

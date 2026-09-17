@@ -94,25 +94,24 @@ global.document = {
 };
 
 /**
- * localStorage shim. The newsstand remembers its filter chip there, which is a
- * per-viewer convenience and never state — so the module has to survive a
- * store that is absent (node, as below, until one is installed), empty, or
- * throwing (a private window, or blocked site data). All three are exercised.
+ * A fake detail sheet. The newsstand tile is a menu: tapping a button hands a
+ * title and a body-builder to ctx.actions.openPanel, and the cards are drawn
+ * into whatever body it is given. Here that body is just another shim node,
+ * which is exactly what the real sheet's is.
  */
-function fakeStorage(initial = {}, { throws = false } = {}) {
-  const map = new Map(Object.entries(initial));
+function fakePanel() {
+  const calls = [];
   return {
-    getItem(k) { if (throws) throw new Error('blocked'); return map.has(k) ? map.get(k) : null; },
-    setItem(k, v) { if (throws) throw new Error('blocked'); map.set(k, String(v)); },
-    removeItem(k) { if (throws) throw new Error('blocked'); map.delete(k); },
-    _map: map,
+    calls,
+    get last() { return calls[calls.length - 1] || null; },
+    actions: {
+      openPanel(title, build) {
+        const body = new El('div');
+        build(body);
+        calls.push({ title, body });
+      },
+    },
   };
-}
-function withStorage(store, fn) {
-  const had = 'localStorage' in global;
-  const prev = global.localStorage;
-  global.localStorage = store;
-  try { return fn(); } finally { if (had) global.localStorage = prev; else delete global.localStorage; }
 }
 
 /** Every node's text, flattened — used only to assert that data ARRIVED. */
@@ -205,147 +204,111 @@ async function main() {
     check('an absent captains_log is omitted, not reported false', !/captain/i.test(textOf(root4)));
   }
 
-  // -- newsstand specifics ---------------------------------------------------
-  console.log('\nnewsstand');
+  // -- newsstand: the category menu ------------------------------------------
+  //
+  // The tile body is a menu, the stories are in the sheet. So the assertions
+  // split the same way: what the BOARD shows (buttons, counts, and nothing
+  // else), and what the SHEET shows once a button is tapped.
+  console.log('\nnewsstand — the tile menu');
   const news = mods.get('newsstand');
+  const tap = (btn) => btn.listeners.click[0]({ stopPropagation() {} });
+  const newsTile = (cards, extra = {}) => ({ band: 'HOURLY', status: 'ok', data: { cards, ...extra } });
+  const btnsOf = (root) => root.querySelectorAll('.news-menu-btn');
+  const countChip = (btn) => btn.querySelector('.news-menu-count').textContent;
+
   if (news) {
+    // First mention decides button order. 'Business' appears first WITHOUT an
+    // emoji and again with one; 'tech' arrives a second time in another case;
+    // U1 carries no category at all.
     const cards = [
-      { title: 'A', synopsis: 'S1', source: 'Src', url: 'https://example.com/a', category: 'Tech', emoji: '💻', lens: 'L1' },
-      { title: 'B', source: 'Src', url: 'https://example.com/b' },                       // no synopsis/category/emoji
-      { title: 'C', synopsis: 'S3', source: 'Src', url: 'javascript:alert(1)', emoji: '🏙️' }, // emoji, no category
-      { title: 'D', synopsis: 'S4', source: 'Src', url: 'https://example.com/d', category: 'Weather Balloons', emoji: '🎈' },
-    ];
-    const root = new El('div');
-    news.render(root, { band: 'HOURLY', status: 'ok', data: { cards, as_of: new Date().toISOString(), count: 4 } }, { id: 'newsstand', actions: {} });
-
-    check('one card per entry', countOf(root, 'news-card') === 4);
-    // Two of the four carry a category (A, D). C has an emoji but no category,
-    // and B has neither — so two chips, not three.
-    check('one chip per categorised card', countOf(root, 'news-cat') === 2);
-    const perCard = root.querySelectorAll('.news-card').map((c) => countOf(c, 'news-cat'));
-    check('a card with no category renders no chip', perCard.join() === '1,0,0,1', perCard.join());
-    check('synopses render', /S1/.test(textOf(root)) && /S4/.test(textOf(root)));
-    check('every synopsis starts clamped', countOf(root, 'clamped') === 3);
-    check('emoji render as text', /💻/.test(textOf(root)) && /🎈/.test(textOf(root)));
-    check('an emoji with no category still shows', /🏙️/.test(textOf(root)));
-    // The tone palette is a hint, not a gate: an unheard-of category still renders.
-    const tones = root.querySelectorAll('.news-cat').map((n) => n.className);
-    check('an unknown category falls back to neutral', tones.some((c) => c.includes('news-cat-neutral')));
-    check('a known category is tinted', tones.some((c) => c.includes('news-cat-tech')));
-    check('the lens still renders', /L1/.test(textOf(root)));
-    check('a javascript: url is inert text, never a link', !root.querySelectorAll('A').some((a) => /javascript/i.test(a.getAttribute('href') || '')));
-    check('the "more" toggle exists per long synopsis', countOf(root, 'news-more') === 3);
-  }
-
-  // -- newsstand category filter ---------------------------------------------
-  console.log('\nnewsstand — category filter');
-  if (news) {
-    // First mention decides chip order. 'Business' appears first WITHOUT an
-    // emoji and again with one; 'tech' arrives a second time in another case.
-    const fcards = [
-      { title: 'T1', source: 's', url: 'https://example.com/1', category: 'Tech', emoji: '💻', synopsis: 'S-T1' },
+      { title: 'T1', source: 's', url: 'https://example.com/1', category: 'Tech', emoji: '💻', synopsis: 'S-T1', lens: 'L-T1' },
       { title: 'L1', source: 's', url: 'https://example.com/2', category: 'Local News', emoji: '🏙️', synopsis: 'S-L1' },
       { title: 'B1', source: 's', url: 'https://example.com/3', category: 'Business' },
-      { title: 'T2', source: 's', url: 'https://example.com/4', category: 'tech' },
+      { title: 'T2', source: 's', url: 'https://example.com/4', category: 'tech', synopsis: 'S-T2' },
       { title: 'U1', source: 's', url: 'https://example.com/5' },
       { title: 'X1', source: 's', url: 'https://example.com/6', category: 'Weather Balloons', emoji: '🎈' },
       { title: 'B2', source: 's', url: 'https://example.com/7', category: 'Business', emoji: '💼' },
+      { title: 'T3', source: 's', url: 'javascript:alert(1)', category: 'Tech', synopsis: 'S-T3' },
     ];
-    const newsTile = (cards) => ({ band: 'HOURLY', status: 'ok', data: { cards } });
-    const chipsOf = (root) => root.querySelectorAll('.news-filter');
-    const shownTitles = (root) =>
-      root
-        .querySelectorAll('.news-card')
-        .filter((n) => !n.classList.contains('hidden'))
-        .map((n) => n.querySelector('.news-title').textContent);
-    const tap = (chip) => chip.listeners.click[0]({ stopPropagation() {} });
 
+    const panel = fakePanel();
     const root = new El('div');
-    withStorage(fakeStorage(), () => news.render(root, newsTile(fcards), { id: 'newsstand', actions: {} }));
+    news.render(root, newsTile(cards, { as_of: new Date().toISOString(), refresh_note: 'next run 07:00' }), {
+      id: 'newsstand',
+      actions: panel.actions,
+    });
 
-    const chips = chipsOf(root);
+    const btns = btnsOf(root);
     check(
-      'the chip set is derived from the payload, in first-mention order',
-      chips.map((c) => c.textContent).join('|') === 'All|💻Tech|🏙️Local News|💼Business|🎈Weather Balloons',
-      chips.map((c) => c.textContent).join('|')
+      'the menu is derived from the payload, in first-mention order',
+      btns.map((b) => b.querySelector('.news-menu-label').textContent).join('|') ===
+        'Tech|Local News|Business|Weather Balloons|Uncategorised',
+      btns.map((b) => b.querySelector('.news-menu-label').textContent).join('|')
     );
-    check('two spellings of one category are one chip', chips.length === 5);
-    check('an unknown category still gets a chip', /Weather Balloons/.test(root.querySelector('.news-filters').textContent));
-    check('a category whose first card forgot its emoji still wears one', /💼Business/.test(chips[3].textContent));
-    check('All leads the row and starts active', chips[0].classList.contains('news-filter-on'));
-    check('the active chip is announced', chips[0].getAttribute('aria-pressed') === 'true');
-    check('All shows every card', shownTitles(root).join() === 'T1,L1,B1,T2,U1,X1,B2');
+    check('two spellings of one category are one button', btns.length === 5);
+    check('each button carries its own count', btns.map(countChip).join() === '3,1,2,1,1', btns.map(countChip).join());
+    check('a button wears its category emoji', /💻/.test(btns[0].textContent) && /🏙️/.test(btns[1].textContent));
+    check('a category whose first card forgot its emoji still wears one', /💼/.test(btns[2].textContent));
+    check('an unknown category still gets a button', /Weather Balloons/.test(btns[3].textContent));
+    check('a known category is tinted', btns[0].className.includes('news-menu-tech'));
+    check('an unknown category falls back to neutral', btns[3].className.includes('news-menu-neutral'));
+    // A card with no category has no button of its own to live under, and must
+    // not simply vanish from the board.
+    check('uncategorised cards collect in one trailing button', btns[4].querySelector('.news-menu-label').textContent === 'Uncategorised');
 
-    tap(chips[1]); // Tech
-    check('a chip narrows the list to its category', shownTitles(root).join() === 'T1,T2', shownTitles(root).join());
-    check('the filter matches across casings', shownTitles(root).includes('T2'));
-    check('an uncategorised card belongs to no chip but All', !shownTitles(root).includes('U1'));
-    check('the tapped chip takes the accent', chips[1].classList.contains('news-filter-on'));
-    check('All gives it up', !chips[0].classList.contains('news-filter-on'));
-    check('only the last VISIBLE card drops its rule', countOf(root, 'news-last') === 1);
+    // The whole point of the redesign: the tile is a menu, not a list.
+    check('no story cards in the tile body', countOf(root, 'news-card') === 0);
+    check('no synopsis in the tile body', !/S-T1/.test(textOf(root)));
+    check('no filter rail survives the redesign', countOf(root, 'news-filters') === 0 && countOf(root, 'news-filter') === 0);
+    check('one faint line carries as_of and the refresh note', countOf(root, 'tile-foot') === 1);
+    check('and it says both', /as of/.test(textOf(root)) && /next run 07:00/.test(textOf(root)));
 
-    tap(chips[4]); // Weather Balloons — a category no tone palette has heard of
-    check('an unknown category filters like any other', shownTitles(root).join() === 'X1');
+    // -- the sheet -----------------------------------------------------------
+    console.log('\nnewsstand — the category sheet');
+    tap(btns[0]); // Tech
+    check('a tap opens the sheet', panel.calls.length === 1);
+    check('the sheet is titled with the emoji and the category', panel.last.title === '💻 Tech');
+    const inSheet = (body) => body.querySelectorAll('.news-card').map((c) => c.querySelector('.news-title').textContent);
+    check('the sheet holds that category only', inSheet(panel.last.body).join() === 'T1,T2,T3', inSheet(panel.last.body).join());
+    check('across casings', inSheet(panel.last.body).includes('T2'));
+    check('an uncategorised card is not in it', !inSheet(panel.last.body).includes('U1'));
 
-    tap(chips[0]);
-    check('All restores the full list', shownTitles(root).join() === 'T1,L1,B1,T2,U1,X1,B2');
-    check('All is active again', chips[0].classList.contains('news-filter-on') && !chips[4].classList.contains('news-filter-on'));
-
-    // -- no categories, no rail --------------------------------------------
-    const bare = new El('div');
-    withStorage(fakeStorage(), () =>
-      news.render(bare, newsTile([{ title: 'only', source: 's', url: 'https://example.com/x' }]), { id: 'newsstand', actions: {} })
+    const sheet = panel.last.body;
+    check('the cards render in full', /S-T1/.test(textOf(sheet)) && /L-T1/.test(textOf(sheet)));
+    check('each card wears its category chip', countOf(sheet, 'news-cat') === 3);
+    check('every synopsis starts clamped', countOf(sheet, 'clamped') === 3);
+    check('the "more" toggle exists per synopsis', countOf(sheet, 'news-more') === 3);
+    check('expanding unclamps', (sheet.querySelector('.news-more').listeners.click[0]({ stopPropagation() {} }), countOf(sheet, 'clamped') === 2));
+    check(
+      'a javascript: url is inert text, never a link',
+      !sheet.querySelectorAll('A').some((a) => /javascript/i.test(a.getAttribute('href') || ''))
     );
-    check('a payload with no categories renders no chip row', countOf(bare, 'news-filters') === 0);
-    check('but the card still renders', countOf(bare, 'news-card') === 1);
+    check('a real url is a link', sheet.querySelectorAll('A').some((a) => a.getAttribute('href') === 'https://example.com/1'));
 
+    tap(btns[4]); // Uncategorised
+    check('the uncategorised button opens its own cards', inSheet(panel.last.body).join() === 'U1');
+    check('and is titled without an emoji it never had', panel.last.title === 'Uncategorised');
+
+    tap(btns[3]); // Weather Balloons — a category no tone palette has heard of
+    check('an unknown category opens like any other', inSheet(panel.last.body).join() === 'X1');
+    check('the board is unchanged by any of it', countOf(root, 'news-card') === 0 && btnsOf(root).length === 5);
+
+    // -- nothing to show -----------------------------------------------------
     const none = new El('div');
-    withStorage(fakeStorage(), () => news.render(none, newsTile([]), { id: 'newsstand', actions: {} }));
-    check('an empty payload renders no chip row', countOf(none, 'news-filters') === 0);
-    check('an empty payload says so', /No cards/.test(textOf(none)));
+    news.render(none, newsTile([]), { id: 'newsstand', actions: panel.actions });
+    check('an empty payload renders no menu', countOf(none, 'news-menu-btn') === 0);
+    check('an empty payload says so', /No paper yet/.test(textOf(none)));
 
-    // -- the remembered chip -------------------------------------------------
-    const store = fakeStorage({ 'helm.newsstand.filter': 'local news' });
-    const remembered = new El('div');
-    withStorage(store, () => news.render(remembered, newsTile(fcards), { id: 'newsstand', actions: {} }));
-    check('the last-picked chip is restored on render', shownTitles(remembered).join() === 'L1');
-    check('and it is the one wearing the accent', chipsOf(remembered)[2].classList.contains('news-filter-on'));
-
-    withStorage(store, () => tap(chipsOf(remembered)[1]));
-    check('picking a chip remembers it', store._map.get('helm.newsstand.filter') === 'tech');
-
-    const stale = fakeStorage({ 'helm.newsstand.filter': 'a category the vault dropped' });
-    const staleRoot = new El('div');
-    withStorage(stale, () => news.render(staleRoot, newsTile(fcards), { id: 'newsstand', actions: {} }));
-    check('a remembered category no longer in the payload falls back to All', shownTitles(staleRoot).length === 7);
-
-    const blocked = new El('div');
+    // -- no sheet to open ----------------------------------------------------
+    // An older shell, or the generic-card path: the menu goes inert rather
+    // than throwing on a phone (rule 8).
+    const inert = new El('div');
     let threw = null;
     try {
-      withStorage(fakeStorage({}, { throws: true }), () => {
-        news.render(blocked, newsTile(fcards), { id: 'newsstand', actions: {} });
-        tap(chipsOf(blocked)[1]);
-      });
+      news.render(inert, newsTile(cards), { id: 'newsstand', actions: {} });
+      tap(btnsOf(inert)[0]);
     } catch (e) { threw = e; }
-    check('a storage that throws never reaches the page', !threw, threw && threw.message);
-    check('and the filter still works without it', !threw && shownTitles(blocked).join() === 'T1,T2');
-
-    // No localStorage at all (node's own global) — the module must not care.
-    const bare2 = new El('div');
-    let threw2 = null;
-    try { news.render(bare2, newsTile(fcards), { id: 'newsstand', actions: {} }); } catch (e) { threw2 = e; }
-    check('no localStorage at all is survivable', !threw2, threw2 && threw2.message);
-    check('and All is the fallback', !threw2 && shownTitles(bare2).length === 7);
-
-    // The clamp is untouched by any of this, and because filtering hides
-    // cards rather than rebuilding the list, a synopsis the reader opened is
-    // still open when they come back to it.
-    check('every synopsis still starts clamped', countOf(root, 'news-synopsis') === 2 && countOf(root, 'clamped') === 2);
-    root.querySelector('.news-more').listeners.click[0]({ stopPropagation() {} });
-    check('expanding still unclamps', countOf(root, 'clamped') === 1);
-    tap(chipsOf(root)[2]); // away to Local News
-    tap(chipsOf(root)[0]); // and back to All
-    check('an expanded synopsis survives a round trip through the chips', countOf(root, 'clamped') === 1);
+    check('a tap with no panel action never reaches the page', !threw, threw && threw.message);
   }
 
   // -- mke_board / Local Team Scoreboard -------------------------------------

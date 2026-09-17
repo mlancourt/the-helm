@@ -363,44 +363,54 @@ body {
 
 /* -------------------------------------------------------------- newsstand */
 
-/* Filter chips. They wrap at phone width rather than scrolling sideways —
-   a horizontal rail hides its own tail on a 375px screen. The active chip
-   takes the brass; the rest reuse the neutral .news-cat look. */
-.news-filters {
-  display: flex;
-  flex-wrap: wrap;
+/* The tile body is a menu, not a list — two columns at phone width, wrapping
+   rather than scrolling sideways, so the tile stays the same height class as
+   everything else on the board. The stories live in the panel. */
+.news-menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
-  margin: 0 0 8px;
+}
+@media (min-width: 720px) {
+  .news-menu { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 }
 
-.news-filter {
-  display: inline-flex;
+.news-menu-btn {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 9px;
-  border-radius: 999px;
+  gap: 5px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 9px;
   border: 1px solid var(--line);
   background: #1a1f26;
   color: var(--text-dim);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
+  line-height: 1.2;
+  text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.news-filter:hover { color: var(--text); border-color: #2f3d4c; }
-.news-filter-on {
-  background: #2a2413;
-  border-color: var(--brass);
-  color: var(--brass);
-}
-.news-filter:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.news-menu-btn:hover { color: var(--text); border-color: #2f3d4c; }
+.news-menu-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+/* The label is what gives; the count must never be pushed off the button. */
+.news-menu-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.news-menu-dot { margin-left: auto; color: var(--text-faint); }
+.news-menu-count { color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+/* Same palette as the category chips, so a category looks like itself on the
+   board and in the panel. */
+.news-menu-local { background: #12232c; color: var(--info);  border-color: #1d4152; }
+.news-menu-sport { background: #122f24; color: var(--good);  border-color: #1d4c38; }
+.news-menu-civic { background: #2a2413; color: var(--brass); border-color: #4a4020; }
+.news-menu-tech  { background: #1d1b2e; color: #9f8fd8;      border-color: #332e4d; }
+.news-menu-money { background: #2f2512; color: var(--warn);  border-color: #4c3c1a; }
 
 .news { display: flex; flex-direction: column; }
 .news-card { padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
-.news-card:last-child, .news-card.news-last { border-bottom: 0; }
+.news-card:last-child { border-bottom: 0; }
 .news-head { display: flex; gap: 6px; align-items: baseline; }
 .news-title { font-size: 13.5px; color: var(--text); text-decoration: none; display: block; }
 .news-title:hover { color: var(--brass); text-decoration: underline; }
@@ -606,6 +616,16 @@ body {
 }
 
 .sheet-body { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+
+/* The detail panel rides the same rails as the ask sheet; only its body
+   differs — a scrolling list rather than a transcript plus a composer. */
+.panel-title {
+  margin: 2px 26px 8px 0;
+  font-size: 14px;
+  font-weight: 620;
+  color: var(--brass);
+}
+.panel-body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
 .ask-head { display: flex; align-items: center; gap: 8px; padding: 2px 0 9px; }
 .ask-title { font-size: 14px; font-weight: 620; color: var(--brass); }
