@@ -45,7 +45,7 @@
  */
 
 import { el, empty, pill, safeUrl } from '../lib/dom.js';
-import { prettyDate, dueLabel, ago, ctTime, ctDate } from '../lib/fmt.js';
+import { prettyDate, airLabel, ago, ctTime, ctDate } from '../lib/fmt.js';
 
 /**
  * The faces, in Matt's build order (E2). `tone` picks the button tint; the
@@ -202,7 +202,7 @@ function episodeText(next) {
 
 function watchRow(item, isNew) {
   const next = obj(item.next);
-  const chip = dueLabel(item.days);
+  const chip = airLabel(item.days);
   const air = next.air_date ? prettyDate(next.air_date) : '';
 
   const meta = [air, item.status_note ? String(item.status_note) : ''].filter(Boolean).join('  ·  ');

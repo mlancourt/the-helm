@@ -158,6 +158,32 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('no days means no label', fmt.dueLabel(null), null);
   eq('junk days means no label', fmt.dueLabel('soon'), null);
 
+  console.log('\nair labels (entertainment\'s voice, dueLabel\'s tones)');
+  // Same urgency ladder, different words: "due" is a bill's word and an
+  // episode is not owed. The tone assertions are deliberately written against
+  // dueLabel rather than against literals, so the two can never drift apart
+  // about what three days out looks like.
+  eq('today airs today', fmt.airLabel(0).text, 'airs today');
+  eq('tomorrow is just tomorrow', fmt.airLabel(1).text, 'tomorrow');
+  eq('further out counts forward', fmt.airLabel(6).text, 'in 6d');
+  eq('inside the amber band counts forward too', fmt.airLabel(2).text, 'in 2d');
+  eq('a date already past says so', fmt.airLabel(-3).text, 'aired 3d ago');
+  eq('no days means no chip', fmt.airLabel(null), null);
+  eq('junk days means no chip', fmt.airLabel('soon'), null);
+  eq('undefined means no chip', fmt.airLabel(undefined), null);
+
+  for (const n of [-3, 0, 1, 2, 5, 6, 9, 74]) {
+    eq(`tone at ${n} days matches dueLabel`, fmt.airLabel(n).tone, fmt.dueLabel(n).tone);
+  }
+
+  // The words must NOT match — that is the whole point of the second helper.
+  eq('but the wording does not', fmt.airLabel(0).text === fmt.dueLabel(0).text, false);
+
+  // dueLabel itself is untouched: Purser and Reminders keep saying "due".
+  eq('dueLabel still says due today', fmt.dueLabel(0).text, 'due today');
+  eq('dueLabel still says due tomorrow', fmt.dueLabel(1).text, 'due tomorrow');
+  eq('dueLabel still counts bare days', fmt.dueLabel(6).text, '6d');
+
   console.log('\nCentral wall clock');
   // 'HH:MM' is Central wall time, not an instant: text in, text out.
   eq('morning', fmt.ctClock('09:15'), '9:15 AM');

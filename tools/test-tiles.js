@@ -572,13 +572,40 @@ async function main() {
     check('an air date is rendered from its parts', /Sun Mar 1\b/.test(wText), 'expected "Sun Mar 1"');
     check('and never shifts a day under new Date()', !/Feb 28/.test(wText));
 
+    // The chip is airLabel, not dueLabel: an episode is not owed, so it never
+    // says "due". Tones are dueLabel's, so three days out looks the same
+    // urgency here as it does on Purser.
     const wPills = wSheet.querySelectorAll('.pill');
     check(
-      'the days-out chip is the shared dueLabel, and only where there is a count',
-      wPills.map((x) => x.textContent).join('|') === '2d|40d',
+      'the chip counts forward, and only where there is a count',
+      wPills.map((x) => x.textContent).join('|') === 'in 2d|in 40d',
       wPills.map((x) => x.textContent).join('|')
     );
-    check('and it carries dueLabel\'s tone', wPills[0].className.includes('pill-warn') && wPills[1].className.includes('pill-neutral'));
+    check('and it carries the shared tone ladder', wPills[0].className.includes('pill-warn') && wPills[1].className.includes('pill-neutral'));
+    check('nothing in the sheet says "due"', !/\bdue\b/i.test(wText));
+
+    // The two wordings the chip exists for, on their own payload so the row
+    // counts above stay readable.
+    const soonPanel = fakePanel();
+    withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, entTile({
+        watching: {
+          updated_at: daysAgoIso(1),
+          items: [
+            { title: 'Drops today', platform: 'Hulu', link: 'https://example.com/a', next: { season: 1, episode: 2, name: 'Tonight', air_date: ymd(0) }, days: 0 },
+            { title: 'Drops tomorrow', platform: 'Hulu', link: 'https://example.com/b', next: { season: 1, episode: 3, name: 'Then', air_date: ymd(1) }, days: 1 },
+          ],
+        },
+        podcasts: null, top5: null, listening: null,
+      }), { id: 'entertainment', actions: soonPanel.actions });
+      tap(entBtns(r)[0]);
+    });
+    const soonPills = soonPanel.last.body.querySelectorAll('.pill');
+    check('an episode landing today reads "airs today"', soonPills[0].textContent === 'airs today', soonPills[0].textContent);
+    check('and is red, exactly as a bill due today is', soonPills[0].className.includes('pill-bad'));
+    check('an episode landing tomorrow reads "tomorrow"', soonPills[1].textContent === 'tomorrow', soonPills[1].textContent);
+    check('and is amber', soonPills[1].className.includes('pill-warn'));
     check('a platform chip is printed', countOf(wSheet, 'ent-platform') === 3 && /Apple TV\+/.test(wText));
     check('the status note is carried through', /airing weekly/.test(wText) && /schedule not published/.test(wText));
     check('a row is a link to the platform', wSheet.querySelectorAll('A').some((a) => a.getAttribute('href') === 'https://example.com/quiet-ledger'));

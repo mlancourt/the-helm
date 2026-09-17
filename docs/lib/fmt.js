@@ -115,6 +115,30 @@ export function dueLabel(days) {
   return { text: `${n}d`, tone: 'neutral' };
 }
 
+/**
+ * The same chip, in entertainment's voice: 'airs today' / 'tomorrow' / 'in 6d'.
+ *
+ * Tone for tone identical to `dueLabel` — today red, the next few days amber,
+ * the rest neutral — because a thing three days out should look the same
+ * urgency wherever it appears on the board. Only the WORDS differ: "due" is a
+ * bill's word, and an episode is not owed. `dueLabel` is left exactly as it
+ * was, because Purser and Reminders are talking about obligations and should
+ * keep saying so.
+ *
+ * A date already past is still flagged rather than shrugged off: for a `next`
+ * episode it means the schedule the engine is holding has gone stale, and that
+ * is worth seeing.
+ */
+export function airLabel(days) {
+  if (days === null || days === undefined || !Number.isFinite(Number(days))) return null;
+  const n = Number(days);
+  if (n < 0) return { text: `aired ${Math.abs(n)}d ago`, tone: 'bad' };
+  if (n === 0) return { text: 'airs today', tone: 'bad' };
+  if (n === 1) return { text: 'tomorrow', tone: 'warn' };
+  if (n <= 5) return { text: `in ${n}d`, tone: 'warn' };
+  return { text: `in ${n}d`, tone: 'neutral' };
+}
+
 /** 'HH:MM' 24h Central -> '3:25 PM'. Text in, text out — never parsed. */
 export function ctClock(hhmm) {
   const m = String(hhmm ?? '').match(/^(\d{1,2}):(\d{2})$/);

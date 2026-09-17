@@ -82,11 +82,11 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 657 assertions, no server needed
+npm test            # 682 assertions, no server needed
 npm run test:worker # 62 assertions, needs `npm run dev` running
 ```
 
-- **`test:fmt`** (84) — every date helper, run under `America/Chicago`,
+- **`test:fmt`** (104) — every date helper, run under `America/Chicago`,
   `Asia/Tokyo`, `UTC` and `Pacific/Kiritimati`, asserting byte-identical output
   in all four. This is the rule-7 tripwire.
 - **`test-graders`** (111) — every market across pre / in / post / push, run
@@ -115,7 +115,7 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   timeout, upstream error, corrupt snapshot, refusal, truncation). worker.js is
   a plain ES module, so the route runs in Node with no wrangler and no network.
   **No test ever calls a real model** — nothing here can spend money.
-- **`test-tiles`** (219) — every render module, against the mock snapshot and
+- **`test-tiles`** (224) — every render module, against the mock snapshot and
   against deliberately hostile payloads: empty, null, wrong-typed, all-fields-
   missing, and carrying fields no module has heard of. No module may throw at
   any of them, because a module that throws turns one card into "this tile
@@ -468,6 +468,15 @@ future, and every item would read new forever.
 Under the grid, one faint line carries the **oldest** `updated_at` among the
 populated faces: the tile is only as current as its stalest face, and a fresh
 podcast list must not make a three-day-old episode schedule look fresh too.
+
+The days-out chip is **`airLabel()`**, not `dueLabel()`: same tone ladder —
+today red, the next few days amber, the rest neutral, so a thing three days
+out looks equally urgent wherever it sits on the board — but entertainment's
+words. "Due" is a bill's word and an episode is not owed, so it reads *airs
+today* / *tomorrow* / *in 6d*. `dueLabel` is untouched; Purser and Reminders
+are talking about obligations and should keep saying so. The tests assert the
+two helpers' tones against **each other** rather than against literals, so
+they cannot drift apart, and assert that their wording differs.
 
 Rule 7 lives in the sheets. `air_date`, `published` and `release_date` are
 date-only Central strings rendered from their parts by `prettyDate`. Where one
