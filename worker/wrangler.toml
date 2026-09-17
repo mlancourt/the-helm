@@ -13,8 +13,8 @@ compatibility_date = "2026-09-17"
 
 [[kv_namespaces]]
 binding = "HELM_KV"
-id = "REPLACE_ME_KV_NAMESPACE_ID"
-preview_id = "REPLACE_ME_KV_PREVIEW_ID"
+id = "ccfb2b6fb3d04b10a4a813643706add4"
+preview_id = "87c2be3c641842f7b09775d81594842e"
 
 [observability]
 enabled = true
