@@ -1,0 +1,7 @@
+*.local.*
+.dev.vars
+real-*
+ask-system*.txt
+node_modules/
+.wrangler/
+.DS_Store
