@@ -12,11 +12,12 @@
  *  10  untrusted content is data — see lib/dom.js; there is no innerHTML here
  */
 
-import { apiBase, STALE_AFTER_MS, DATA_REFRESH_MS } from './config.js';
+import { apiBase, STALE_AFTER_MS, DATA_REFRESH_MS, APP_VERSION_LABEL } from './config.js';
 import { REGISTRY, BAND_ORDER, BAND_LABEL } from './tiles/_registry.js';
 import { createLiveBand } from './live/band.js';
 import { el, clear, empty, pill } from './lib/dom.js';
 import { ago, ctTime } from './lib/fmt.js';
+import { subheadText } from './lib/header.js';
 
 const LS_TOKEN = 'helm.token';
 const LS_SNAPSHOT = 'helm.snapshot';
@@ -42,6 +43,8 @@ const MOCK_FILE =
 const API = apiBase();
 
 const state = {
+  // Read from /api/data because it is part of the Worker contract, and
+  // deliberately rendered nowhere: see lib/header.js.
   me: null,
   snapshot: null,
   pending: [],
@@ -399,13 +402,23 @@ function renderBanner() {
   }
 }
 
+/**
+ * The build chip beside the wordmark. Written once at boot — it cannot change
+ * without a reload, and it must be on screen even when boot() bails at the
+ * token gate, because "which build is this phone running" is the first
+ * question worth answering when the board looks wrong.
+ */
+function renderVersion() {
+  const chip = document.getElementById('version-chip');
+  if (chip) chip.textContent = APP_VERSION_LABEL;
+}
+
 function renderHeader() {
   const sub = document.getElementById('subhead');
   clear(sub);
-  const bits = [];
-  if (state.me?.name) bits.push(state.me.name);
-  if (state.snapshot?.generated_at) bits.push(`snapshot ${ago(state.snapshot.generated_at)}`);
-  sub.appendChild(el('span', { text: bits.join('  ·  ') }));
+  // The whole line comes from lib/header.js, which has no way to reach
+  // state.me — that is the point of it being a separate, tested function.
+  sub.appendChild(el('span', { text: subheadText(state.snapshot) }));
 
   const count = state.pending.length;
   const chip = document.getElementById('pending-chip');
@@ -490,6 +503,62 @@ async function loadModules() {
 }
 
 // -------------------------------------------------------------- ask sheet
+
+/**
+ * Keyboard-aware sheets.
+ *
+ * Both sheets are `position: fixed`, which anchors them to the LAYOUT viewport
+ * — the one the on-screen keyboard does not shrink. Left alone, iOS draws the
+ * keyboard over the composer and then scrolls the page to chase the focused
+ * input, which is exactly the floating-input-in-a-void Matt photographed.
+ *
+ * So the CSS reads two numbers from visualViewport instead:
+ *
+ *   --kb    how much of the bottom edge the keyboard is covering right now
+ *   --vvh   how much height is actually visible
+ *
+ * and the sheets sit on --kb and cap their scrollers against --vvh. Nothing
+ * scrolls and nothing jumps: the sheet simply stops where the keyboard starts.
+ *
+ * `bottom`, not `transform`, carries --kb — transform is already spoken for by
+ * the open/close slide, and a 200ms transition on it would make the sheet lag
+ * the keyboard by a fifth of a second on every keystroke that resizes it.
+ */
+let viewportTracked = false;
+function trackViewport() {
+  // boot() runs again when a token is pasted at the gate; the listeners below
+  // are for the life of the page, not the life of a boot.
+  if (viewportTracked) return;
+  viewportTracked = true;
+
+  const root = document.documentElement;
+  const vv = window.visualViewport;
+
+  if (!vv) {
+    // Desktop Firefox and anything older. No keyboard to dodge; --kb stays 0
+    // and the caps fall back to the layout viewport.
+    root.style.setProperty('--vvh', `${window.innerHeight}px`);
+    window.addEventListener('resize', () =>
+      root.style.setProperty('--vvh', `${window.innerHeight}px`)
+    );
+    return;
+  }
+
+  const sync = () => {
+    // offsetTop is how far the visual viewport has been scrolled down inside
+    // the layout viewport. Without it, a page iOS has already scrolled reports
+    // a keyboard taller than it is and the sheet lifts clean off the screen.
+    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    root.style.setProperty('--kb', `${Math.round(kb)}px`);
+    root.style.setProperty('--vvh', `${Math.round(vv.height)}px`);
+  };
+
+  sync();
+  vv.addEventListener('resize', sync);
+  vv.addEventListener('scroll', sync);
+  // Rotation settles after the resize event fires, so measure again once it has.
+  window.addEventListener('orientationchange', () => setTimeout(sync, 250));
+}
 
 /**
  * Two sheets share one scrim: Ask, which is mounted once and keeps its
@@ -664,6 +733,9 @@ function startLiveBand() {
 }
 
 async function boot() {
+  renderVersion();
+  trackViewport();
+
   if (!MOCK && !token) {
     showGate('No token', [
       'The Helm needs its token once. Paste it below and it is remembered on this device.',

@@ -75,11 +75,11 @@ export function render(root, tile, ctx) {
   function paint() {
     clear(transcript);
     if (!history.length) {
+      // One line, deliberately: the empty state IS the sheet's height before
+      // the first question, and a two-line hint opens a sheet twice as tall as
+      // it needs to be.
       transcript.appendChild(
-        el('p', {
-          cls: 'empty',
-          text: 'Ask about anything on the board. Long-press a tile to pin it here.',
-        })
+        el('p', { cls: 'empty ask-hint', text: 'Ask about the board, or long-press a tile.' })
       );
     }
     for (const m of history) transcript.appendChild(bubble(m.role, m.content));

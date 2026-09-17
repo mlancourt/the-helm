@@ -37,3 +37,17 @@ export const STALE_AFTER_MS = 15 * 60 * 1000;
 
 /** Foreground refresh cadence for /api/data. The LIVE band has its own (M3). */
 export const DATA_REFRESH_MS = 5 * 60 * 1000;
+
+/**
+ * The page's own version — the single source for both readouts.
+ *
+ * The chip beside the wordmark prints `v` + major.minor; the Ship Status
+ * footer prints the whole thing. Two places, one constant, so they cannot
+ * drift apart and leave Matt reading a version the phone is not running.
+ *
+ * Bump this with each ruling batch, alongside CACHE_VERSION in sw.js.
+ */
+export const APP_VERSION = '1.0.0';
+
+/** `v1.0` — what the header chip shows. */
+export const APP_VERSION_LABEL = `v${APP_VERSION.split('.').slice(0, 2).join('.')}`;

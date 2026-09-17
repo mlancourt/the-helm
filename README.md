@@ -82,7 +82,7 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 495 assertions, no server needed
+npm test            # 573 assertions, no server needed
 npm run test:worker # 62 assertions, needs `npm run dev` running
 ```
 
@@ -97,6 +97,13 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   cadence, one summary per game and only once it is under way, one scoreboard
   per league, event-id matching, and that a dead feed keeps the last good
   grades instead of blanking them.
+- **`test-shell`** (78) — the header and the two sheets, which are the only
+  part of the page with no other coverage because `app.js` cannot be imported
+  outside a browser. It asserts the version comes from one constant, that the
+  subhead cannot print `me.name`, that the phone sheets carry no fixed height,
+  and that `style.css` reaches nowhere off this origin. Its sharpest assertion
+  is a **cascade-order** check: a desktop override written above the phone rule
+  it overrides loses silently, and only on a wide screen. That bug was real.
 - **`test:sw`** (38) — the service worker's routing policy: ESPN and `/ask` are
   never cached, `/api/data` is network-first with a cache fallback, the shell is
   stale-while-revalidate, and a 404 in the precache list cannot fail an install.
@@ -304,6 +311,75 @@ the snapshot are display-only.
 
 Vanilla ES modules, one stylesheet, no build step. Phone-first single column;
 two columns at 640px, three at 1040px.
+
+### The wordmark, and the version
+
+The wordmark is set in **Helm Display** — a subset of Big Shoulders Display
+(SIL OFL 1.1), inlined as base64 in `style.css`. Rule 4 allows the page exactly
+two external calls, the Worker and ESPN, so the face is carried rather than
+fetched: 1.8 KB, arriving with the stylesheet, no flash of a substituted
+wordmark on one bar of LTE. Provenance, licence and the rebuild command are in
+`docs/fonts/`. The subset has **nineteen characters** — enough for "The Helm"
+and a version string — so adding a character to the wordmark means rebuilding
+it; anything outside the set falls through to the system stack mid-word.
+
+The version lives in **one place**: `APP_VERSION` in `docs/config.js`. The chip
+beside the wordmark prints `v` + major.minor; the Ship Status footer prints the
+whole thing. `test-shell` fails if either is ever typed out by hand.
+
+**Bump `APP_VERSION` and `CACHE_VERSION` together, each ruling batch.** A
+version bump with a stale cache version ships a chip that says v1.1 over a v1.0
+shell, which is worse than no chip at all.
+
+The chip is set in mono, not the display face, on purpose: Big Shoulders draws
+its `1` as a bare condensed stem, so `v1.0` sets as `vl.0` at chip size. The
+digits stay in the subset so that is one line away from changing back.
+
+The subhead reads **`LannyAI · snapshot 49m ago`**. `/api/data` still returns
+`me` and the page still reads it, but the board never prints it — the header
+speaks for the machine, not the operator. That is enforced by `subheadText()`
+in `docs/lib/header.js` having no parameter that could carry a name.
+
+### The sheets, and the keyboard
+
+Both sheets — Ask and the detail panel — ride one set of rails, so they feel
+identical. Nothing sets `height`. A sheet is as tall as its header plus
+whatever its body has to say; an empty Ask is one line of hint, and the caps
+only ever stop it growing.
+
+The hard part is the on-screen keyboard. `position: fixed` anchors to the
+**layout** viewport, which the keyboard does not shrink — so left alone, iOS
+draws the keyboard over the composer and then scrolls the page to chase the
+focused input. That is the mostly-empty panel with the input floating
+mid-screen.
+
+So `app.js` publishes two custom properties off `window.visualViewport`:
+
+| property | what it is |
+|---|---|
+| `--kb` | how much of the bottom edge the keyboard covers, right now |
+| `--vvh` | how much height is actually visible |
+
+The sheets sit on `bottom: var(--kb)` and cap their scrollers against `--vvh`.
+Nothing scrolls, nothing jumps: the sheet stops where the keyboard starts.
+
+Three details that are not optional:
+
+- **`--kb` rides `bottom`, not `transform`.** `transform` is already spoken for
+  by the open/close slide, and a 200 ms transition on it would make the sheet
+  lag the keyboard by a fifth of a second on every resize.
+- **`vv.offsetTop` is subtracted.** If iOS has already scrolled the page, the
+  naive `innerHeight - vv.height` reports a keyboard taller than it is and the
+  sheet lifts clean off the screen. This is also what makes the layout
+  self-correcting when iOS scrolls anyway.
+- **Desktop overrides live in a *second* `@media (min-width: 720px)` block at
+  the end of the sheet section**, because `.sheet-body`, `.ask-transcript` and
+  `.panel-body` are defined below the first one. Media queries add no
+  specificity, so an override written above the rule it overrides loses.
+  `test-shell` asserts the source order for exactly this reason.
+
+Desktop is unchanged by all of it: the docked panel has no keyboard to dodge,
+and its body fills it as it always did.
 
 ### Adding a tile
 

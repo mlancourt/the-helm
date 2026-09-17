@@ -1,5 +1,34 @@
-/* The Helm — one stylesheet. No CDN, no web fonts, no framework.
-   Phone-first: single column, then a grid once there's room. */
+/* The Helm — one stylesheet. No CDN, no framework, no request off this origin.
+   Phone-first: single column, then a grid once there's room.
+
+   The one typeface is inlined below rather than linked, so "no web fonts" in
+   the sense rule 4 means it — no external call — still holds. */
+
+/* ------------------------------------------------------------- wordmark face
+
+   "Helm Display" — a subset of Big Shoulders Display (SIL OFL 1.1), a
+   condensed grotesk drawn for Chicago civic signage. See docs/fonts/ for the
+   licence and the command that rebuilds this blob.
+
+   Inlined as base64, not fetched: rule 4 allows the page exactly two external
+   calls — the Worker and ESPN — and a font request would be a third. 1.8 KB
+   raw, so it costs less than the icons and arrives with the stylesheet, which
+   means no flash of a substituted wordmark on one bar of LTE.
+
+   It carries NINETEEN characters and no more — T h e H l m v, a space, a full
+   stop and the ten digits. Enough for "The Helm" and a version string, nothing
+   else. Every other glyph falls through to the system stack mid-word, which is
+   why this face is set on the wordmark alone and must never reach body text.
+   (The digits are currently unused; see .version-chip below for why.) */
+@font-face {
+  font-family: 'Helm Display';
+  src: url(data:font/woff2;base64,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) format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  /* swap, not block: if the blob is ever corrupted the wordmark must still
+     read in the fallback rather than sit invisible for three seconds. */
+  font-display: swap;
+}
 
 :root {
   --bg: #0f141a;
@@ -51,16 +80,55 @@ body {
 .topbar-main {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
 }
 
 .wordmark {
   margin: 0;
-  font-size: 22px;
-  font-weight: 650;
-  letter-spacing: 0.02em;
+  /* The display face only. If the blob fails to decode, the stack below is a
+     condensed system gothic on every platform Matt opens this on, so the
+     wordmark degrades in weight and width rather than into body text. */
+  font-family: 'Helm Display', 'Avenir Next Condensed', 'Helvetica Neue Condensed',
+    'Roboto Condensed', 'Segoe UI Semibold', -apple-system, sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+  /* Big Shoulders runs tall (ascent 1968/2000). A fixed line box keeps the
+     topbar the same height whether or not the face loaded. */
+  line-height: 1.05;
+  letter-spacing: 0.005em;
   color: var(--brass);
+  /* Brass on near-black at this weight thickens under subpixel rendering; the
+     face is drawn for signage and wants the lighter stem. */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The build, beside the name. Rendered from APP_VERSION in config.js — never
+   typed in here.
+
+   NOT the display face, deliberately. Big Shoulders draws its 1 as a bare
+   condensed stem with a flag that vanishes below about 16px, so "v1.0" sets as
+   "vl.0" in a chip this size — which is the one string on the board that has
+   to be unambiguous. The glyphs are still in the subset (the ruling asked for
+   them) so this is one line away from changing back if the face ever gets a
+   slashed or flagged one. Mono keeps the digits unmistakable and the tabular
+   figures stop the chip resizing between v1.9 and v1.10. */
+.version-chip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--text-faint);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 3px 5px;
+  /* baseline-aligned in a flex row of much larger text; nudge it off the
+     wordmark's baseline so it sits with the cap height, not under it. */
+  position: relative;
+  top: -4px;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .subhead {
@@ -581,30 +649,58 @@ body {
 }
 .scrim.open { opacity: 1; pointer-events: auto; }
 
+/* Both sheets ride these rails, so Ask and the detail panel feel like one
+   thing: sized to their content, pinned to the bottom edge that is actually
+   visible, and never taller than the room left above the keyboard.
+
+   Nothing here sets `height`. A sheet is as tall as its header plus whatever
+   its body has to say — an empty Ask is one line of hint, not a void — and the
+   caps below only ever stop it growing. */
 .sheet {
   position: fixed;
   z-index: 50;
-  left: 0; right: 0; bottom: 0;
-  max-height: 82vh;
+  left: 0; right: 0;
+
+  /* The bottom edge of the VISIBLE viewport, not the layout one. --kb is the
+     keyboard's height, published by trackViewport() in app.js; it is 0 on a
+     desktop and 0 before the keyboard opens, so this is plain `bottom: 0`
+     until the moment it needs not to be. */
+  bottom: var(--kb, 0px);
+
+  /* A ceiling, never a height. --vvh is what is actually on screen, so with
+     the keyboard up this tightens by itself rather than running underneath it. */
+  max-height: min(88vh, calc(var(--vvh, 100vh) - 24px));
+
   display: flex;
   flex-direction: column;
   background: var(--bg-raise);
   border-top: 1px solid var(--line);
   border-radius: 18px 18px 0 0;
-  padding: 10px 14px calc(12px + var(--safe-b));
+
+  /* The home indicator only needs clearing when the keyboard is not already
+     covering it; once --kb exceeds the inset this collapses to nothing rather
+     than leaving a strip of dead sheet above the keys. */
+  padding: 10px 14px calc(12px + max(0px, calc(var(--safe-b) - var(--kb, 0px))));
+
   transform: translateY(102%);
-  transition: transform 0.22s ease;
+  transition: transform 200ms ease-out;
   box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.5);
 }
 .sheet.open { transform: translateY(0); }
 
-/* On a wide screen it docks to the corner instead of covering the board. */
+/* On a wide screen it docks to the corner instead of covering the board.
+
+   Only .sheet itself is overridden here. Its children are overridden in a
+   second 720px block at the end of this section, because they are DEFINED
+   below this point — an override written here would lose the cascade to the
+   phone rule it is meant to beat, silently, and only on desktop. */
 @media (min-width: 720px) {
   .sheet {
     left: auto; right: 18px; bottom: 18px;
     width: 420px; max-height: 70vh;
     border: 1px solid var(--line);
     border-radius: 16px;
+    padding: 10px 14px 12px;
   }
   .sheet.open { transform: translateY(0); }
 }
@@ -615,7 +711,9 @@ body {
   font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 6px;
 }
 
-.sheet-body { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+/* flex: 0 1 auto, not 1 — a flex-basis of 0 in a container whose height is its
+   content would make the body contribute nothing to that height and collapse. */
+.sheet-body { display: flex; flex-direction: column; min-height: 0; flex: 0 1 auto; }
 
 /* The detail panel rides the same rails as the ask sheet; only its body
    differs — a scrolling list rather than a transcript plus a composer. */
@@ -625,7 +723,15 @@ body {
   font-weight: 620;
   color: var(--brass);
 }
-.panel-body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* The panel's list gets more room than Ask's transcript — it is the whole
+   point of the panel, where the transcript is one of three stacked parts —
+   but it is capped the same way, against what is visible. */
+.panel-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  max-height: min(62vh, calc(var(--vvh, 100vh) - 120px));
+}
 
 .ask-head { display: flex; align-items: center; gap: 8px; padding: 2px 0 9px; }
 .ask-title { font-size: 14px; font-weight: 620; color: var(--brass); }
@@ -640,19 +746,29 @@ body {
 .ask-pin-label { color: var(--text-dim); }
 .hidden { display: none !important; }
 
+/* Grows only as messages arrive. 40vh is the ruling; the second term keeps
+   the composer on screen when the keyboard has taken most of the viewport,
+   reserving roughly the header, the composer and the sheet's own padding. */
 .ask-transcript {
-  flex: 1; min-height: 120px;
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: min(40vh, calc(var(--vvh, 100vh) - 200px));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: flex; flex-direction: column; gap: 8px;
   padding: 2px 0 8px;
 }
+/* An empty transcript is one line of hint and nothing else — no reserved box,
+   no scrollbar, no bottom padding holding open a gap under it. */
+.ask-transcript:not(:has(.bubble)) { padding-bottom: 2px; }
 
 .bubble { max-width: 88%; padding: 8px 11px; border-radius: 12px; font-size: 13.5px; }
 .bubble-user { align-self: flex-end; background: #233042; border-bottom-right-radius: 4px; }
 .bubble-assistant { align-self: flex-start; background: var(--bg-sink); border: 1px solid var(--line-soft); border-bottom-left-radius: 4px; }
 .bubble-wait { opacity: 0.6; font-style: italic; }
 .bubble-text { white-space: pre-wrap; word-break: break-word; }
+
+.ask-hint { margin: 2px 0; }
 
 .ask-offer {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -661,7 +777,16 @@ body {
 }
 .ask-offer-text { font-size: 12px; color: #e8cf94; flex: 1 1 100%; }
 
-.ask-compose { display: flex; gap: 8px; align-items: flex-end; }
+/* Pinned to the sheet's bottom edge: last child, never shrinking, so the
+   transcript above it is the only thing that gives. The hairline makes the
+   boundary read as deliberate when a bubble is clipped against it mid-scroll,
+   rather than as a bleed. */
+.ask-compose {
+  display: flex; gap: 8px; align-items: flex-end;
+  flex: 0 0 auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-soft);
+}
 
 .ask-input {
   flex: 1;
@@ -681,6 +806,19 @@ body {
 
 .btn-send { background: var(--brass); color: #150f02; border-color: #5c4a14; flex: 0 0 auto; }
 
+/* Desktop, part two: everything inside the sheets.
+
+   This has to come AFTER the phone rules above, not up with the .sheet block,
+   or it loses the cascade to them. A docked panel has no keyboard to dodge and
+   nothing below it to run into, so its body goes back to filling it exactly as
+   it did before this file learned about --kb. */
+@media (min-width: 720px) {
+  .sheet-body { flex: 1 1 auto; }
+  .ask-transcript { flex: 1 1 auto; min-height: 120px; max-height: none; }
+  .panel-body { max-height: none; }
+}
+
+/* No slide, no fade — the sheet is simply there or not. */
 @media (prefers-reduced-motion: reduce) {
   .sheet, .scrim { transition: none; }
 }

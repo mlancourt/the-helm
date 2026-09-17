@@ -22,6 +22,7 @@
 
 import { el, empty, pill, row } from '../lib/dom.js';
 import { ago, ctTime, usdPrecise } from '../lib/fmt.js';
+import { APP_VERSION } from '../config.js';
 
 /** Fields this module renders itself. Anything else lands in "also reported". */
 const KNOWN = new Set([
@@ -232,5 +233,8 @@ export function render(el_, tile) {
   if (has(spend.basis)) notes.push(String(spend.basis));
   if (has(spend.ledger)) notes.push(`ledger: ${spend.ledger}`);
   notes.push('Display only. Nothing here moves money or stops the engine.');
+  // The page's own build, in full. The header chip shows major.minor from the
+  // same constant, so "what is my phone running" has one answer, not two.
+  notes.push(`page ${APP_VERSION}`);
   el_.appendChild(el('p', { cls: 'tile-foot', text: notes.join(' · ') }));
 }
