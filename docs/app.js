@@ -621,6 +621,16 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       /* offline support is a bonus, never a requirement */
     });
   });
+  // When a new service worker takes over (skipWaiting + clients.claim), the
+  // page that triggered the update is still running the OLD shell from cache.
+  // Reload once so a deploy lands on the first open, not the second. The guard
+  // stops a reload loop if the controller flips twice during install.
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloaded || !navigator.serviceWorker.controller) return;
+    reloaded = true;
+    location.reload();
+  });
 }
 
 boot();
