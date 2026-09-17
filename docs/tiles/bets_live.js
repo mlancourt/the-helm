@@ -12,25 +12,20 @@
 
 import { el, pill, empty } from '../lib/dom.js';
 import { units, odds, line, ctKick, ctTime, kickDate, dayLabel, ctToday } from '../lib/fmt.js';
+import { payoutMultiple } from '../live/graders.js';
 
 /** grader state -> [pill label, tone]. M3's graders return the label too. */
 const STATE_PILL = {
   pre: ['PRE', 'neutral'],
   lead: ['LEADING', 'good'],
-  cover: ['COVERING', 'good'],
   trail: ['TRAILING', 'warn'],
+  even: ['TIED', 'neutral'],
   win: ['WIN', 'win'],
   lose: ['LOSS', 'bad'],
   push: ['PUSH', 'neutral'],
   dead: ['DEAD', 'dead'],
+  unsupported: ['N/A', 'na'],
 };
-
-/** American odds -> profit multiplier on a 1u stake. */
-function payoutMultiple(price) {
-  const p = Number(price);
-  if (!Number.isFinite(p) || p === 0) return 0;
-  return p > 0 ? p / 100 : 100 / Math.abs(p);
-}
 
 /**
  * Net units if every current lean held. Tickets with no grade contribute 0 —
@@ -44,13 +39,15 @@ function leanUnits(tickets, grades) {
     const g = grades.get(t.id);
     if (!g) continue;
     const stake = Number(t.stake_u) || 0;
-    if (g.state === 'win' || g.state === 'lead' || g.state === 'cover') {
+    if (g.state === 'win' || g.state === 'lead') {
       net += stake * payoutMultiple(t.price);
       graded++;
     } else if (g.state === 'lose' || g.state === 'trail') {
       net -= stake;
       graded++;
-    } else if (g.state === 'push' || g.state === 'dead') {
+    } else if (g.state === 'push' || g.state === 'dead' || g.state === 'even') {
+      // A tie, a push, and a dead game all lean nowhere — counted as graded
+      // so the figure is not mistaken for "nothing has started yet".
       graded++;
     }
   }

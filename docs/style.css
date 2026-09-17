@@ -212,6 +212,8 @@ body {
 .pill-bad     { background: #331a18; color: var(--bad);  border-color: #522a26; }
 .pill-win     { background: var(--good); color: #06150f; border-color: var(--good); }
 .pill-dead    { background: #1a1f26; color: var(--text-faint); border-color: var(--line); text-decoration: line-through; }
+/* "we cannot grade this" is not the same as "this bet is dead" — no strike */
+.pill-na      { background: #1a1f26; color: var(--text-faint); border-color: var(--line); font-style: italic; }
 .pill-pending { background: #2a2413; color: var(--brass); border-color: #4a4020; }
 .pill-mode    { background: #12232c; color: var(--info); border-color: #1d4152; }
 

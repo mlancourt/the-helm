@@ -21,6 +21,17 @@ const path = require('node:path');
 const SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'sw.js'), 'utf8');
 const ORIGIN = 'https://mlancourt.github.io';
 
+// Read the version out of the source rather than hardcoding it, so bumping
+// CACHE_VERSION on a deploy does not fail these tests for the wrong reason.
+const VERSION = (SRC.match(/CACHE_VERSION\s*=\s*'([^']+)'/) || [])[1];
+if (!VERSION) {
+  console.error('could not find CACHE_VERSION in sw.js');
+  process.exit(1);
+}
+const SHELL_CACHE = `${VERSION}-shell`;
+const DATA_CACHE = `${VERSION}-data`;
+const STALE_CACHE = 'helm-v0-shell';
+
 let pass = 0;
 const failures = [];
 function check(name, cond, detail) {
@@ -47,7 +58,7 @@ function makeWorld({ netOk = true, cacheHas = true } = {}) {
   });
 
   const caches = {
-    _names: ['helm-v1-shell', 'helm-v1-data', 'helm-v0-shell', 'stray-cache'],
+    _names: [SHELL_CACHE, DATA_CACHE, STALE_CACHE, 'stray-cache'],
     open: async (name) => {
       log.opened.push(name);
       return cacheObj(name);
@@ -181,6 +192,7 @@ async function route(world, url, method = 'GET') {
     check('install precaches the shell', w.log.added.length >= 15, `added ${w.log.added.length}`);
     check('install precaches index.html', w.log.added.includes('./index.html'));
     check('install precaches every tile module', w.log.added.filter((u) => u.includes('/tiles/')).length === 9);
+    check('install precaches the LIVE band modules', w.log.added.filter((u) => u.includes('/live/')).length === 3);
     check('install precaches the icons', w.log.added.filter((u) => u.includes('/icons/')).length === 3);
     check('install calls skipWaiting', w.log.skipWaiting === 1);
   }
@@ -208,10 +220,10 @@ async function route(world, url, method = 'GET') {
     let activated;
     w.listeners.activate({ waitUntil: (p) => (activated = p) });
     await activated;
-    check('activate evicts caches from older versions', w.log.deleted.includes('helm-v0-shell'));
+    check('activate evicts caches from older versions', w.log.deleted.includes(STALE_CACHE));
     check('activate evicts unrelated caches', w.log.deleted.includes('stray-cache'));
-    check('activate keeps the current shell cache', !w.log.deleted.includes('helm-v1-shell'));
-    check('activate keeps the current data cache', !w.log.deleted.includes('helm-v1-data'));
+    check(`activate keeps the current shell cache (${SHELL_CACHE})`, !w.log.deleted.includes(SHELL_CACHE));
+    check(`activate keeps the current data cache (${DATA_CACHE})`, !w.log.deleted.includes(DATA_CACHE));
     check('activate claims open clients', w.log.claimed === 1);
   }
 

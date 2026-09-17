@@ -14,6 +14,7 @@
 
 import { apiBase, STALE_AFTER_MS, DATA_REFRESH_MS } from './config.js';
 import { REGISTRY, BAND_ORDER, BAND_LABEL } from './tiles/_registry.js';
+import { createLiveBand } from './live/band.js';
 import { el, clear, empty, pill } from './lib/dom.js';
 import { ago, ctTime } from './lib/fmt.js';
 
@@ -30,7 +31,12 @@ const MOCK = !!MOCK_PARAM;
  * is already committed under docs/mock/.
  */
 const MOCK_FILE =
-  MOCK_PARAM && MOCK_PARAM !== '1' && /^[a-z0-9_-]{1,40}$/i.test(MOCK_PARAM)
+  MOCK_PARAM &&
+  MOCK_PARAM !== '1' &&
+  // Dots are allowed so gitignored fixtures like `live.local` work, but a
+  // leading dot or any ".." is refused so the name can never walk the tree.
+  /^[a-z0-9_][a-z0-9_.-]{0,39}$/i.test(MOCK_PARAM) &&
+  !MOCK_PARAM.includes('..')
     ? `./mock/${MOCK_PARAM}.json`
     : './mock/helm-data.json';
 const API = apiBase();
@@ -47,6 +53,16 @@ const state = {
 
 let askController = null;
 const modules = new Map(); // tile id -> render fn (or null if it failed to load)
+
+/**
+ * The LIVE band runs on its own clock — 45s while a game is in progress —
+ * independently of the 5-minute snapshot refresh. It re-renders on its own
+ * whenever grades move.
+ */
+const liveBand = createLiveBand((next) => {
+  state.live = next;
+  renderAll();
+});
 
 // --------------------------------------------------------------------- token
 
@@ -563,6 +579,12 @@ async function refresh() {
   }
 }
 
+/** Start the LIVE band once there is a snapshot telling us what to watch. */
+function startLiveBand() {
+  if (!state.snapshot) return;
+  liveBand.start(() => state.snapshot);
+}
+
 async function boot() {
   if (!MOCK && !token) {
     showGate('No token', [
@@ -574,13 +596,22 @@ async function boot() {
   await loadModules();
   await mountAsk();
   await refresh();
+  startLiveBand();
 
   // Foreground refresh only — a backgrounded phone should not poll.
   setInterval(() => {
     if (document.visibilityState === 'visible') refresh();
   }, DATA_REFRESH_MS);
+
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') refresh();
+    if (document.visibilityState !== 'visible') {
+      // A phone in a pocket has no business hitting ESPN every 45 seconds.
+      liveBand.stop();
+      return;
+    }
+    refresh();
+    // Scores may have moved a long way while the tab was hidden.
+    liveBand.start(() => state.snapshot);
   });
 }
 

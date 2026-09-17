@@ -9,9 +9,9 @@ Matt's vault + engine, which lives elsewhere and talks to this Worker over the
 admin endpoints. Nothing here generates real data. See `CLAUDE.md` for the
 build brief and the hard rules.
 
-Status: **M1 + M2 complete** — Worker, KV, token auth, events, admin
-publish/drain; page shell, tile registry, all v1 render modules, PWA.
-M3 (LIVE band: ESPN + graders) and M4 (`/ask` v1) are not built yet.
+Status: **M1 + M2 + M3 complete** — Worker, KV, token auth, events, admin
+publish/drain; page shell, tile registry, all v1 render modules, PWA; LIVE band
+with in-browser ESPN fetch and bet graders. M4 (`/ask` v1) is not built yet.
 
 ---
 
@@ -27,12 +27,16 @@ docs/                   GitHub Pages root — serve this directory, nothing else
   lib/fmt.js            dates, units, odds — the rule-7 quarantine
   tiles/_registry.js    id -> {band, position, module, title}
   tiles/<id>.js         one file per tile: export function render(el, tile, ctx)
-  live/                 ESPN fetch + graders (M3, empty for now)
+  live/espn.js          ESPN fetch + normalize
+  live/graders.js       market -> grader, pure functions
+  live/band.js          the polling loop and cadence
   manifest.webmanifest sw.js icons/
   mock/                 generated fake data, fake by construction
 
 tools/make-mock-data.js fake snapshot generator
 tools/make-icons.js     draws the PWA icons (zero deps, zlib only)
+tools/make-live-mock.js builds a snapshot against TODAY'S REAL ESPN slate
+tools/fixtures/         real ESPN payloads, captured for the grader tests
 tools/test-fmt.js       date/format unit tests, run across four timezones
 tools/test-sw.js        service worker caching-policy tests
 tools/test-worker.js    Worker API tests (needs wrangler dev)
@@ -64,6 +68,7 @@ Then open one of:
 |---|---|
 | `http://127.0.0.1:8080/?mock=1` | renders the fake snapshot, no Worker at all |
 | `http://127.0.0.1:8080/?mock=drift` | the schema-drift fixture (see rule 9 below) |
+| `http://127.0.0.1:8080/?mock=live.local` | real event ids — watch the graders work |
 | `http://127.0.0.1:8080/?api=http://127.0.0.1:8787&t=<token>` | the real local Worker |
 
 `?api=` is honoured **only when the page itself is on localhost**. On the real
@@ -73,14 +78,22 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 75 assertions, no server needed
+npm test            # 221 assertions, no server needed
 npm run test:worker # 61 assertions, needs `npm run dev` running
 ```
 
 - **`test:fmt`** (49) — every date helper, run under `America/Chicago`,
   `Asia/Tokyo`, `UTC` and `Pacific/Kiritimati`, asserting byte-identical output
   in all four. This is the rule-7 tripwire.
-- **`test:sw`** (26) — the service worker's routing policy: ESPN and `/ask` are
+- **`test-graders`** (101) — every market across pre / in / post / push, run
+  against **real ESPN payloads** captured in `tools/fixtures/`. Inventing
+  fixtures would only prove the graders agree with my guess about ESPN's shape,
+  which is the exact thing worth testing.
+- **`test-band`** (44) — the LIVE loop's decisions rather than its arithmetic:
+  cadence, one summary per game and only once it is under way, one scoreboard
+  per league, event-id matching, and that a dead feed keeps the last good
+  grades instead of blanking them.
+- **`test:sw`** (27) — the service worker's routing policy: ESPN and `/ask` are
   never cached, `/api/data` is network-first with a cache fallback, the shell is
   stale-while-revalidate, and a 404 in the precache list cannot fail an install.
 - **`test:worker`** (61) — token 401s, event shape rejection, per-event KV keys,
@@ -91,7 +104,13 @@ Regenerate the fake data or the icons any time:
 ```bash
 npm run mock
 npm run icons
+npm run mock:live   # rebuilds the real-slate fixture (gitignored)
 ```
+
+`?mock=1` uses **invented** event ids, so the LIVE band correctly reports "no
+ESPN event matched this ticket" for every one of them. That is the honest
+degradation path, not a bug. To watch grading actually happen, run
+`npm run mock:live` and open `?mock=live.local`.
 
 ---
 
@@ -332,6 +351,96 @@ file a `meal_verdict` event and badge it **pending**; the tile keeps showing
 the vault's own verdict underneath. A submitted write is never rendered as
 applied. `withdraw` calls `DELETE /api/event/:id` — the undo valve, one event
 at a time, and only the author's own.
+
+### The LIVE band
+
+`bets_live` and `mke_board` are graded **in the browser**, not by the engine.
+The page calls `site.api.espn.com` directly (CORS-open, no key). With the
+Worker, that is the only external origin the page touches.
+
+```
+live/espn.js     fetch + normalize      — returns facts, judges nothing
+live/graders.js  market -> grader       — pure functions, no fetch, no DOM
+live/band.js     the loop               — cadence, summaries, assembling ctx.live
+```
+
+**Cadence:** 45s while any relevant game is in progress, 5 min while everything
+is still pre, and it stops once every relevant game is final. It also stops
+when the tab is hidden — a phone in a pocket has no business polling ESPN — and
+does an immediate pass when it comes back.
+
+**Matching:** tickets match games by `espn_event_id` and **never** by team
+name, because ESPN abbreviations drift. `mke_board` is the one exception: it
+matches by abbreviation, because that is what the snapshot gives it.
+
+**Summaries** (`/summary?event=`) are much heavier than the scoreboard, so one
+is fetched only when a ticket's market needs scoring plays *and* that game is
+already under way. A pre-game summary has no `scoringPlays` key at all.
+
+**On failure** the last good grades are kept and the tile shows "feed
+unavailable". It never blanks, and it never shows zeros as though they were
+scores.
+
+#### Three things ESPN does that will bite you
+
+Verified against live payloads on 2026-09-17; all three are covered by tests.
+
+1. **`score` is a string.** `"5"`, not `5`. Concatenating two of them makes a
+   total of `"53"`, and `"10" < "9"` is true. Always `Number()`.
+2. **`linescores` are objects** — `{value, displayValue, period}` — and the key
+   is absent entirely pre-game and for soccer. Default to `[]`.
+3. **Not every touchdown is abbreviated `TD`.** A defensive score arrives as
+   `SFOP` ("Sack Opp Fumble Recovery"). Filtering on `type.abbreviation === 'TD'`
+   silently turns a winning ticket into a LOSS. A play counts as a touchdown if
+   the abbreviation says TD, *or* the type text says Touchdown, *or* the scoring
+   team's score jumped by 6+.
+
+#### anytime_td: the scorer is not everyone named in the play
+
+ESPN writes a passing touchdown as:
+
+```
+Mike Gesicki 2 Yd pass from Joe Burrow (Evan McPherson Kick)
+```
+
+Gesicki scored it. Burrow threw it, McPherson kicked the extra point, and all
+three surnames are in that one string. Matching the whole text — the obvious
+implementation, and arguably what "player surname in a TD scoring play" asks
+for — grades a **Joe Burrow anytime TD ticket as a WIN** for a touchdown he did
+not score, and does the same for the kicker.
+
+So `scorerText()` credits only the name before the yardage, and falls back to
+the text before the first parenthesis. There are tests asserting Gesicki wins
+while Burrow and McPherson both lose on that exact play.
+
+This is a deliberate deviation from the literal brief, because a wrong call on
+"did my guy score" is precisely the bug that makes a board untrustworthy.
+
+#### anytime_goal is behind a flag, and off
+
+`ANYTIME_GOAL_ENABLED = false` in `live/graders.js`. Tickets render "grading
+unsupported" rather than a guess.
+
+What has been verified: soccer carries **no `scoringPlays`** at all. Goals live
+in `keyEvents[]` where `scoringPlay === true` and `type.text` is `"Goal - …"`.
+The parser for that is written and tested, so enabling it is a one-line change.
+
+What has **not**: the brief requires verification against a *live* summary, and
+only a completed one has been checked. There is also real spelling drift
+between a goal's `text` and its `shortText` (`Charalampos` vs `Charalambos`
+in the captured fixture), which makes surname matching less safe here than it
+looks. Watch one live match grade correctly before flipping it.
+
+#### Grader states
+
+`pre | lead | trail | even | win | lose | push | dead | unsupported`
+
+`win` and `lose` appear **only** once ESPN calls the game final. While a game
+is running a ticket is LEADING / TRAILING / COVERING, and the tile footer says
+so: *this is a lean, not a settlement*. A different system settles bets.
+
+`even` exists so a tied game and a spread sitting exactly on the number lean
+nowhere, instead of being quietly rounded into a lead.
 
 ### PWA
 

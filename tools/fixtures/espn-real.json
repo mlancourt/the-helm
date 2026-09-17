@@ -1,0 +1,887 @@
+{
+ "nfl_post_raw": {
+  "id": "401872925",
+  "uid": "s:20~l:28~e:401872925",
+  "date": "2026-09-13T17:00Z",
+  "name": "Tampa Bay Buccaneers at Cincinnati Bengals",
+  "shortName": "TB @ CIN",
+  "competitions": [
+   {
+    "id": "401872925",
+    "uid": "s:20~l:28~e:401872925~c:401872925",
+    "date": "2026-09-13T17:00Z",
+    "attendance": 66625,
+    "type": {
+     "id": "1",
+     "abbreviation": "STD"
+    },
+    "timeValid": true,
+    "neutralSite": false,
+    "conferenceCompetition": false,
+    "playByPlayAvailable": true,
+    "recent": false,
+    "competitors": [
+     {
+      "id": "4",
+      "uid": "s:20~l:28~t:4",
+      "type": "team",
+      "order": 0,
+      "homeAway": "home",
+      "winner": true,
+      "team": {
+       "id": "4",
+       "location": "Cincinnati",
+       "name": "Bengals",
+       "abbreviation": "CIN",
+       "displayName": "Cincinnati Bengals",
+       "shortDisplayName": "Bengals"
+      },
+      "score": "33",
+      "linescores": [
+       {
+        "value": 14,
+        "displayValue": "14",
+        "period": 1
+       },
+       {
+        "value": 10,
+        "displayValue": "10",
+        "period": 2
+       },
+       {
+        "value": 3,
+        "displayValue": "3",
+        "period": 3
+       },
+       {
+        "value": 6,
+        "displayValue": "6",
+        "period": 4
+       }
+      ]
+     },
+     {
+      "id": "27",
+      "uid": "s:20~l:28~t:27",
+      "type": "team",
+      "order": 1,
+      "homeAway": "away",
+      "winner": false,
+      "team": {
+       "id": "27",
+       "location": "Tampa Bay",
+       "name": "Buccaneers",
+       "abbreviation": "TB",
+       "displayName": "Tampa Bay Buccaneers",
+       "shortDisplayName": "Buccaneers"
+      },
+      "score": "27",
+      "linescores": [
+       {
+        "value": 3,
+        "displayValue": "3",
+        "period": 1
+       },
+       {
+        "value": 7,
+        "displayValue": "7",
+        "period": 2
+       },
+       {
+        "value": 10,
+        "displayValue": "10",
+        "period": 3
+       },
+       {
+        "value": 7,
+        "displayValue": "7",
+        "period": 4
+       }
+      ]
+     }
+    ],
+    "status": {
+     "clock": 0,
+     "displayClock": "0:00",
+     "period": 4,
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final",
+      "shortDetail": "Final"
+     },
+     "isTBDFlex": false
+    },
+    "startDate": "2026-09-13T17:00Z"
+   }
+  ],
+  "status": {
+   "clock": 0,
+   "displayClock": "0:00",
+   "period": 4,
+   "type": {
+    "id": "3",
+    "name": "STATUS_FINAL",
+    "state": "post",
+    "completed": true,
+    "description": "Final",
+    "detail": "Final",
+    "shortDetail": "Final"
+   }
+  }
+ },
+ "mlb_post_raw": {
+  "id": "401816969",
+  "uid": "s:1~l:10~e:401816969",
+  "date": "2026-09-16T17:15Z",
+  "name": "San Francisco Giants at St. Louis Cardinals",
+  "shortName": "SF @ STL",
+  "competitions": [
+   {
+    "id": "401816969",
+    "uid": "s:1~l:10~e:401816969~c:401816969",
+    "date": "2026-09-16T17:15Z",
+    "attendance": 24960,
+    "type": {
+     "id": "1",
+     "abbreviation": "STD"
+    },
+    "timeValid": true,
+    "neutralSite": false,
+    "conferenceCompetition": true,
+    "playByPlayAvailable": true,
+    "recent": false,
+    "wasSuspended": false,
+    "competitors": [
+     {
+      "id": "24",
+      "uid": "s:1~l:10~t:24",
+      "type": "team",
+      "order": 0,
+      "homeAway": "home",
+      "winner": false,
+      "team": {
+       "id": "24",
+       "location": "St. Louis",
+       "name": "Cardinals",
+       "abbreviation": "STL",
+       "displayName": "St. Louis Cardinals",
+       "shortDisplayName": "Cardinals"
+      },
+      "score": "5",
+      "linescores": [
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 1
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 2
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 3
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 4
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 5
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 6
+       },
+       {
+        "value": 2,
+        "displayValue": "2",
+        "period": 7
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 8
+       },
+       {
+        "value": 2,
+        "displayValue": "2",
+        "period": 9
+       },
+       {
+        "value": 1,
+        "displayValue": "1",
+        "period": 10
+       }
+      ],
+      "hits": 5,
+      "errors": 2
+     },
+     {
+      "id": "26",
+      "uid": "s:1~l:10~t:26",
+      "type": "team",
+      "order": 1,
+      "homeAway": "away",
+      "winner": true,
+      "team": {
+       "id": "26",
+       "location": "San Francisco",
+       "name": "Giants",
+       "abbreviation": "SF",
+       "displayName": "San Francisco Giants",
+       "shortDisplayName": "Giants"
+      },
+      "score": "6",
+      "linescores": [
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 1
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 2
+       },
+       {
+        "value": 1,
+        "displayValue": "1",
+        "period": 3
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 4
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 5
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 6
+       },
+       {
+        "value": 2,
+        "displayValue": "2",
+        "period": 7
+       },
+       {
+        "value": 1,
+        "displayValue": "1",
+        "period": 8
+       },
+       {
+        "value": 0,
+        "displayValue": "0",
+        "period": 9
+       },
+       {
+        "value": 2,
+        "displayValue": "2",
+        "period": 10
+       }
+      ],
+      "hits": 13,
+      "errors": 2
+     }
+    ],
+    "status": {
+     "clock": 0,
+     "displayClock": "0:00",
+     "period": 10,
+     "type": {
+      "id": "3",
+      "name": "STATUS_FINAL",
+      "state": "post",
+      "completed": true,
+      "description": "Final",
+      "detail": "Final/10",
+      "shortDetail": "Final/10",
+      "altDetail": "F/10"
+     }
+    },
+    "startDate": "2026-09-16T17:15Z"
+   }
+  ],
+  "status": {
+   "clock": 0,
+   "displayClock": "0:00",
+   "period": 10,
+   "type": {
+    "id": "3",
+    "name": "STATUS_FINAL",
+    "state": "post",
+    "completed": true,
+    "description": "Final",
+    "detail": "Final/10",
+    "shortDetail": "Final/10",
+    "altDetail": "F/10"
+   }
+  }
+ },
+ "nfl_pre_raw": {
+  "id": "401872932",
+  "uid": "s:20~l:28~e:401872932",
+  "date": "2026-09-18T00:15Z",
+  "name": "Detroit Lions at Buffalo Bills",
+  "shortName": "DET @ BUF",
+  "competitions": [
+   {
+    "id": "401872932",
+    "uid": "s:20~l:28~e:401872932~c:401872932",
+    "date": "2026-09-18T00:15Z",
+    "attendance": 0,
+    "type": {
+     "id": "1",
+     "abbreviation": "STD"
+    },
+    "timeValid": true,
+    "neutralSite": false,
+    "conferenceCompetition": false,
+    "playByPlayAvailable": false,
+    "recent": false,
+    "competitors": [
+     {
+      "id": "2",
+      "uid": "s:20~l:28~t:2",
+      "type": "team",
+      "order": 0,
+      "homeAway": "home",
+      "team": {
+       "id": "2",
+       "location": "Buffalo",
+       "name": "Bills",
+       "abbreviation": "BUF",
+       "displayName": "Buffalo Bills",
+       "shortDisplayName": "Bills"
+      },
+      "score": "0"
+     },
+     {
+      "id": "8",
+      "uid": "s:20~l:28~t:8",
+      "type": "team",
+      "order": 1,
+      "homeAway": "away",
+      "team": {
+       "id": "8",
+       "location": "Detroit",
+       "name": "Lions",
+       "abbreviation": "DET",
+       "displayName": "Detroit Lions",
+       "shortDisplayName": "Lions"
+      },
+      "score": "0"
+     }
+    ],
+    "status": {
+     "clock": 0,
+     "displayClock": "0:00",
+     "period": 0,
+     "type": {
+      "id": "1",
+      "name": "STATUS_SCHEDULED",
+      "state": "pre",
+      "completed": false,
+      "description": "Scheduled",
+      "detail": "Thu, September 17th at 8:15 PM EDT",
+      "shortDetail": "9/17 - 8:15 PM EDT"
+     },
+     "isTBDFlex": false
+    },
+    "startDate": "2026-09-18T00:15Z"
+   }
+  ],
+  "weather": {
+   "displayValue": "7",
+   "temperature": 66,
+   "highTemperature": 66,
+   "conditionId": "Cloudy",
+   "link": {
+    "language": "en-US",
+    "rel": [
+     "14127"
+    ],
+    "href": "http://www.accuweather.com/en/us/highmark-stadium-ny/14127/current-weather/43037_poi?lang=en-us",
+    "text": "Weather",
+    "shortText": "Weather",
+    "isExternal": true,
+    "isPremium": false
+   }
+  },
+  "status": {
+   "clock": 0,
+   "displayClock": "0:00",
+   "period": 0,
+   "type": {
+    "id": "1",
+    "name": "STATUS_SCHEDULED",
+    "state": "pre",
+    "completed": false,
+    "description": "Scheduled",
+    "detail": "Thu, September 17th at 8:15 PM EDT",
+    "shortDetail": "9/17 - 8:15 PM EDT"
+   }
+  }
+ },
+ "nfl_scoring_plays": [
+  {
+   "type": {
+    "id": "59",
+    "text": "Field Goal Good",
+    "abbreviation": "FG"
+   },
+   "text": "Chase McLaughlin 34 Yd Field Goal",
+   "awayScore": 3,
+   "homeScore": 0,
+   "period": {
+    "number": 1
+   },
+   "team": {
+    "id": "27"
+   },
+   "scoringType": {
+    "name": "field-goal",
+    "displayName": "Field Goal",
+    "abbreviation": "FG"
+   }
+  },
+  {
+   "type": {
+    "id": "80",
+    "text": "Sack Opp Fumble Recovery",
+    "abbreviation": "SFOP"
+   },
+   "text": "Demetrius Knight Jr. 27 Yd Fumble Return (Evan McPherson Kick)",
+   "awayScore": 3,
+   "homeScore": 7,
+   "period": {
+    "number": 1
+   },
+   "team": {
+    "id": "4"
+   },
+   "scoringType": {
+    "name": "touchdown",
+    "displayName": "Touchdown",
+    "abbreviation": "TD"
+   }
+  },
+  {
+   "type": {
+    "id": "67",
+    "text": "Passing Touchdown",
+    "abbreviation": "TD"
+   },
+   "text": "Mike Gesicki 2 Yd pass from Joe Burrow (Evan McPherson Kick)",
+   "awayScore": 3,
+   "homeScore": 14,
+   "period": {
+    "number": 1
+   },
+   "team": {
+    "id": "4"
+   },
+   "scoringType": {
+    "name": "touchdown",
+    "displayName": "Touchdown",
+    "abbreviation": "TD"
+   }
+  },
+  {
+   "type": {
+    "id": "68",
+    "text": "Rushing Touchdown",
+    "abbreviation": "TD"
+   },
+   "text": "Chase Brown 5 Yd Rush (Evan McPherson Kick)",
+   "awayScore": 3,
+   "homeScore": 21,
+   "period": {
+    "number": 2
+   },
+   "team": {
+    "id": "4"
+   },
+   "scoringType": {
+    "name": "touchdown",
+    "displayName": "Touchdown",
+    "abbreviation": "TD"
+   }
+  },
+  {
+   "type": {
+    "id": "68",
+    "text": "Rushing Touchdown",
+    "abbreviation": "TD"
+   },
+   "text": "Bucky Irving 10 Yd Rush (Chase McLaughlin Kick)",
+   "awayScore": 10,
+   "homeScore": 21,
+   "period": {
+    "number": 2
+   },
+   "team": {
+    "id": "27"
+   },
+   "scoringType": {
+    "name": "touchdown",
+    "displayName": "Touchdown",
+    "abbreviation": "TD"
+   }
+  },
+  {
+   "type": {
+    "id": "59",
+    "text": "Field Goal Good",
+    "abbreviation": "FG"
+   },
+   "text": "Evan McPherson 20 Yd Field Goal",
+   "awayScore": 10,
+   "homeScore": 24,
+   "period": {
+    "number": 2
+   },
+   "team": {
+    "id": "4"
+   },
+   "scoringType": {
+    "name": "field-goal",
+    "displayName": "Field Goal",
+    "abbreviation": "FG"
+   }
+  },
+  {
+   "type": {
+    "id": "59",
+    "text": "Field Goal Good",
+    "abbreviation": "FG"
+   },
+   "text": "Evan McPherson 55 Yd Field Goal",
+   "awayScore": 10,
+   "homeScore": 27,
+   "period": {
+    "number": 3
+   },
+   "team": {
+    "id": "4"
+   },
+   "scoringType": {
+    "name": "field-goal",
+    "displayName": "Field Goal",
+    "abbreviation": "FG"
+   }
+  },
+  {
+   "type": {
+    "id": "59",
+    "text": "Field Goal Good",
+    "abbreviation": "FG"
+   },
+   "text": "Chase McLaughlin 51 Yd Field Goal",
+   "awayScore": 13,
+   "homeScore": 27,
+   "period": {
+    "number": 3
+   },
+   "team": {
+    "id": "27"
+   },
+   "scoringType": {
+    "name": "field-goal",
+    "displayName": "Field Goal",
+    "abbreviation": "FG"
+   }
+  },
+  {
+   "type": {
+    "id": "36",
+    "text": "Interception Return Touchdown",
+    "abbreviation": "TD"
+   },
+   "text": "Josiah Trotter 38 Yd Interception Return (Chase McLaughlin Kick)",
+   "awayScore": 20,
+   "homeScore": 27,
+   "period": {
+    "number": 3
+   },
+   "team": {
+    "id": "27"
+   },
+   "scoringType": {
+    "name": "touchdown",
+    "displayName": "Touchdown",
+    "abbreviation": "TD"
+   }
+  },
+  {
+   "type": {
+    "id": "59",
+    "text": "Field Goal Good",
+    "abbreviation": "FG"
+   },
+   "text": "Evan McPherson 58 Yd Field Goal",
+   "awayScore": 20,
+   "homeScore": 30,
+   "period": {
+    "number": 4
+   },
+   "team": {
+    "id": "4"
+   },
+   "scoringType": {
+    "name": "field-goal",
+    "displayName": "Field Goal",
+    "abbreviation": "FG"
+   }
+  },
+  {
+   "type": {
+    "id": "59",
+    "text": "Field Goal Good",
+    "abbreviation": "FG"
+   },
+   "text": "Evan McPherson 32 Yd Field Goal",
+   "awayScore": 20,
+   "homeScore": 33,
+   "period": {
+    "number": 4
+   },
+   "team": {
+    "id": "4"
+   },
+   "scoringType": {
+    "name": "field-goal",
+    "displayName": "Field Goal",
+    "abbreviation": "FG"
+   }
+  },
+  {
+   "type": {
+    "id": "68",
+    "text": "Rushing Touchdown",
+    "abbreviation": "TD"
+   },
+   "text": "Baker Mayfield 9 Yd Rush (Chase McLaughlin Kick)",
+   "awayScore": 27,
+   "homeScore": 33,
+   "period": {
+    "number": 4
+   },
+   "team": {
+    "id": "27"
+   },
+   "scoringType": {
+    "name": "touchdown",
+    "displayName": "Touchdown",
+    "abbreviation": "TD"
+   }
+  }
+ ],
+ "soccer_key_events": [
+  {
+   "type": {
+    "id": "173",
+    "text": "Goal - Volley",
+    "type": "goal---volley"
+   },
+   "text": "Goal! Coventry City 0, Brighton and Hove Albion 1. Charalampos Kostoulas (Brighton and Hove Albion) right footed shot from the right side of the box to the bottom left corner. Assisted by Pascal Groß with a headed pass.",
+   "shortText": "Charalambos Kostoulas Goal - Vol",
+   "period": {
+    "number": 1
+   },
+   "clock": {
+    "value": 2096,
+    "displayValue": "35'"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "331"
+   }
+  },
+  {
+   "type": {
+    "id": "70",
+    "text": "Goal",
+    "type": "goal"
+   },
+   "text": "Goal! Coventry City 0, Brighton and Hove Albion 2. Malick Yalcouyé (Brighton and Hove Albion) right footed shot from the centre of the box to the bottom left corner. Assisted by Maxim De Cuyper.",
+   "shortText": "Malick Yalcouyé Goal",
+   "period": {
+    "number": 2
+   },
+   "clock": {
+    "value": 3039,
+    "displayValue": "51'"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "331"
+   }
+  },
+  {
+   "type": {
+    "id": "98",
+    "text": "Penalty - Scored",
+    "type": "penalty---scored"
+   },
+   "text": "Goal! Coventry City 0, Brighton and Hove Albion 3. Pascal Groß (Brighton and Hove Albion) converts the penalty with a right footed shot to the bottom right corner.",
+   "shortText": "Pascal Gross Penalty - Scored",
+   "period": {
+    "number": 2
+   },
+   "clock": {
+    "value": 4152,
+    "displayValue": "70'"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "331"
+   }
+  },
+  {
+   "type": {
+    "id": "70",
+    "text": "Goal",
+    "type": "goal"
+   },
+   "text": "Goal! Coventry City 0, Brighton and Hove Albion 4. Lewis Dunk (Brighton and Hove Albion) right footed shot from outside the box to the top left corner. Assisted by Chema Andrés.",
+   "shortText": "Lewis Dunk Goal",
+   "period": {
+    "number": 2
+   },
+   "clock": {
+    "value": 4959,
+    "displayValue": "83'"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "331"
+   }
+  },
+  {
+   "type": {
+    "id": "70",
+    "text": "Goal",
+    "type": "goal"
+   },
+   "text": "Goal! Coventry City 0, Brighton and Hove Albion 5. Yasin Ayari (Brighton and Hove Albion) right footed shot from outside the box to the bottom right corner. Assisted by Pascal Groß.",
+   "shortText": "Yasin Ayari Goal",
+   "period": {
+    "number": 2
+   },
+   "clock": {
+    "value": 5400,
+    "displayValue": "90'+4'"
+   },
+   "scoringPlay": true,
+   "team": {
+    "id": "331"
+   }
+  }
+ ],
+ "_provenance": "Captured from site.api.espn.com on 2026-09-17. Real public sports data, no personal data of any kind. Fields the page never reads have been dropped; everything the normalizer and graders touch is byte-for-byte as ESPN sent it.",
+ "soccer_post_shutout_raw": {
+  "id": "401879282",
+  "uid": "s:600~l:700~e:401879282",
+  "date": "2026-09-13T13:00Z",
+  "name": "Brighton & Hove Albion at Coventry City",
+  "shortName": "BHA @ COV",
+  "competitions": [
+   {
+    "id": "401879282",
+    "uid": "s:600~l:700~e:401879282~c:401879282",
+    "date": "2026-09-13T13:00Z",
+    "startDate": "2026-09-13T13:00Z",
+    "attendance": 31492,
+    "timeValid": true,
+    "recent": false,
+    "status": {
+     "clock": 5400,
+     "displayClock": "90'+6'",
+     "period": 2,
+     "type": {
+      "id": "28",
+      "name": "STATUS_FULL_TIME",
+      "state": "post",
+      "completed": true,
+      "description": "Full Time",
+      "detail": "FT",
+      "shortDetail": "FT"
+     }
+    },
+    "altGameNote": "English Premier League",
+    "competitors": [
+     {
+      "id": "388",
+      "uid": "s:600~t:388",
+      "type": "team",
+      "order": 0,
+      "homeAway": "home",
+      "winner": false,
+      "score": "0",
+      "team": {
+       "id": "388",
+       "abbreviation": "COV",
+       "displayName": "Coventry City",
+       "shortDisplayName": "Coventry",
+       "name": "Coventry City",
+       "location": "Coventry City"
+      }
+     },
+     {
+      "id": "331",
+      "uid": "s:600~t:331",
+      "type": "team",
+      "order": 1,
+      "homeAway": "away",
+      "winner": true,
+      "score": "5",
+      "team": {
+       "id": "331",
+       "abbreviation": "BHA",
+       "displayName": "Brighton & Hove Albion",
+       "shortDisplayName": "Brighton",
+       "name": "Brighton & Hove Albion",
+       "location": "Brighton & Hove Albion"
+      }
+     }
+    ],
+    "wasSuspended": false,
+    "playByPlayAvailable": true,
+    "playByPlayAthletes": true
+   }
+  ],
+  "status": {
+   "clock": 5400,
+   "displayClock": "90'+6'",
+   "period": 2,
+   "type": {
+    "id": "28",
+    "name": "STATUS_FULL_TIME",
+    "state": "post",
+    "completed": true,
+    "description": "Full Time",
+    "detail": "FT",
+    "shortDetail": "FT"
+   }
+  },
+  "venue": {
+   "displayName": "Coventry Building Society Arena"
+  }
+ }
+}
