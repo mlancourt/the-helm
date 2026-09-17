@@ -489,3 +489,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .sheet, .scrim { transition: none; }
 }
+
+/* gate token form (iOS installed-app path) */
+.gate-form{display:flex;gap:8px;margin-top:12px}
+.gate-input{flex:1;min-width:0;font:14px ui-monospace,Menlo,monospace;padding:10px 12px;border-radius:8px;border:1px solid var(--line,#28333f);background:var(--panel2,#1e2733);color:var(--ink,#e6ebf0)}
+.gate-input.bad{border-color:var(--lose,#e5484d)}
+.gate-btn{font:600 14px system-ui,sans-serif;padding:10px 14px;border-radius:8px;border:0;background:var(--accent,#d4a72c);color:#0f141a}
+.gate-btn:focus-visible,.gate-input:focus-visible{outline:2px solid var(--accent,#d4a72c);outline-offset:2px}

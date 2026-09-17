@@ -51,9 +51,10 @@ const modules = new Map(); // tile id -> render fn (or null if it failed to load
 // --------------------------------------------------------------------- token
 
 /**
- * Identity is one opaque token in the URL. It is copied into localStorage on
- * every load that carries it, and stripped from the address bar ONLY when
- * running as an installed (standalone) app — see the iOS note below.
+ * Identity is one opaque token. It arrives once — via ?t= in a browser tab, or
+ * pasted into the gate inside an installed app (iOS launches installed web
+ * apps at the manifest start_url with their own storage partition, so ?t=
+ * cannot reach them) — is stored in localStorage, and is stripped from the bar.
  */
 function bootToken() {
   const fromUrl = params.get('t');
@@ -63,19 +64,9 @@ function bootToken() {
     } catch {
       /* private mode — fall back to the in-memory value below */
     }
-    // iOS gives a home-screen web app its OWN storage partition, and "Add to
-    // Home Screen" bookmarks the CURRENT address-bar URL. So in a normal browser
-    // tab the token must STAY in the URL — that is what the bookmark captures,
-    // and that is how the standalone app gets its token on first launch (it
-    // reads ?t=, stores it in its own partition, and only THEN scrubs).
-    // Scrubbing in a plain tab was the bug: the bookmark came out bare and the
-    // standalone app had an empty localStorage.
-    const standalone = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
-    if (standalone) {
-      params.delete('t');
-      const qs = params.toString();
-      history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
-    }
+    params.delete('t');
+    const qs = params.toString();
+    history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
     return fromUrl;
   }
   try {
@@ -513,14 +504,33 @@ async function mountAsk() {
 
 // ------------------------------------------------------------------- gates
 
-function showGate(title, lines) {
+function showGate(title, lines, { tokenForm = false } = {}) {
   const main = document.getElementById('board');
   clear(main);
   document.getElementById('banner').classList.remove('show');
+  const body = el('div', { cls: 'card-body' }, lines.map((l) => el('p', { cls: 'gate-line', text: l })));
+  if (tokenForm) {
+    // An installed iOS web app launches at the manifest's start_url, not the
+    // bookmarked URL, and has its own storage partition — so ?t= can never
+    // reach it. The token is pasted once here instead and stored in that
+    // partition. Same box also rescues a plain tab whose storage was cleared.
+    const input = el('input', { cls: 'gate-input', attrs: { id: 'gate-token', type: 'text', inputmode: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', placeholder: 'paste token' } });
+    const btn = el('button', { cls: 'gate-btn', attrs: { id: 'gate-save', type: 'button' }, text: 'Save token' });
+    const submit = () => {
+      const v = (input.value || '').trim();
+      if (!/^[A-Za-z0-9_-]{8,128}$/.test(v)) { input.classList.add('bad'); return; }
+      try { localStorage.setItem(LS_TOKEN, v); } catch { /* private mode */ }
+      token = v;
+      refresh();
+    };
+    btn.addEventListener('click', submit);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+    body.appendChild(el('div', { cls: 'gate-form' }, [input, btn]));
+  }
   main.appendChild(
     el('div', { cls: 'card gate' }, [
       el('div', { cls: 'card-head' }, [el('h2', { cls: 'card-title', text: title })]),
-      el('div', { cls: 'card-body' }, lines.map((l) => el('p', { cls: 'gate-line', text: l }))),
+      body,
     ])
   );
 }
@@ -540,9 +550,8 @@ async function refresh() {
       }
       token = '';
       showGate('Token rejected', [
-        'The Worker did not recognise this token.',
-        'Open the page again with ?t=<token> to install a new one.',
-      ]);
+        'The Worker did not recognise this token. Paste the current one below.',
+      ], { tokenForm: true });
       return;
     }
     showGate('Cannot reach the Worker', [
@@ -555,9 +564,8 @@ async function refresh() {
 async function boot() {
   if (!MOCK && !token) {
     showGate('No token', [
-      'The Helm needs its token once.',
-      'Open this page with ?t=<token> appended and it will be remembered.',
-    ]);
+      'The Helm needs its token once. Paste it below and it is remembered on this device.',
+    ], { tokenForm: true });
     return;
   }
 
