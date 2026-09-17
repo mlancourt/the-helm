@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-17T14:30:58.625Z",
-  "run_id": "run-mock-mu5mnhoh",
+  "generated_at": "2026-09-17T14:48:11.306Z",
+  "run_id": "run-mock-mu5n9mi2",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T14:30:58.625Z",
+      "updated_at": "2026-09-17T14:48:11.306Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -94,7 +94,7 @@
     },
     "mke_board": {
       "band": "LIVE",
-      "updated_at": "2026-09-17T14:30:58.625Z",
+      "updated_at": "2026-09-17T14:48:11.306Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -120,7 +120,7 @@
     },
     "radar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T14:30:58.625Z",
+      "updated_at": "2026-09-17T14:48:11.306Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -136,7 +136,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T14:30:58.625Z",
+      "updated_at": "2026-09-17T14:48:11.306Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -186,7 +186,7 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T14:30:58.625Z",
+      "updated_at": "2026-09-17T14:48:11.306Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -198,7 +198,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T14:30:58.625Z",
+      "updated_at": "2026-09-17T14:48:11.306Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -232,11 +232,11 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-17T14:07:58.625Z",
+      "updated_at": "2026-09-17T14:25:11.306Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-17T14:07:58.625Z",
+        "as_of": "2026-09-17T14:25:11.306Z",
         "cards": [
           {
             "title": "Regional freight rates flatten after a long climb",
@@ -261,7 +261,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-17T13:00:58.625Z",
+      "updated_at": "2026-09-17T13:18:11.306Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

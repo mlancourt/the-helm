@@ -1,1 +1,47 @@
-<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>The Helm</title><body style="font:16px system-ui;background:#0f141a;color:#e6ebf0;padding:24px">The Helm — under construction (Phase 1).</body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- viewport-fit=cover + the safe-area insets in style.css keep the layout
+     clear of the iPhone notch and home indicator in standalone mode -->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0f141a">
+<title>The Helm</title>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="The Helm">
+
+<!-- Rule 4: no CDNs, no web fonts, no analytics. One stylesheet, one module. -->
+<link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+<header class="topbar">
+  <div class="topbar-main">
+    <h1 class="wordmark">The Helm</h1>
+    <div id="pending-chip" class="pending-chip-slot"></div>
+  </div>
+  <div id="subhead" class="subhead"></div>
+</header>
+
+<div id="banner" class="banner"></div>
+
+<main id="board" class="board"></main>
+
+<button id="ask-fab" class="fab" type="button" aria-label="Open ask panel">Ask</button>
+
+<div id="scrim" class="scrim"></div>
+
+<aside id="sheet" class="sheet" aria-label="Ask panel">
+  <button id="sheet-close" class="sheet-close" type="button" aria-label="Close ask panel">×</button>
+  <div id="sheet-body" class="sheet-body"></div>
+</aside>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>

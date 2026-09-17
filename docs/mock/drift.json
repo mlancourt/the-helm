@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "generated_at": "2026-09-17T14:30:00.000Z",
+  "run_id": "run-mock-drift",
+  "tz": "America/Chicago",
+  "_comment": "Rule 9 fixture. Load with ?mock=drift. Deliberately drifted: carries two tiles the registry has never heard of, omits several the registry expects, and degrades two more. The page must render all of it without throwing.",
+  "tiles": {
+    "shop_queue": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T14:28:00.000Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "open_jobs": 4,
+        "oldest": "2026-09-11",
+        "next_up": "Cedar Ridge compressor",
+        "assigned": null,
+        "detail": { "bay": 2, "hours_booked": 6.5 }
+      }
+    },
+    "tide_clock": {
+      "band": "WEEKLY",
+      "updated_at": "2026-09-17T12:00:00.000Z",
+      "status": "ok",
+      "error": null,
+      "data": { "note": "a tile from a band with no registered members at all" }
+    },
+    "newsstand": {
+      "band": "HOURLY",
+      "updated_at": "2026-09-17T11:02:00.000Z",
+      "status": "error",
+      "error": "feed fetch failed after 3 attempts",
+      "data": { "cards": [], "as_of": "2026-09-17T11:02:00.000Z" }
+    },
+    "purser_due": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T06:00:00.000Z",
+      "status": "stale",
+      "error": null,
+      "data": {
+        "items": [
+          { "card": "Blue card", "due": "2026-09-20", "amount": null, "amount_display": true, "autopay": false, "reminder_armed": true }
+        ]
+      }
+    },
+    "bets_live": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T14:30:00.000Z",
+      "status": "ok",
+      "error": null,
+      "data": { "bankroll_u": 42.5, "open_u": 0, "record": "0-0-0", "tickets": [] }
+    }
+  }
+}

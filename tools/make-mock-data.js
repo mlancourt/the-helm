@@ -235,5 +235,21 @@ function mockEvents() {
   ];
 }
 
-const out = process.argv.includes('--events') ? mockEvents() : snapshot();
-process.stdout.write(JSON.stringify(out, null, 2) + '\n');
+/**
+ * The same two events as the Worker would hand back from /api/data — stamped
+ * with {id, ts, actor}. This lets `?mock=1` exercise the pending badge and the
+ * withdraw valve without a Worker, and without ever faking an *applied* write.
+ */
+function mockPending() {
+  return mockEvents().map((e, i) => {
+    const ts = new Date(Date.now() - (i + 1) * 9 * 60000).toISOString();
+    return { id: `${ts}:mock0${i + 1}`, ts, actor: 'Matt', ...e };
+  });
+}
+
+const mode = process.argv.includes('--events')
+  ? mockEvents()
+  : process.argv.includes('--pending')
+    ? mockPending()
+    : snapshot();
+process.stdout.write(JSON.stringify(mode, null, 2) + '\n');

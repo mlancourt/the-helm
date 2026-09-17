@@ -1,0 +1,23 @@
+[
+  {
+    "id": "2026-09-17T14:34:03.954Z:mock01",
+    "ts": "2026-09-17T14:34:03.954Z",
+    "actor": "Matt",
+    "type": "meal_verdict",
+    "payload": {
+      "date": "2026-09-17",
+      "verdict": "HIT"
+    }
+  },
+  {
+    "id": "2026-09-17T14:25:03.954Z:mock02",
+    "ts": "2026-09-17T14:25:03.954Z",
+    "actor": "Matt",
+    "type": "mileage",
+    "payload": {
+      "odometer": 74812,
+      "kind": "business",
+      "note": "Cedar Ridge service call"
+    }
+  }
+]

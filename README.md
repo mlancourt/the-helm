@@ -9,8 +9,9 @@ Matt's vault + engine, which lives elsewhere and talks to this Worker over the
 admin endpoints. Nothing here generates real data. See `CLAUDE.md` for the
 build brief and the hard rules.
 
-Status: **M1 complete** — Worker, KV, token auth, events, admin publish/drain.
-M2 (page shell + tiles), M3 (LIVE band), M4 (`/ask`) are not built yet.
+Status: **M1 + M2 complete** — Worker, KV, token auth, events, admin
+publish/drain; page shell, tile registry, all v1 render modules, PWA.
+M3 (LIVE band: ESPN + graders) and M4 (`/ask` v1) are not built yet.
 
 ---
 
@@ -19,13 +20,27 @@ M2 (page shell + tiles), M3 (LIVE band), M4 (`/ask`) are not built yet.
 ```
 worker/worker.js        the whole API — one self-contained file, plain JS
 worker/wrangler.toml    name, KV binding, compatibility date
-tools/make-mock-data.js fake snapshot generator (node, no deps)
-tools/test-worker.js    Worker test suite (node, no deps, needs wrangler dev)
-docs/                   GitHub Pages root — the app shell (M2)
-docs/mock/              generated fake snapshot, fake by construction
+
+docs/                   GitHub Pages root — serve this directory, nothing else
+  index.html app.js style.css config.js
+  lib/dom.js            safe DOM construction (no innerHTML, anywhere)
+  lib/fmt.js            dates, units, odds — the rule-7 quarantine
+  tiles/_registry.js    id -> {band, position, module, title}
+  tiles/<id>.js         one file per tile: export function render(el, tile, ctx)
+  live/                 ESPN fetch + graders (M3, empty for now)
+  manifest.webmanifest sw.js icons/
+  mock/                 generated fake data, fake by construction
+
+tools/make-mock-data.js fake snapshot generator
+tools/make-icons.js     draws the PWA icons (zero deps, zlib only)
+tools/test-fmt.js       date/format unit tests, run across four timezones
+tools/test-sw.js        service worker caching-policy tests
+tools/test-worker.js    Worker API tests (needs wrangler dev)
 ```
 
-`wrangler` is the only dev dependency. The page itself has no build step.
+`wrangler` is the only dev dependency. The page itself has no build step: no
+bundler, no framework, no npm at runtime. Open `docs/index.html` through any
+static server and it runs.
 
 ---
 
@@ -37,20 +52,45 @@ cp worker/.dev.vars.example worker/.dev.vars   # gitignored; edit the secret
 npm run dev                                    # wrangler dev on :8787
 ```
 
-In a second terminal:
+Serve the page in a third terminal:
 
 ```bash
-npm test
+npm run serve
 ```
 
-61 assertions covering token 401s, event shape rejection, per-event KV keys,
-the delete-event actor check, snapshot validation, ack scoping, CORS, and
-routing. The suite installs its own throwaway tokens and drains what it wrote.
+Then open one of:
 
-Regenerate the mock snapshot any time:
+| URL | What it does |
+|---|---|
+| `http://127.0.0.1:8080/?mock=1` | renders the fake snapshot, no Worker at all |
+| `http://127.0.0.1:8080/?mock=drift` | the schema-drift fixture (see rule 9 below) |
+| `http://127.0.0.1:8080/?api=http://127.0.0.1:8787&t=<token>` | the real local Worker |
+
+`?api=` is honoured **only when the page itself is on localhost**. On the real
+origin it is ignored, because otherwise a crafted `?api=https://evil.example`
+link would make the page post Matt's bearer token straight at an attacker.
+
+### Tests
+
+```bash
+npm test            # 75 assertions, no server needed
+npm run test:worker # 61 assertions, needs `npm run dev` running
+```
+
+- **`test:fmt`** (49) — every date helper, run under `America/Chicago`,
+  `Asia/Tokyo`, `UTC` and `Pacific/Kiritimati`, asserting byte-identical output
+  in all four. This is the rule-7 tripwire.
+- **`test:sw`** (26) — the service worker's routing policy: ESPN and `/ask` are
+  never cached, `/api/data` is network-first with a cache fallback, the shell is
+  stale-while-revalidate, and a 404 in the precache list cannot fail an install.
+- **`test:worker`** (61) — token 401s, event shape rejection, per-event KV keys,
+  the delete-event actor check, snapshot validation, ack scoping, CORS, routing.
+
+Regenerate the fake data or the icons any time:
 
 ```bash
 npm run mock
+npm run icons
 ```
 
 ---
@@ -77,13 +117,30 @@ npx wrangler secret put ANTHROPIC_API_KEY     # M4 — never reaches the page
 npx wrangler secret put ASK_MODEL             # M4, optional
 ```
 
-### 3. Deploy
+### 3. Deploy the Worker
 
 ```bash
 npm run deploy
 ```
 
-Note the `*.workers.dev` URL. The page (M2) will point at it.
+Note the `*.workers.dev` URL and put it in `docs/config.js` as `WORKER_BASE`.
+That constant is the only place the page learns where its API lives.
+
+### 4. Publish the page
+
+GitHub Pages serves from `/docs` on `main`, so a push deploys it. Then open
+
+```
+https://mlancourt.github.io/the-helm/?t=<token>
+```
+
+once on the phone. The token moves into localStorage and is stripped from the
+address bar, so every later visit works from the bare URL — and the token stops
+riding along in screenshots, history and referrers.
+
+**Install to the home screen (iOS):** Share -> Add to Home Screen. It opens
+standalone, with no Safari chrome. Bump `CACHE_VERSION` in `docs/sw.js` when
+shipping shell changes, or installed clients keep the old files.
 
 ---
 
@@ -199,6 +256,93 @@ The engine owns the data; this Worker is only a mailbox.
 If real data ever looks wrong on the page, **report it — never "fix" it here.**
 The vault wins all conflicts. Money never moves from this UI; dollar figures in
 the snapshot are display-only.
+
+---
+
+## The page
+
+Vanilla ES modules, one stylesheet, no build step. Phone-first single column;
+two columns at 640px, three at 1040px.
+
+### Adding a tile
+
+1. Write `docs/tiles/<id>.js` exporting `render(el, tile, ctx)`.
+2. Add one line to `docs/tiles/_registry.js`.
+3. Add the file to `SHELL` in `docs/sw.js` and bump `CACHE_VERSION`.
+
+`tile` is the snapshot entry (`{band, updated_at, status, error, data}`). `ctx`
+carries `{id, title, snapshot, pending, actions, live}`, where `actions` are
+`submitEvent`, `withdrawEvent`, `ask` and `openAsk`.
+
+You never have to do step 2 for the page to survive: an unregistered tile
+renders as a generic key/value card. Step 2 is what gives it a real layout.
+
+### Rule 9 — drift in both directions
+
+The engine and the page ship on different clocks, so the page treats schema
+drift as normal, not as an error:
+
+- a tile in the snapshot with **no render module** -> generic key/value card,
+  titled by its id, including a band the registry has never heard of
+- a tile in the registry **missing from the snapshot** -> empty grey card
+- a tile whose module **throws** -> that one card greys with the message; the
+  rest of the board renders
+
+`?mock=drift` loads a fixture that does all of these at once. Use it after
+touching the render path.
+
+### Rule 8 — graceful degradation
+
+| Failure | What Matt sees |
+|---|---|
+| tile `status: error` / `stale` | that card greys, keeps its `updated_at`, rest renders |
+| Worker unreachable | last cached snapshot + "showing cached snapshot from …" |
+| Worker unreachable, no cache | a plain "cannot reach the Worker" card |
+| token rejected (401) | the stored token is dropped and Matt is told to re-open with `?t=` |
+| ESPN down (M3) | LIVE tiles show "feed unavailable", never blank |
+| `/ask` down | the chat says so and the mode chip flips to `offline` |
+
+### Rule 10 — untrusted content is data
+
+There is no `innerHTML` in this codebase and there must never be one. Every
+string from the snapshot, from ESPN, or from `/ask` is placed with
+`textContent` via `lib/dom.js`. `extLink()` additionally refuses any URL that
+is not `http(s)`, so a snapshot carrying a `javascript:` URL renders as inert
+text instead of a live link.
+
+### Rule 7 — the disqualifying bug
+
+Business dates are `YYYY-MM-DD` **Central** strings. `new Date("2026-09-17")`
+parses as UTC midnight, which renders as *Sep 16* for anyone in Central.
+
+All date handling is quarantined in `docs/lib/fmt.js`. Date-only strings are
+split on `-` and rebuilt with `Date.UTC`, then read back with `getUTC*` only —
+pure calendar arithmetic, no timezone involved. Full UTC ISO *instants* (the
+`updated_at` fields, which carry a `Z`) are safe to parse and are displayed
+through `Intl` with an explicit `America/Chicago` zone.
+
+`npm test` runs those helpers under four timezones and requires identical
+output. **Never add a function to `fmt.js` that passes a date-only string to
+`new Date()`**, and never parse one anywhere else.
+
+### Writes are proposals
+
+The dinner HIT/MISS buttons are the only write affordance on the board. They
+file a `meal_verdict` event and badge it **pending**; the tile keeps showing
+the vault's own verdict underneath. A submitted write is never rendered as
+applied. `withdraw` calls `DELETE /api/event/:id` — the undo valve, one event
+at a time, and only the author's own.
+
+### PWA
+
+`manifest.webmanifest` (standalone, dark, 192/512 + maskable) and a real PNG
+`apple-touch-icon`, because iOS will not take an SVG. The icons are drawn
+procedurally by `tools/make-icons.js` — a ship's wheel, no brand marks, no icon
+font, no CDN.
+
+`sw.js` caches the shell stale-while-revalidate and `/api/data` network-first.
+It **never** caches ESPN or `/ask`: a cached score would show stale numbers as
+live, and a cached answer would replay itself forever.
 
 ---
 
