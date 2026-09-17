@@ -51,9 +51,9 @@ const modules = new Map(); // tile id -> render fn (or null if it failed to load
 // --------------------------------------------------------------------- token
 
 /**
- * Identity is one opaque token in the URL. It is moved into localStorage on
- * first load and stripped from the address bar, so the bare URL works
- * afterwards and the token stops riding in screenshots, history and referrers.
+ * Identity is one opaque token in the URL. It is copied into localStorage on
+ * every load that carries it, and stripped from the address bar ONLY when
+ * running as an installed (standalone) app — see the iOS note below.
  */
 function bootToken() {
   const fromUrl = params.get('t');
@@ -63,9 +63,19 @@ function bootToken() {
     } catch {
       /* private mode — fall back to the in-memory value below */
     }
-    params.delete('t');
-    const qs = params.toString();
-    history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
+    // iOS gives a home-screen web app its OWN storage partition, and "Add to
+    // Home Screen" bookmarks the CURRENT address-bar URL. So in a normal browser
+    // tab the token must STAY in the URL — that is what the bookmark captures,
+    // and that is how the standalone app gets its token on first launch (it
+    // reads ?t=, stores it in its own partition, and only THEN scrubs).
+    // Scrubbing in a plain tab was the bug: the bookmark came out bare and the
+    // standalone app had an empty localStorage.
+    const standalone = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+    if (standalone) {
+      params.delete('t');
+      const qs = params.toString();
+      history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
+    }
     return fromUrl;
   }
   try {
