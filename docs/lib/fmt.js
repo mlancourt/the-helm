@@ -39,6 +39,25 @@ export function ctToday() {
   return CT_YMD.format(new Date());
 }
 
+/**
+ * A UTC ISO *instant* -> the Central business date it fell on, 'YYYY-MM-DD'.
+ *
+ * The bridge between the two kinds of time in this codebase: it lets an
+ * instant (a `lastOpened` stamp, an `updated_at`) be compared against a
+ * date-only business string without either one being parsed wrong. Rule 7
+ * holds — the date-only side is never handed to `new Date()`; the instant
+ * side is, because it carries a Z.
+ */
+export function ctDate(iso) {
+  // A date-only string PARSES — as UTC midnight — and would come back out a
+  // day earlier for anyone in Central. That is rule 7's exact trap, so this
+  // refuses one outright rather than quietly answering yesterday.
+  if (YMD_RE.test(iso)) return '';
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return '';
+  return CT_YMD.format(new Date(t));
+}
+
 /** Calendar arithmetic on a date-only string. Returns a string. */
 export function addDays(ymd, n) {
   if (!YMD_RE.test(ymd)) return ymd;

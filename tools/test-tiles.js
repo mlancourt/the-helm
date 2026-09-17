@@ -94,6 +94,34 @@ global.document = {
 };
 
 /**
+ * A localStorage shim, because the entertainment tile's "new" counts are a
+ * property of the device rather than the snapshot. Node has no localStorage at
+ * all, which is itself one of the cases under test: a tile that reaches for it
+ * unguarded throws a ReferenceError and takes the card down.
+ *
+ * `broken: true` is Safari's private mode, where the accessor itself throws.
+ */
+function fakeStorage(seed = null, { broken = false } = {}) {
+  const cell = { value: seed === null ? null : JSON.stringify(seed) };
+  return {
+    cell,
+    get parsed() { return cell.value === null ? null : JSON.parse(cell.value); },
+    getItem() { if (broken) throw new Error('private mode'); return cell.value; },
+    setItem(_k, v) { if (broken) throw new Error('private mode'); cell.value = String(v); },
+  };
+}
+
+/** Run `fn` with a given localStorage in place, and always put it back. */
+function withStorage(storage, fn) {
+  const had = Object.prototype.hasOwnProperty.call(global, 'localStorage');
+  const prev = global.localStorage;
+  global.localStorage = storage;
+  try { return fn(); } finally {
+    if (had) global.localStorage = prev; else delete global.localStorage;
+  }
+}
+
+/**
  * A fake detail sheet. The newsstand tile is a menu: tapping a button hands a
  * title and a body-builder to ctx.actions.openPanel, and the cards are drawn
  * into whatever body it is given. Here that body is just another shim node,
@@ -309,6 +337,357 @@ async function main() {
       tap(btnsOf(inert)[0]);
     } catch (e) { threw = e; }
     check('a tap with no panel action never reaches the page', !threw, threw && threw.message);
+  }
+
+  // -- entertainment: the four-face menu ------------------------------------
+  //
+  // Two things are being tested that no other tile has: a menu whose buttons
+  // come from faces the engine may not have built yet, and a count that lives
+  // on the DEVICE rather than in the snapshot. So the localStorage the tile
+  // reads is a shim here, seeded per case.
+  console.log('\nentertainment — the face menu');
+  const ent = mods.get('entertainment');
+  const entBtns = (root) => root.querySelectorAll('.ent-btn');
+  const entLabels = (root) => entBtns(root).map((b) => b.querySelector('.ent-btn-label').textContent);
+  const chipOf = (btn) => btn.querySelector('.ent-count');
+
+  // Central business dates, built from parts — the same arithmetic the mock
+  // generator uses, and never `new Date('YYYY-MM-DD')`.
+  const CT_FMT = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const ctNow = CT_FMT.format(new Date());
+  const ymd = (n) => {
+    const [y, m, d] = ctNow.split('-').map(Number);
+    const t = new Date(Date.UTC(y, m - 1, d) + n * 86400000);
+    const p = (v) => String(v).padStart(2, '0');
+    return `${t.getUTCFullYear()}-${p(t.getUTCMonth() + 1)}-${p(t.getUTCDate())}`;
+  };
+  const daysAgoIso = (n) => new Date(Date.now() - n * 86400000).toISOString();
+  const entTile = (data) => ({ band: 'DAILY', status: 'ok', data });
+  const LS_KEY = 'helm.entertainment.lastOpened';
+
+  if (ent) {
+    // -- the board: four buttons, two of them not built yet -------------------
+    const shipped = entTile({
+      watching: { updated_at: daysAgoIso(30), items: [], errors: null },
+      podcasts: { updated_at: daysAgoIso(30), items: [], errors: null },
+      top5: null,
+      listening: null,
+      attribution: 'Data from TMDB',
+    });
+
+    const board = withStorage(fakeStorage({ watching: daysAgoIso(1), podcasts: daysAgoIso(1) }), () => {
+      const r = new El('div');
+      ent.render(r, shipped, { id: 'entertainment', actions: {} });
+      return r;
+    });
+
+    check('all four faces get a button', entBtns(board).length === 4, String(entBtns(board).length));
+    check(
+      'in the ruled order',
+      entLabels(board).join('|') === 'Watching|Podcasts|Top 5|Listening',
+      entLabels(board).join('|')
+    );
+    check('each wears its own glyph', /📺/.test(entBtns(board)[0].textContent) && /🎧/.test(entBtns(board)[3].textContent));
+    // E2: a face the engine has not built is visible as coming, not missing.
+    check('a null face is greyed', entBtns(board)[2].className.includes('ent-btn-soon') && entBtns(board)[3].className.includes('ent-btn-soon'));
+    check('and says "soon"', entBtns(board)[2].querySelector('.ent-soon').textContent === 'soon');
+    check('and cannot be tapped', entBtns(board)[2].getAttribute('disabled') === 'disabled');
+    check('a populated face is not greyed', !entBtns(board)[0].className.includes('ent-btn-soon'));
+    check('a populated face is tappable', !entBtns(board)[0].getAttribute('disabled'));
+    // E8: quiet by default. Nothing new means no chip — not a zero.
+    check('an empty face shows no count chip', !chipOf(entBtns(board)[0]) && !chipOf(entBtns(board)[1]));
+    check('a greyed face has no count chip', !chipOf(entBtns(board)[2]));
+    check('nothing is listed on the board itself', countOf(board, 'ent-row') === 0);
+
+    // -- the counts -----------------------------------------------------------
+    console.log('\nentertainment — counts against lastOpened');
+    //
+    // Opened ten days ago. Of the watching rows, only the one whose last
+    // episode aired since then is new; the row with no `last` at all has no
+    // arrival stamp of its own and falls back to the face, which is older
+    // still. Of the podcasts, the recent instant and the recent date-only both
+    // count; the twelve-day-old one does not.
+    const SINCE = daysAgoIso(10);
+    const counted = entTile({
+      watching: {
+        updated_at: daysAgoIso(30),
+        items: [
+          { title: 'Aired since', last: { season: 1, episode: 4, air_date: ymd(-3) } },
+          { title: 'Aired long before', last: { season: 1, episode: 1, air_date: ymd(-20) } },
+          { title: 'Never aired', last: null },
+        ],
+      },
+      podcasts: {
+        updated_at: daysAgoIso(30),
+        items: [
+          { show: 'A', title: 'fresh instant', published_at: daysAgoIso(0.04), published: ymd(0) },
+          { show: 'A', title: 'old instant', published_at: daysAgoIso(12), published: ymd(-12) },
+          { show: 'B', title: 'date only, recent', published: ymd(-1) },
+        ],
+      },
+      top5: null,
+      listening: null,
+    });
+
+    const seen = withStorage(fakeStorage({ watching: SINCE, podcasts: SINCE }), () => {
+      const r = new El('div');
+      ent.render(r, counted, { id: 'entertainment', actions: {} });
+      return r;
+    });
+    check('watching counts only what aired since it was last opened', chipOf(entBtns(seen)[0]).textContent === '1 new', chipOf(entBtns(seen)[0])?.textContent);
+    check('podcasts counts instants and date-only alike', chipOf(entBtns(seen)[1]).textContent === '2 new', chipOf(entBtns(seen)[1])?.textContent);
+
+    // An item with no arrival stamp of its own falls back to the face: the
+    // same payload, with a face that refreshed since the last open.
+    const freshFace = JSON.parse(JSON.stringify(counted.data));
+    freshFace.watching.updated_at = daysAgoIso(1);
+    const fell = withStorage(fakeStorage({ watching: SINCE }), () => {
+      const r = new El('div');
+      ent.render(r, entTile(freshFace), { id: 'entertainment', actions: {} });
+      return r;
+    });
+    check('an item with no stamp of its own follows the face', chipOf(entBtns(fell)[0]).textContent === '2 new', chipOf(entBtns(fell)[0])?.textContent);
+
+    // Never opened here, storage blocked, storage full of junk — all three
+    // mean the same thing, and it is never "nothing new".
+    const never = withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, counted, { id: 'entertainment', actions: {} });
+      return r;
+    });
+    check('a face never opened on this device counts everything', chipOf(entBtns(never)[0]).textContent === '3 new', chipOf(entBtns(never)[0])?.textContent);
+
+    const blocked = withStorage(fakeStorage(null, { broken: true }), () => {
+      const r = new El('div');
+      ent.render(r, counted, { id: 'entertainment', actions: {} });
+      return r;
+    });
+    check('storage that throws counts everything rather than nothing', chipOf(entBtns(blocked)[1]).textContent === '3 new', chipOf(entBtns(blocked)[1])?.textContent);
+
+    const junk = withStorage({ getItem: () => 'not json at all', setItem() {} }, () => {
+      const r = new El('div');
+      ent.render(r, counted, { id: 'entertainment', actions: {} });
+      return r;
+    });
+    check('unparseable storage counts everything', chipOf(entBtns(junk)[0]).textContent === '3 new', chipOf(entBtns(junk)[0])?.textContent);
+
+    // A stamp that is a date-only string rather than an instant — written by
+    // some older build, or a hand edit. Comparing a business date against it
+    // would be a day wrong forever, so it reads as "never opened here".
+    const badStamp = withStorage(fakeStorage({ watching: ymd(-10) }), () => {
+      const r = new El('div');
+      ent.render(r, counted, { id: 'entertainment', actions: {} });
+      return r;
+    });
+    check('a stamp that is not an instant is not trusted', chipOf(entBtns(badStamp)[0]).textContent === '3 new', chipOf(entBtns(badStamp)[0])?.textContent);
+
+    // No localStorage on the object at all — Node, and any browser that has
+    // taken it away. An unguarded reach here is a ReferenceError on a phone.
+    const none = withStorage(undefined, () => {
+      const r = new El('div');
+      let threw = null;
+      try { ent.render(r, counted, { id: 'entertainment', actions: {} }); } catch (e) { threw = e; }
+      return { r, threw };
+    });
+    check('no localStorage at all never throws', !none.threw, none.threw && none.threw.message);
+    check('and still counts everything as new', chipOf(entBtns(none.r)[0]).textContent === '3 new');
+
+    // -- opening a face -------------------------------------------------------
+    console.log('\nentertainment — opening a face');
+    const store = fakeStorage({ watching: SINCE, podcasts: SINCE });
+    const panel2 = fakePanel();
+    const opened = withStorage(store, () => {
+      const r = new El('div');
+      ent.render(r, counted, { id: 'entertainment', actions: panel2.actions });
+      const btn = entBtns(r)[0];
+      const chip = chipOf(btn);
+      tap(btn);
+      return { r, btn, chip };
+    });
+    check('a tap opens the sheet', panel2.calls.length === 1);
+    check('titled with the glyph and the face', panel2.last.title === '📺 Watching', panel2.last.title);
+    check('opening stamps the face on this device', !!withStorage(store, () => store.parsed)?.watching);
+    check('and leaves the other face alone', withStorage(store, () => store.parsed).podcasts === SINCE);
+    check('the chip goes quiet on the spot', opened.chip.className.includes('hidden'));
+
+    // An older shell with no panel action: inert, and nothing is marked seen
+    // either — a face cannot be "opened" if it never opened.
+    const store2 = fakeStorage({ watching: SINCE });
+    const inertEnt = withStorage(store2, () => {
+      const r = new El('div');
+      let threw = null;
+      try {
+        ent.render(r, counted, { id: 'entertainment', actions: {} });
+        tap(entBtns(r)[0]);
+      } catch (e) { threw = e; }
+      return threw;
+    });
+    check('a tap with no panel action never reaches the page', !inertEnt, inertEnt && inertEnt.message);
+    check('and does not mark an unopened face as seen', withStorage(store2, () => store2.parsed).watching === SINCE);
+
+    // -- the watching sheet ---------------------------------------------------
+    console.log('\nentertainment — the Watching sheet');
+    const watchTile = entTile({
+      watching: {
+        // Deliberately stale, so the only row that can read as new is the one
+        // whose own episode aired since — not every row falling back to a
+        // face that happened to refresh this morning.
+        updated_at: daysAgoIso(40),
+        items: [
+          {
+            title: 'The Quiet Ledger',
+            platform: 'Apple TV+',
+            link: 'https://example.com/quiet-ledger',
+            next: { season: 3, episode: 4, name: 'A Clerical Error', air_date: '2026-03-01' },
+            last: { season: 3, episode: 3, air_date: ymd(-5) },
+            days: 2,
+            status_note: 'airing weekly',
+          },
+          { title: 'Bell Foundry', platform: 'Max', link: 'https://example.com/bell', next: null, last: null, days: null, status_note: 'schedule not published' },
+          { title: 'Northbound', platform: 'Netflix', link: 'javascript:alert(1)', next: { season: 4, episode: 1, name: 'Premiere', air_date: ymd(40) }, last: null, days: 40, status_note: null },
+        ],
+        errors: ['tmdb timed out for one title'],
+      },
+      podcasts: null,
+      top5: null,
+      listening: null,
+      attribution: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
+    });
+
+    const wPanel = fakePanel();
+    withStorage(fakeStorage({ watching: SINCE }), () => {
+      const r = new El('div');
+      ent.render(r, watchTile, { id: 'entertainment', actions: wPanel.actions });
+      tap(entBtns(r)[0]);
+    });
+    const wSheet = wPanel.last.body;
+    const wText = textOf(wSheet);
+    check('one row per show', countOf(wSheet, 'ent-row') === 3, String(countOf(wSheet, 'ent-row')));
+    check('the next episode reads S{n}E{m} · {name}', /S3E4 · A Clerical Error/.test(wText));
+    check('a show with nothing scheduled says so', /no episode scheduled/.test(wText));
+
+    // RULE 7, the disqualifying bug. '2026-03-01' is a Sunday; parsed as an
+    // instant it lands on Feb 28 for anyone in Central. The date on this row
+    // is built from the parts, so it cannot move.
+    check('an air date is rendered from its parts', /Sun Mar 1\b/.test(wText), 'expected "Sun Mar 1"');
+    check('and never shifts a day under new Date()', !/Feb 28/.test(wText));
+
+    const wPills = wSheet.querySelectorAll('.pill');
+    check(
+      'the days-out chip is the shared dueLabel, and only where there is a count',
+      wPills.map((x) => x.textContent).join('|') === '2d|40d',
+      wPills.map((x) => x.textContent).join('|')
+    );
+    check('and it carries dueLabel\'s tone', wPills[0].className.includes('pill-warn') && wPills[1].className.includes('pill-neutral'));
+    check('a platform chip is printed', countOf(wSheet, 'ent-platform') === 3 && /Apple TV\+/.test(wText));
+    check('the status note is carried through', /airing weekly/.test(wText) && /schedule not published/.test(wText));
+    check('a row is a link to the platform', wSheet.querySelectorAll('A').some((a) => a.getAttribute('href') === 'https://example.com/quiet-ledger'));
+    check('and opens in a new tab, safely', wSheet.querySelectorAll('A').every((a) => a.getAttribute('target') === '_blank' && /noopener/.test(a.getAttribute('rel') || '')));
+    check('a javascript: link is never a link', !wSheet.querySelectorAll('A').some((a) => /javascript/i.test(a.getAttribute('href') || '')));
+    check('but that row still renders', /Northbound/.test(wText));
+    check('the episode that aired since last open is marked new', countOf(wSheet, 'ent-new-mark') === 1, String(countOf(wSheet, 'ent-new-mark')));
+    check('a face error is reported, not swallowed', /tmdb timed out/.test(wText));
+    check('TMDB is credited in the footer', /not endorsed or certified by TMDB/.test(wText));
+
+    // -- the podcasts sheet ---------------------------------------------------
+    console.log('\nentertainment — the Podcasts sheet');
+    const podTile = entTile({
+      watching: null,
+      podcasts: {
+        updated_at: daysAgoIso(30),
+        items: [
+          { show: 'Ledger & Lamp', title: 'older lamp', published: ymd(-9), published_at: daysAgoIso(9), duration_min: 44, url: 'https://example.com/lamp-2' },
+          { show: 'Mock Fork', title: 'newest fork', published: '2026-03-01', published_at: daysAgoIso(0.04), duration_min: 58, url: 'https://example.com/fork-1' },
+          { show: 'Ledger & Lamp', title: 'newer lamp', published: ymd(-2), published_at: daysAgoIso(2), duration_min: null, url: 'https://example.com/lamp-1' },
+          { show: 'Mock Fork', title: 'older fork', published: ymd(-13), published_at: daysAgoIso(13), duration_min: 63, url: 'javascript:alert(1)' },
+        ],
+      },
+      top5: null,
+      listening: null,
+    });
+
+    const pPanel = fakePanel();
+    withStorage(fakeStorage({ podcasts: daysAgoIso(5) }), () => {
+      const r = new El('div');
+      ent.render(r, podTile, { id: 'entertainment', actions: pPanel.actions });
+      tap(entBtns(r)[1]);
+    });
+    const pSheet = pPanel.last.body;
+    const pText = textOf(pSheet);
+    const heads = pSheet.querySelectorAll('.ent-group-head').map((h) => h.textContent);
+    const titles = pSheet.querySelectorAll('.ent-row-title').map((t) => t.textContent);
+    check('episodes are grouped by show', heads.join('|') === 'Mock Fork|Ledger & Lamp', heads.join('|'));
+    check('shows are ordered by whichever dropped last', heads[0] === 'Mock Fork');
+    check('and each show is newest-first inside', titles.join('|') === 'newest fork|older fork|newer lamp|older lamp', titles.join('|'));
+    check('a duration is printed', /58 min/.test(pText));
+    check('a missing duration is simply absent', !/null min|NaN/.test(pText));
+    check('the published date is rendered from its parts', /Sun Mar 1\b/.test(pText));
+    check('and never shifts a day', !/Feb 28/.test(pText));
+    check('only episodes published since the last open are marked new', countOf(pSheet, 'ent-new-mark') === 2, String(countOf(pSheet, 'ent-new-mark')));
+    check('a row links to the episode', pSheet.querySelectorAll('A').some((a) => a.getAttribute('href') === 'https://example.com/fork-1'));
+    check('a javascript: episode url is inert', !pSheet.querySelectorAll('A').some((a) => /javascript/i.test(a.getAttribute('href') || '')));
+    check('the footer says what "new" actually means, once', (pText.match(/not unheard/g) || []).length === 1);
+
+    // -- empty and grown ------------------------------------------------------
+    console.log('\nentertainment — empty faces and schema growth');
+    const emptyPanel = fakePanel();
+    withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, shipped, { id: 'entertainment', actions: emptyPanel.actions });
+      tap(entBtns(r)[0]);
+      tap(entBtns(r)[1]);
+    });
+    check('an empty watching face opens to a plain message', /Nothing on the shelf/.test(textOf(emptyPanel.calls[0].body)));
+    check('an empty podcasts face opens to a plain message', /No new episodes/.test(textOf(emptyPanel.calls[1].body)));
+    check('and neither draws a row', countOf(emptyPanel.calls[0].body, 'ent-row') === 0 && countOf(emptyPanel.calls[1].body, 'ent-row') === 0);
+
+    // Rule 9 in this tile's own terms: a face the engine invents next month
+    // gets a button and a readable sheet without a page deploy.
+    const grownPanel = fakePanel();
+    const grown = withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, entTile({
+        watching: null, podcasts: null, top5: null, listening: null,
+        concerts: { updated_at: daysAgoIso(1), items: [{ title: 'A show at a made-up hall', venue: 'The Mock Room', link: 'https://example.com/gig' }] },
+        sources: { tv: 'TMDB' },
+        attribution: 'Data from TMDB',
+      }), { id: 'entertainment', actions: grownPanel.actions });
+      tap(entBtns(r)[4]);
+      return r;
+    });
+    check('an unknown populated face still gets a button', entLabels(grown).join('|') === 'Watching|Podcasts|Top 5|Listening|concerts', entLabels(grown).join('|'));
+    check('and opens to what arrived', /A show at a made-up hall/.test(textOf(grownPanel.last.body)) && /The Mock Room/.test(textOf(grownPanel.last.body)));
+    check('payload metadata is not mistaken for a face', !entLabels(grown).includes('sources') && !entLabels(grown).includes('attribution'));
+
+    // -- the faint line -------------------------------------------------------
+    const footRoot = withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, entTile({
+        watching: { updated_at: daysAgoIso(3), items: [] },
+        podcasts: { updated_at: new Date(Date.now() - 60000).toISOString(), items: [] },
+        top5: null, listening: null,
+      }), { id: 'entertainment', actions: {} });
+      return r;
+    });
+    check('one faint line under the grid', countOf(footRoot, 'tile-foot') === 1);
+    check('and it reports the OLDEST populated face', /3d ago/.test(textOf(footRoot)), textOf(footRoot));
+    const noFoot = withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, entTile({ watching: null, podcasts: null, top5: null, listening: null }), { id: 'entertainment', actions: {} });
+      return r;
+    });
+    check('no populated face means no line at all', countOf(noFoot, 'tile-foot') === 0);
+
+    // -- the owner is never named ---------------------------------------------
+    const ENT_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'entertainment.js'), 'utf8');
+    check('the module never reaches for me.name', !/\bme\b\s*[.?[]/.test(ENT_SRC));
+    const named = withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, watchTile, { id: 'entertainment', actions: {}, me: { name: 'Matt', role: 'owner' } });
+      return r;
+    });
+    check('and a name in ctx never lands on the board', !/Matt/.test(textOf(named)));
+    check('nor does the storage key leak into the page', !new RegExp(LS_KEY).test(textOf(named)));
   }
 
   // -- mke_board / Local Team Scoreboard -------------------------------------

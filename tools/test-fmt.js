@@ -74,6 +74,26 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('daysBetween same day', fmt.daysBetween('2026-09-17', '2026-09-17'), 0);
   eq('daysBetween rejects junk', fmt.daysBetween('2026-09-17', 'nope'), null);
 
+  console.log('\nan instant, brought down to its Central day');
+  // The bridge the entertainment tile's "new" counts stand on: a lastOpened
+  // instant against a date-only air_date. Getting this wrong by a day is the
+  // same class of bug as rule 7 itself, so it is pinned in every timezone.
+  eq('ctDate mid-afternoon Central', fmt.ctDate('2026-09-17T20:30:00Z'), '2026-09-17');
+  // 03:00Z is 22:00 the previous evening in Central — the day BEFORE, and the
+  // answer must not follow the machine's own clock into tomorrow.
+  eq('ctDate after UTC midnight is still yesterday in Central', fmt.ctDate('2026-09-18T03:00:00Z'), '2026-09-17');
+  // 05:00Z in September is exactly midnight CDT: the first instant of the day.
+  eq('ctDate at Central midnight', fmt.ctDate('2026-09-18T05:00:00Z'), '2026-09-18');
+  eq('ctDate one second before Central midnight', fmt.ctDate('2026-09-18T04:59:59Z'), '2026-09-17');
+  // Winter is CST, an hour further from UTC.
+  eq('ctDate at Central midnight in winter', fmt.ctDate('2026-01-15T06:00:00Z'), '2026-01-15');
+  eq('ctDate one second before, in winter', fmt.ctDate('2026-01-15T05:59:59Z'), '2026-01-14');
+  eq('ctDate rejects junk', fmt.ctDate('not a time'), '');
+  // A date-only string parses as UTC midnight and would answer "yesterday" in
+  // Central. Refused, not silently shifted — rule 7's whole point.
+  eq('ctDate refuses a date-only string rather than shifting it', fmt.ctDate('2026-09-17'), '');
+  eq('ctDate rejects null', fmt.ctDate(null), '');
+
   console.log('\nrelative day labels');
   eq('dayLabel today', fmt.dayLabel('2026-09-17', '2026-09-17'), 'Today');
   eq('dayLabel tomorrow', fmt.dayLabel('2026-09-18', '2026-09-17'), 'Tomorrow');

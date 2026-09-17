@@ -82,11 +82,11 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 573 assertions, no server needed
+npm test            # 657 assertions, no server needed
 npm run test:worker # 62 assertions, needs `npm run dev` running
 ```
 
-- **`test:fmt`** (75) — every date helper, run under `America/Chicago`,
+- **`test:fmt`** (84) — every date helper, run under `America/Chicago`,
   `Asia/Tokyo`, `UTC` and `Pacific/Kiritimati`, asserting byte-identical output
   in all four. This is the rule-7 tripwire.
 - **`test-graders`** (111) — every market across pre / in / post / push, run
@@ -104,7 +104,7 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   and that `style.css` reaches nowhere off this origin. Its sharpest assertion
   is a **cascade-order** check: a desktop override written above the phone rule
   it overrides loses silently, and only on a wide screen. That bug was real.
-- **`test:sw`** (38) — the service worker's routing policy: ESPN and `/ask` are
+- **`test:sw`** (39) — the service worker's routing policy: ESPN and `/ask` are
   never cached, `/api/data` is network-first with a cache fallback, the shell is
   stale-while-revalidate, and a 404 in the precache list cannot fail an install.
   It also asserts precache parity: every module the registry names is in `SHELL`.
@@ -115,7 +115,7 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   timeout, upstream error, corrupt snapshot, refusal, truncation). worker.js is
   a plain ES module, so the route runs in Node with no wrangler and no network.
   **No test ever calls a real model** — nothing here can spend money.
-- **`test-tiles`** (145) — every render module, against the mock snapshot and
+- **`test-tiles`** (219) — every render module, against the mock snapshot and
   against deliberately hostile payloads: empty, null, wrong-typed, all-fields-
   missing, and carrying fields no module has heard of. No module may throw at
   any of them, because a module that throws turns one card into "this tile
@@ -430,6 +430,55 @@ is remembered: the sheet is transient, so there is no per-viewer state to keep.
 
 Any tile can use it: `ctx.actions.openPanel(title, build)`, where `build(body)`
 fills a cleared body. A builder that throws greys the panel, not the board.
+
+### Entertainment — a menu that remembers
+
+The entertainment tile is the newsstand's menu pattern with one thing added:
+it remembers. Four faces — Watching, Podcasts, Top 5, Listening — each a
+button, each opening the same detail panel.
+
+Two differences from the newsstand are deliberate:
+
+**The faces are fixed in the module, not derived from the payload.** A face
+the engine has not built yet arrives as `null`, and a `null` face is still a
+button — greyed, dashed, wearing "soon". Deriving the menu from the data would
+silently drop it, and "coming" is information. (A face the engine *invents*
+and populates still gets a button anyway, via rule 9; payload metadata such as
+`sources` and `attribution` is not mistaken for one.)
+
+**The count chip is per device, not per snapshot.** Each face's chip counts
+items that arrived since that face was last opened *on this phone* — a
+timestamp per face under `helm.entertainment.lastOpened` in localStorage. That
+is a property of the device, not of the vault, so it is the one piece of tile
+state the snapshot does not own. The rules around it:
+
+- storage that is missing, blocked (Safari private mode) or corrupt means the
+  face has never been opened here, so **everything counts as new**. Never zero:
+  a tile gone silent because private mode ate a key is the worse failure.
+- nothing new means **no chip at all**, not a "0". The tile is quiet by default.
+- opening a face stamps it and the chip disappears on the spot, rather than
+  waiting for the next snapshot.
+
+What counts as "arrived" is per face, and only two faces have a real answer: a
+podcast episode has `published_at`, and a show has `last.air_date`. Anything
+with no per-item arrival stamp falls back to the face's own `updated_at`. A
+`release_date` is deliberately **not** treated as an arrival — it is in the
+future, and every item would read new forever.
+
+Under the grid, one faint line carries the **oldest** `updated_at` among the
+populated faces: the tile is only as current as its stalest face, and a fresh
+podcast list must not make a three-day-old episode schedule look fresh too.
+
+Rule 7 lives in the sheets. `air_date`, `published` and `release_date` are
+date-only Central strings rendered from their parts by `prettyDate`. Where one
+has to be compared against a `lastOpened` *instant*, the instant is brought
+down to its Central date with `ctDate()` and the two date strings are compared
+as text — the date-only side is never handed to `new Date()`.
+
+The podcast sheet's footer says what the badge actually promises, once: *"New
+means published since you last opened this, not unheard."* The page can see a
+publish date; it cannot see a play. The watching sheet's footer carries TMDB's
+attribution string verbatim, from `data.attribution`.
 
 ### Rule 9 — drift in both directions
 

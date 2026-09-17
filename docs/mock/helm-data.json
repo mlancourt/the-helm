@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-17T18:33:55.088Z",
-  "run_id": "run-mock-mu5vbwy8",
+  "generated_at": "2026-09-17T20:35:35.111Z",
+  "run_id": "run-mock-mu5zodoo",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:33:55.088Z",
+      "updated_at": "2026-09-17T20:35:35.112Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -94,7 +94,7 @@
     },
     "mke_board": {
       "band": "LIVE",
-      "updated_at": "2026-09-17T18:33:55.088Z",
+      "updated_at": "2026-09-17T20:35:35.112Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -125,7 +125,7 @@
     },
     "radar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:33:55.088Z",
+      "updated_at": "2026-09-17T20:35:35.112Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -141,7 +141,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:33:55.088Z",
+      "updated_at": "2026-09-17T20:35:35.112Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -191,7 +191,7 @@
     },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:33:55.088Z",
+      "updated_at": "2026-09-17T20:35:35.112Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -275,7 +275,7 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:33:55.088Z",
+      "updated_at": "2026-09-17T20:35:35.112Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -287,7 +287,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:33:55.088Z",
+      "updated_at": "2026-09-17T20:35:35.112Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -321,11 +321,11 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-17T18:10:55.088Z",
+      "updated_at": "2026-09-17T20:12:35.112Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-17T18:10:55.088Z",
+        "as_of": "2026-09-17T20:12:35.112Z",
         "count": 4,
         "refresh_note": null,
         "source": "mock generator",
@@ -367,20 +367,174 @@
         ]
       }
     },
+    "entertainment": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T20:35:35.112Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "watching": {
+          "updated_at": "2026-09-17T19:00:35.112Z",
+          "items": [
+            {
+              "title": "The Quiet Ledger",
+              "platform": "Apple TV+",
+              "link": "https://example.com/mock/quiet-ledger",
+              "tmdb_id": 900111,
+              "next": {
+                "season": 3,
+                "episode": 4,
+                "name": "A Clerical Error",
+                "air_date": "2026-09-19"
+              },
+              "last": {
+                "season": 3,
+                "episode": 3,
+                "air_date": "2026-09-12"
+              },
+              "days": 2,
+              "status_note": "airing weekly"
+            },
+            {
+              "title": "Harbour Lights",
+              "platform": "Paramount+",
+              "link": "https://example.com/mock/harbour-lights",
+              "tmdb_id": 900222,
+              "next": {
+                "season": 2,
+                "episode": 7,
+                "name": "Slack Water",
+                "air_date": "2026-09-17"
+              },
+              "last": {
+                "season": 2,
+                "episode": 6,
+                "air_date": "2026-09-10"
+              },
+              "days": 0,
+              "status_note": null
+            },
+            {
+              "title": "Bell Foundry",
+              "platform": "Max",
+              "link": "https://example.com/mock/bell-foundry",
+              "tmdb_id": 900333,
+              "next": null,
+              "last": {
+                "season": 1,
+                "episode": 8,
+                "air_date": "2026-09-16"
+              },
+              "days": null,
+              "status_note": "schedule not published"
+            },
+            {
+              "title": "Northbound",
+              "platform": "Netflix",
+              "link": "javascript:alert(1)",
+              "tmdb_id": 900444,
+              "next": {
+                "season": 4,
+                "episode": 1,
+                "name": "Season premiere",
+                "air_date": "2026-11-30"
+              },
+              "last": {
+                "season": 3,
+                "episode": 10,
+                "air_date": "2026-03-11"
+              },
+              "days": 74,
+              "status_note": null
+            }
+          ],
+          "errors": null
+        },
+        "podcasts": {
+          "updated_at": "2026-09-17T19:55:35.112Z",
+          "items": [
+            {
+              "show": "Mock Fork",
+              "title": "The chatbot that filed its own taxes",
+              "published": "2026-09-17",
+              "published_at": "2026-09-17T17:35:35.112Z",
+              "duration_min": 58,
+              "url": "https://example.com/mock/pod/fork-1",
+              "artwork": null
+            },
+            {
+              "show": "The Long Docket",
+              "title": "Case 114: the disappearing deposition",
+              "published": "2026-09-16",
+              "published_at": "2026-09-16T18:35:35.112Z",
+              "duration_min": 71,
+              "url": "https://example.com/mock/pod/docket-1",
+              "artwork": null
+            },
+            {
+              "show": "Ledger & Lamp",
+              "title": "A very small bank in a very large hurry",
+              "published": "2026-09-15",
+              "published_at": "2026-09-15T17:35:35.112Z",
+              "duration_min": 44,
+              "url": "https://example.com/mock/pod/ledger-1",
+              "artwork": null
+            },
+            {
+              "show": "Mock Fork",
+              "title": "Everyone is building the same agent",
+              "published": "2026-09-14",
+              "published_at": "2026-09-14T19:05:35.112Z",
+              "duration_min": 63,
+              "url": "https://example.com/mock/pod/fork-2",
+              "artwork": null
+            },
+            {
+              "show": "Ledger & Lamp",
+              "title": "The audit nobody asked for",
+              "published": "2026-09-08",
+              "published_at": "2026-09-08T20:35:35.112Z",
+              "duration_min": null,
+              "url": "https://example.com/mock/pod/ledger-2",
+              "artwork": null
+            },
+            {
+              "show": "Cold Open Radio",
+              "title": "Twelve minutes of dead air, explained",
+              "published": "2026-09-05",
+              "published_at": "2026-09-05T20:35:35.112Z",
+              "duration_min": 12,
+              "url": "https://example.com/mock/pod/cold-1",
+              "artwork": null
+            }
+          ],
+          "errors": null
+        },
+        "top5": null,
+        "listening": null,
+        "sources": {
+          "tv": "TMDB",
+          "podcasts": "RSS via iTunes Search",
+          "movies": "pending",
+          "books": "pending"
+        },
+        "attribution": "This product uses the TMDB API but is not endorsed or certified by TMDB."
+      }
+    },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:33:55.088Z",
+      "updated_at": "2026-09-17T20:35:35.112Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-16T12:33:55.088Z",
+        "drift_audit_updated": "2026-09-16T14:35:35.112Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-17T18:25:55.088Z",
+        "worker_published_at": "2026-09-17T20:27:35.112Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -402,7 +556,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-17T17:03:55.088Z",
+      "updated_at": "2026-09-17T19:05:35.112Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

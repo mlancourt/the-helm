@@ -276,6 +276,89 @@ function snapshot() {
         agoIso(23)
       ),
 
+      // Entertainment: a menu tile with two faces populated and two still
+      // null, which is exactly the shape the engine ships today. Streaming
+      // service names are real because the platform chip has to look like the
+      // real thing; every show, episode, podcast and date below is invented.
+      //
+      // The rows are chosen to exercise the sheet: an episode landing today
+      // (red chip), one in two days (amber), one months out (neutral), a show
+      // with nothing scheduled at all, and a link that is not http(s) and must
+      // render as inert text rather than becoming a live one.
+      entertainment: tile('DAILY', {
+        watching: {
+          updated_at: agoIso(95),
+          items: [
+            {
+              title: 'The Quiet Ledger',
+              platform: 'Apple TV+',
+              link: 'https://example.com/mock/quiet-ledger',
+              tmdb_id: 900111,
+              next: { season: 3, episode: 4, name: 'A Clerical Error', air_date: addDays(TODAY, 2) },
+              last: { season: 3, episode: 3, air_date: addDays(TODAY, -5) },
+              days: 2,
+              status_note: 'airing weekly',
+            },
+            {
+              title: 'Harbour Lights',
+              platform: 'Paramount+',
+              link: 'https://example.com/mock/harbour-lights',
+              tmdb_id: 900222,
+              next: { season: 2, episode: 7, name: 'Slack Water', air_date: TODAY },
+              last: { season: 2, episode: 6, air_date: addDays(TODAY, -7) },
+              days: 0,
+              status_note: null,
+            },
+            {
+              // Nothing scheduled, and the engine says why rather than guessing.
+              title: 'Bell Foundry',
+              platform: 'Max',
+              link: 'https://example.com/mock/bell-foundry',
+              tmdb_id: 900333,
+              next: null,
+              last: { season: 1, episode: 8, air_date: addDays(TODAY, -1) },
+              days: null,
+              status_note: 'schedule not published',
+            },
+            {
+              title: 'Northbound',
+              platform: 'Netflix',
+              link: 'javascript:alert(1)',
+              tmdb_id: 900444,
+              next: { season: 4, episode: 1, name: 'Season premiere', air_date: addDays(TODAY, 74) },
+              last: { season: 3, episode: 10, air_date: addDays(TODAY, -190) },
+              days: 74,
+              status_note: null,
+            },
+          ],
+          errors: null,
+        },
+
+        // Invented shows, invented episodes. `published` is the Central
+        // business date and `published_at` the instant — both, because the
+        // tile compares the instant when it has one and the date when it does
+        // not, and the mock has to exercise the pair.
+        podcasts: {
+          updated_at: agoIso(40),
+          items: [
+            { show: 'Mock Fork', title: 'The chatbot that filed its own taxes', published: TODAY, published_at: agoIso(3 * 60), duration_min: 58, url: 'https://example.com/mock/pod/fork-1', artwork: null },
+            { show: 'The Long Docket', title: 'Case 114: the disappearing deposition', published: addDays(TODAY, -1), published_at: agoIso(26 * 60), duration_min: 71, url: 'https://example.com/mock/pod/docket-1', artwork: null },
+            { show: 'Ledger & Lamp', title: 'A very small bank in a very large hurry', published: addDays(TODAY, -2), published_at: agoIso(2 * 1440 + 180), duration_min: 44, url: 'https://example.com/mock/pod/ledger-1', artwork: null },
+            { show: 'Mock Fork', title: 'Everyone is building the same agent', published: addDays(TODAY, -3), published_at: agoIso(3 * 1440 + 90), duration_min: 63, url: 'https://example.com/mock/pod/fork-2', artwork: null },
+            { show: 'Ledger & Lamp', title: 'The audit nobody asked for', published: addDays(TODAY, -9), published_at: agoIso(9 * 1440), duration_min: null, url: 'https://example.com/mock/pod/ledger-2', artwork: null },
+            { show: 'Cold Open Radio', title: 'Twelve minutes of dead air, explained', published: addDays(TODAY, -12), published_at: agoIso(12 * 1440), duration_min: 12, url: 'https://example.com/mock/pod/cold-1', artwork: null },
+          ],
+          errors: null,
+        },
+
+        // Not built yet. The tile renders these two greyed, wearing "soon".
+        top5: null,
+        listening: null,
+
+        sources: { tv: 'TMDB', podcasts: 'RSS via iTunes Search', movies: 'pending', books: 'pending' },
+        attribution: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
+      }),
+
       ship_status: tile('DAILY', {
         captains_log_today: true,
         captains_log_file: 'mock-log-2026-01-01.md',

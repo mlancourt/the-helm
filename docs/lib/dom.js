@@ -47,20 +47,30 @@ export function pill(text, tone = 'neutral') {
 }
 
 /**
+ * A snapshot URL, vetted — or null.
+ *
+ * URLs arrive from the snapshot, so anything that is not http(s) is refused
+ * here rather than becoming a javascript: or data: link further down. One
+ * definition, because `extLink` is not the only shape a link takes: a tile
+ * whose whole row is tappable needs the same guard around its own anchor.
+ */
+export function safeUrl(href) {
+  try {
+    const u = new URL(String(href));
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * An external link. Always rel="noopener noreferrer" — target="_blank" without
  * it hands the opened page a handle on ours.
  *
- * URLs arrive from the snapshot, so anything that is not http(s) renders as
- * inert text rather than becoming a javascript: or data: link.
+ * A URL the guard above refuses renders as inert text instead of a link.
  */
 export function extLink(href, text, cls = '') {
-  let safe = null;
-  try {
-    const u = new URL(String(href));
-    if (u.protocol === 'http:' || u.protocol === 'https:') safe = u.href;
-  } catch {
-    safe = null;
-  }
+  const safe = safeUrl(href);
   if (!safe) return el('span', { cls, text });
   return el('a', {
     cls,

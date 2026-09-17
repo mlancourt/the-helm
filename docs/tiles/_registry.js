@@ -15,6 +15,7 @@ export const REGISTRY = {
   bets_live: { band: 'LIVE', position: 10, module: './tiles/bets_live.js', title: 'Open Bets' },
   mke_board: { band: 'LIVE', position: 20, module: './tiles/mke_board.js', title: 'Local Team Scoreboard' },
   newsstand: { band: 'HOURLY', position: 30, module: './tiles/newsstand.js', title: 'Newsstand' },
+  entertainment: { band: 'DAILY', position: 35, module: './tiles/entertainment.js', title: 'Entertainment' },
   radar: { band: 'DAILY', position: 40, module: './tiles/radar.js', title: 'Radar' },
   calendar: { band: 'DAILY', position: 50, module: './tiles/calendar.js', title: 'Calendar' },
   reminders: { band: 'DAILY', position: 55, module: './tiles/reminders.js', title: 'Reminders' },
