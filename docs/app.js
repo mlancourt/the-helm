@@ -521,7 +521,9 @@ function showGate(title, lines, { tokenForm = false } = {}) {
       if (!/^[A-Za-z0-9_-]{8,128}$/.test(v)) { input.classList.add('bad'); return; }
       try { localStorage.setItem(LS_TOKEN, v); } catch { /* private mode */ }
       token = v;
-      refresh();
+      // boot() exited early at the gate, so modules + the ask sheet are not
+      // loaded yet; a rejected-token gate arrives after boot, so only refresh.
+      if (modules.size) refresh(); else boot();
     };
     btn.addEventListener('click', submit);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
