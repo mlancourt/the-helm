@@ -1,0 +1,4 @@
+# Copy to worker/.dev.vars (gitignored) for `wrangler dev`.
+# Real secrets never live in this repo.
+ADMIN_SECRET=dev-admin-secret-change-me
+ASK_DAILY_CAP_USD=3.00

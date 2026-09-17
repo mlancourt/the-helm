@@ -1,0 +1,20 @@
+# The Helm — Worker config.
+# The KV id below is a placeholder: run `npx wrangler kv namespace create HELM_KV`
+# and paste the real ids in. They are not secrets, so they belong in the repo.
+name = "the-helm"
+main = "worker.js"
+compatibility_date = "2026-09-17"
+
+# Secrets (never here — `wrangler secret put <NAME>`):
+#   ADMIN_SECRET        required
+#   ANTHROPIC_API_KEY   M4
+#   ASK_MODEL           M4, optional
+#   ASK_DAILY_CAP_USD   M4, optional (default 3.00)
+
+[[kv_namespaces]]
+binding = "HELM_KV"
+id = "REPLACE_ME_KV_NAMESPACE_ID"
+preview_id = "REPLACE_ME_KV_PREVIEW_ID"
+
+[observability]
+enabled = true

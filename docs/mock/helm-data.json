@@ -1,0 +1,270 @@
+{
+  "schema": 1,
+  "generated_at": "2026-09-17T14:26:53.112Z",
+  "run_id": "run-mock-mu5mi88o",
+  "tz": "America/Chicago",
+  "tiles": {
+    "bets_live": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T14:26:53.112Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "bankroll_u": 42.5,
+        "open_u": 6,
+        "record": "11-9-1",
+        "tickets": [
+          {
+            "id": "tkt-mock-001",
+            "league": "football/nfl",
+            "espn_event_id": "401770114",
+            "game": "Harbor Kestrels at Foundry Ironsides",
+            "kick_ct": "2026-09-17 15:25",
+            "market": "spread",
+            "side": "away",
+            "line": -3.5,
+            "player": null,
+            "label": "Kestrels -3.5",
+            "stake_u": 2,
+            "price": -110,
+            "class": "core"
+          },
+          {
+            "id": "tkt-mock-002",
+            "league": "football/nfl",
+            "espn_event_id": "401770114",
+            "game": "Harbor Kestrels at Foundry Ironsides",
+            "kick_ct": "2026-09-17 15:25",
+            "market": "total_over",
+            "side": null,
+            "line": 44.5,
+            "player": null,
+            "label": "Over 44.5",
+            "stake_u": 1,
+            "price": -105,
+            "class": "lean"
+          },
+          {
+            "id": "tkt-mock-003",
+            "league": "football/nfl",
+            "espn_event_id": "401770119",
+            "game": "Cedar Valley Drays at North Pike Sentinels",
+            "kick_ct": "2026-09-17 19:15",
+            "market": "anytime_td",
+            "side": null,
+            "line": null,
+            "player": "D. Vasquez",
+            "label": "Vasquez anytime TD",
+            "stake_u": 1,
+            "price": 135,
+            "class": "flier"
+          },
+          {
+            "id": "tkt-mock-004",
+            "league": "basketball/nba",
+            "espn_event_id": "401810422",
+            "game": "Lakeshore Current at Granite City Foremen",
+            "kick_ct": "2026-09-17 20:00",
+            "market": "ml",
+            "side": "home",
+            "line": null,
+            "player": null,
+            "label": "Foremen ML",
+            "stake_u": 1.5,
+            "price": -145,
+            "class": "core"
+          },
+          {
+            "id": "tkt-mock-005",
+            "league": "soccer/usa.1",
+            "espn_event_id": "731204",
+            "game": "Riverbend FC vs Cross Harbor SC",
+            "kick_ct": "2026-09-18 19:30",
+            "market": "btts",
+            "side": null,
+            "line": null,
+            "player": null,
+            "label": "Both teams to score",
+            "stake_u": 0.5,
+            "price": -120,
+            "class": "flier"
+          }
+        ]
+      }
+    },
+    "mke_board": {
+      "band": "LIVE",
+      "updated_at": "2026-09-17T14:26:53.112Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "teams": [
+          {
+            "abbr": "MIL",
+            "league": "baseball/mlb"
+          },
+          {
+            "abbr": "MIL",
+            "league": "basketball/nba"
+          },
+          {
+            "abbr": "GB",
+            "league": "football/nfl"
+          },
+          {
+            "abbr": "MARQ",
+            "league": "basketball/mens-college-basketball"
+          }
+        ]
+      }
+    },
+    "radar": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T14:26:53.112Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "date": "2026-09-17",
+        "lines": [
+          "Shop compressor still cycling short — watch it before the Thursday run.",
+          "Two quotes out past 10 days; neither has been nudged.",
+          "Weather turns Friday afternoon. Move the outdoor work up.",
+          "Nothing on the calendar defends the 9-11 block tomorrow. Guard it."
+        ],
+        "source": "mock-generator"
+      }
+    },
+    "calendar": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T14:26:53.112Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "days": [
+          {
+            "date": "2026-09-17",
+            "events": [
+              {
+                "time_ct": "08:30",
+                "title": "Standup — shop floor",
+                "cal": "wss"
+              },
+              {
+                "time_ct": "12:00",
+                "title": "Lunch w/ parts rep",
+                "cal": "wss"
+              },
+              {
+                "time_ct": "17:45",
+                "title": "Nora's practice pickup",
+                "cal": "family"
+              }
+            ]
+          },
+          {
+            "date": "2026-09-18",
+            "events": [
+              {
+                "time_ct": "09:00",
+                "title": "Deep work block",
+                "cal": "wss"
+              },
+              {
+                "time_ct": "14:00",
+                "title": "Service call — Cedar Ridge",
+                "cal": "wss"
+              },
+              {
+                "time_ct": "19:00",
+                "title": "Family movie night",
+                "cal": "family"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "dinner": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T14:26:53.112Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "date": "2026-09-17",
+        "meal": "Sheet-pan sausage and peppers",
+        "notes": "Start the oven at 5:15 or it slips past bedtime.",
+        "verdict": null
+      }
+    },
+    "purser_due": {
+      "band": "DAILY",
+      "updated_at": "2026-09-17T14:26:53.112Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "items": [
+          {
+            "card": "Blue card",
+            "due": "2026-09-20",
+            "amount": 412.88,
+            "amount_display": true,
+            "autopay": false,
+            "reminder_armed": true
+          },
+          {
+            "card": "Shop card",
+            "due": "2026-09-26",
+            "amount": 1290.4,
+            "amount_display": false,
+            "autopay": true,
+            "reminder_armed": false
+          },
+          {
+            "card": "Travel card",
+            "due": "2026-10-03",
+            "amount": 76.12,
+            "amount_display": true,
+            "autopay": true,
+            "reminder_armed": false
+          }
+        ]
+      }
+    },
+    "newsstand": {
+      "band": "HOURLY",
+      "updated_at": "2026-09-17T14:03:53.112Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "as_of": "2026-09-17T14:03:53.112Z",
+        "cards": [
+          {
+            "title": "Regional freight rates flatten after a long climb",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/freight-rates",
+            "lens": "business"
+          },
+          {
+            "title": "Small-shop automation is getting cheap faster than expected",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/shop-automation",
+            "lens": "trade"
+          },
+          {
+            "title": "A slow argument for keeping one analog habit",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/analog-habit",
+            "lens": "long"
+          }
+        ]
+      }
+    },
+    "ask": {
+      "band": "ASK",
+      "updated_at": "2026-09-17T12:56:53.112Z",
+      "status": "stale",
+      "error": "no ask backend configured yet (M4)",
+      "data": {}
+    }
+  }
+}

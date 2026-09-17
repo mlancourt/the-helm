@@ -1,15 +1,17 @@
 {
   "name": "the-helm",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "wrangler dev --config worker/wrangler.toml --port 8787",
+    "deploy": "wrangler deploy --config worker/wrangler.toml",
+    "mock": "node tools/make-mock-data.js > docs/mock/helm-data.json",
+    "test": "node tools/test-worker.js"
   },
-  "keywords": [],
   "author": "",
-  "license": "ISC",
-  "description": "",
+  "license": "UNLICENSED",
+  "description": "The Helm — personal homepage: Cloudflare Worker + static PWA",
   "devDependencies": {
     "wrangler": "^4.133.0"
-  }
+  },
+  "private": true
 }
