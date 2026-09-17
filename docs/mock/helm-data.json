@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-17T18:05:44.010Z",
-  "run_id": "run-mock-mu5ubo3u",
+  "generated_at": "2026-09-17T18:33:55.088Z",
+  "run_id": "run-mock-mu5vbwy8",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:05:44.010Z",
+      "updated_at": "2026-09-17T18:33:55.088Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -94,33 +94,38 @@
     },
     "mke_board": {
       "band": "LIVE",
-      "updated_at": "2026-09-17T18:05:44.010Z",
+      "updated_at": "2026-09-17T18:33:55.088Z",
       "status": "ok",
       "error": null,
       "data": {
+        "title": "Local Team Scoreboard",
         "teams": [
           {
             "abbr": "MIL",
-            "league": "baseball/mlb"
+            "league": "baseball/mlb",
+            "name": "Brewers"
           },
           {
             "abbr": "MIL",
-            "league": "basketball/nba"
+            "league": "basketball/nba",
+            "name": "Bucks"
           },
           {
             "abbr": "GB",
-            "league": "football/nfl"
+            "league": "football/nfl",
+            "name": "Packers"
           },
           {
             "abbr": "MARQ",
-            "league": "basketball/mens-college-basketball"
+            "league": "basketball/mens-college-basketball",
+            "name": "Marquette"
           }
         ]
       }
     },
     "radar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:05:44.010Z",
+      "updated_at": "2026-09-17T18:33:55.088Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -136,7 +141,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:05:44.010Z",
+      "updated_at": "2026-09-17T18:33:55.088Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -186,7 +191,7 @@
     },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:05:44.010Z",
+      "updated_at": "2026-09-17T18:33:55.088Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -270,7 +275,7 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:05:44.010Z",
+      "updated_at": "2026-09-17T18:33:55.088Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -282,7 +287,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:05:44.010Z",
+      "updated_at": "2026-09-17T18:33:55.088Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -316,11 +321,11 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-17T17:42:44.010Z",
+      "updated_at": "2026-09-17T18:10:55.088Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-17T17:42:44.010Z",
+        "as_of": "2026-09-17T18:10:55.088Z",
         "count": 4,
         "refresh_note": null,
         "source": "mock generator",
@@ -364,18 +369,18 @@
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T18:05:44.010Z",
+      "updated_at": "2026-09-17T18:33:55.088Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-16T12:05:44.010Z",
+        "drift_audit_updated": "2026-09-16T12:33:55.088Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-17T17:57:44.010Z",
+        "worker_published_at": "2026-09-17T18:25:55.088Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -397,7 +402,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-17T16:35:44.010Z",
+      "updated_at": "2026-09-17T17:03:55.088Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

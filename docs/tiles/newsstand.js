@@ -15,6 +15,18 @@
  *   lens      why this matters to Matt. Kept last and kept distinct, because
  *             it is the vault's opinion rather than the source's reporting.
  *
+ * The filter chips above the list are DERIVED from the cards, never from a
+ * list in this file — a category the vault invents tomorrow shows up on its
+ * own, wearing its own emoji, with no page deploy (rule 9). The chip set is
+ * the categories actually present, in the order the payload first mentions
+ * them, behind an "All" chip. Filtering hides cards rather than rebuilding
+ * the list, so an expanded synopsis survives a round trip through a chip.
+ *
+ * The last-picked chip is remembered in localStorage: a per-viewer
+ * convenience, not state. Every read and write is wrapped, and a private
+ * window, a cleared store, or a remembered category that is no longer in the
+ * payload all fall back to All.
+ *
  * Rule 10: every one of them lands via textContent. An emoji is untrusted text
  * exactly like a headline is.
  */
@@ -35,8 +47,36 @@ const CATEGORY_TONE = {
   markets: 'money',
 };
 
+/**
+ * Two spellings of one category are one chip. The payload's own casing is what
+ * gets printed; this key only decides sameness.
+ */
+function catKey(category) {
+  return String(category).trim().toLowerCase();
+}
+
+const ALL = '*';
+const LS_FILTER = 'helm.newsstand.filter';
+
+function readFilter() {
+  try {
+    return localStorage.getItem(LS_FILTER) || ALL;
+  } catch {
+    // Private window, blocked site data, or no storage at all.
+    return ALL;
+  }
+}
+
+function writeFilter(key) {
+  try {
+    localStorage.setItem(LS_FILTER, key);
+  } catch {
+    /* the filter still works for this visit, it just will not be remembered */
+  }
+}
+
 function categoryChip(category, emoji) {
-  const tone = CATEGORY_TONE[String(category).trim().toLowerCase()] || 'neutral';
+  const tone = CATEGORY_TONE[catKey(category)] || 'neutral';
   return el('span', { cls: `news-cat news-cat-${tone}` }, [
     emoji ? el('span', { cls: 'news-emoji', attrs: { 'aria-hidden': 'true' }, text: String(emoji) }) : null,
     el('span', { text: String(category) }),
@@ -98,6 +138,95 @@ function card(c) {
   return el('div', { cls: 'news-card' }, bits);
 }
 
+/**
+ * The categories actually present, in first-mention order:
+ *   key -> {label, emoji}
+ *
+ * The label is the payload's own spelling and the emoji is the payload's own
+ * glyph — the first one offered for that category, so a card that forgot its
+ * emoji does not blank the chip for every card that remembered.
+ */
+function categoriesIn(entries) {
+  const cats = new Map();
+  for (const e of entries) {
+    if (!e.key) continue;
+    const emoji = e.card.emoji ? String(e.card.emoji) : '';
+    const seen = cats.get(e.key);
+    if (!seen) cats.set(e.key, { label: String(e.card.category).trim(), emoji });
+    else if (!seen.emoji && emoji) seen.emoji = emoji;
+  }
+  return cats;
+}
+
+/**
+ * The chip row. Returns null when there is nothing to filter by, so a payload
+ * of uncategorised cards gets no empty rail above it.
+ */
+function filterRow(entries) {
+  const cats = categoriesIn(entries);
+  if (!cats.size) return null;
+
+  // A remembered category the vault has since dropped is not an error — it is
+  // just no longer on offer. Fall back to All.
+  let active = readFilter();
+  if (active !== ALL && !cats.has(active)) active = ALL;
+
+  const chips = [];
+
+  function apply(key) {
+    let last = null;
+    for (const e of entries) {
+      // An uncategorised card belongs to no chip but All.
+      const show = key === ALL || e.key === key;
+      if (show) e.node.classList.remove('hidden');
+      else e.node.classList.add('hidden');
+      // :last-child is structural and a hidden card still holds that slot, so
+      // the last VISIBLE card is marked here to drop its trailing hairline.
+      e.node.classList.remove('news-last');
+      if (show) last = e.node;
+    }
+    if (last) last.classList.add('news-last');
+    for (const c of chips) {
+      const on = c.key === key;
+      if (on) c.node.classList.add('news-filter-on');
+      else c.node.classList.remove('news-filter-on');
+      c.node.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
+  function chip(key, label, emoji) {
+    const node = el(
+      'button',
+      {
+        cls: 'news-filter',
+        attrs: { type: 'button' },
+        on: {
+          click: (e) => {
+            // Don't let the tap ride up into the card's Explain handler.
+            e.stopPropagation();
+            apply(key);
+            writeFilter(key);
+          },
+        },
+      },
+      [
+        emoji ? el('span', { cls: 'news-emoji', attrs: { 'aria-hidden': 'true' }, text: emoji }) : null,
+        el('span', { text: label }),
+      ]
+    );
+    chips.push({ key, node });
+    return node;
+  }
+
+  const row = el('div', { cls: 'news-filters', attrs: { role: 'group', 'aria-label': 'Filter by category' } }, [
+    chip(ALL, 'All', ''),
+    ...[...cats].map(([key, { label, emoji }]) => chip(key, label, emoji)),
+  ]);
+
+  apply(active);
+  return row;
+}
+
 export function render(el_, tile) {
   const data = tile.data || {};
   const cards = Array.isArray(data.cards) ? data.cards : [];
@@ -107,7 +236,17 @@ export function render(el_, tile) {
     return;
   }
 
-  el_.appendChild(el('div', { cls: 'news' }, cards.map(card)));
+  // One entry per card: the node, and the category key it answers to.
+  const entries = cards.map((c) => ({
+    card: c || {},
+    key: c && c.category ? catKey(c.category) : '',
+    node: card(c || {}),
+  }));
+
+  const row = filterRow(entries);
+  if (row) el_.appendChild(row);
+
+  el_.appendChild(el('div', { cls: 'news' }, entries.map((e) => e.node)));
 
   const foot = [];
   if (data.as_of) foot.push(`as of ${ago(data.as_of)}`);

@@ -363,9 +363,44 @@ body {
 
 /* -------------------------------------------------------------- newsstand */
 
+/* Filter chips. They wrap at phone width rather than scrolling sideways —
+   a horizontal rail hides its own tail on a 375px screen. The active chip
+   takes the brass; the rest reuse the neutral .news-cat look. */
+.news-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.news-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #1a1f26;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.news-filter:hover { color: var(--text); border-color: #2f3d4c; }
+.news-filter-on {
+  background: #2a2413;
+  border-color: var(--brass);
+  color: var(--brass);
+}
+.news-filter:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
 .news { display: flex; flex-direction: column; }
 .news-card { padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
-.news-card:last-child { border-bottom: 0; }
+.news-card:last-child, .news-card.news-last { border-bottom: 0; }
 .news-head { display: flex; gap: 6px; align-items: baseline; }
 .news-title { font-size: 13.5px; color: var(--text); text-decoration: none; display: block; }
 .news-title:hover { color: var(--brass); text-decoration: underline; }

@@ -1,10 +1,17 @@
 /**
- * mke_board — one row per Milwaukee-area team: opponent, score or next kick,
- * countdown.
+ * mke_board — one row per local team: opponent, score or next kick, countdown.
  *
- * The snapshot only supplies the watchlist ({abbr, league}); everything on the
- * right-hand side comes from ESPN in the browser. Until M3 wires that up the
- * rows render with an honest placeholder rather than inventing a fixture.
+ * The id stays `mke_board` because ids are contracts; the heading reads
+ * "Local Team Scoreboard" and lives in _registry.js, because titles are
+ * labels. The snapshot's own `data.title` is deliberately ignored — the card
+ * head already prints the registry title, and rendering both would say it
+ * twice.
+ *
+ * The snapshot supplies the watchlist ({abbr, league, name?}); everything on
+ * the right-hand side comes from ESPN in the browser. The league slug is
+ * passed through to ESPN verbatim, so a league the vault adds tomorrow —
+ * `basketball/mens-college-basketball`, say — needs nothing here beyond a
+ * label, and gets a sensible one derived from the slug even without that.
  */
 
 import { el, empty } from '../lib/dom.js';

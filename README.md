@@ -325,6 +325,31 @@ carries `{id, title, snapshot, pending, actions, live}`, where `actions` are
 You never have to do step 2 for the page to survive: an unregistered tile
 renders as a generic key/value card. Step 2 is what gives it a real layout.
 
+**Ids are contracts, titles are labels.** The heading a tile wears comes from
+`_registry.js` and nothing else — rename it there freely, and never rename the
+id to match. `mke_board` reads "Local Team Scoreboard"; the id stays
+`mke_board` because the engine, the snapshot and every event key speak it. A
+snapshot that carries its own `data.title` is ignored for the same reason: the
+card head already prints one, and two would say it twice.
+
+### Newsstand category chips
+
+The filter chips above the newsstand cards are **derived from the payload**,
+never from a list in the page. Every distinct `category` present gets a chip,
+labelled `<emoji> <category>` with the card's own emoji, in the order the
+payload first mentions them, behind an "All" chip. A category the vault invents
+tomorrow appears on its own with no deploy; two spellings of one category
+(`Tech`, `tech`) are one chip.
+
+Tapping a chip hides the other cards rather than rebuilding the list, so a
+synopsis the reader expanded is still expanded when they come back to it. The
+3-line clamp is untouched.
+
+The last-picked chip is remembered in `localStorage` under
+`helm.newsstand.filter` — a per-viewer convenience, not state. Reads and writes
+are both wrapped, and a private window, a blocked store, or a remembered
+category the vault has since dropped all fall back to All.
+
 ### Rule 9 — drift in both directions
 
 The engine and the page ship on different clocks, so the page treats schema

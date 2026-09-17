@@ -145,11 +145,16 @@ function snapshot() {
       }),
 
       mke_board: tile('LIVE', {
+        // The engine sends a title too; the page prints the registry's and
+        // ignores this one, so the heading is never said twice.
+        title: 'Local Team Scoreboard',
+        // `name` is the engine's label for the row; the page still matches on
+        // abbr + league, so a team that arrives without one renders the same.
         teams: [
-          { abbr: 'MIL', league: 'baseball/mlb' },
-          { abbr: 'MIL', league: 'basketball/nba' },
-          { abbr: 'GB', league: 'football/nfl' },
-          { abbr: 'MARQ', league: 'basketball/mens-college-basketball' },
+          { abbr: 'MIL', league: 'baseball/mlb', name: 'Brewers' },
+          { abbr: 'MIL', league: 'basketball/nba', name: 'Bucks' },
+          { abbr: 'GB', league: 'football/nfl', name: 'Packers' },
+          { abbr: 'MARQ', league: 'basketball/mens-college-basketball', name: 'Marquette' },
         ],
       }),
 
