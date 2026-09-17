@@ -717,42 +717,263 @@ async function main() {
     check('nor does the storage key leak into the page', !new RegExp(LS_KEY).test(textOf(named)));
   }
 
-  // -- mke_board / Local Team Scoreboard -------------------------------------
-  console.log('\nmke_board');
-  const mke = mods.get('mke_board');
-  if (mke) {
-    check(
-      'the registry titles it "Local Team Scoreboard"',
-      /mke_board:[^\n]*title: 'Local Team Scoreboard'/.test(REGISTRY_SRC),
-      'registry title'
-    );
-    check('the tile id stays mke_board', /\n\s{2}mke_board:/.test(REGISTRY_SRC));
+  // -- today_games: the league menu and its slate ----------------------------
+  //
+  // This tile renders almost nothing from the snapshot: the payload says WHICH
+  // leagues, and every game comes from ESPN via ctx.live.today. So the games
+  // below are the committed fake slate (tools/mock-espn.js) put through the
+  // REAL normalizer — which means these assertions cover espn.js's broadcast
+  // merge as well as the tile.
+  console.log('\ntoday_games — the league menu');
+  const tg = mods.get('today_games');
+  if (tg) {
+    check('mke_board is gone from the registry', !/mke_board/.test(REGISTRY_SRC));
+    check("today_games sits at position 20, titled Today's Games", /today_games:[^\n]*position: 20[^\n]*title: "Today's Games"/.test(REGISTRY_SRC));
+    check('and its module file is gone', !fs.existsSync(path.join(__dirname, '..', 'docs', 'tiles', 'mke_board.js')));
 
-    const teams = [
-      { abbr: 'MIL', league: 'baseball/mlb', name: 'Brewers' },
-      { abbr: 'MARQ', league: 'basketball/mens-college-basketball', name: 'Marquette' },
-      { abbr: 'XYZ', league: 'curling/world' },
-    ];
-    const board = new Map([
-      ['baseball/mlb:MIL', { state: 'in', opponent: 'vs PIT', score: '3–2', detail: 'Top 7th' }],
-      ['basketball/mens-college-basketball:MARQ', { state: 'pre', opponent: '@ VILL', kick: '8:00 PM', countdown: 'in 3h' }],
-      ['curling/world:XYZ', { state: 'none' }],
-    ]);
+    const { normalizeEvent } = await import('../docs/live/espn.js');
+    const { slate, todayGamesPayload } = require('./mock-espn.js');
+
+    // A FIXED date, so kick times and the sheet header are deterministic.
+    const DATE_CT = '2026-09-17';
+    const RAW = slate(DATE_CT);
+    const payload = todayGamesPayload(DATE_CT);
+
+    const liveFor = (slugs, { ok = true, error = null } = {}) => ({
+      games: new Map(),
+      grades: new Map(),
+      today: {
+        date_ct: DATE_CT,
+        leagues: new Map(
+          slugs.map((slug) => [
+            slug,
+            { games: (RAW.leagues[slug] || []).map((e) => normalizeEvent(e, slug)).filter(Boolean), ok },
+          ])
+        ),
+      },
+      fetched_at: '2026-09-17T19:14:00Z',
+      error,
+    });
+
+    const ALL = ['baseball/mlb', 'soccer/usa.1', 'soccer/eng.1', 'soccer/esp.1'];
+    const tgBtns = (root) => root.querySelectorAll('.tg-btn');
+    const tgLabels = (root) => tgBtns(root).map((b) => b.querySelector('.tg-btn-label').textContent);
+    const chipText = (btn) => {
+      const c = btn.querySelector('.tg-count') || btn.querySelector('.tg-idle');
+      return c ? c.textContent : '';
+    };
+
+    const panel = fakePanel();
     const root = new El('div');
-    mke.render(
-      root,
-      { band: 'LIVE', status: 'ok', data: { title: 'Local Team Scoreboard', teams } },
-      { id: 'mke_board', actions: {}, live: { board, fetched_at: new Date().toISOString(), error: null } }
-    );
+    tg.render(root, { band: 'LIVE', status: 'ok', data: payload }, {
+      id: 'today_games',
+      actions: panel.actions,
+      live: liveFor(ALL),
+    });
 
-    check('one row per team', countOf(root, 'mke-row') === 3);
-    check('a college-basketball row renders like the others', /MARQ/.test(textOf(root)) && /@ VILL/.test(textOf(root)));
-    check('its league slug reads as NCAAM, not the raw slug', /NCAAM/.test(textOf(root)) && !/mens-college-basketball/.test(textOf(root)));
-    check('a league nobody labelled still gets a label from its slug', /WORLD/.test(textOf(root)));
-    check('a live row shows the score', /3–2/.test(textOf(root)));
-    // data.title is the engine's; the card head already prints the registry's.
-    const titleHits = (textOf(root).match(/Local Team Scoreboard/g) || []).length;
-    check('data.title is not rendered a second time inside the tile', titleHits === 0, `${titleHits} hits`);
+    check(
+      'one button per league, in payload order',
+      tgLabels(root).join('|') === 'MLB|MLS|EPL|La Liga',
+      tgLabels(root).join('|')
+    );
+    check('each button wears its emoji', countOf(root, 'tg-emoji') === 4);
+    check(
+      'the chip counts that league’s games',
+      tgBtns(root).map(chipText).join() === '3 games,2 games,no games today,2 games',
+      tgBtns(root).map(chipText).join()
+    );
+    // MLB has one in-progress game; MLS has one; La Liga is all final.
+    check('a live-dot only where a game is actually in progress', countOf(root, 'tg-dot') === 2);
+    check('the dot is on MLB and MLS', !!tgBtns(root)[0].querySelector('.tg-dot') && !!tgBtns(root)[1].querySelector('.tg-dot'));
+    check('not on the all-final league', !tgBtns(root)[3].querySelector('.tg-dot'));
+    check('nor on the empty one', !tgBtns(root)[2].querySelector('.tg-dot'));
+    check('an empty slate greys its button', tgBtns(root)[2].className.includes('tg-btn-none'));
+    check('a live league is tinted live', tgBtns(root)[0].className.includes('tg-btn-live'));
+    check('a league with games but none live is tinted on', tgBtns(root)[3].className.includes('tg-btn-on'));
+
+    // The board is a menu: no games on it, one faint line under it.
+    check('no game rows in the tile body', countOf(root, 'tg-game') === 0);
+    check('one faint line carries the feed time and the date', countOf(root, 'tile-foot') === 1);
+    check('and it says both', /feed 2:14 PM/.test(textOf(root)) && /Thu Sep 17/.test(textOf(root)), textOf(root));
+    check('nothing on the board reads as undefined', !/undefined/.test(textOf(root)));
+
+    // -- the sheet -----------------------------------------------------------
+    console.log('\ntoday_games — the league sheet');
+    tap(tgBtns(root)[0]); // MLB
+    check('a tap opens the sheet', panel.calls.length === 1);
+    check('titled with the emoji, the label and the date', panel.last.title === '⚾ MLB · Thu Sep 17', panel.last.title);
+
+    const sheet = panel.last.body;
+    const matchups = sheet.querySelectorAll('.tg-matchup').map((n) => n.textContent);
+    check(
+      'games are chronological by kick, not payload order',
+      matchups.join(' | ') === 'Herons @ Ironsides | Loons @ Nine | Foremen @ Drays',
+      matchups.join(' | ')
+    );
+    check('the matchup uses shortDisplayNames', /Herons @ Ironsides/.test(textOf(sheet)) && !/Harbor Herons/.test(textOf(sheet)));
+
+    const rows = sheet.querySelectorAll('.tg-game');
+    const statusOf = (r) => r.querySelector('.tg-status').textContent;
+    check('a final row says Final and the score', statusOf(rows[0]) === 'Final  ·  HRN 6 – 5 FIS', statusOf(rows[0]));
+    check('a live row says the score and the clock', statusOf(rows[1]) === 'LKL 2 – 4 CCN  ·  Top 7th', statusOf(rows[1]));
+    check('a pre row says the kick time in Central', statusOf(rows[2]) === '9:40 PM', statusOf(rows[2]));
+    check('the live row gets the green rail', rows[1].classList.contains('tg-game-in'));
+    check('the final row greys', rows[0].classList.contains('tg-game-post'));
+
+    // -- the watch chips (G4) ------------------------------------------------
+    const chipsOf = (r) => r.querySelectorAll('.tg-chip').map((c) => c.textContent);
+    check(
+      'a mapped national channel gets a tick and the service',
+      chipsOf(rows[1]).includes('✓ YouTube TV'),
+      chipsOf(rows[1]).join()
+    );
+    check(
+      'an RSN the map claims is his beats the regional rule',
+      chipsOf(rows[1]).includes('✓ CreamCity.TV (regional, yours)'),
+      chipsOf(rows[1]).join()
+    );
+    check(
+      'an unmapped name is printed verbatim and unmarked',
+      chipsOf(rows[0]).includes('MLB.TV') && !chipsOf(rows[0]).some((c) => /✓ MLB\.TV/.test(c)),
+      chipsOf(rows[0]).join()
+    );
+    check(
+      "another team's market feed says it will not be his",
+      chipsOf(rows[0]).includes('regional — not yours'),
+      chipsOf(rows[0]).join()
+    );
+    check('a mapped chip is classed mapped', rows[1].querySelectorAll('.tg-chip-mapped').length === 2);
+    check('a regional chip is classed regional', rows[0].querySelectorAll('.tg-chip-regional').length === 1);
+    check('an unmapped chip is classed raw', rows[0].querySelectorAll('.tg-chip-raw').length === 1);
+    check(
+      'a name ESPN sent twice is one chip, not two',
+      chipsOf(rows[1]).length === 2,
+      chipsOf(rows[1]).join()
+    );
+    check('national listings come first', chipsOf(rows[2])[0] === '✓ Peacock', chipsOf(rows[2]).join());
+    check('no chip anywhere reads as undefined', !/undefined/.test(textOf(sheet)));
+
+    // A game ESPN listed with no broadcast at all.
+    tap(tgBtns(root)[1]); // MLS
+    const mlsRows = panel.last.body.querySelectorAll('.tg-game');
+    check('a game with no listing says so rather than nothing', mlsRows[1].querySelector('.tg-chip-none').textContent === 'no listing');
+    check('a soccer clock renders as ESPN sent it', /63'/.test(textOf(panel.last.body)));
+
+    // -- an empty slate still opens (G6) -------------------------------------
+    tap(tgBtns(root)[2]); // EPL
+    check('a league with nothing on still opens its sheet', panel.calls.length === 3);
+    check('and says which league has nothing on', /No EPL games today\./.test(textOf(panel.last.body)));
+    check('with the date still in the title', /Thu Sep 17/.test(panel.last.title));
+
+    // -- before the band has run ---------------------------------------------
+    const cold = new El('div');
+    tg.render(cold, { band: 'LIVE', status: 'ok', data: payload }, { id: 'today_games', actions: panel.actions });
+    check('with no band yet every league says awaiting feed', countOf(cold, 'tg-idle') === 4);
+    check('and no count is invented', countOf(cold, 'tg-count') === 0);
+    check('the date is still printed from the payload', /Thu Sep 17/.test(textOf(cold)));
+    check('a cold tile never claims no games today', !/no games today/.test(textOf(cold)));
+
+    // -- a league whose feed died --------------------------------------------
+    const sick = new El('div');
+    const sickPanel = fakePanel();
+    tg.render(sick, { band: 'LIVE', status: 'ok', data: payload }, {
+      id: 'today_games',
+      actions: sickPanel.actions,
+      live: liveFor(ALL, { ok: false, error: 'some feeds unavailable' }),
+    });
+    check('a partial failure is said on the board', /feed unavailable/.test(textOf(sick)));
+    tap(tgBtns(sick)[0]);
+    check('and in the sheet, over the last slate it had', /feed unavailable/.test(textOf(sickPanel.last.body)));
+    check('the last slate is still rendered', sickPanel.last.body.querySelectorAll('.tg-game').length === 3);
+
+    // -- schema growth and hostile shapes -----------------------------------
+    const grown = new El('div');
+    tg.render(grown, { band: 'LIVE', status: 'ok', data: {
+      date_ct: DATE_CT,
+      leagues: [{ id: 'ncaaf', slug: 'football/college-football' }, { slug: '' }, { id: 'dupe', slug: 'baseball/mlb', label: 'MLB' }, { id: 'dupe2', slug: 'baseball/mlb', label: 'again' }],
+    } }, { id: 'today_games', actions: {}, live: liveFor(['baseball/mlb']) });
+    check('a league with no label gets one from its slug', /COLLEGE-FOOTBALL/.test(textOf(grown)));
+    check('a league with no slug is dropped', tgLabels(grown).length === 2, tgLabels(grown).join());
+    check('a slug listed twice gets one button', tgLabels(grown).filter((l) => l === 'MLB').length === 1);
+    check('a league with no emoji still renders', !/undefined/.test(textOf(grown)));
+
+    const noLeagues = new El('div');
+    tg.render(noLeagues, { band: 'LIVE', status: 'ok', data: { date_ct: DATE_CT, leagues: [] } }, { id: 'today_games', actions: {} });
+    check('no leagues at all says so', /No leagues on the board\./.test(textOf(noLeagues)));
+
+    // Rule 7: a date_ct that is not a plain date renders verbatim, unparsed.
+    const oddDate = new El('div');
+    tg.render(oddDate, { band: 'LIVE', status: 'ok', data: { ...payload, date_ct: '2026-9-7' } }, { id: 'today_games', actions: {}, live: liveFor(ALL) });
+    check('an off-shape date_ct is printed as text, never parsed', /2026-9-7/.test(textOf(oddDate)));
+
+    // A postponed game is not "pre" — it must not show a kick time.
+    const dead = JSON.parse(JSON.stringify(RAW.leagues['baseball/mlb'][2]));
+    dead.competitions[0].status.type = { state: 'pre', name: 'STATUS_POSTPONED', completed: false, detail: 'Postponed', shortDetail: 'Postponed' };
+    const deadPanel = fakePanel();
+    const deadRoot = new El('div');
+    tg.render(deadRoot, { band: 'LIVE', status: 'ok', data: payload }, {
+      id: 'today_games',
+      actions: deadPanel.actions,
+      live: {
+        games: new Map(),
+        grades: new Map(),
+        today: { date_ct: DATE_CT, leagues: new Map([['baseball/mlb', { games: [normalizeEvent(dead, 'baseball/mlb')], ok: true }]]) },
+        fetched_at: '2026-09-17T19:14:00Z',
+        error: null,
+      },
+    });
+    tap(tgBtns(deadRoot)[0]);
+    check('a postponed game says postponed, not a kick time', /Postponed/.test(textOf(deadPanel.last.body)));
+    check('and is not counted as live', countOf(deadRoot, 'tg-dot') === 0);
+
+    // -- watchChips directly (G4), for the cases a row cannot reach ----------
+    console.log('\ntoday_games — watch chips, case by case');
+    {
+      const game = (broadcasts, home = 'CCN', away = 'LKL') => ({
+        home: { abbr: home }, away: { abbr: away }, broadcasts,
+      });
+      const chips = (bc, map = payload.watch_map, locals = payload.local_teams, slug = 'baseball/mlb') =>
+        tg.watchChips(game(bc), map, locals, slug).map((c) => `${c.kind}:${c.text}`);
+
+      check(
+        'a local team\u2019s own feed that the map has NOT claimed is printed plainly',
+        chips([{ name: 'Nine Sports', market: 'Home' }]).join() === 'raw:Nine Sports',
+        chips([{ name: 'Nine Sports', market: 'Home' }]).join()
+      );
+      check(
+        'the local-team check ignores abbreviation casing',
+        chips([{ name: 'Nine Sports', market: 'Home' }], payload.watch_map, { 'baseball/mlb': ['ccn'] }).join() === 'raw:Nine Sports'
+      );
+      check(
+        'a league with no local_teams entry treats every market feed as somebody else\u2019s',
+        chips([{ name: 'Nine Sports', market: 'Home' }], payload.watch_map, {}).join() === 'regional:regional \u2014 not yours'
+      );
+      check(
+        'two other-market feeds collapse into one regional chip',
+        chips([{ name: 'A Sports', market: 'Home' }, { name: 'B Sports', market: 'Away' }], payload.watch_map, {}).length === 1
+      );
+      check(
+        'a National market is never called regional, mapped or not',
+        chips([{ name: 'Unknown Channel', market: 'National' }]).join() === 'raw:Unknown Channel'
+      );
+      check('a blank name is dropped rather than rendered empty', chips([{ name: '   ', market: 'National' }]).length === 0);
+      check('a game with no broadcasts key at all yields no chips', tg.watchChips({}, {}, {}, 'x').length === 0);
+      check('a null watch_map does not throw', tg.watchChips(game([{ name: 'FS1', market: 'National' }]), null, null, 'x').length === 1);
+      check(
+        'a watch_map value that is not a string is treated as unmapped',
+        chips([{ name: 'FS1', market: 'National' }], { FS1: null }).join() === 'raw:FS1'
+      );
+      check('and the mapping is exact, not fuzzy', chips([{ name: 'fs1', market: 'National' }]).join() === 'raw:fs1');
+    }
+
+    // -- no sheet to open ----------------------------------------------------
+    const inert = new El('div');
+    let threw = null;
+    try {
+      tg.render(inert, { band: 'LIVE', status: 'ok', data: payload }, { id: 'today_games', actions: {}, live: liveFor(ALL) });
+      tap(tgBtns(inert)[0]);
+    } catch (e) { threw = e; }
+    check('a tap with no panel action never reaches the page', !threw, threw && threw.message);
   }
 
   // -- reminders specifics ---------------------------------------------------

@@ -3,7 +3,13 @@
  * The Helm — fake snapshot generator. Node, zero deps.
  *
  *   node tools/make-mock-data.js            > docs/mock/helm-data.json
+ *   node tools/make-mock-data.js --pending  > docs/mock/pending.json
+ *   node tools/make-mock-data.js --espn     > docs/mock/espn-today.json
  *   node tools/make-mock-data.js --events   > two POST /api/event bodies
+ *
+ * The `--espn` slate is the other half of `today_games`: that tile's games all
+ * come from ESPN in the browser, so a snapshot alone cannot show it working.
+ * See tools/mock-espn.js.
  *
  * EVERY value below is invented. No real bets, balances, people, feeds, or
  * calendar items ever land in this repo. League slugs and team abbreviations
@@ -13,6 +19,8 @@
  * arithmetic on the parts via Date.UTC and never hand a date-only string to
  * `new Date()`.
  */
+
+const { todayGamesPayload, slate } = require('./mock-espn.js');
 
 const CT_YMD = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Chicago',
@@ -144,19 +152,11 @@ function snapshot() {
         ],
       }),
 
-      mke_board: tile('LIVE', {
-        // The engine sends a title too; the page prints the registry's and
-        // ignores this one, so the heading is never said twice.
-        title: 'Local Team Scoreboard',
-        // `name` is the engine's label for the row; the page still matches on
-        // abbr + league, so a team that arrives without one renders the same.
-        teams: [
-          { abbr: 'MIL', league: 'baseball/mlb', name: 'Brewers' },
-          { abbr: 'MIL', league: 'basketball/nba', name: 'Bucks' },
-          { abbr: 'GB', league: 'football/nfl', name: 'Packers' },
-          { abbr: 'MARQ', league: 'basketball/mens-college-basketball', name: 'Marquette' },
-        ],
-      }),
+      // Today's Games: the engine publishes only the league list, the watch
+      // map and the Central date. Every game comes from ESPN in the browser —
+      // from docs/mock/espn-today.json under `?mock=1`. The two are generated
+      // from the same file so the broadcast names hit this watch map.
+      today_games: tile('LIVE', todayGamesPayload(TODAY)),
 
       radar: tile('DAILY', {
         date: TODAY,
@@ -418,5 +418,7 @@ const mode = process.argv.includes('--events')
   ? mockEvents()
   : process.argv.includes('--pending')
     ? mockPending()
-    : snapshot();
+    : process.argv.includes('--espn')
+      ? slate(TODAY)
+      : snapshot();
 process.stdout.write(JSON.stringify(mode, null, 2) + '\n');

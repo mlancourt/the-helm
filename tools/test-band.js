@@ -39,6 +39,9 @@ function stubFetch({ scoreboards = {}, summaries = {}, fail = new Set() } = {}) 
     const league = u.pathname.replace('/apis/site/v2/sports/', '').replace(/\/(scoreboard|summary)$/, '');
     if (fail.has(league) || fail.has('*')) throw new Error('network down');
     if (u.pathname.endsWith('/scoreboard')) {
+      // Keyed by league alone: the DATE the band asked for is asserted from
+      // the recorded URL, not served differently, so a wrong date shows up as
+      // a failed assertion rather than as an empty slate.
       return { ok: true, json: async () => ({ events: scoreboards[league] || [] }) };
     }
     if (u.pathname.endsWith('/summary')) {
@@ -50,16 +53,31 @@ function stubFetch({ scoreboards = {}, summaries = {}, fail = new Set() } = {}) 
   return calls;
 }
 
-const snapshotWith = (tickets, teams = []) => ({
-  schema: 1,
-  tiles: {
-    bets_live: { band: 'DAILY', status: 'ok', data: { tickets } },
-    mke_board: { band: 'LIVE', status: 'ok', data: { teams } },
-  },
-});
+/**
+ * `leagues` are today_games' league list — `[{id, slug, label, emoji}]` — and
+ * `dateCt` its Central date string. Both default to absent, which is how the
+ * pre-today_games cases in here stay exactly the cases they were.
+ */
+const snapshotWith = (tickets, leagues = null, dateCt = null) => {
+  const tiles = { bets_live: { band: 'DAILY', status: 'ok', data: { tickets } } };
+  if (leagues) {
+    tiles.today_games = {
+      band: 'LIVE',
+      status: 'ok',
+      data: {
+        leagues: leagues.map((l) => (typeof l === 'string' ? { id: l, slug: l, label: l, emoji: '' } : l)),
+        ...(dateCt ? { date_ct: dateCt } : {}),
+        watch_map: {},
+        local_teams: {},
+      },
+    };
+  }
+  return { schema: 1, tiles };
+};
 
 (async () => {
-  const { createLiveBand, nextDelay, LIVE_MS, PRE_MS } = await import('../docs/live/band.js');
+  const { createLiveBand, nextDelay, requirements, LIVE_MS, PRE_MS } = await import('../docs/live/band.js');
+  const { ctDateCompact } = await import('../docs/live/espn.js');
 
   // Real events, with state forced where a scenario needs it.
   const nflPost = FIX.nfl_post_raw;                       // TB 27 @ CIN 33, final
@@ -163,10 +181,7 @@ const snapshotWith = (tickets, teams = []) => ({
     const calls = stubFetch({ scoreboards: { 'football/nfl': [nflPost], 'baseball/mlb': [mlbPost] } });
     const band = createLiveBand(() => {});
     await band.runOnce(
-      snapshotWith(
-        [tkt({ id: 'a' }), tkt({ id: 'b', league: 'baseball/mlb', espn_event_id: mlbPost.id })],
-        [{ abbr: 'MIL', league: 'baseball/mlb' }]
-      )
+      snapshotWith([tkt({ id: 'a' }), tkt({ id: 'b', league: 'baseball/mlb', espn_event_id: mlbPost.id })])
     );
     const sb = calls.filter((c) => c.includes('/scoreboard'));
     check('one scoreboard call per distinct league', sb.length === 2, `got ${sb.length}`);
@@ -176,30 +191,75 @@ const snapshotWith = (tickets, teams = []) => ({
   {
     const calls = stubFetch({ scoreboards: {} });
     const band = createLiveBand(() => {});
-    await band.runOnce(snapshotWith([], []));
+    await band.runOnce(snapshotWith([]));
     check('nothing to watch means no fetches at all', calls.length === 0);
   }
 
-  // ---------------------------------------------------------- mke_board
-  console.log('\nmke_board rows');
+  // -------------------------------------------------- today_games slates
+  //
+  // The whole point of G5: `bets_live` and `today_games` are served by ONE
+  // tick. So what is tested here is the PLAN — which calls get made, with
+  // which date — and the per-league slate the tile reads.
+  console.log('\ntoday_games — one tick serves both tiles');
   {
-    stubFetch({ scoreboards: { 'baseball/mlb': [mlbPost] } });
+    const today = ctDateCompact();
+    const req = requirements(snapshotWith([tkt({ league: 'baseball/mlb' })], ['baseball/mlb', 'soccer/usa.1']));
+    check('a league a ticket and the board share is ONE call', req.plan.length === 2, `plan ${req.plan.length}`);
+    check('and both calls are dated today', req.plan.every((p) => p.date === today));
+    check('the board leagues come through in payload order', req.leagues.map((l) => l.slug).join() === 'baseball/mlb,soccer/usa.1');
+  }
+  {
+    // RULE 7: `dates=` is built from date_ct by string ops. A snapshot dated
+    // to a day that is not today must be queried as THAT day, unshifted —
+    // `new Date('2026-01-02')` would send 20260101 to anyone in Central.
+    const calls = stubFetch({ scoreboards: { 'baseball/mlb': [] } });
+    const band = createLiveBand(() => {});
+    await band.runOnce(snapshotWith([], ['baseball/mlb'], '2026-01-02'));
+    check('dates= is the payload date, character for character', calls.some((c) => /[?&]dates=20260102(&|$)/.test(c)), calls.join(' '));
+    check('and the day is not shifted backwards', !calls.some((c) => /dates=20260101/.test(c)));
+  }
+  {
+    const req = requirements(snapshotWith([], ['baseball/mlb'], 'not-a-date'));
+    check('an unusable date_ct falls back to today rather than querying junk', req.boardDate === ctDateCompact());
+  }
+  {
+    stubFetch({ scoreboards: { 'baseball/mlb': [mlbPost, nflPre], 'soccer/usa.1': [] } });
     let got = null;
     const band = createLiveBand((s) => (got = s));
-    // SF @ STL: STL is home.
-    await band.runOnce(snapshotWith([], [{ abbr: 'STL', league: 'baseball/mlb' }, { abbr: 'XXX', league: 'baseball/mlb' }]));
-    const row = got.board.get('baseball/mlb:STL');
-    check('a team on the slate gets a row', !!row && row.state === 'post');
-    check('home team shows "vs OPP"', row.opponent === 'vs SF', row?.opponent);
-    check('score is us-first', row.score === '5–6', row?.score);
-    check('a team not playing today says so', got.board.get('baseball/mlb:XXX').state === 'none');
+    await band.runOnce(snapshotWith([], ['baseball/mlb', 'soccer/usa.1']));
+    check('every followed league gets an entry', got.today.leagues.size === 2);
+    check('the slate is the whole league, not just ticketed games', got.today.leagues.get('baseball/mlb').games.length === 2);
+    check('a league with nothing on gets an empty slate, not a missing one', got.today.leagues.get('soccer/usa.1').games.length === 0);
+    check('a healthy league is marked ok', got.today.leagues.get('soccer/usa.1').ok === true);
+    check('the payload date rides along for the tile header', typeof got.today.date_ct === 'string');
+  }
+  {
+    // A board game under way drives the cadence even with no tickets at all.
+    stubFetch({ scoreboards: { 'baseball/mlb': [asLive(mlbPost)] } });
+    const band = createLiveBand(() => {});
+    const res = await band.runOnce(snapshotWith([], ['baseball/mlb']));
+    check('a live game on the board alone polls at 45s', nextDelay(res) === LIVE_MS);
   }
   {
     stubFetch({ scoreboards: { 'baseball/mlb': [mlbPost] } });
+    const band = createLiveBand(() => {});
+    const res = await band.runOnce(snapshotWith([], ['baseball/mlb']));
+    check('an all-final board stops the loop', nextDelay(res) === 0);
+  }
+  {
+    // One league's call dies. Its last slate must survive with the feed
+    // flagged — "no games today" would be a lie told by the network.
     let got = null;
+    stubFetch({ scoreboards: { 'baseball/mlb': [mlbPost], 'soccer/usa.1': [] } });
     const band = createLiveBand((s) => (got = s));
-    await band.runOnce(snapshotWith([], [{ abbr: 'SF', league: 'baseball/mlb' }]));
-    check('away team shows "@ OPP"', got.board.get('baseball/mlb:SF').opponent === '@ STL');
+    await band.runOnce(snapshotWith([], ['baseball/mlb', 'soccer/usa.1']));
+    stubFetch({ scoreboards: { 'soccer/usa.1': [] }, fail: new Set(['baseball/mlb']) });
+    await band.runOnce(snapshotWith([], ['baseball/mlb', 'soccer/usa.1']));
+    const mlb = got.today.leagues.get('baseball/mlb');
+    check('the last good slate is kept', mlb.games.length === 1);
+    check('and that league is marked not-ok', mlb.ok === false);
+    check('the healthy league is still ok', got.today.leagues.get('soccer/usa.1').ok === true);
+    check('the pass is flagged as partial', got.error === 'some feeds unavailable');
   }
 
   // ----------------------------------------------------------- failures

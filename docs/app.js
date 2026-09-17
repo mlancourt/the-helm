@@ -15,6 +15,7 @@
 import { apiBase, STALE_AFTER_MS, DATA_REFRESH_MS, APP_VERSION_LABEL } from './config.js';
 import { REGISTRY, BAND_ORDER, BAND_LABEL } from './tiles/_registry.js';
 import { createLiveBand } from './live/band.js';
+import { normalizeEvent } from './live/espn.js';
 import { el, clear, empty, pill } from './lib/dom.js';
 import { ago, ctTime } from './lib/fmt.js';
 import { subheadText } from './lib/header.js';
@@ -51,21 +52,70 @@ const state = {
   cachedAt: null, // when the snapshot we are showing was fetched
   offline: false, // true when the last fetch failed and we fell back to cache
   error: null,
-  live: null, // M3 fills this: {games, grades, board, fetched_at, error}
+  live: null, // the LIVE band fills this: {games, grades, today, fetched_at, error}
 };
 
 let askController = null;
 const modules = new Map(); // tile id -> render fn (or null if it failed to load)
 
 /**
+ * `?mock=1` gets a FAKE ESPN slate too.
+ *
+ * Without this, mock mode would draw its invented leagues against the real
+ * slate — which means the pre/in/post rows and the three watch-chip cases
+ * (mapped, unmapped, another team's regional) could only be seen on a day when
+ * the real world happened to supply them. docs/mock/espn-today.json is
+ * invented by tools/make-mock-data.js and is fake by construction.
+ *
+ * Only for `?mock=1`. A NAMED fixture — `?mock=live.local` above all — exists
+ * precisely to grade against real event ids on the real slate, so it keeps the
+ * real feed.
+ */
+const MOCK_ESPN = MOCK && MOCK_PARAM === '1';
+
+async function mockSlate() {
+  // Re-read every call rather than caching in a module variable, so editing
+  // the file during dev lands without a reload. It is a few KB off our own
+  // origin; the service worker's stale-while-revalidate means an edit shows up
+  // a tick later than the save, which is fine for a mock.
+  try {
+    const res = await fetch('./mock/espn-today.json', { cache: 'no-store' });
+    if (!res.ok) return {};
+    const j = await res.json();
+    return j && typeof j === 'object' ? j : {};
+  } catch {
+    return {};
+  }
+}
+
+const mockEspn = {
+  async fetchScoreboard(league) {
+    const slate = await mockSlate();
+    const raw = Array.isArray(slate.leagues?.[league]) ? slate.leagues[league] : [];
+    return raw.map((e) => normalizeEvent(e, league)).filter(Boolean);
+  },
+  async fetchSummary(_league, eventId) {
+    const slate = await mockSlate();
+    const s = slate.summaries?.[eventId] || {};
+    return {
+      scoringPlays: Array.isArray(s.scoringPlays) ? s.scoringPlays : [],
+      keyEvents: Array.isArray(s.keyEvents) ? s.keyEvents : [],
+    };
+  },
+};
+
+/**
  * The LIVE band runs on its own clock — 45s while a game is in progress —
  * independently of the 5-minute snapshot refresh. It re-renders on its own
  * whenever grades move.
  */
-const liveBand = createLiveBand((next) => {
-  state.live = next;
-  renderAll();
-});
+const liveBand = createLiveBand(
+  (next) => {
+    state.live = next;
+    renderAll();
+  },
+  MOCK_ESPN ? mockEspn : {}
+);
 
 // --------------------------------------------------------------------- token
 

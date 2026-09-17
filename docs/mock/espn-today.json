@@ -1,0 +1,851 @@
+{
+  "_comment": "INVENTED ESPN SLATE for ?mock=1. Real league slugs and response shapes; every team, score, channel and event id is fake. Regenerate with: node tools/make-mock-data.js --espn > docs/mock/espn-today.json",
+  "date_ct": "2026-09-17",
+  "leagues": {
+    "baseball/mlb": [
+      {
+        "id": "401998201",
+        "uid": "s:1~l:1~e:401998201",
+        "date": "2026-09-18T00:10:00.000Z",
+        "name": "Lakeshore Loons at Cream City Nine",
+        "shortName": "LKL @ CCN",
+        "competitions": [
+          {
+            "id": "401998201",
+            "date": "2026-09-18T00:10:00.000Z",
+            "venue": {
+              "fullName": "Cream City Yard",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "401998201-home",
+                "homeAway": "home",
+                "score": "4",
+                "team": {
+                  "abbreviation": "CCN",
+                  "displayName": "Cream City Nine",
+                  "shortDisplayName": "Nine"
+                },
+                "linescores": [
+                  {
+                    "value": 1,
+                    "displayValue": "1",
+                    "period": 1
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 2
+                  },
+                  {
+                    "value": 2,
+                    "displayValue": "2",
+                    "period": 3
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 4
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 5
+                  },
+                  {
+                    "value": 1,
+                    "displayValue": "1",
+                    "period": 6
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 7
+                  }
+                ]
+              },
+              {
+                "id": "401998201-away",
+                "homeAway": "away",
+                "score": "2",
+                "team": {
+                  "abbreviation": "LKL",
+                  "displayName": "Lakeshore Loons",
+                  "shortDisplayName": "Loons"
+                },
+                "linescores": [
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 1
+                  },
+                  {
+                    "value": 1,
+                    "displayValue": "1",
+                    "period": 2
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 3
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 4
+                  },
+                  {
+                    "value": 1,
+                    "displayValue": "1",
+                    "period": 5
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 6
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 7
+                  }
+                ]
+              }
+            ],
+            "status": {
+              "period": 7,
+              "displayClock": "0:00",
+              "type": {
+                "state": "in",
+                "name": "STATUS_IN_PROGRESS",
+                "completed": false,
+                "detail": "Top 7th",
+                "shortDetail": "Top 7th"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "national",
+                "names": [
+                  "FS1"
+                ]
+              },
+              {
+                "market": "home",
+                "names": [
+                  "CreamCity.TV"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "TV"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "FS1"
+                }
+              },
+              {
+                "type": {
+                  "shortName": "STREAMING"
+                },
+                "market": {
+                  "type": "Home"
+                },
+                "media": {
+                  "shortName": "CreamCity.TV"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 7,
+          "displayClock": "0:00",
+          "type": {
+            "state": "in",
+            "name": "STATUS_IN_PROGRESS",
+            "completed": false,
+            "detail": "Top 7th",
+            "shortDetail": "Top 7th"
+          }
+        }
+      },
+      {
+        "id": "401998202",
+        "uid": "s:1~l:1~e:401998202",
+        "date": "2026-09-17T18:10:00.000Z",
+        "name": "Harbor Herons at Foundry Ironsides",
+        "shortName": "HRN @ FIS",
+        "competitions": [
+          {
+            "id": "401998202",
+            "date": "2026-09-17T18:10:00.000Z",
+            "venue": {
+              "fullName": "Foundry Field",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "401998202-home",
+                "homeAway": "home",
+                "score": "5",
+                "team": {
+                  "abbreviation": "FIS",
+                  "displayName": "Foundry Ironsides",
+                  "shortDisplayName": "Ironsides"
+                },
+                "linescores": [
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 1
+                  },
+                  {
+                    "value": 1,
+                    "displayValue": "1",
+                    "period": 2
+                  },
+                  {
+                    "value": 1,
+                    "displayValue": "1",
+                    "period": 3
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 4
+                  },
+                  {
+                    "value": 2,
+                    "displayValue": "2",
+                    "period": 5
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 6
+                  },
+                  {
+                    "value": 1,
+                    "displayValue": "1",
+                    "period": 7
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 8
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 9
+                  }
+                ],
+                "winner": false
+              },
+              {
+                "id": "401998202-away",
+                "homeAway": "away",
+                "score": "6",
+                "team": {
+                  "abbreviation": "HRN",
+                  "displayName": "Harbor Herons",
+                  "shortDisplayName": "Herons"
+                },
+                "linescores": [
+                  {
+                    "value": 2,
+                    "displayValue": "2",
+                    "period": 1
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 2
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 3
+                  },
+                  {
+                    "value": 3,
+                    "displayValue": "3",
+                    "period": 4
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 5
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 6
+                  },
+                  {
+                    "value": 1,
+                    "displayValue": "1",
+                    "period": 7
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 8
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 9
+                  }
+                ],
+                "winner": true
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "post",
+                "name": "STATUS_FINAL",
+                "completed": true,
+                "detail": "Final",
+                "shortDetail": "Final"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "national",
+                "names": [
+                  "MLB.TV"
+                ]
+              },
+              {
+                "market": "away",
+                "names": [
+                  "Herons.TV"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "STREAMING"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "MLB.TV"
+                }
+              },
+              {
+                "type": {
+                  "shortName": "STREAMING"
+                },
+                "market": {
+                  "type": "Away"
+                },
+                "media": {
+                  "shortName": "Herons.TV"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "post",
+            "name": "STATUS_FINAL",
+            "completed": true,
+            "detail": "Final",
+            "shortDetail": "Final"
+          }
+        }
+      },
+      {
+        "id": "401998203",
+        "uid": "s:1~l:1~e:401998203",
+        "date": "2026-09-18T02:40:00.000Z",
+        "name": "Granite City Foremen at Cedar Valley Drays",
+        "shortName": "GCF @ CVD",
+        "competitions": [
+          {
+            "id": "401998203",
+            "date": "2026-09-18T02:40:00.000Z",
+            "venue": {
+              "fullName": "Drayworks Park",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "401998203-home",
+                "homeAway": "home",
+                "score": "0",
+                "team": {
+                  "abbreviation": "CVD",
+                  "displayName": "Cedar Valley Drays",
+                  "shortDisplayName": "Drays"
+                }
+              },
+              {
+                "id": "401998203-away",
+                "homeAway": "away",
+                "score": "0",
+                "team": {
+                  "abbreviation": "GCF",
+                  "displayName": "Granite City Foremen",
+                  "shortDisplayName": "Foremen"
+                }
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "pre",
+                "name": "STATUS_SCHEDULED",
+                "completed": false,
+                "detail": "Scheduled",
+                "shortDetail": "Scheduled"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "national",
+                "names": [
+                  "Peacock"
+                ]
+              },
+              {
+                "market": "away",
+                "names": [
+                  "Foremen Sports Net"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "STREAMING"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "Peacock"
+                }
+              },
+              {
+                "type": {
+                  "shortName": "TV"
+                },
+                "market": {
+                  "type": "Away"
+                },
+                "media": {
+                  "shortName": "Foremen Sports Net"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "pre",
+            "name": "STATUS_SCHEDULED",
+            "completed": false,
+            "detail": "Scheduled",
+            "shortDetail": "Scheduled"
+          }
+        }
+      }
+    ],
+    "soccer/usa.1": [
+      {
+        "id": "742118",
+        "uid": "s:1~l:1~e:742118",
+        "date": "2026-09-18T00:30:00.000Z",
+        "name": "Cross Harbor SC at Riverbend FC",
+        "shortName": "CHS @ RVB",
+        "competitions": [
+          {
+            "id": "742118",
+            "date": "2026-09-18T00:30:00.000Z",
+            "venue": {
+              "fullName": "Riverbend Grounds",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "742118-home",
+                "homeAway": "home",
+                "score": "0",
+                "team": {
+                  "abbreviation": "RVB",
+                  "displayName": "Riverbend FC",
+                  "shortDisplayName": "Riverbend"
+                }
+              },
+              {
+                "id": "742118-away",
+                "homeAway": "away",
+                "score": "0",
+                "team": {
+                  "abbreviation": "CHS",
+                  "displayName": "Cross Harbor SC",
+                  "shortDisplayName": "Cross Harbor"
+                }
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "pre",
+                "name": "STATUS_SCHEDULED",
+                "completed": false,
+                "detail": "Scheduled",
+                "shortDetail": "Scheduled"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "national",
+                "names": [
+                  "MLS Season Pass"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "STREAMING"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "MLS Season Pass"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "pre",
+            "name": "STATUS_SCHEDULED",
+            "completed": false,
+            "detail": "Scheduled",
+            "shortDetail": "Scheduled"
+          }
+        }
+      },
+      {
+        "id": "742119",
+        "uid": "s:1~l:1~e:742119",
+        "date": "2026-09-18T01:00:00.000Z",
+        "name": "North Pike Sentinels at Slack Water United",
+        "shortName": "NPS @ SWU",
+        "competitions": [
+          {
+            "id": "742119",
+            "date": "2026-09-18T01:00:00.000Z",
+            "venue": {
+              "fullName": "Pike Street Stadium",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "742119-home",
+                "homeAway": "home",
+                "score": "1",
+                "team": {
+                  "abbreviation": "SWU",
+                  "displayName": "Slack Water United",
+                  "shortDisplayName": "Slack Water"
+                }
+              },
+              {
+                "id": "742119-away",
+                "homeAway": "away",
+                "score": "1",
+                "team": {
+                  "abbreviation": "NPS",
+                  "displayName": "North Pike Sentinels",
+                  "shortDisplayName": "Sentinels"
+                }
+              }
+            ],
+            "status": {
+              "period": 2,
+              "displayClock": "63'",
+              "type": {
+                "state": "in",
+                "name": "STATUS_IN_PROGRESS",
+                "completed": false,
+                "detail": "63'",
+                "shortDetail": "63'"
+              }
+            },
+            "broadcasts": [],
+            "geoBroadcasts": []
+          }
+        ],
+        "status": {
+          "period": 2,
+          "displayClock": "63'",
+          "type": {
+            "state": "in",
+            "name": "STATUS_IN_PROGRESS",
+            "completed": false,
+            "detail": "63'",
+            "shortDetail": "63'"
+          }
+        }
+      }
+    ],
+    "soccer/eng.1": [],
+    "soccer/esp.1": [
+      {
+        "id": "731447",
+        "uid": "s:1~l:1~e:731447",
+        "date": "2026-09-17T19:00:00.000Z",
+        "name": "Almendro CF at Val de Mar",
+        "shortName": "ALM @ VDM",
+        "competitions": [
+          {
+            "id": "731447",
+            "date": "2026-09-17T19:00:00.000Z",
+            "venue": {
+              "fullName": "Estadio Inventado",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "731447-home",
+                "homeAway": "home",
+                "score": "3",
+                "team": {
+                  "abbreviation": "VDM",
+                  "displayName": "Val de Mar",
+                  "shortDisplayName": "Val de Mar"
+                },
+                "winner": true
+              },
+              {
+                "id": "731447-away",
+                "homeAway": "away",
+                "score": "0",
+                "team": {
+                  "abbreviation": "ALM",
+                  "displayName": "Almendro CF",
+                  "shortDisplayName": "Almendro"
+                },
+                "winner": false
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "post",
+                "name": "STATUS_FINAL",
+                "completed": true,
+                "detail": "Final",
+                "shortDetail": "Final"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "national",
+                "names": [
+                  "ESPN Deportes",
+                  "ESPN+"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "TV"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "ESPN Deportes"
+                }
+              },
+              {
+                "type": {
+                  "shortName": "STREAMING"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "ESPN+"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "post",
+            "name": "STATUS_FINAL",
+            "completed": true,
+            "detail": "Final",
+            "shortDetail": "Final"
+          }
+        }
+      },
+      {
+        "id": "731448",
+        "uid": "s:1~l:1~e:731448",
+        "date": "2026-09-17T14:00:00.000Z",
+        "name": "Puerto Faro at Montaraz",
+        "shortName": "PTF @ MNT",
+        "competitions": [
+          {
+            "id": "731448",
+            "date": "2026-09-17T14:00:00.000Z",
+            "venue": {
+              "fullName": "Campo del Faro",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "731448-home",
+                "homeAway": "home",
+                "score": "1",
+                "team": {
+                  "abbreviation": "MNT",
+                  "displayName": "Montaraz",
+                  "shortDisplayName": "Montaraz"
+                },
+                "winner": false
+              },
+              {
+                "id": "731448-away",
+                "homeAway": "away",
+                "score": "1",
+                "team": {
+                  "abbreviation": "PTF",
+                  "displayName": "Puerto Faro",
+                  "shortDisplayName": "Puerto Faro"
+                },
+                "winner": false
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "post",
+                "name": "STATUS_FINAL",
+                "completed": true,
+                "detail": "Final",
+                "shortDetail": "Final"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "national",
+                "names": [
+                  "Movistar Plus+"
+                ]
+              },
+              {
+                "market": "home",
+                "names": [
+                  "Canal Montaraz"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "TV"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "Movistar Plus+"
+                }
+              },
+              {
+                "type": {
+                  "shortName": "TV"
+                },
+                "market": {
+                  "type": "Home"
+                },
+                "media": {
+                  "shortName": "Canal Montaraz"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "post",
+            "name": "STATUS_FINAL",
+            "completed": true,
+            "detail": "Final",
+            "shortDetail": "Final"
+          }
+        }
+      }
+    ]
+  },
+  "summaries": {}
+}

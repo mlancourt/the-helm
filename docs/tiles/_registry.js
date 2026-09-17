@@ -13,7 +13,7 @@
 
 export const REGISTRY = {
   bets_live: { band: 'LIVE', position: 10, module: './tiles/bets_live.js', title: 'Open Bets' },
-  mke_board: { band: 'LIVE', position: 20, module: './tiles/mke_board.js', title: 'Local Team Scoreboard' },
+  today_games: { band: 'LIVE', position: 20, module: './tiles/today_games.js', title: "Today's Games" },
   newsstand: { band: 'HOURLY', position: 30, module: './tiles/newsstand.js', title: 'Newsstand' },
   entertainment: { band: 'DAILY', position: 35, module: './tiles/entertainment.js', title: 'Entertainment' },
   radar: { band: 'DAILY', position: 40, module: './tiles/radar.js', title: 'Radar' },

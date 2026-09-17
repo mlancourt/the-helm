@@ -15,7 +15,13 @@
  *
  * Lines are chosen near the current score so that a live game produces a mix
  * of COVERING and TRAILING rather than five identical pills.
+ *
+ * It also lists the same leagues under `today_games`, so that tile renders the
+ * REAL slate with REAL broadcast names — the only way to see whether the watch
+ * map actually covers what ESPN sends on a given night.
  */
+
+const { WATCH_MAP, SERVICES } = require('./mock-espn.js');
 
 const LEAGUES = process.argv.slice(2).filter((a) => !a.startsWith('-'));
 const DEFAULT_LEAGUES = ['baseball/mlb', 'football/nfl', 'football/college-football'];
@@ -147,12 +153,13 @@ async function scoreboard(league, date) {
   }
 
   const now = new Date().toISOString();
-  const teams = [...new Set(picked.flatMap((g) => [`${g.league}:${g.home.abbr}`, `${g.league}:${g.away.abbr}`]))]
-    .slice(0, 6)
-    .map((k) => {
-      const i = k.lastIndexOf(':');
-      return { abbr: k.slice(i + 1), league: k.slice(0, i) };
-    });
+  const ctToday = () =>
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Chicago',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
 
   const snapshot = {
     schema: 1,
@@ -166,9 +173,23 @@ async function scoreboard(league, date) {
         band: 'DAILY', updated_at: now, status: 'ok', error: null,
         data: { bankroll_u: 42.5, open_u: tickets.reduce((a, t) => a + t.stake_u, 0), record: '11-9-1', tickets },
       },
-      mke_board: {
+      today_games: {
         band: 'LIVE', updated_at: now, status: 'ok', error: null,
-        data: { teams },
+        data: {
+          title: "Today's Games",
+          date_ct: ctToday(),
+          leagues: leagues.map((slug) => ({
+            id: slug.split('/').pop(),
+            slug,
+            label: slug.split('/').pop().toUpperCase(),
+            emoji: '',
+          })),
+          services: SERVICES,
+          watch_map: WATCH_MAP,
+          // Real slate, so the regional test wants the real local club: a
+          // Brewers feed should read as his, everybody else's as a blackout.
+          local_teams: { 'baseball/mlb': ['MIL'] },
+        },
       },
     },
   };

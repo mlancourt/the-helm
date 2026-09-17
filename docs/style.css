@@ -364,22 +364,144 @@ body {
 .ticket-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: 0 0 auto; }
 .ticket-stake { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
 
-/* -------------------------------------------------------------- mke_board */
+/* ------------------------------------------------------------- today_games */
 
-.mke { display: flex; flex-direction: column; }
-.mke-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 8px 0; border-bottom: 1px solid var(--line-soft);
+/* The same menu shape as the newsstand and entertainment, because it is the
+   same idea: the tile is a way in, and the slate lives in the sheet. */
+.tg-menu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
 }
-.mke-row:last-child { border-bottom: 0; }
-.mke-left { display: flex; align-items: baseline; gap: 7px; }
-.mke-abbr { font-size: 14px; font-weight: 650; letter-spacing: 0.02em; }
-.mke-league { font-size: 10px; color: var(--text-faint); letter-spacing: 0.06em; }
-.mke-right { display: flex; flex-direction: column; align-items: flex-end; }
-.mke-opp { font-size: 12px; color: var(--text-dim); }
-.mke-score { font-size: 11.5px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
-.mke-score.live { color: var(--good); }
-.mke-idle { font-size: 11.5px; color: var(--text-faint); }
+@media (min-width: 720px) {
+  .tg-menu { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+}
+
+.tg-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #1a1f26;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tg-btn:hover { color: var(--text); border-color: #2f3d4c; }
+.tg-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+/* The label is what gives; the count must never be pushed off the button. */
+.tg-btn-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tg-emoji { font-size: 12px; line-height: 1; }
+
+/* A league with games on: lit. One of them under way: lit green, with a dot.
+   Nothing on today, or nothing known yet: dimmed — but still a button. */
+.tg-btn-on   { background: #12232c; color: var(--info); border-color: #1d4152; }
+.tg-btn-live { background: #122f24; color: var(--good); border-color: #1d4c38; }
+.tg-btn-none,
+.tg-btn-wait { background: #15191f; color: var(--text-faint); }
+
+.tg-dot {
+  margin-left: auto;
+  font-size: 9px;
+  line-height: 1;
+  color: var(--good);
+  animation: tg-pulse 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tg-dot { animation: none; }
+}
+@keyframes tg-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.tg-count {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #0e1318;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* The dot already took the auto margin when it is present. */
+.tg-dot + .tg-count { margin-left: 4px; }
+
+.tg-idle {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+/* -- the sheet -- */
+
+.tg-list { display: flex; flex-direction: column; }
+.tg-game {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 9px 0 9px 9px;
+  border-bottom: 1px solid var(--line-soft);
+  /* Transparent on every row so the text aligns whether or not the row has a
+     rail. NOT pulled left with a negative margin: .panel-body has no left
+     padding to eat into, so the rail would hang outside its scroller. */
+  border-left: 3px solid transparent;
+}
+.tg-game:last-child { border-bottom: 0; }
+/* A live game gets the same green rail bets_live gives a LEADING ticket. */
+.tg-game-in { border-left-color: var(--good); }
+.tg-game-post { border-left-color: var(--line); }
+.tg-game-post .tg-matchup { color: var(--text-dim); }
+.tg-game-dead { border-left-color: var(--warn); }
+
+.tg-game-main { min-width: 0; flex: 1; }
+.tg-matchup { font-size: 13.5px; font-weight: 560; color: var(--text); }
+
+.tg-side { display: flex; flex-direction: column; align-items: flex-end; flex: 0 0 auto; }
+.tg-status {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.tg-status-in { color: var(--good); }
+.tg-status-post { color: var(--text-dim); }
+.tg-status-dead { color: var(--warn); }
+
+.tg-watch { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.tg-chip {
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #1a1f26;
+  color: var(--text-dim);
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* He has it. */
+.tg-chip-mapped { background: #122f24; color: var(--good); border-color: #1d4c38; }
+/* Somebody else's RSN — it will black out. Said quietly, not in red: it is
+   not an error, just not his. */
+.tg-chip-regional,
+.tg-chip-none { background: #15191f; color: var(--text-faint); border-style: dashed; }
+
+.tg-warn { margin: 0 0 10px; font-size: 11.5px; color: var(--warn); }
 
 /* ------------------------------------------------------------------ radar */
 

@@ -35,6 +35,7 @@ docs/                   GitHub Pages root — serve this directory, nothing else
   mock/                 generated fake data, fake by construction
 
 tools/make-mock-data.js fake snapshot generator
+tools/mock-espn.js      the invented ESPN slate behind ?mock=1, + its watch map
 tools/make-icons.js     draws the PWA icons (zero deps, zlib only)
 tools/make-live-mock.js builds a snapshot against TODAY'S REAL ESPN slate
 tools/fixtures/         real ESPN payloads, captured for the grader tests
@@ -136,10 +137,19 @@ npm run icons
 npm run mock:live   # rebuilds the real-slate fixture (gitignored)
 ```
 
-`?mock=1` uses **invented** event ids, so the LIVE band correctly reports "no
-ESPN event matched this ticket" for every one of them. That is the honest
-degradation path, not a bug. To watch grading actually happen, run
-`npm run mock:live` and open `?mock=live.local`.
+`?mock=1` also gets a **fake ESPN slate** (`docs/mock/espn-today.json`, from
+`tools/mock-espn.js`): four leagues with invented teams covering pre, in
+progress and final, and broadcast names chosen to hit the watch map, miss it,
+and trip the "regional — not yours" rule. Without it, `today_games` could only
+be seen working on a day the real world happened to supply those cases.
+`app.js` injects that slate into the band; `live/band.js` itself has no mock
+branch.
+
+`bets_live`'s mock tickets still carry **invented event ids**, so the band
+correctly reports "no ESPN event matched this ticket" for every one of them.
+That is the honest degradation path, not a bug. To watch grading actually
+happen — and to see the watch map against real broadcast names — run
+`npm run mock:live` and open `?mock=live.local`, which keeps the **real** feed.
 
 ---
 
@@ -328,7 +338,7 @@ beside the wordmark prints `v` + major.minor; the Ship Status footer prints the
 whole thing. `test-shell` fails if either is ever typed out by hand.
 
 **Bump `APP_VERSION` and `CACHE_VERSION` together, each ruling batch.** A
-version bump with a stale cache version ships a chip that says v1.1 over a v1.0
+version bump with a stale cache version ships a chip that says v1.2 over a v1.1
 shell, which is worse than no chip at all.
 
 The chip is set in mono, not the display face, on purpose: Big Shoulders draws
@@ -387,6 +397,8 @@ and its body fills it as it always did.
 2. Add one line to `docs/tiles/_registry.js`.
 3. Add the file to `SHELL` in `docs/sw.js` and bump `CACHE_VERSION`.
 4. Give it invented data in `tools/make-mock-data.js` and run `npm run mock`.
+5. If it is a LIVE tile, say what it needs from ESPN in `requirements()` in
+   `docs/live/band.js` — never fetch from a tile module.
 
 `npm test` enforces steps 2-4: `test-sw` fails if a registered module is not
 precached (online it works and offline it silently vanishes — the worst kind of
@@ -403,10 +415,50 @@ renders as a generic key/value card. Step 2 is what gives it a real layout.
 
 **Ids are contracts, titles are labels.** The heading a tile wears comes from
 `_registry.js` and nothing else — rename it there freely, and never rename the
-id to match. `mke_board` reads "Local Team Scoreboard"; the id stays
-`mke_board` because the engine, the snapshot and every event key speak it. A
-snapshot that carries its own `data.title` is ignored for the same reason: the
+id to match, because the engine, the snapshot and every event key speak the id.
+A snapshot that carries its own `data.title` is ignored for the same reason: the
 card head already prints one, and two would say it twice.
+
+**Retiring a tile** is two deletions and nothing else: drop its line from
+`_registry.js` and delete its module (and its entry in `sw.js`'s `SHELL`). An
+old snapshot that still carries the id renders as a generic key/value card by
+rule 9 and harms nothing, so the engine and the page can be retired out of step.
+`mke_board` — "Local Team Scoreboard" — went this way on 2026-09-17, replaced by
+`today_games`.
+
+### Today's Games
+
+`today_games` is a **menu tile** at position 20: one button per league Matt
+follows, and the day's slate in a sheet.
+
+The engine publishes only the league list, the watch map, the services he has,
+his local teams, and `date_ct` — it never fetches a schedule. Every game, and
+every score on it, comes from ESPN in the browser on the LIVE band's clock,
+shared with `bets_live` (see below).
+
+A button shows `{n} games` and a pulsing green dot when one of them is under
+way. A league with nothing on greys and says "no games today" — and still opens,
+so the sheet can say which league and which date. Before the band's first pass
+a button says "awaiting feed", because "no games today" is a claim and the page
+does not yet have the standing to make it.
+
+**How to watch** is the one judgement the tile makes, and it is three-way:
+
+| Case | Chip |
+|---|---|
+| the broadcast name is a key in `watch_map` | `✓ <service>` |
+| it is not | the raw name, unmarked — a hand-kept map missing an entry is not the same as him not having the channel |
+| it is a `Home`/`Away` market feed for a team not in `local_teams[slug]` | `regional — not yours` |
+
+Mapped wins over regional on purpose: the map is how the vault says "this
+particular RSN *is* mine" (`"Brewers.TV": "Brewers.TV (regional, yours)"`), and
+that statement outranks the geography. **When a ✓ is wrong, fix the map in the
+vault** — `watch_map` is a hand-kept list, not truth, and YouTube TV's lineup
+moves.
+
+Adding a league is one line in the vault's `today-games.json`; the page needs
+nothing, and a league it has never heard of gets a button labelled from the tail
+of its slug.
 
 ### Newsstand category menu
 
@@ -547,7 +599,8 @@ at a time, and only the author's own.
 
 ### The LIVE band
 
-`bets_live` and `mke_board` are graded **in the browser**, not by the engine.
+`bets_live` is graded and `today_games` is filled **in the browser**, not by the
+engine.
 The page calls `site.api.espn.com` directly (CORS-open, no key). With the
 Worker, that is the only external origin the page touches.
 
@@ -563,8 +616,21 @@ when the tab is hidden — a phone in a pocket has no business polling ESPN — 
 does an immediate pass when it comes back.
 
 **Matching:** tickets match games by `espn_event_id` and **never** by team
-name, because ESPN abbreviations drift. `mke_board` is the one exception: it
-matches by abbreviation, because that is what the snapshot gives it.
+name, because ESPN abbreviations drift (`OLM`, `BES`, `LEVS`). `today_games`
+does not match at all — it takes the whole league slate.
+
+**One tick serves both tiles.** `band.js` does not ask per tile. `requirements()`
+builds one deduped plan of `(league, date)` pairs — the leagues the tickets name
+dated today, plus the board's leagues dated by the snapshot's `date_ct` — and
+fetches each exactly once; `espn.js` coalesces any identical request still in
+flight. The two dates are the same string on an ordinary day, which is why an
+ordinary day costs one call per league. `date_ct` becomes ESPN's `dates=` by
+**removing two dashes from a string** — never `new Date(date_ct)`, which would
+send yesterday (rule 7).
+
+A league whose call fails keeps the slate it had and is flagged `ok: false`, so
+its sheet says "feed unavailable" over the last good slate. "No games today" is
+never something the network gets to say.
 
 **Summaries** (`/summary?event=`) are much heavier than the scoreboard, so one
 is fetched only when a ticket's market needs scoring plays *and* that game is
@@ -574,9 +640,9 @@ already under way. A pre-game summary has no `scoringPlays` key at all.
 unavailable". It never blanks, and it never shows zeros as though they were
 scores.
 
-#### Three things ESPN does that will bite you
+#### Four things ESPN does that will bite you
 
-Verified against live payloads on 2026-09-17; all three are covered by tests.
+Verified against live payloads on 2026-09-17; all four are covered by tests.
 
 1. **`score` is a string.** `"5"`, not `5`. Concatenating two of them makes a
    total of `"53"`, and `"10" < "9"` is true. Always `Number()`.
@@ -587,6 +653,14 @@ Verified against live payloads on 2026-09-17; all three are covered by tests.
    silently turns a winning ticket into a LOSS. A play counts as a touchdown if
    the abbreviation says TD, *or* the type text says Touchdown, *or* the scoring
    team's score jumped by 6+.
+4. **How-to-watch is told twice, and neither telling is complete.**
+   `broadcasts[].names` carries the names with a **lower-case** market
+   (`"national"`, `"away"`); `geoBroadcasts[]` carries the same names with a
+   **title-case** market (`"National"`, `"Away"`) plus a type whose casing is
+   not even self-consistent (`"Streaming"` in MLB, `"STREAMING"` in soccer).
+   Both keys are missing entirely for plenty of games. `espn.js` merges the two
+   into one deduped `[{name, type, market}]`, normalises the market to title
+   case, and decides nothing on `type`.
 
 #### anytime_td: the scorer is not everyone named in the play
 
@@ -767,8 +841,9 @@ else is the page's problem, and the page tolerates schema growth: an unknown
 tile id renders as a generic key/value card, a registered tile missing from the
 snapshot renders as an empty grey card.
 
-Tiles in the contract today: `bets_live`, `mke_board`, `newsstand`, `radar`,
-`calendar`, `reminders`, `dinner`, `purser_due`, `ship_status`. The page reads their payloads
+Tiles in the contract today: `bets_live`, `today_games`, `newsstand`,
+`entertainment`, `radar`, `calendar`, `reminders`, `dinner`, `purser_due`,
+`ship_status`. The page reads their payloads
 field by field and skips what the engine has not sent — a missing field is
 never rendered as a zero, a `false`, or an `Invalid Date`.
 

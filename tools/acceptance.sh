@@ -36,7 +36,11 @@ let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
   console.log("  markets:", JSON.stringify(byMarket));
   console.log("  leagues:", JSON.stringify(byLeague));
   console.log("  espn_event_ids:", [...new Set(t.map(x=>x.espn_event_id))].join(", "));
-  const mk=tiles.mke_board?.data?.teams||[];
-  console.log("mke_board:", mk.map(x=>x.league+":"+x.abbr).join(", "));
+  const tg=tiles.today_games?.data||{};
+  const lg=Array.isArray(tg.leagues)?tg.leagues:[];
+  console.log("today_games date_ct:", tg.date_ct, "| leagues:", lg.map(x=>x.id+"="+x.slug).join(", "));
+  console.log("  watch_map entries:", Object.keys(tg.watch_map||{}).length,
+              "| services:", (tg.services||[]).length,
+              "| local_teams:", JSON.stringify(tg.local_teams||{}));
 });
 '

@@ -124,7 +124,7 @@ CORS: allow `https://mlancourt.github.io` and `http://localhost:*` (dev). Handle
 | id | band | `data` | render |
 |---|---|---|---|
 | `bets_live` | DAILY publish, **LIVE grade** | `{bankroll_u, open_u, record, tickets:[{id, league, espn_event_id, game, kick_ct, market, side, line, player, label, stake_u, price, class}]}` | header: open / lean-now / closed units · one card per game (score, clock) · one row per ticket: stripe + label + why + pill (PRE/LEADING/TRAILING/COVERING/WIN/LOSS/DEAD) + stake@price. Grades in-browser every 45 s while any ticket's game is `in`. Footer: "lean, not settlement." |
-| `mke_board` | LIVE | `{teams:[{abbr, league}]}` | one row per team: opponent, score or next kick (Central), countdown. Page fetches ESPN `scoreboard?dates=<today CT>` per league. |
+| `today_games` | LIVE | `{title, date_ct, leagues:[{id, slug, label, emoji}], services:[…], watch_map:{<broadcast>: <service>}, local_teams:{<slug>: [abbr]}}` | menu tile: one button per league with a `{n} games` chip and a live-dot; tap → sheet with today's slate, chronological by kick, showing kick time (Central) / live score + clock / Final, plus watch chips — `✓ <service>` when `watch_map` has the broadcast name, the raw name when it does not, `regional — not yours` for a `Home`/`Away` feed whose team is not in `local_teams`. Page fetches ESPN `scoreboard?dates=<date_ct>` per league, shared with `bets_live`. Replaced `mke_board` (retired 2026-09-17). |
 | `radar` | DAILY | `{date, lines:[…], source}` | plain list, verbatim, date in header |
 | `calendar` | DAILY | `{days:[{date, events:[{time_ct, title, cal}]}]}` | today + tomorrow, two-tone by `cal` (family / wss) |
 | `dinner` | DAILY | `{date, meal, notes, verdict}` | meal + two buttons **HIT / MISS** → `meal_verdict` event; badge pending |
@@ -183,3 +183,5 @@ Tests (Worker, `wrangler dev` + node): token 401s; event shape rejection; per-ev
 ## Change log
 
 **v1.0 (2026-09-17):** initial brief — schema 1, nine v1 tiles, four event types, ESPN LIVE band as proven by the spike, `/ask` v1 with cap.
+
+**v1.1 (2026-09-17):** `mke_board` retired and replaced by `today_games` (vault spec `06-AI-Stack/The-Helm/Todays-Games-Tile-Spec.md`). One ESPN scoreboard call per league per tick now serves both LIVE tiles — `live/band.js` builds a single deduped `(league, date)` plan; a tile module still never fetches. `live/espn.js` gained `broadcasts` (the `broadcasts[]`/`geoBroadcasts[]` merge), `venue`, `short` team names, and `compactCtDate()` — `date_ct` → `dates=` by string ops only.

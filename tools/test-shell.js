@@ -257,9 +257,27 @@ console.log('\nsubhead never contains me.name');
     );
   }
 
-  // Reduced motion.
-  const rm = topLevelRules(CSS).find((r) => /prefers-reduced-motion/.test(r.prelude));
-  check('prefers-reduced-motion is honoured', !!rm && /\.sheet[^{]*\{[^}]*transition:\s*none/.test(rm.body));
+  // Reduced motion. There is more than one such block now — the sheets stop
+  // sliding and the live-dot stops pulsing — so every one of them counts.
+  const rms = topLevelRules(CSS).filter((r) => /prefers-reduced-motion/.test(r.prelude));
+  check('prefers-reduced-motion is honoured at all', rms.length > 0);
+  check(
+    'the sheets stop sliding under reduced motion',
+    rms.some((r) => /\.sheet[^{]*\{[^}]*transition:\s*none/.test(r.body)),
+    `${rms.length} reduced-motion blocks`
+  );
+  // Anything that animates forever has to be switchable off; a pulsing dot in
+  // the corner of the eye is exactly what the setting exists for.
+  const keyframed = [...CSS.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1]);
+  for (const name of keyframed) {
+    const users = [...CSS.matchAll(new RegExp(`animation:[^;]*\\b${name}\\b[^;]*;`, 'g'))];
+    const infinite = users.some((u) => /infinite/.test(u[0]));
+    if (!infinite) continue;
+    check(
+      `the endless @keyframes ${name} is stilled under reduced motion`,
+      rms.some((r) => /animation:\s*none/.test(r.body))
+    );
+  }
 
   // app.js side of the contract.
   check('app.js publishes --kb and --vvh', /--kb/.test(APP) && /--vvh/.test(APP));
