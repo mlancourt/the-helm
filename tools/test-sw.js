@@ -19,6 +19,9 @@ const vm = require('node:vm');
 const path = require('node:path');
 
 const SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'sw.js'), 'utf8');
+const REGISTRY_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', '_registry.js'), 'utf8');
+/** Every tile module the registry knows about — the precache list must cover them. */
+const TILE_MODULES = [...REGISTRY_SRC.matchAll(/module:\s*'\.\/(tiles\/[a-z0-9_]+\.js)'/gi)].map((m) => m[1]);
 const ORIGIN = 'https://mlancourt.github.io';
 
 // Read the version out of the source rather than hardcoding it, so bumping
@@ -191,7 +194,9 @@ async function route(world, url, method = 'GET') {
     await installed;
     check('install precaches the shell', w.log.added.length >= 15, `added ${w.log.added.length}`);
     check('install precaches index.html', w.log.added.includes('./index.html'));
-    check('install precaches every tile module', w.log.added.filter((u) => u.includes('/tiles/')).length === 9);
+    // Every module the registry names, plus the registry itself.
+    const missing = [...TILE_MODULES, 'tiles/_registry.js'].filter((m) => !w.log.added.includes(`./${m}`));
+    check('install precaches every tile module', missing.length === 0, `missing: ${missing.join(', ')}`);
     check('install precaches the LIVE band modules', w.log.added.filter((u) => u.includes('/live/')).length === 3);
     check('install precaches the icons', w.log.added.filter((u) => u.includes('/icons/')).length === 3);
     check('install calls skipWaiting', w.log.skipWaiting === 1);
@@ -225,6 +230,16 @@ async function route(world, url, method = 'GET') {
     check(`activate keeps the current shell cache (${SHELL_CACHE})`, !w.log.deleted.includes(SHELL_CACHE));
     check(`activate keeps the current data cache (${DATA_CACHE})`, !w.log.deleted.includes(DATA_CACHE));
     check('activate claims open clients', w.log.claimed === 1);
+  }
+
+  // -- precache parity ----------------------------------------------------
+  // A new tile module that never reaches the SHELL list still works online and
+  // quietly disappears offline, which is the worst kind of bug to find on a
+  // phone with one bar. Cheap to assert, so assert it.
+  console.log('\nprecache parity');
+  check('the registry lists modules at all', TILE_MODULES.length >= 8, `found ${TILE_MODULES.length}`);
+  for (const m of TILE_MODULES) {
+    check(`sw precaches ${m}`, SRC.includes(`'./${m}'`));
   }
 
   console.log(`\n${pass} passed, ${failures.length} failed`);

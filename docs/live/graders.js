@@ -80,12 +80,65 @@ export function scorerText(playText) {
   return paren > 0 ? text.slice(0, paren) : text;
 }
 
+/** Lowercase, drop punctuation that varies, collapse spaces. Hyphens stay. */
+function norm(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[.,'’]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Word-boundary containment, so "Brown" does not hit "Browne". */
+function hasWord(hay, word) {
+  if (!word) return false;
+  return new RegExp(`(^|[^a-z])${escapeRe(word)}([^a-z]|$)`, 'i').test(hay);
+}
+
+/**
+ * Does this scoring play credit THIS player?
+ *
+ * A surname alone is not enough, and that is not hypothetical. Checking two
+ * real NFL rosters turned up three players sharing the surname Brown in a
+ * single fixture — a receiver, a cornerback and an offensive tackle across the
+ * two teams. Surname-only matching would credit a player-scores-a-touchdown
+ * ticket to whichever Brown happened to reach the end zone, including on a
+ * defensive return. First initials do not rescue it either: two of those three
+ * given names begin with the same letter.
+ *
+ * So the surname has to match AND the given name has to be consistent:
+ *   - the whole name appearing in the credited text is an outright match
+ *   - otherwise the surname must match and the first name must either be equal
+ *     or be an initial of it ("D. Vasquez" matching "Devin Vasquez")
+ *   - a ticket carrying only a surname falls back to the surname, which is the
+ *     most that can be known from it
+ */
 function nameHits(playText, player) {
   const want = surname(player);
   if (!want) return false;
-  const hay = scorerText(playText).toLowerCase();
-  // Word-boundary match so "Brown" does not hit "Browne".
-  return new RegExp(`(^|[^a-z])${want.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z]|$)`, 'i').test(hay);
+
+  const hay = norm(scorerText(playText));
+  const full = norm(player);
+
+  // The whole name is present — unambiguous.
+  if (full && full.includes(' ') && hay.includes(full)) return true;
+
+  if (!hasWord(hay, want)) return false;
+
+  const tokens = norm(player).split(' ').filter(Boolean);
+  // Only a surname was given; the surname match is all there is to go on.
+  if (tokens.length < 2) return true;
+
+  const first = tokens[0];
+  const hayFirst = hay.split(' ').filter(Boolean)[0] || '';
+  if (!hayFirst) return false;
+
+  // "D." / "D" is an initial: match on the letter.
+  if (first.length === 1) return hayFirst.startsWith(first);
+
+  return hayFirst === first;
 }
 
 // ------------------------------------------------------------ scoring plays

@@ -364,12 +364,120 @@ body {
 /* -------------------------------------------------------------- newsstand */
 
 .news { display: flex; flex-direction: column; }
-.news-card { padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+.news-card { padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
 .news-card:last-child { border-bottom: 0; }
+.news-head { display: flex; gap: 6px; align-items: baseline; }
 .news-title { font-size: 13.5px; color: var(--text); text-decoration: none; display: block; }
 .news-title:hover { color: var(--brass); text-decoration: underline; }
-.news-meta { display: flex; gap: 8px; margin-top: 2px; font-size: 11px; color: var(--text-faint); }
-.news-lens { color: var(--info); }
+.news-meta { display: flex; gap: 8px; align-items: center; margin-top: 4px; font-size: 11px; color: var(--text-faint); }
+.news-emoji { font-size: 12px; line-height: 1; }
+.news-emoji-lone { font-size: 14px; }
+
+.news-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #1a1f26;
+  color: var(--text-dim);
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.news-cat-local { background: #12232c; color: var(--info);  border-color: #1d4152; }
+.news-cat-sport { background: #122f24; color: var(--good);  border-color: #1d4c38; }
+.news-cat-civic { background: #2a2413; color: var(--brass); border-color: #4a4020; }
+.news-cat-tech  { background: #1d1b2e; color: #9f8fd8;      border-color: #332e4d; }
+.news-cat-money { background: #2f2512; color: var(--warn);  border-color: #4c3c1a; }
+
+.news-synopsis {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+/* Folded, not hidden: three lines, and the whole thing one tap away. */
+.news-synopsis.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.news-more { font-size: 11px; margin-top: 2px; }
+
+.news-lens {
+  margin: 6px 0 0;
+  padding-left: 8px;
+  border-left: 2px solid #1d4152;
+  color: var(--info);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* ------------------------------------------------------------ ship status */
+
+.ship-block { display: flex; flex-direction: column; }
+.ship-block + .ship-block { margin-top: 2px; }
+.ship-heading {
+  margin: 12px 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.ship-row { align-items: flex-start; }
+.ship-stack { display: flex; flex-direction: column; gap: 1px; padding: 5px 0; }
+.ship-stack-value { font-size: 13px; color: var(--text); word-break: break-word; }
+.ship-value { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.ship-file { font-size: 11px; color: var(--text-faint); word-break: break-all; }
+.ship-quiet { font-size: 12px; color: var(--text-faint); }
+.ship-service .row-label { text-transform: capitalize; }
+
+.ship-meter { margin: 2px 0 6px; }
+.ship-meter-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-sink);
+  border: 1px solid var(--line-soft);
+  overflow: hidden;
+}
+.ship-meter-fill { height: 100%; border-radius: 999px; }
+.ship-meter-good { background: var(--good); }
+.ship-meter-warn { background: var(--warn); }
+.ship-meter-bad  { background: var(--bad); }
+.ship-meter-label { margin-top: 5px; font-size: 12px; }
+.ship-meter-spent { color: var(--text); font-weight: 650; }
+.ship-meter-cap { color: var(--text-faint); }
+
+.ship-kill {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: var(--bg-sink);
+  border: 1px solid var(--line-soft);
+}
+.ship-kill-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--bad);
+  margin-bottom: 4px;
+}
+.ship-kill-cmd {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-dim);
+  word-break: break-all;
+  -webkit-user-select: all;
+  user-select: all;
+}
 
 /* --------------------------------------------------------------- ask sheet */
 

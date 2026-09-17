@@ -19,6 +19,7 @@ export const REGISTRY = {
   calendar: { band: 'DAILY', position: 50, module: './tiles/calendar.js', title: 'Calendar' },
   dinner: { band: 'DAILY', position: 60, module: './tiles/dinner.js', title: 'Dinner' },
   purser_due: { band: 'DAILY', position: 70, module: './tiles/purser_due.js', title: 'Purser — Due' },
+  ship_status: { band: 'DAILY', position: 80, module: './tiles/ship_status.js', title: 'Ship Status' },
   ask: { band: 'ASK', position: 99, module: './tiles/ask.js', title: 'Ask' },
 };
 

@@ -114,6 +114,17 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('line null is blank, not zero', fmt.line(null), '');
   eq('line zero is a real zero', fmt.line(0), '0');
 
+  // usdPrecise is the /ask meter's formatter: one ask costs about half a cent,
+  // and usd() would round every one of them to $0.00.
+  eq('usdPrecise keeps a sub-cent ask visible', fmt.usdPrecise(0.0048), '$0.0048');
+  eq('usdPrecise on a real cent is ordinary money', fmt.usdPrecise(0.42), '$0.42');
+  eq('usdPrecise on dollars is ordinary money', fmt.usdPrecise(3), '$3.00');
+  eq('usdPrecise zero is a real zero', fmt.usdPrecise(0), '$0.00');
+  eq('usdPrecise null is unknown, not zero', fmt.usdPrecise(null), '—');
+  eq('usdPrecise refuses to round a tiny amount to nothing', fmt.usdPrecise(0.00004), '< $0.0001');
+  eq('usdPrecise handles a negative sub-cent', fmt.usdPrecise(-0.0048), '-$0.0048');
+  eq('usdPrecise at the cent boundary', fmt.usdPrecise(0.01), '$0.01');
+
   console.log(`\n${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 })();

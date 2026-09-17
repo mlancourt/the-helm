@@ -39,8 +39,11 @@ tools/make-icons.js     draws the PWA icons (zero deps, zlib only)
 tools/make-live-mock.js builds a snapshot against TODAY'S REAL ESPN slate
 tools/fixtures/         real ESPN payloads, captured for the grader tests
 tools/test-fmt.js       date/format unit tests, run across four timezones
-tools/test-sw.js        service worker caching-policy tests
+tools/test-sw.js        service worker caching-policy + precache-parity tests
+tools/test-tiles.js     every render module, incl. hostile payloads (DOM shim)
+tools/test-ask.js       the /ask route, against a fake KV and a stubbed model
 tools/test-worker.js    Worker API tests (needs wrangler dev)
+tools/ask-probe.sh      one real /ask against the deployed Worker, shape only
 ```
 
 `wrangler` is the only dev dependency. The page itself has no build step: no
@@ -79,11 +82,11 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 303 assertions, no server needed
+npm test            # 415 assertions, no server needed
 npm run test:worker # 62 assertions, needs `npm run dev` running
 ```
 
-- **`test:fmt`** (49) — every date helper, run under `America/Chicago`,
+- **`test:fmt`** (57) — every date helper, run under `America/Chicago`,
   `Asia/Tokyo`, `UTC` and `Pacific/Kiritimati`, asserting byte-identical output
   in all four. This is the rule-7 tripwire.
 - **`test-graders`** (101) — every market across pre / in / post / push, run
@@ -94,9 +97,10 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   cadence, one summary per game and only once it is under way, one scoreboard
   per league, event-id matching, and that a dead feed keeps the last good
   grades instead of blanking them.
-- **`test:sw`** (27) — the service worker's routing policy: ESPN and `/ask` are
+- **`test:sw`** (37) — the service worker's routing policy: ESPN and `/ask` are
   never cached, `/api/data` is network-first with a cache fallback, the shell is
   stale-while-revalidate, and a 404 in the precache list cannot fail an install.
+  It also asserts precache parity: every module the registry names is in `SHELL`.
 - **`test:ask`** (82) — the whole `/ask` route, driven against a fake KV
   namespace and a stubbed model API: pricing and cost estimation, history
   trimming, the 8 KB per-tile truncation, the pinned tile, cap enforcement at
@@ -104,6 +108,13 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   timeout, upstream error, corrupt snapshot, refusal, truncation). worker.js is
   a plain ES module, so the route runs in Node with no wrangler and no network.
   **No test ever calls a real model** — nothing here can spend money.
+- **`test-tiles`** (84) — every render module, against the mock snapshot and
+  against deliberately hostile payloads: empty, null, wrong-typed, all-fields-
+  missing, and carrying fields no module has heard of. No module may throw at
+  any of them, because a module that throws turns one card into "this tile
+  failed to render" on a phone. The DOM is a 60-line shim, not a dependency.
+  `HELM_SNAPSHOT=/path/to/snapshot.json node tools/test-tiles.js` runs the same
+  suite against a real snapshot and prints pass/fail only, never content.
 - **`test:worker`** (62) — token 401s, event shape rejection, per-event KV keys,
   the delete-event actor check, snapshot validation, ack scoping, CORS, routing.
   Its `/ask` checks are deliberately limited to the free paths (401, 400, and
@@ -299,6 +310,13 @@ two columns at 640px, three at 1040px.
 1. Write `docs/tiles/<id>.js` exporting `render(el, tile, ctx)`.
 2. Add one line to `docs/tiles/_registry.js`.
 3. Add the file to `SHELL` in `docs/sw.js` and bump `CACHE_VERSION`.
+4. Give it invented data in `tools/make-mock-data.js` and run `npm run mock`.
+
+`npm test` enforces steps 2-4: `test-sw` fails if a registered module is not
+precached (online it works and offline it silently vanishes — the worst kind of
+bug to find on a phone), and `test-tiles` renders every registered module
+against the mock snapshot and against empty, null, wrong-typed and
+unknown-field payloads.
 
 `tile` is the snapshot entry (`{band, updated_at, status, error, data}`). `ctx`
 carries `{id, title, snapshot, pending, actions, live}`, where `actions` are
@@ -584,6 +602,11 @@ The Worker validates only that the body parses and carries `schema`. Everything
 else is the page's problem, and the page tolerates schema growth: an unknown
 tile id renders as a generic key/value card, a registered tile missing from the
 snapshot renders as an empty grey card.
+
+Tiles in the contract today: `bets_live`, `mke_board`, `newsstand`, `radar`,
+`calendar`, `dinner`, `purser_due`, `ship_status`. The page reads their payloads
+field by field and skips what the engine has not sent — a missing field is
+never rendered as a zero, a `false`, or an `Invalid Date`.
 
 **Timestamps the Worker generates are UTC ISO-8601.** Business dates inside the
 snapshot are `YYYY-MM-DD` **Central** strings and must be rendered verbatim as

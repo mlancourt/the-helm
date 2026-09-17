@@ -99,7 +99,8 @@ async function main() {
   const data = await call('GET', '/api/data', { token: TOK_OWNER });
   check('GET /api/data returns me', data.json?.me?.name === 'Matt' && data.json.me.role === 'owner');
   check('GET /api/data returns the snapshot', data.json?.snapshot?.schema === 1);
-  check('GET /api/data carries every mock tile', Object.keys(data.json?.snapshot?.tiles || {}).length === 8);
+  const mockTileCount = Object.keys(JSON.parse(mock).tiles).length;
+  check('GET /api/data carries every mock tile', Object.keys(data.json?.snapshot?.tiles || {}).length === mockTileCount, `expected ${mockTileCount}`);
   check('GET /api/data returns a pending array', Array.isArray(data.json?.pending));
 
   // -- event shape rejection ---------------------------------------------

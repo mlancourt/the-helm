@@ -7,7 +7,7 @@
     "deploy": "wrangler deploy --config worker/wrangler.toml",
     "mock": "node tools/make-mock-data.js > docs/mock/helm-data.json && node tools/make-mock-data.js --pending > docs/mock/pending.json",
     "icons": "node tools/make-icons.js",
-    "test": "node tools/test-fmt.js && node tools/test-graders.js && node tools/test-band.js && node tools/test-sw.js && node tools/test-ask.js",
+    "test": "node tools/test-fmt.js && node tools/test-graders.js && node tools/test-band.js && node tools/test-sw.js && node tools/test-ask.js && node tools/test-tiles.js",
     "test:worker": "node tools/test-worker.js",
     "mock:live": "node tools/make-live-mock.js > docs/mock/live.local.json"
   },

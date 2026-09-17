@@ -150,6 +150,25 @@ export function usd(n) {
   return v.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 }
 
+/**
+ * Display-only dollars, down to the fraction of a cent.
+ *
+ * `usd()` is right for a credit-card bill and wrong for an API meter: one
+ * `/ask` call costs about half a cent, and rounding it to $0.00 would tell
+ * Matt his spend tile is broken. Below a cent this keeps four decimals, and
+ * an amount too small even for that says so rather than rendering as zero.
+ */
+export function usdPrecise(n) {
+  const v = num(n);
+  if (v === null) return '—';
+  if (v !== 0 && Math.abs(v) < 0.01) {
+    const four = v.toFixed(4);
+    if (Number(four) === 0) return v > 0 ? '< $0.0001' : '> -$0.0001';
+    return `${v < 0 ? '-' : ''}$${Math.abs(Number(four)).toFixed(4)}`;
+  }
+  return usd(v);
+}
+
 /** A signed line: -3.5 stays, 3.5 becomes '+3.5'. */
 export function line(n) {
   const v = num(n);

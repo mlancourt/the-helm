@@ -149,6 +149,36 @@ function check(name, cond, detail) {
   check('missing plays says it is waiting', /waiting on scoring plays/.test(gradeTicket(td('C. Brown'), live(NFL)).why));
   check('anytime_td without a player is unsupported', st({ id: 'x', market: 'anytime_td' }, NFL, PLAYS) === 'unsupported');
 
+  // Surname collisions inside ONE fixture. These are real names taken from two
+  // NFL rosters (public data) precisely because invented ones would be too
+  // tidy: one fixture really can contain three unrelated players called Brown,
+  // two of whose given names start with the same letter.
+  console.log('\nsurname collisions (three Browns in one fixture)');
+  const play = (text) => ({
+    scoringPlays: [{ type: { abbreviation: 'TD', text: 'Passing Touchdown' }, text, awayScore: 7, homeScore: 0, period: { number: 1 } }],
+  });
+  const brownTkt = td('Amon-Ra St. Brown');
+  check('the right Brown scoring is a WIN',
+    st(brownTkt, NFL, play('Amon-Ra St. Brown 19 Yd pass from Jared Goff (Jake Bates Kick)')) === 'win');
+  check('a DIFFERENT Brown does not win it (Aamaris, pick-six)',
+    st(brownTkt, NFL, play('Aamaris Brown 31 Yd Interception Return (Jake Bates Kick)')) === 'lose');
+  check('nor a third Brown on the other team (Spencer)',
+    st(brownTkt, NFL, play('Spencer Brown 1 Yd Fumble Recovery (Matt Prater Kick)')) === 'lose');
+  check('first initials alone would not have saved it (Amon-Ra vs Aamaris both "A")',
+    'amon-ra'[0] === 'aamaris'[0]);
+  check('a second player still grades normally',
+    st(td('Rhys Calloway'), NFL, play('Rhys Calloway 4 Yd pass from Kyle Denner (Sam Prater Kick)')) === 'win');
+  check('a same-surname teammate does not take his place',
+    st(td('Rhys Calloway'), NFL, play('Tomas Calloway 4 Yd Rush (Sam Prater Kick)')) === 'lose');
+  check('an initialled first name still matches ("D. Vasquez" / "Devin Vasquez")',
+    st(td('D. Vasquez'), NFL, play('Devin Vasquez 8 Yd Rush (Kicker Kick)')) === 'win');
+  check('an initial does not match a different first letter',
+    st(td('D. Vasquez'), NFL, play('Marco Vasquez 8 Yd Rush (Kicker Kick)')) === 'lose');
+  check('a surname-only ticket still matches on the surname',
+    st(td('Calloway'), NFL, play('Rhys Calloway 4 Yd pass from Kyle Denner (Sam Prater Kick)')) === 'win');
+  check('and the full-name path is exact, not substring-sloppy',
+    st(td('Amon-Ra St. Brown'), NFL, play('Amon-Ra St. Brown 2 Yd Rush (Jake Bates Kick)')) === 'win');
+
   console.log('\ntouchdown detection');
   const tds = G.touchdownPlays(FIX.nfl_scoring_plays);
   // Six: five abbreviated "TD", plus the fumble return abbreviated "SFOP".
