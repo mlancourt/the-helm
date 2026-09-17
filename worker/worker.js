@@ -8,9 +8,13 @@
  *   HELM_KV        KV namespace (see README for key design)
  * Secrets
  *   ADMIN_SECRET       required — guards /api/admin/*
- *   ASK_DAILY_CAP_USD  optional — default 3.00 (M4)
- *   ASK_MODEL          optional (M4)
- *   ANTHROPIC_API_KEY  optional (M4) — never reaches the page
+ *   ANTHROPIC_API_KEY  required for /ask — never reaches the page
+ *   ASK_MODEL          optional — default the newest Sonnet-class model
+ *   ASK_DAILY_CAP_USD  optional — default 3.00
+ *
+ * Most of this file is private to the Worker; the handful of pure helpers the
+ * /ask path is built from are exported so tools/test-ask.js can unit-test them
+ * without a running Worker. Cloudflare ignores exports other than `default`.
  */
 
 // ---------------------------------------------------------------- constants
@@ -30,6 +34,26 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const EVENT_ID_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z:[0-9a-z]{6}$/;
 
 const DEFAULT_ASK_CAP_USD = 3.0;
+
+// ---- /ask (M4) ------------------------------------------------------------
+
+const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_VERSION = '2023-06-01';
+
+/** The brief's number. Answers are a paragraph, not an essay. */
+const ASK_MAX_TOKENS = 800;
+/** The brief's number. Past this the page gets 504 {reason:"timeout"}. */
+const ASK_TIMEOUT_MS = 25_000;
+/** Newest Sonnet-class model, per the brief. Override with secret ASK_MODEL. */
+const DEFAULT_ASK_MODEL = 'claude-sonnet-5';
+
+const MAX_ASK_BYTES = 128 * 1024;
+const MAX_ASK_HISTORY = 10;      // turns, per the brief
+const MAX_HISTORY_CHARS = 8000;  // one turn; an 800-token answer is ~3200
+/** Per the brief: a tile bigger than this is sent as a note, not as data. */
+const MAX_TILE_DATA_BYTES = 8 * 1024;
+
+const TILE_ID_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
 
 // ------------------------------------------------------------------ helpers
 
@@ -242,13 +266,248 @@ function askCapUsd(env) {
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_ASK_CAP_USD;
 }
 
+export function askModel(env) {
+  const m = env && typeof env.ASK_MODEL === 'string' ? env.ASK_MODEL.trim() : '';
+  return m || DEFAULT_ASK_MODEL;
+}
+
+/**
+ * List prices in USD per million tokens, matched by model-id prefix (longest
+ * wins). The cap is a dollar guard rail, so an id nobody has priced here is
+ * costed at the most expensive tier rather than at zero — an unknown model
+ * must trip the cap early, never run free.
+ */
+const ASK_PRICES = [
+  ['claude-fable-5', { in: 10, out: 50 }],
+  ['claude-mythos-5', { in: 10, out: 50 }],
+  ['claude-opus-', { in: 5, out: 25 }],
+  ['claude-sonnet-5', { in: 2, out: 10 }],
+  ['claude-sonnet-4-6', { in: 3, out: 15 }],
+  ['claude-haiku-4-5', { in: 1, out: 5 }],
+];
+const ASK_PRICE_UNKNOWN = { in: 10, out: 50 };
+
+export function modelPrices(model) {
+  const id = String(model || '');
+  let hit = null;
+  for (const [prefix, price] of ASK_PRICES) {
+    if (id.startsWith(prefix) && (!hit || prefix.length > hit.prefix.length)) hit = { prefix, price };
+  }
+  return hit ? hit.price : ASK_PRICE_UNKNOWN;
+}
+
+/**
+ * Cost estimate from the usage block the API returns. Cache writes bill at
+ * 1.25x and cache reads at 0.1x of the input rate.
+ *
+ * This is an estimate, not an invoice — the cap exists to stop a runaway loop,
+ * and the console is the ledger.
+ */
+export function estimateUsd(model, usage) {
+  const p = modelPrices(model);
+  const u = usage || {};
+  const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  const input = num(u.input_tokens) + num(u.cache_creation_input_tokens) * 1.25 + num(u.cache_read_input_tokens) * 0.1;
+  const usd = (input * p.in + num(u.output_tokens) * p.out) / 1e6;
+  return Math.round(usd * 1e6) / 1e6;
+}
+
+/**
+ * Trim the page's transcript into something the Messages API will accept:
+ * user/assistant turns only, non-empty, at most MAX_ASK_HISTORY of them, and
+ * starting on a user turn (the API rejects a leading assistant message).
+ * Anything malformed is dropped rather than 400'd — a chat box should not fail
+ * closed because one turn in the scrollback is odd.
+ */
+export function normalizeHistory(raw) {
+  if (!Array.isArray(raw)) return [];
+  const turns = [];
+  for (const m of raw) {
+    if (!isObj(m)) continue;
+    if (m.role !== 'user' && m.role !== 'assistant') continue;
+    const content = typeof m.content === 'string' ? m.content.trim() : '';
+    if (!content) continue;
+    turns.push({ role: m.role, content: content.slice(0, MAX_HISTORY_CHARS) });
+  }
+  const tail = turns.slice(-MAX_ASK_HISTORY);
+  while (tail.length && tail[0].role !== 'user') tail.shift();
+  return tail;
+}
+
+function byteLen(s) {
+  return new TextEncoder().encode(s).length;
+}
+
+/** A tile's data, or a note standing in for it when it is too big to send. */
+function tileDataForModel(data, where) {
+  const bytes = byteLen(JSON.stringify(data ?? null));
+  if (bytes <= MAX_TILE_DATA_BYTES) return data ?? null;
+  return {
+    _truncated: true,
+    _note: `${where} omitted: ${bytes} bytes exceeds the ${MAX_TILE_DATA_BYTES}-byte per-tile limit`,
+    _keys: isObj(data) ? Object.keys(data) : undefined,
+  };
+}
+
+/**
+ * The snapshot as the model sees it: tiles, plus the three header fields that
+ * make them readable (`schema`, `generated_at`, `tz`). `run_id` and anything
+ * else the engine adds stays out — it is provenance, not board state.
+ */
+export function askSnapshotView(snapshot) {
+  const tiles = {};
+  const src = isObj(snapshot) && isObj(snapshot.tiles) ? snapshot.tiles : {};
+  for (const [id, tile] of Object.entries(src)) {
+    if (!isObj(tile)) continue;
+    tiles[id] = { ...tile, data: tileDataForModel(tile.data, `tile \`${id}\` data`) };
+  }
+  return {
+    schema: isObj(snapshot) ? (snapshot.schema ?? null) : null,
+    generated_at: isObj(snapshot) ? (snapshot.generated_at ?? null) : null,
+    tz: isObj(snapshot) ? (snapshot.tz ?? null) : null,
+    tiles,
+  };
+}
+
+/**
+ * system = the vault owner's `ask:sys` text + the current snapshot + the
+ * pinned tile, in that order. The prompt's *content* is not ours; this file
+ * only ever appends board state beneath it.
+ */
+export function buildAskSystem({ sysText, snapshot, pinned }) {
+  const parts = [String(sysText || '').trim()];
+
+  parts.push(
+    [
+      '# Board snapshot',
+      'The tiles currently published to The Helm. Business dates are plain YYYY-MM-DD',
+      'strings in the timezone named by `tz` — read them verbatim, never shift them.',
+      'Bet grades on the page are a lean, never a settlement.',
+      '',
+      JSON.stringify(askSnapshotView(snapshot)),
+    ].join('\n')
+  );
+
+  if (pinned && pinned.tile_id) {
+    parts.push(
+      [
+        '# Pinned tile',
+        `The reader opened this from the \`${pinned.tile_id}\` tile and is asking about it.`,
+        '',
+        JSON.stringify(tileDataForModel(pinned.tile_data, 'pinned tile data')),
+      ].join('\n')
+    );
+  }
+
+  return parts.join('\n\n');
+}
+
+/** One HTTP call to the model API, bounded by whatever time is left. */
+async function callModelApi(key, body, timeoutMs) {
+  if (timeoutMs <= 0) return { timeout: true };
+  try {
+    const res = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': ANTHROPIC_VERSION,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    return { status: res.status, text: await res.text() };
+  } catch (e) {
+    const name = e && e.name;
+    if (name === 'TimeoutError' || name === 'AbortError') return { timeout: true };
+    return { network: true };
+  }
+}
+
+/** Text blocks, joined. Anything that is not text is not an answer. */
+function answerText(data) {
+  const blocks = Array.isArray(data && data.content) ? data.content : [];
+  return blocks
+    .filter((b) => isObj(b) && b.type === 'text' && typeof b.text === 'string')
+    .map((b) => b.text)
+    .join('\n\n')
+    .trim();
+}
+
 /**
  * The one swappable seam. v1 (M4) calls the Anthropic Messages API from
  * here; Phase 2 swaps the body for a Cloudflare Tunnel fetch. The page
  * never learns which — it only ever sees {answer, mode, usd}.
+ *
+ * Raw fetch rather than the SDK on purpose: rule 3 keeps this Worker a single
+ * self-contained file that can be pasted into the Cloudflare dashboard, and a
+ * bundled npm dependency would end that.
+ *
+ * Returns {answer, usd, usage, model} or {fail: 'no_key'|'timeout'|'upstream'}.
  */
-async function askBackend(/* env, { q, tile_id, tile_data, history, system } */) {
-  return { notImplemented: true };
+async function askBackend(env, { system, messages, model }) {
+  const key = env.ANTHROPIC_API_KEY;
+  if (!key) return { fail: 'no_key' };
+
+  const deadline = Date.now() + ASK_TIMEOUT_MS;
+  const body = {
+    model,
+    max_tokens: ASK_MAX_TOKENS,
+    // One cached block: the system prompt and snapshot are identical across
+    // every ask between two publishes, and only the messages move.
+    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+    messages,
+    // A board answer is a short paragraph. Thinking tokens would come out of
+    // the same 800-token budget the answer needs, so it is off — and a model
+    // that refuses the field (thinking always on) gets one more attempt
+    // without it rather than handing the page a 400.
+    thinking: { type: 'disabled' },
+  };
+
+  let res = await callModelApi(key, body, deadline - Date.now());
+  if (res.status === 400 && /thinking/i.test(res.text || '')) {
+    const { thinking, ...withoutThinking } = body;
+    res = await callModelApi(key, withoutThinking, deadline - Date.now());
+  }
+
+  if (res.timeout) return { fail: 'timeout' };
+  if (res.network) return { fail: 'upstream', detail: 'could not reach the model API' };
+
+  let data = null;
+  try {
+    data = JSON.parse(res.text);
+  } catch {
+    /* handled below */
+  }
+  if (res.status !== 200 || !isObj(data)) {
+    const msg = isObj(data) && isObj(data.error) && data.error.message ? String(data.error.message) : `http ${res.status}`;
+    return { fail: 'upstream', status: res.status, detail: msg.slice(0, 200) };
+  }
+
+  let answer = answerText(data);
+  if (data.stop_reason === 'refusal') {
+    answer = answer || 'The model declined to answer that one.';
+  } else if (data.stop_reason === 'max_tokens') {
+    answer = `${answer}\n\n(cut off at the ${ASK_MAX_TOKENS}-token answer limit.)`.trim();
+  }
+  if (!answer) answer = 'The model returned an empty answer.';
+
+  return { answer, usage: data.usage || null, model: data.model || model, usd: estimateUsd(data.model || model, data.usage) };
+}
+
+/**
+ * Add one call's cost to today's bucket. KV has no atomic increment, so two
+ * asks racing can under-count by one — acceptable on a one-user board where
+ * the cap is a guard rail. The bucket expires on its own so the namespace does
+ * not accumulate a key per day forever.
+ */
+async function recordAskSpend(env, usd) {
+  const current = await askSpendToday(env);
+  const next = {
+    usd: Math.round((current.usd + (Number(usd) || 0)) * 1e6) / 1e6,
+    calls: current.calls + 1,
+  };
+  await env.HELM_KV.put(`ask:cap:${utcDay()}`, JSON.stringify(next), { expirationTtl: 60 * 60 * 24 * 14 });
 }
 
 // ------------------------------------------------------------------ routes
@@ -341,20 +600,71 @@ async function handleHealth(request, env) {
 }
 
 async function handleAsk(request, env) {
-  // M4 wires this up. The seam and the cap check live here already so the
-  // page can be built against the real shape.
+  // The cap is checked before anything is read, so a runaway page cannot even
+  // spend the Worker's time once the day's budget is gone.
   const spend = await askSpendToday(env);
-  if (spend.usd >= askCapUsd(env)) return err(request, 429, 'cap', 'daily /ask spend cap reached');
+  const cap = askCapUsd(env);
+  if (spend.usd >= cap) {
+    return err(request, 429, 'cap', `daily /ask spend cap of $${cap.toFixed(2)} reached`);
+  }
 
-  const r = await readJsonCapped(request, MAX_EVENT_BYTES);
+  const r = await readJsonCapped(request, MAX_ASK_BYTES);
   if (r.tooBig) return err(request, 413, 'too_large', 'ask body too large');
   if (r.bad) return err(request, 400, 'bad_json', 'body must be valid JSON');
   if (!isObj(r.value) || !nonEmptyText(r.value.q, MAX_TEXT_LEN))
     return err(request, 400, 'bad_shape', 'body.q must be a non-empty string');
 
-  const out = await askBackend();
-  if (out.notImplemented) return err(request, 503, 'not_implemented', '/api/ask lands in M4');
-  return json(request, out);
+  const body = r.value;
+  const q = body.q.trim();
+
+  let pinned = null;
+  if (body.tile_id !== undefined && body.tile_id !== null) {
+    if (typeof body.tile_id !== 'string' || !TILE_ID_RE.test(body.tile_id)) {
+      return err(request, 400, 'bad_shape', 'body.tile_id must be a tile id');
+    }
+    pinned = { tile_id: body.tile_id, tile_data: body.tile_data ?? null };
+  }
+
+  // The prompt's content belongs to the vault owner and is installed by
+  // PUT /api/admin/ask-system. Without it there is nothing to ask *as*, and
+  // inventing a stand-in here would be this repo writing vault content.
+  const sysText = await env.HELM_KV.get('ask:sys');
+  if (!sysText || !sysText.trim()) {
+    return err(request, 503, 'no_system', 'the /ask system prompt has not been installed yet');
+  }
+
+  let snapshot = null;
+  const rawSnapshot = await env.HELM_KV.get('snapshot');
+  if (rawSnapshot) {
+    try {
+      snapshot = JSON.parse(rawSnapshot);
+    } catch {
+      snapshot = null; // a broken snapshot means no board context, not a 500
+    }
+  }
+
+  const model = askModel(env);
+  const out = await askBackend(env, {
+    system: buildAskSystem({ sysText, snapshot, pinned }),
+    messages: [...normalizeHistory(body.history), { role: 'user', content: q }],
+    model,
+  });
+
+  if (out.fail === 'no_key') return err(request, 503, 'no_key', 'no model key is configured on this Worker');
+  if (out.fail === 'timeout') return err(request, 504, 'timeout', `no answer within ${ASK_TIMEOUT_MS / 1000}s`);
+  if (out.fail === 'upstream') return err(request, 502, 'upstream', out.detail || 'the model API refused the call');
+
+  await recordAskSpend(env, out.usd);
+
+  // Length and cost only. The question, the answer and the snapshot never
+  // reach a log line.
+  console.log(
+    `ask ok model=${out.model} q_len=${q.length} pinned=${pinned ? pinned.tile_id : '-'} ` +
+      `in=${out.usage?.input_tokens ?? '?'} cached=${out.usage?.cache_read_input_tokens ?? 0} ` +
+      `out=${out.usage?.output_tokens ?? '?'} usd=${out.usd}`
+  );
+
+  return json(request, { answer: out.answer, mode: 'snapshot', usd: out.usd });
 }
 
 // ------------------------------------------------------------ admin routes

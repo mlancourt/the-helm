@@ -184,12 +184,21 @@ async function main() {
   check('health reports ask_today_usd', health.json.ask_today_usd === 0);
   check('health needs a token', (await call('GET', '/api/health')).status === 401);
 
-  // -- ask seam (M4) ------------------------------------------------------
-  console.log('\nask seam');
+  // -- ask (M4) -----------------------------------------------------------
+  // Only the free paths are exercised here: a `wrangler dev` pointed at a real
+  // ANTHROPIC_API_KEY would otherwise bill a live model call on every test
+  // run. The model path itself is covered end to end, with a stubbed API, in
+  // tools/test-ask.js.
+  console.log('\nask');
   check('ask needs a token', (await call('POST', '/api/ask', { body: { q: 'hi' } })).status === 401);
-  const ask = await call('POST', '/api/ask', { token: TOK_OWNER, body: { q: 'what is open?' } });
-  check('ask is a documented 503 until M4', ask.status === 503 && ask.json.reason === 'not_implemented', ask.text);
   check('ask rejects an empty q', (await call('POST', '/api/ask', { token: TOK_OWNER, body: { q: '' } })).status === 400);
+  check('ask rejects a bogus tile_id', (await call('POST', '/api/ask', { token: TOK_OWNER, body: { q: 'hi', tile_id: '../snapshot' } })).json?.reason === 'bad_shape');
+
+  const ask = await call('POST', '/api/ask', { token: TOK_OWNER, body: { q: 'what is open?' } });
+  const askOk = ask.status === 200 && typeof ask.json?.answer === 'string' && ask.json.mode === 'snapshot' && typeof ask.json.usd === 'number';
+  const askDegraded = [429, 502, 503, 504].includes(ask.status) && ['cap', 'upstream', 'no_key', 'no_system', 'timeout'].includes(ask.json?.reason);
+  check('ask either answers or degrades with a documented reason', askOk || askDegraded, `${ask.status} ${ask.text.slice(0, 160)}`);
+  console.log(`       (this environment took the "${askOk ? 'answered' : ask.json?.reason}" path)`);
 
   // -- CORS ---------------------------------------------------------------
   console.log('\nCORS');

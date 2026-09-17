@@ -9,9 +9,10 @@ Matt's vault + engine, which lives elsewhere and talks to this Worker over the
 admin endpoints. Nothing here generates real data. See `CLAUDE.md` for the
 build brief and the hard rules.
 
-Status: **M1 + M2 + M3 complete** — Worker, KV, token auth, events, admin
+Status: **M1 + M2 + M3 + M4 complete** — Worker, KV, token auth, events, admin
 publish/drain; page shell, tile registry, all v1 render modules, PWA; LIVE band
-with in-browser ESPN fetch and bet graders. M4 (`/ask` v1) is not built yet.
+with in-browser ESPN fetch and bet graders; `/ask` v1 answering from the
+snapshot behind a daily spend cap, with long-press Explain on every tile.
 
 ---
 
@@ -78,8 +79,8 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 221 assertions, no server needed
-npm run test:worker # 61 assertions, needs `npm run dev` running
+npm test            # 303 assertions, no server needed
+npm run test:worker # 62 assertions, needs `npm run dev` running
 ```
 
 - **`test:fmt`** (49) — every date helper, run under `America/Chicago`,
@@ -96,8 +97,18 @@ npm run test:worker # 61 assertions, needs `npm run dev` running
 - **`test:sw`** (27) — the service worker's routing policy: ESPN and `/ask` are
   never cached, `/api/data` is network-first with a cache fallback, the shell is
   stale-while-revalidate, and a 404 in the precache list cannot fail an install.
-- **`test:worker`** (61) — token 401s, event shape rejection, per-event KV keys,
+- **`test:ask`** (82) — the whole `/ask` route, driven against a fake KV
+  namespace and a stubbed model API: pricing and cost estimation, history
+  trimming, the 8 KB per-tile truncation, the pinned tile, cap enforcement at
+  the configured number, and every degradation path (no key, no system prompt,
+  timeout, upstream error, corrupt snapshot, refusal, truncation). worker.js is
+  a plain ES module, so the route runs in Node with no wrangler and no network.
+  **No test ever calls a real model** — nothing here can spend money.
+- **`test:worker`** (62) — token 401s, event shape rejection, per-event KV keys,
   the delete-event actor check, snapshot validation, ack scoping, CORS, routing.
+  Its `/ask` checks are deliberately limited to the free paths (401, 400, and
+  "answered or degraded with a documented reason"), so pointing `wrangler dev`
+  at a live key cannot bill a model call on every test run.
 
 Regenerate the fake data or the icons any time:
 
@@ -131,9 +142,9 @@ secrets.
 ```bash
 cd worker
 npx wrangler secret put ADMIN_SECRET          # required — long random string
-npx wrangler secret put ASK_DAILY_CAP_USD     # optional — default 3.00 (M4)
-npx wrangler secret put ANTHROPIC_API_KEY     # M4 — never reaches the page
-npx wrangler secret put ASK_MODEL             # M4, optional
+npx wrangler secret put ANTHROPIC_API_KEY     # required for /ask — never reaches the page
+npx wrangler secret put ASK_DAILY_CAP_USD     # optional — default 3.00
+npx wrangler secret put ASK_MODEL             # optional — default claude-sonnet-5
 ```
 
 ### 3. Deploy the Worker
@@ -212,7 +223,7 @@ CORS allows `https://mlancourt.github.io` and `http://localhost:*`.
 | `POST /api/event` | token | validate, stamp `{id, ts, actor}`, store; returns 201 + the stored event |
 | `DELETE /api/event/:id` | token | withdraw ONE still-pending event, only if `actor` matches. 404 once drained |
 | `GET /api/health` | token | `{published_at, pending_count, ask_today_usd, ask_cap_usd}` |
-| `POST /api/ask` | token | **M4.** Returns `503 {reason:"not_implemented"}` today |
+| `POST /api/ask` | token | `{q, tile_id?, tile_data?, history?}` → `{answer, mode:"snapshot", usd}`. See [Ask](#ask) |
 | `POST /api/admin/publish` | secret | body = full snapshot; must parse and carry `schema` |
 | `GET /api/admin/events` | secret | every pending event, oldest first |
 | `POST /api/admin/events/ack` | secret | `{ids:[…]}` — deletes exactly those keys |
@@ -222,7 +233,7 @@ CORS allows `https://mlancourt.github.io` and `http://localhost:*`.
 Error bodies are always `{error:true, reason, detail?}`. Reasons in use:
 `unauthorized`, `bad_json`, `bad_shape`, `bad_type`, `bad_payload`, `bad_id`,
 `not_actor`, `not_found`, `no_route`, `no_schema`, `weak_token`, `too_large`,
-`cap`, `not_implemented`, `internal`.
+`cap`, `no_key`, `no_system`, `timeout`, `upstream`, `internal`.
 
 ### Events — exactly these four
 
@@ -246,7 +257,7 @@ pending and never renders a submitted write as applied.
 | `snapshot` | the full `helm-data.json` string, replaced atomically on publish |
 | `tokens` | `{"<token>": {"name":…,"role":…}}` |
 | `evt:<utc-iso>:<rand6>` | one event JSON |
-| `ask:cap:<YYYY-MM-DD>` | `{usd, calls}` — UTC day |
+| `ask:cap:<YYYY-MM-DD>` | `{usd, calls}` — UTC day, expires after 14 days |
 | `ask:sys` | the `/ask` system prompt text |
 
 **One KV key per event, never a single array key.** KV has no atomic append, so
@@ -319,7 +330,7 @@ touching the render path.
 | Worker unreachable, no cache | a plain "cannot reach the Worker" card |
 | token rejected (401) | the stored token is dropped and Matt is told to re-open with `?t=` |
 | ESPN down (M3) | LIVE tiles show "feed unavailable", never blank |
-| `/ask` down | the chat says so and the mode chip flips to `offline` |
+| `/ask` down | the chat says which way it failed; the mode chip reads `cap`, `slow`, `unset` or `offline` |
 
 ### Rule 10 — untrusted content is data
 
@@ -452,6 +463,108 @@ font, no CDN.
 `sw.js` caches the shell stale-while-revalidate and `/api/data` network-first.
 It **never** caches ESPN or `/ask`: a cached score would show stale numbers as
 live, and a cached answer would replay itself forever.
+
+---
+
+## Ask
+
+`POST /api/ask` answers questions about the board. One user, one token, one
+model call per question, and a hard dollar ceiling on the day.
+
+### What the Worker builds
+
+```
+system  = ask:sys (the vault owner's prompt, verbatim, first)
+        + the current snapshot — tiles only, plus schema/generated_at/tz
+        + the pinned tile, when the question came from a tile's Explain
+messages = the page's last ≤10 turns, then the question
+```
+
+The system block is sent with `cache_control: ephemeral`: it is byte-identical
+for every question asked between two publishes, so the second and later asks in
+a sitting read most of their input from cache at a tenth of the price.
+
+A tile whose `data` serialises to more than **8 KB** is replaced by a note
+naming its size and its keys. That keeps one fat tile — a long newsstand, a
+busy calendar — from crowding the rest of the board out of the prompt.
+
+`run_id` is dropped. `tz` and `generated_at` are kept, because a business date
+is a plain `YYYY-MM-DD` string and is unreadable without the zone it belongs to.
+
+### The backend seam
+
+`askBackend()` is deliberately the only function that knows where answers come
+from. Today it POSTs to the Anthropic Messages API with the key from the
+`ANTHROPIC_API_KEY` secret; Phase 2 replaces that body with a fetch at a
+Cloudflare Tunnel. Either way the page sees only `{answer, mode, usd}` and
+renders `mode` as a chip — `snapshot` now, `vault` later.
+
+It calls raw HTTP rather than the SDK on purpose: rule 3 keeps `worker.js` a
+single self-contained file that can be pasted into the Cloudflare dashboard,
+and a bundled npm dependency would end that.
+
+Defaults: model `claude-sonnet-5` (override with the `ASK_MODEL` secret),
+`max_tokens` 800, thinking off — an 800-token budget is for the answer, not for
+reasoning. A model that rejects `thinking: disabled` (the ones that always
+think) is retried once without the field rather than failing the question.
+
+### The cap
+
+`ASK_DAILY_CAP_USD` (default **$3.00**) is checked before the request body is
+even read, against `ask:cap:<UTC day>`. At or over it, every ask returns
+`429 {reason:"cap"}` and the chat says the day's budget is spent. Cost is
+estimated from the `usage` block the API returns, at list prices, with cache
+writes at 1.25x and cache reads at 0.1x of the input rate.
+
+A model id nobody has priced in `worker.js` is costed at the **most expensive**
+tier. An unpriced model must trip the cap early; it must never run free.
+
+The counter is a guard rail, not a ledger — KV has no atomic increment, so two
+asks racing can under-count by one call. On a one-user board that is fine.
+`GET /api/health` reports `ask_today_usd` and `ask_cap_usd`.
+
+### Failure, and what the chat says
+
+| Status | `reason` | The chat |
+|---|---|---|
+| 429 | `cap` | "The day's ask budget is spent. It resets at 00:00 UTC." |
+| 504 | `timeout` | "The model did not answer in time." (25s ceiling) |
+| 502 | `upstream` | "The model API is not answering right now." |
+| 503 | `no_key` | no `ANTHROPIC_API_KEY` on the Worker |
+| 503 | `no_system` | nothing installed at `ask:sys` yet |
+
+`no_system` is a refusal to improvise: the prompt's *content* belongs to the
+vault owner, and this repo inventing a stand-in would be exactly the boundary
+violation `CLAUDE.md` draws. Install it with `PUT /api/admin/ask-system`.
+
+### On the page
+
+The panel is a bottom sheet on the phone. The transcript lives in one closure,
+in memory only — never localStorage, never an event, never the snapshot — so
+closing the sheet keeps it and reloading drops it. Answers are placed with
+`textContent` like any other untrusted string (rule 10).
+
+Every tile carries **Explain**: long-press, right-click, or the `?` in its
+header. That opens the sheet with the tile pinned and "Explain this tile."
+already typed. The pin chip shows what is attached and unpins with one tap.
+
+A message starting with `add a tile`, `build`, or `I want a tile` offers **File
+as build request** instead of burning an ask on it — with "Ask anyway" right
+beside it, because it stays Matt's call.
+
+The mode chip doubles as the meter: after an answer its tooltip reads the cost
+of that call, and on a failure it reads which reason came back.
+
+### Checking it live
+
+```bash
+tools/ask-probe.sh "what is open on the board right now?"
+```
+
+Reads the token from `token.local.txt`, asks the deployed Worker one question,
+and prints **shape only** — status, mode, answer length, cost, and the day's
+running total before and after. The answer itself is Matt's data and stays on
+Matt's screen, not in a build transcript. It bills one real model call.
 
 ---
 

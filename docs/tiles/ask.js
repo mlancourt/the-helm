@@ -9,13 +9,29 @@
  * Rule 10: every answer lands via textContent. A model reply is untrusted data
  * exactly like a snapshot string.
  *
- * /api/ask is a documented 503 until M4, so the failure path below is the one
- * that actually runs today — which is the point of writing it first.
+ * Every /api/ask failure is a reason string from the Worker, not a stack
+ * trace: the chat says what went wrong in Matt's words and keeps the
+ * transcript (rule 8).
  */
 
 import { el, clear, pill } from '../lib/dom.js';
 
 const MAX_TURNS = 10;
+
+/**
+ * Worker reason -> what the chat says, and what the mode chip reads.
+ * An unmapped reason falls through to the Worker's own message, which is
+ * already short and human.
+ */
+const FAILURES = {
+  cap: ['The day\u2019s ask budget is spent. It resets at 00:00 UTC.', 'cap'],
+  timeout: ['The model did not answer in time. Worth another go.', 'slow'],
+  upstream: ['The model API is not answering right now.', 'offline'],
+  no_key: ['Ask is not configured on the Worker yet (no model key).', 'unset'],
+  no_system: ['Ask has no system prompt installed yet.', 'unset'],
+  too_large: ['That question carried too much with it.', 'snapshot'],
+  unauthorized: ['The Worker did not recognise this token.', 'offline'],
+};
 
 /** The build-request affordance from the brief. */
 const BUILD_RE = /^\s*(add a tile\b|build\b|i want a tile\b)/i;
@@ -176,11 +192,18 @@ export function render(root, tile, ctx) {
       transcript.removeChild(thinking);
       history.push({ role: 'assistant', content: String(res.answer ?? '') });
       if (res.mode) modeChip.textContent = String(res.mode);
+      // The cap is real money on a card, so the cost of the last answer is
+      // one long-press away rather than buried in the Worker log.
+      if (typeof res.usd === 'number') modeChip.title = `last answer cost $${res.usd.toFixed(4)}`;
     } catch (e) {
       transcript.removeChild(thinking);
       // Rule 8: /ask down means the chat says so, plainly.
-      history.push({ role: 'assistant', content: e.message || 'Ask is unavailable right now.' });
-      modeChip.textContent = 'offline';
+      // hasOwnProperty, not a bare lookup: a reason of "constructor" would
+      // otherwise hand back an Object method and throw inside the catch.
+      const [text, chip] = Object.prototype.hasOwnProperty.call(FAILURES, e.reason) ? FAILURES[e.reason] : [];
+      history.push({ role: 'assistant', content: text || e.message || 'Ask is unavailable right now.' });
+      modeChip.textContent = chip || 'offline';
+      modeChip.title = e.reason ? `/ask failed: ${e.reason}` : '/ask failed';
     } finally {
       busy = false;
       sendBtn.disabled = false;
@@ -214,6 +237,7 @@ export function render(root, tile, ctx) {
             setPinned(null);
             clearOffer();
             modeChip.textContent = 'snapshot';
+            modeChip.title = '';
             paint();
           },
         },
