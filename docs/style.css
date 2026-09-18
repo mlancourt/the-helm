@@ -195,21 +195,50 @@ body {
 .card-degraded { opacity: 0.62; border-style: dashed; }
 
 .card-head {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 8px;
+  padding-bottom: 7px;
+  margin-bottom: 9px;
   user-select: none;
   -webkit-user-select: none;
 }
 
+/* brass rule, fading left→right — the wordmark's colour carried onto every card */
+.card-head::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--brass) 0, rgba(201, 162, 39, 0.35) 45%, transparent 100%);
+}
+
 .card-title {
   margin: 0;
-  font-size: 14px;
-  font-weight: 620;
-  letter-spacing: 0.01em;
-  color: var(--text);
+  /* the wordmark's fallback stack — NOT 'Helm Display' (19-glyph subset, wordmark only; rule 4) */
+  font-family: 'Avenir Next Condensed', 'Helvetica Neue Condensed', 'Roboto Condensed', 'Segoe UI Semibold', -apple-system, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--brass);
+  -webkit-font-smoothing: antialiased;
+}
+
+.card-title::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--brass);
+  margin-right: 8px;
+  transform: rotate(45deg);
+  position: relative;
+  top: -2px;
 }
 
 .card-head-right { display: flex; align-items: center; gap: 6px; }

@@ -188,3 +188,5 @@ Tests (Worker, `wrangler dev` + node): token 401s; event shape rejection; per-ev
 **v1.3 (2026-09-17):** `local_events` ("Lake Country") added — vault spec `Local-Tile-Spec.md`, rulings L1–L6. First tile to read its own `status`, so `renderGeneric` moved out of `app.js` into `lib/dom.js` as `genericCard()` and both paths now share one definition of what rule 9's card looks like.
 
 **v1.1 (2026-09-17):** `mke_board` retired and replaced by `today_games` (vault spec `06-AI-Stack/The-Helm/Todays-Games-Tile-Spec.md`). One ESPN scoreboard call per league per tick now serves both LIVE tiles — `live/band.js` builds a single deduped `(league, date)` plan; a tile module still never fetches. `live/espn.js` gained `broadcasts` (the `broadcasts[]`/`geoBroadcasts[]` merge), `venue`, `short` team names, and `compactCtDate()` — `date_ct` → `dates=` by string ops only.
+
+**v1.6.1 (2026-09-18):** card nameplates — brass condensed uppercase titles + rule + diamond, CSS only, spec `Card-Nameplate-Spec.md`.
