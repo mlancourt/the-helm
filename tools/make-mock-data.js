@@ -729,10 +729,71 @@ function snapshot() {
           errors: null,
         },
 
-        // Not built yet. The tile renders this one greyed, wearing "soon".
-        listening: null,
+        // Four invented books in four invented series. The rows exercise the
+        // sheet: one already out (the "out now" pill instead of a countdown),
+        // one close enough for the amber chip, one months away, and one
+        // half-missing — no sequence, no author, no link — because a series
+        // Audible numbers loosely is the normal case, not the odd one.
+        // Sorted by release date ascending, the way the engine publishes it.
+        listening: {
+          updated_at: agoIso(13 * 60),
+          week_of: mondayOf(TODAY),
+          status: 'ok',
+          series_checked: 17,
+          items: [
+            {
+              series: 'The Salvage Fleet',
+              sequence: '12',
+              title: 'Deadweight Tonnage',
+              author: 'R. J. Mockton',
+              release_date: addDays(TODAY, -2),
+              days: -2,
+              just_out: true,
+              asin: 'B0MOCK0001',
+              link: 'https://example.com/mock/pd/B0MOCK0001',
+              source: 'audible-catalog',
+            },
+            {
+              series: 'Cartwright & Fen',
+              sequence: null,
+              title: 'The Second Tuesday',
+              author: 'Imogen Pell',
+              release_date: addDays(TODAY, 4),
+              days: 4,
+              just_out: false,
+              asin: 'B0MOCK0002',
+              link: 'https://example.com/mock/pd/B0MOCK0002',
+              source: 'audible-catalog',
+            },
+            {
+              series: 'Longwater',
+              sequence: '4.5',
+              title: 'A Short Passage',
+              author: 'Dana Q. Hollis',
+              release_date: addDays(TODAY, 81),
+              days: 81,
+              just_out: false,
+              asin: 'B0MOCK0003',
+              link: 'https://example.com/mock/pd/B0MOCK0003',
+              source: 'audible-catalog',
+            },
+            {
+              series: 'The Ninth Watch',
+              sequence: '3',
+              title: 'Dark Union Station',
+              author: null,
+              release_date: addDays(TODAY, 158),
+              days: 158,
+              just_out: false,
+              asin: 'B0MOCK0004',
+              link: null,
+              source: null,
+            },
+          ],
+          errors: null,
+        },
 
-        sources: { tv: 'TMDB', podcasts: 'RSS via iTunes Search', movies: 'TMDB discover + watch/providers', books: 'pending' },
+        sources: { tv: 'TMDB', podcasts: 'RSS via iTunes Search', movies: 'TMDB discover + watch/providers', books: 'Audible catalog' },
         attribution: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
       }),
 

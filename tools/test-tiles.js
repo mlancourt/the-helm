@@ -795,6 +795,173 @@ async function main() {
     check('a null top5 face is still greyed, wearing "soon"', entBtns(stillSoon)[2].className.includes('ent-btn-soon') && entBtns(stillSoon)[2].querySelector('.ent-soon').textContent === 'soon');
     check('and still cannot be tapped', entBtns(stillSoon)[2].getAttribute('disabled') === 'disabled');
 
+    // -- the listening sheet --------------------------------------------------
+    console.log('\nentertainment — the Listening sheet');
+    //
+    // The last face to get a body. Books, not bills: the chip counts down in
+    // entertainment's voice, and a book already out says so rather than
+    // reporting a negative countdown. '2026-12-08' is the rule-7 trap — parsed
+    // as an instant it is December 7th for anyone Central.
+    const listenTile = entTile({
+      watching: null,
+      podcasts: null,
+      top5: null,
+      listening: {
+        updated_at: daysAgoIso(40),
+        week_of: '2026-09-14',
+        status: 'ok',
+        series_checked: 17,
+        items: [
+          {
+            series: 'Expedition Nine',
+            sequence: '20',
+            title: 'Last Ride',
+            author: 'Craig Mockson',
+            release_date: '2026-12-08',
+            days: 81,
+            just_out: false,
+            asin: 'B0TEST0001',
+            link: 'https://example.com/pd/B0TEST0001',
+            source: 'audible-catalog',
+          },
+          {
+            series: 'The Grey Ledger',
+            sequence: null,
+            title: 'Dark Union',
+            author: 'Imogen Pell',
+            release_date: '2027-02-23',
+            days: 158,
+            just_out: false,
+            asin: 'B0TEST0002',
+            link: 'https://example.com/pd/B0TEST0002',
+            source: 'audible-catalog',
+          },
+          {
+            series: 'Terminal Watch',
+            sequence: '8',
+            title: 'State of Exile',
+            author: 'Dana Q. Hollis',
+            release_date: ymd(-3),
+            days: -3,
+            just_out: true,
+            asin: 'B0TEST0003',
+            link: 'https://example.com/pd/B0TEST0003',
+            source: 'audible-catalog',
+          },
+          {
+            // Half-missing, and a link that must never become one.
+            series: null,
+            sequence: null,
+            title: 'Avalon Station',
+            author: null,
+            release_date: null,
+            days: null,
+            just_out: false,
+            asin: null,
+            link: 'javascript:alert(1)',
+            source: null,
+          },
+        ],
+        errors: null,
+      },
+      attribution: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
+    });
+
+    const lPanel = fakePanel();
+    withStorage(fakeStorage({ listening: daysAgoIso(5) }), () => {
+      const r = new El('div');
+      ent.render(r, listenTile, { id: 'entertainment', actions: lPanel.actions });
+      tap(entBtns(r)[3]);
+    });
+    const lSheet = lPanel.last.body;
+    const lText = textOf(lSheet);
+    const lRows = lSheet.querySelectorAll('.ent-row');
+    const lTitles = lSheet.querySelectorAll('.ent-row-title').map((n) => n.textContent);
+
+    check('the Listening face has its own body now, not the generic card', !/asin:/.test(lText));
+    check('one row per book', lRows.length === 4, String(lRows.length));
+    check(
+      'in the order the engine published them',
+      lTitles.join('|') === 'Last Ride|Dark Union|State of Exile|Avalon Station',
+      lTitles.join('|')
+    );
+
+    // The sequence is a label beside the title, and absent when the series
+    // does not number that way.
+    const seqs = lSheet.querySelectorAll('.ent-seq').map((n) => n.textContent);
+    check('a numbered book wears its sequence', seqs[0] === '#20', seqs[0]);
+    check('a book with no sequence has no hash at all', seqs.length === 2, seqs.join('|'));
+    check('and the hash is never doubled', !/##/.test(lText));
+
+    // Series and author, quiet under the title.
+    check('the series is the quiet second line', lSheet.querySelectorAll('.ent-series').map((n) => n.textContent).join('|') === 'Expedition Nine|The Grey Ledger|Terminal Watch');
+    check('with the author beside it', lSheet.querySelectorAll('.ent-author').map((n) => n.textContent).join('|') === 'Craig Mockson|Imogen Pell|Dana Q. Hollis');
+
+    // The chip: airLabel's ladder for anything still coming, and the release
+    // pill for a book already out — never 'aired 3d ago' about a novel.
+    const lPills = lSheet.querySelectorAll('.pill').map((n) => n.textContent);
+    check('a countdown chip per dated book', lPills.length === 3, lPills.join('|'));
+    check('through the shared airLabel ladder', lPills[0] === 'in 81d' && lPills[1] === 'in 158d', lPills.join('|'));
+    check('a just-out book says "out now" instead', lPills[2] === 'out now', lPills[2]);
+    check('and never counts backwards at him', !/aired/.test(lText));
+    check('the out-now pill reads as good news', lSheet.querySelectorAll('.pill')[2].className.includes('pill-good'));
+    check('a book with no days count wears no chip', !lRows[3].querySelector('.pill'));
+
+    // RULE 7. December 8th 2026 is a Tuesday; `new Date('2026-12-08')` is UTC
+    // midnight, which is Monday the 7th in Central.
+    check('the release date is rendered from its parts', /Tue Dec 8/.test(lText), lText.slice(0, 200));
+    check('and never slips to the day before', !/Dec 7/.test(lText));
+    check('a book with no date shows none', lSheet.querySelectorAll('.ent-release').length === 3);
+
+    // The source chip: provenance, printed verbatim, and absent when unsaid.
+    const lSources = lSheet.querySelectorAll('.ent-source').map((n) => n.textContent);
+    check('each row carries its source chip', lSources.length === 3 && lSources.every((t) => t === 'audible-catalog'), lSources.join('|'));
+
+    // The whole row is the Audible link, same mechanics as the other faces.
+    const lLinks = lSheet.querySelectorAll('A');
+    check('each book with a link is a whole-row anchor', lLinks.length === 3, String(lLinks.length));
+    check('opening in a new tab', lLinks.every((a) => a.getAttribute('target') === '_blank'));
+    check('without handing the page a handle back', lLinks.every((a) => (a.getAttribute('rel') || '') === 'noopener noreferrer'));
+    check('a javascript: link is inert, never an anchor', !lLinks.some((a) => /javascript/i.test(a.getAttribute('href') || '')));
+    check('and that book still renders as a row', /Avalon Station/.test(lText) && lRows.length === 4);
+
+    // The footer credits the catalog it actually used, and nobody else.
+    check('the footer counts the series watched', /17 series watched · Audible catalog/.test(lText), lText.slice(-120));
+    check('and TMDB is not credited on a face with no TMDB in it', !/TMDB/.test(lText));
+
+    // E8: no per-item arrival, so the face rides its own updated_at — and a
+    // release date, which is in the FUTURE, is emphatically not an arrival.
+    check('a stale face marks nothing new', countOf(lSheet, 'ent-new-mark') === 0, String(countOf(lSheet, 'ent-new-mark')));
+    const LISTEN_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'entertainment.js'), 'utf8');
+    check('the module reads no arrival stamp for listening', !/\blistening:\s*\(i\)/.test(LISTEN_SRC));
+    const freshListen = JSON.parse(JSON.stringify(listenTile.data));
+    freshListen.listening.updated_at = daysAgoIso(1);
+    const lFresh = fakePanel();
+    const lFreshBoard = withStorage(fakeStorage({ listening: daysAgoIso(5) }), () => {
+      const r = new El('div');
+      ent.render(r, entTile(freshListen), { id: 'entertainment', actions: lFresh.actions });
+      tap(entBtns(r)[3]);
+      return r;
+    });
+    check('a face refreshed since the last open marks all four', countOf(lFresh.last.body, 'ent-new-mark') === 4, String(countOf(lFresh.last.body, 'ent-new-mark')));
+    check('and the button counts the same four', chipOf(entBtns(lFreshBoard)[3])?.textContent === '4 new', chipOf(entBtns(lFreshBoard)[3])?.textContent);
+
+    // Nothing coming: a plain sentence, and the footer still stands.
+    const lEmpty = fakePanel();
+    withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, entTile({ watching: null, podcasts: null, top5: null, listening: { updated_at: daysAgoIso(1), status: 'ok', series_checked: 17, items: [] } }), { id: 'entertainment', actions: lEmpty.actions });
+      tap(entBtns(r)[3]);
+    });
+    check('an empty Listening opens to a plain message', /Nothing upcoming in your series\./.test(textOf(lEmpty.last.body)));
+    check('and still names the catalog', /17 series watched · Audible catalog/.test(textOf(lEmpty.last.body)));
+    check('and draws no rows', countOf(lEmpty.last.body, 'ent-row') === 0);
+
+    // Unchanged: a listening face the engine has not published is the greyed
+    // "soon" button, exactly as before.
+    check('a null listening face is still greyed, wearing "soon"', entBtns(stillSoon)[3].className.includes('ent-btn-soon') && entBtns(stillSoon)[3].querySelector('.ent-soon').textContent === 'soon');
+    check('and still cannot be tapped', entBtns(stillSoon)[3].getAttribute('disabled') === 'disabled');
+
     // -- empty and grown ------------------------------------------------------
     console.log('\nentertainment — empty faces and schema growth');
     const emptyPanel = fakePanel();

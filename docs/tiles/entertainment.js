@@ -448,6 +448,119 @@ function top5Body(faceData, list, sinceIso, attribution) {
   };
 }
 
+// ------------------------------------------------------------- listening face
+
+/**
+ * '#20', or nothing.
+ *
+ * A sequence is a LABEL, not a number: Audible carries '0.5', '4.5' and '2B',
+ * and a series that numbers its books that way must read the way its spine
+ * does. So it is trimmed and printed, never parsed — and a '#' the engine
+ * already wrote is not doubled.
+ */
+function sequenceText(v) {
+  if (v === null || v === undefined) return '';
+  const s = String(v).trim();
+  if (!s) return '';
+  return s.startsWith('#') ? s : `#${s}`;
+}
+
+/**
+ * The chip on the right of the title line.
+ *
+ * `just_out` is the engine saying a book landed within the last week, and it
+ * outranks the countdown: `days` for an already-released book is zero or
+ * negative, which `airLabel` would report as "aired 3d ago" — the wrong verb
+ * and the wrong news. A release is good news, so it wears the good tone and
+ * says so plainly.
+ */
+function listenChip(item) {
+  if (item.just_out === true) return pill('out now', 'good');
+  const chip = airLabel(item.days);
+  return chip ? pill(chip.text, chip.tone) : null;
+}
+
+/**
+ * One upcoming book. Everything but `title` may be absent, so each line only
+ * exists when it has something to say — a row of empty labels reads as broken.
+ */
+function listenRow(item, isNew) {
+  const seq = sequenceText(item.sequence);
+  const series = item.series ? String(item.series) : '';
+  const author = item.author ? String(item.author) : '';
+  const source = item.source ? String(item.source) : '';
+  // Rule 7: `release_date` is a date-only Central string and is built from its
+  // parts. `new Date('2026-12-08')` is UTC midnight, which is December 7th
+  // here — a book would appear to arrive the day before it does.
+  const when = item.release_date ? prettyDate(item.release_date) : '';
+  const chip = listenChip(item);
+
+  return linkRow(item.link, 'ent-row ent-listen-row', [
+    el('div', { cls: 'ent-row-main' }, [
+      el('div', { cls: 'ent-row-title-line' }, [
+        el('span', { cls: 'ent-row-title', text: String(item.title ?? '(untitled)') }),
+        seq ? el('span', { cls: 'ent-seq', text: seq }) : null,
+        isNew ? newMark() : null,
+        chip ? el('span', { cls: 'ent-when' }, [chip]) : null,
+      ]),
+      series || author
+        ? el('div', { cls: 'ent-listen-sub' }, [
+            series ? el('span', { cls: 'ent-series', text: series }) : null,
+            author ? el('span', { cls: 'ent-author', text: author }) : null,
+          ])
+        : null,
+      when || source
+        ? el('div', { cls: 'ent-listen-meta' }, [
+            when ? el('span', { cls: 'ent-release', text: when }) : null,
+            source ? el('span', { cls: 'ent-source', text: source }) : null,
+          ])
+        : null,
+    ]),
+  ]);
+}
+
+/** '17 series watched · Audible catalog' — or just the catalog, if it didn't say. */
+function listenFoot(faceData) {
+  const n = Number(faceData.series_checked);
+  const checked = Number.isFinite(n) && n > 0 ? `${Math.trunc(n)} series watched · ` : '';
+  return `${checked}Audible catalog`;
+}
+
+/**
+ * The shelf ahead.
+ *
+ * The engine has already sorted these by release date and filtered them to
+ * what is still coming (plus anything out in the last week), so the page keeps
+ * the order it was handed and does no date arithmetic of its own — `days` is
+ * the engine's count, in Central, and recomputing it here from a browser clock
+ * is how the two would come to disagree.
+ *
+ * Newness is the face-level fallback, same as Top 5: a release date is in the
+ * FUTURE and is not an arrival, so treating it as one would mark every book
+ * new forever.
+ */
+function listeningBody(faceData, list, sinceIso) {
+  const faceFresh = newerThan(faceData.updated_at, sinceIso) === true;
+  return (body) => {
+    if (!list.length) {
+      body.appendChild(empty('Nothing upcoming in your series.'));
+    } else {
+      body.appendChild(
+        el(
+          'div',
+          { cls: 'ent-list' },
+          list.map((item) => listenRow(item, itemIsNew('listening', item, sinceIso, faceFresh)))
+        )
+      );
+    }
+    errorsInto(body, faceData.errors);
+    // No TMDB line here: this face is Audible's catalog end to end, and
+    // crediting a source that had nothing to do with it would be a lie the
+    // other three faces do not tell.
+    body.appendChild(el('p', { cls: 'ent-foot', text: listenFoot(faceData) }));
+  };
+}
+
 // --------------------------------------------------------------- generic face
 
 /**
@@ -495,6 +608,7 @@ function bodyFor(faceKey, faceData, list, sinceIso, attribution) {
   if (faceKey === 'watching') return watchingBody(faceData, list, sinceIso, attribution);
   if (faceKey === 'podcasts') return podcastsBody(faceData, list, sinceIso);
   if (faceKey === 'top5') return top5Body(faceData, list, sinceIso, attribution);
+  if (faceKey === 'listening') return listeningBody(faceData, list, sinceIso);
   return genericBody(faceData, list, sinceIso, attribution);
 }
 

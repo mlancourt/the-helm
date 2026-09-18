@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-18T16:27:57.107Z",
-  "run_id": "run-mock-mu769rub",
+  "generated_at": "2026-09-18T17:14:28.990Z",
+  "run_id": "run-mock-mu77xm2m",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -204,7 +204,7 @@
     },
     "today_games": {
       "band": "LIVE",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -264,7 +264,7 @@
     },
     "radar": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -280,7 +280,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -330,7 +330,7 @@
     },
     "local_events": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -470,7 +470,7 @@
     },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -554,7 +554,7 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -566,7 +566,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -600,7 +600,7 @@
     },
     "wss_tape": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -623,7 +623,7 @@
         ],
         "items": [
           {
-            "ts": "2026-09-18T16:09:57.107Z",
+            "ts": "2026-09-18T16:56:28.990Z",
             "time_ct": "15:42",
             "actor": "Rae",
             "action": "ticket_update",
@@ -635,7 +635,7 @@
             "evt": "mk1a2b"
           },
           {
-            "ts": "2026-09-18T15:32:57.107Z",
+            "ts": "2026-09-18T16:19:28.990Z",
             "time_ct": "15:05",
             "actor": "Kit",
             "action": "readiness",
@@ -647,7 +647,7 @@
             "evt": "mk3c4d"
           },
           {
-            "ts": "2026-09-18T15:24:57.107Z",
+            "ts": "2026-09-18T16:11:28.990Z",
             "time_ct": "14:57",
             "actor": "Rae",
             "action": "ticket_update",
@@ -659,7 +659,7 @@
             "evt": "mk5e6f"
           },
           {
-            "ts": "2026-09-18T13:57:57.107Z",
+            "ts": "2026-09-18T14:44:28.990Z",
             "time_ct": "13:30",
             "actor": "Odis",
             "action": "lead_update",
@@ -671,7 +671,7 @@
             "evt": "mk7g8h"
           },
           {
-            "ts": "2026-09-18T13:08:57.107Z",
+            "ts": "2026-09-18T13:55:28.990Z",
             "time_ct": "12:41",
             "actor": "Kit",
             "action": "ticket_update",
@@ -683,7 +683,7 @@
             "evt": "mk9i0j"
           },
           {
-            "ts": "2026-09-18T11:54:57.107Z",
+            "ts": "2026-09-18T12:41:28.990Z",
             "time_ct": "11:27",
             "actor": "Rae",
             "action": "ticket_close",
@@ -695,7 +695,7 @@
             "evt": "mkak1l"
           },
           {
-            "ts": "2026-09-18T11:25:57.107Z",
+            "ts": "2026-09-18T12:12:28.990Z",
             "time_ct": "10:58",
             "actor": "Odis",
             "action": "readiness",
@@ -707,7 +707,7 @@
             "evt": "mkbm2n"
           },
           {
-            "ts": "2026-09-18T10:39:57.107Z",
+            "ts": "2026-09-18T11:26:28.990Z",
             "time_ct": "10:12",
             "actor": "Kit",
             "action": "ticket_update",
@@ -719,7 +719,7 @@
             "evt": "mkco3p"
           },
           {
-            "ts": "2026-09-18T10:11:57.107Z",
+            "ts": "2026-09-18T10:58:28.990Z",
             "time_ct": "09:44",
             "actor": "Rae",
             "action": "lead_update",
@@ -731,7 +731,7 @@
             "evt": "mkdq4r"
           },
           {
-            "ts": "2026-09-18T09:30:57.107Z",
+            "ts": "2026-09-18T10:17:28.990Z",
             "time_ct": "09:03",
             "actor": "Odis",
             "action": "ticket_update",
@@ -743,7 +743,7 @@
             "evt": "mkes5t"
           },
           {
-            "ts": "2026-09-18T08:43:57.107Z",
+            "ts": "2026-09-18T09:30:28.990Z",
             "time_ct": "08:16",
             "actor": "Kit",
             "action": "ticket_open",
@@ -755,7 +755,7 @@
             "evt": "mkfu6v"
           },
           {
-            "ts": "2026-09-18T08:19:57.107Z",
+            "ts": "2026-09-18T09:06:28.990Z",
             "time_ct": "07:52",
             "actor": "Rae",
             "action": "other",
@@ -791,12 +791,12 @@
     },
     "cards": {
       "band": "HOURLY",
-      "updated_at": "2026-09-18T14:51:57.108Z",
+      "updated_at": "2026-09-18T15:38:28.990Z",
       "status": "stale",
       "error": "eBay Browse API rate-limited the 06:00 pull — 11 of 14 targets answered",
       "data": {
         "watch": {
-          "updated_at": "2026-09-18T16:09:57.107Z",
+          "updated_at": "2026-09-18T16:56:28.990Z",
           "targets": 14,
           "booked": 12,
           "fresh": 9,
@@ -900,7 +900,7 @@
               "gate": 0.65,
               "book_age_days": 3,
               "book_state": "fresh",
-              "ends_ct": "2026-09-18T12:41",
+              "ends_ct": "2026-09-18T13:28",
               "seller": "bayfield_auctions",
               "seller_fb": 5310,
               "listed": "2026-09-12",
@@ -926,7 +926,7 @@
               "gate": 0.65,
               "book_age_days": 4,
               "book_state": "fresh",
-              "ends_ct": "2026-09-20T11:57",
+              "ends_ct": "2026-09-20T12:44",
               "seller": "attic_finds_wi",
               "seller_fb": 41,
               "listed": "2026-09-17",
@@ -967,11 +967,11 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-18T16:04:57.107Z",
+      "updated_at": "2026-09-18T16:51:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-18T16:04:57.107Z",
+        "as_of": "2026-09-18T16:51:28.990Z",
         "count": 4,
         "refresh_note": null,
         "source": "mock generator",
@@ -1015,12 +1015,12 @@
     },
     "entertainment": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
         "watching": {
-          "updated_at": "2026-09-18T14:52:57.107Z",
+          "updated_at": "2026-09-18T15:39:28.990Z",
           "items": [
             {
               "title": "The Quiet Ledger",
@@ -1097,13 +1097,13 @@
           "errors": null
         },
         "podcasts": {
-          "updated_at": "2026-09-18T15:47:57.107Z",
+          "updated_at": "2026-09-18T16:34:28.990Z",
           "items": [
             {
               "show": "Mock Fork",
               "title": "The chatbot that filed its own taxes",
               "published": "2026-09-18",
-              "published_at": "2026-09-18T13:27:57.107Z",
+              "published_at": "2026-09-18T14:14:28.990Z",
               "duration_min": 58,
               "url": "https://example.com/mock/pod/fork-1",
               "artwork": null
@@ -1112,7 +1112,7 @@
               "show": "The Long Docket",
               "title": "Case 114: the disappearing deposition",
               "published": "2026-09-17",
-              "published_at": "2026-09-17T14:27:57.107Z",
+              "published_at": "2026-09-17T15:14:28.990Z",
               "duration_min": 71,
               "url": "https://example.com/mock/pod/docket-1",
               "artwork": null
@@ -1121,7 +1121,7 @@
               "show": "Ledger & Lamp",
               "title": "A very small bank in a very large hurry",
               "published": "2026-09-16",
-              "published_at": "2026-09-16T13:27:57.107Z",
+              "published_at": "2026-09-16T14:14:28.990Z",
               "duration_min": 44,
               "url": "https://example.com/mock/pod/ledger-1",
               "artwork": null
@@ -1130,7 +1130,7 @@
               "show": "Mock Fork",
               "title": "Everyone is building the same agent",
               "published": "2026-09-15",
-              "published_at": "2026-09-15T14:57:57.107Z",
+              "published_at": "2026-09-15T15:44:28.990Z",
               "duration_min": 63,
               "url": "https://example.com/mock/pod/fork-2",
               "artwork": null
@@ -1139,7 +1139,7 @@
               "show": "Ledger & Lamp",
               "title": "The audit nobody asked for",
               "published": "2026-09-09",
-              "published_at": "2026-09-09T16:27:57.107Z",
+              "published_at": "2026-09-09T17:14:28.990Z",
               "duration_min": null,
               "url": "https://example.com/mock/pod/ledger-2",
               "artwork": null
@@ -1148,7 +1148,7 @@
               "show": "Cold Open Radio",
               "title": "Twelve minutes of dead air, explained",
               "published": "2026-09-06",
-              "published_at": "2026-09-06T16:27:57.107Z",
+              "published_at": "2026-09-06T17:14:28.990Z",
               "duration_min": 12,
               "url": "https://example.com/mock/pod/cold-1",
               "artwork": null
@@ -1157,7 +1157,7 @@
           "errors": null
         },
         "top5": {
-          "updated_at": "2026-09-18T05:27:57.107Z",
+          "updated_at": "2026-09-18T06:14:28.990Z",
           "week_of": "2026-09-14",
           "items": [
             {
@@ -1218,30 +1218,86 @@
           ],
           "errors": null
         },
-        "listening": null,
+        "listening": {
+          "updated_at": "2026-09-18T04:14:28.990Z",
+          "week_of": "2026-09-14",
+          "status": "ok",
+          "series_checked": 17,
+          "items": [
+            {
+              "series": "The Salvage Fleet",
+              "sequence": "12",
+              "title": "Deadweight Tonnage",
+              "author": "R. J. Mockton",
+              "release_date": "2026-09-16",
+              "days": -2,
+              "just_out": true,
+              "asin": "B0MOCK0001",
+              "link": "https://example.com/mock/pd/B0MOCK0001",
+              "source": "audible-catalog"
+            },
+            {
+              "series": "Cartwright & Fen",
+              "sequence": null,
+              "title": "The Second Tuesday",
+              "author": "Imogen Pell",
+              "release_date": "2026-09-22",
+              "days": 4,
+              "just_out": false,
+              "asin": "B0MOCK0002",
+              "link": "https://example.com/mock/pd/B0MOCK0002",
+              "source": "audible-catalog"
+            },
+            {
+              "series": "Longwater",
+              "sequence": "4.5",
+              "title": "A Short Passage",
+              "author": "Dana Q. Hollis",
+              "release_date": "2026-12-08",
+              "days": 81,
+              "just_out": false,
+              "asin": "B0MOCK0003",
+              "link": "https://example.com/mock/pd/B0MOCK0003",
+              "source": "audible-catalog"
+            },
+            {
+              "series": "The Ninth Watch",
+              "sequence": "3",
+              "title": "Dark Union Station",
+              "author": null,
+              "release_date": "2027-02-23",
+              "days": 158,
+              "just_out": false,
+              "asin": "B0MOCK0004",
+              "link": null,
+              "source": null
+            }
+          ],
+          "errors": null
+        },
         "sources": {
           "tv": "TMDB",
           "podcasts": "RSS via iTunes Search",
           "movies": "TMDB discover + watch/providers",
-          "books": "pending"
+          "books": "Audible catalog"
         },
         "attribution": "This product uses the TMDB API but is not endorsed or certified by TMDB."
       }
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T16:27:57.107Z",
+      "updated_at": "2026-09-18T17:14:28.990Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-17T10:27:57.107Z",
+        "drift_audit_updated": "2026-09-17T11:14:28.990Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-18T16:19:57.107Z",
+        "worker_published_at": "2026-09-18T17:06:28.990Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -1263,7 +1319,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-18T14:57:57.107Z",
+      "updated_at": "2026-09-18T15:44:28.990Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}
