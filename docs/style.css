@@ -300,8 +300,6 @@ body {
 .btn:disabled { opacity: 0.45; cursor: default; }
 .btn-small { padding: 6px 10px; min-height: 32px; font-size: 12px; }
 .btn-ghost { background: transparent; }
-.btn-hit:not(:disabled):hover  { border-color: var(--good); color: var(--good); }
-.btn-miss:not(:disabled):hover { border-color: var(--bad);  color: var(--bad); }
 
 .link-btn {
   background: none;
@@ -533,8 +531,6 @@ body {
 .dinner-meal { font-size: 16px; font-weight: 600; margin: 2px 0 3px; }
 .dinner-notes { margin: 0 0 10px; font-size: 12.5px; color: var(--text-dim); }
 .dinner-verdict { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
-.dinner-actions { display: flex; gap: 8px; }
-.dinner-status { margin-top: 8px; font-size: 12px; color: var(--text-faint); }
 .pending-chip { display: flex; align-items: center; gap: 7px; margin-top: 5px; flex-wrap: wrap; }
 .pending-text { font-size: 12px; color: var(--text-dim); }
 
