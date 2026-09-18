@@ -120,11 +120,15 @@ function check(name, cond, detail) {
   check('under 60 pushes exactly', st(tot('total_under', 60), NFL) === 'push');
   check('over 63.5 loses', st(tot('total_over', 63.5), NFL) === 'lose');
   check('under 63.5 wins', st(tot('total_under', 63.5), NFL) === 'win');
-  // Scores cannot go down, so a cleared number is one-way.
-  check('over already past the number leads', lb(tot('total_over', 48.5), live(NFL)) === 'LEADING');
-  check('under already past the number trails', lb(tot('total_under', 48.5), live(NFL)) === 'TRAILING');
+  // B3, the lock: scores cannot go down, so a cleared number is final maths
+  // and the pill stops moving mid-game.
+  check('over already past the number WINS mid-game', lb(tot('total_over', 48.5), live(NFL)) === 'WIN');
+  check('under already past the number LOSES mid-game', lb(tot('total_under', 48.5), live(NFL)) === 'LOSS');
   check('says it is already past the number', /already past/.test(gradeTicket(tot('total_under', 48.5), live(NFL)).why));
   check('over still short says how much it needs', /needs 5 more/.test(gradeTicket(tot('total_over', 65), live(NFL)).why));
+  check('level with the number is not past it (over)', lb(tot('total_over', 60), live(NFL)) === 'TRAILING');
+  check('nor for the under', lb(tot('total_under', 60), live(NFL)) === 'LEADING');
+  check('and says so in words, not "needs 0 more"', /level with 60/.test(gradeTicket(tot('total_over', 60), live(NFL)).why));
   check('total without a line is unsupported', st({ id: 't', market: 'total_over' }, NFL) === 'unsupported');
 
   // -------------------------------------------------------- anytime TD
@@ -142,7 +146,7 @@ function check(name, cond, detail) {
   check('the KICKER named in TD text does not win (McPherson)', st(td('Evan McPherson'), NFL, PLAYS) === 'lose');
   check('a kicker with only field goals does not win (McLaughlin)', st(td('Chase McLaughlin'), NFL, PLAYS) === 'lose');
   check('a player who never scored LOSES', st(td('Nobody Atall'), NFL, PLAYS) === 'lose');
-  check('mid-game scorer reads LEADING not WIN', lb(td('Chase Brown'), live(NFL), PLAYS) === 'LEADING');
+  check('mid-game scorer WINS on the play, not at the whistle (B3)', lb(td('Chase Brown'), live(NFL), PLAYS) === 'WIN');
   check('mid-game non-scorer reads TRAILING not LOSS', lb(td('Nobody Atall'), live(NFL), PLAYS) === 'TRAILING');
   check('pre-game is PRE', st(td('Chase Brown'), NFL_PRE, PLAYS) === 'pre');
   check('missing scoring plays waits rather than calling a loss', st(td('Chase Brown'), live(NFL), undefined) === 'pre');
@@ -209,7 +213,7 @@ function check(name, cond, detail) {
   const btts = { id: 'bt', market: 'btts' };
   check('both scored: WIN (SF 6 - STL 5)', st(btts, MLB) === 'win');
   check('a real shutout: LOSS (BHA 5 - COV 0)', st(btts, SOC) === 'lose');
-  check('mid-game with both on the board LEADS', lb(btts, live(MLB)) === 'LEADING');
+  check('mid-game with both on the board WINS (B3)', lb(btts, live(MLB)) === 'WIN');
   check('mid-game 0-0 TRAILS', lb(btts, live(MLB, { home: { ...MLB.home, score: 0 }, away: { ...MLB.away, score: 0 } })) === 'TRAILING');
   check('names who has yet to score', /yet to score/.test(gradeTicket(btts, live(SOC)).why));
 
@@ -237,10 +241,69 @@ function check(name, cond, detail) {
     return g.state && g.label && typeof g.why === 'string' && g.why.length > 0;
   }));
 
-  console.log('\npayout multiples');
-  check('-110 profit multiple', Math.abs(G.payoutMultiple(-110) - 0.909) < 0.001);
-  check('+135 profit multiple', Math.abs(G.payoutMultiple(135) - 1.35) < 0.0001);
-  check('junk price is 0', G.payoutMultiple(null) === 0);
+  // ------------------------------------------------------- B3: early locks
+  //
+  // One test per market for the LOCK (mid-game, the game still running) and
+  // one for NO REGRESSION (the same ticket on a later pass, and at the final
+  // whistle, must still read the same). The second half is the one that
+  // matters: a pill that says WIN and later says LEADING is worse than one
+  // that never locked at all.
+  console.log('\nearly locks (B3) — lock mid-game, never regress');
+  const q4 = live(NFL, { period: 4, detail: 'Q4 1:02' });
+
+  check('total_over locks to WIN mid-game', st(tot('total_over', 48.5), live(NFL)) === 'win');
+  check('and is still WIN a pass later', st(tot('total_over', 48.5), q4) === 'win');
+  check('and still WIN at the whistle', st(tot('total_over', 48.5), NFL) === 'win');
+
+  check('total_under locks to LOSS mid-game', st(tot('total_under', 48.5), live(NFL)) === 'lose');
+  check('and is still LOSS a pass later', st(tot('total_under', 48.5), q4) === 'lose');
+  check('and still LOSS at the whistle', st(tot('total_under', 48.5), NFL) === 'lose');
+
+  check('spread_1h locks once Q3 starts', st(h1('home', -13.5), q3) === 'win');
+  check('and is still WIN in Q4', st(h1('home', -13.5), q4) === 'win');
+  check('and still WIN at the whistle', st(h1('home', -13.5), NFL) === 'win');
+  // ESPN spends the interval on period 2, and a bet whose maths is finished
+  // must not read as a lean for fifteen minutes.
+  const half = live(NFL, { period: 2, detail: 'Halftime', statusName: 'STATUS_HALFTIME' });
+  check('and locks at halftime, still on period 2', st(h1('home', -13.5), half) === 'win');
+  check('the losing side of the same half locks too', st(h1('away', 13.5), half) === 'lose');
+  check('a halftime told only by the detail line still counts', st(h1('home', -13.5), live(NFL, { period: 2, detail: 'Halftime' })) === 'win');
+  check('but Q2 with a clock running is still a lean', lb(h1('home', -13.5), q2) === 'COVERING');
+
+  check('anytime_td locks to WIN on the scoring play', st(td('Chase Brown'), live(NFL), PLAYS) === 'win');
+  check('and is still WIN a pass later', st(td('Chase Brown'), q4, PLAYS) === 'win');
+  check('and still WIN at the whistle', st(td('Chase Brown'), NFL, PLAYS) === 'win');
+  // The other half of B3: a LOSS on this market waits for the final, because
+  // there is always another drive.
+  check('a non-scorer is NOT locked mid-game', st(td('Nobody Atall'), live(NFL), PLAYS) === 'trail');
+  check('and only becomes a LOSS at the whistle', st(td('Nobody Atall'), NFL, PLAYS) === 'lose');
+
+  check('btts locks to WIN once both have scored', st(btts, live(MLB)) === 'win');
+  check('and is still WIN at the final', st(btts, MLB) === 'win');
+  check('a 0-0 board is not locked', st(btts, live(MLB, { home: { ...MLB.home, score: 0 }, away: { ...MLB.away, score: 0 } })) === 'trail');
+  check('and only becomes a LOSS at the final', st(btts, SOC) === 'lose');
+
+  // Deliberately NOT locked: a lead is not final maths.
+  check('ml stays a lean while the game runs', st(mlHome, live(NFL)) === 'lead');
+  check('even a two-score lead', st(mlHome, live(NFL, { away: { ...NFL.away, score: 0 } })) === 'lead');
+  check('full-game spread stays a lean too', st(sp('home', -5.5), live(NFL)) === 'lead');
+  check('and only WINS at the whistle', st(sp('home', -5.5), NFL) === 'win');
+
+  // anytime_goal shares the touchdown's lock, but it cannot be exercised
+  // while the flag is off — it is verified the day the flag flips, against a
+  // live match, which is the same condition the flag itself carries.
+  check('anytime_goal is still unsupported, flag off', st(goalT, live(SOC), { keyEvents: FIX.soccer_key_events }) === 'unsupported');
+
+  // ------------------------------------------------------- B4: no odds math
+  //
+  // The Bookie logs the price and publishes `to_win_u`; the page renders it.
+  // A payout helper here is how the two drift apart, so there is not one.
+  console.log('\nno odds arithmetic in the page (B4)');
+  check('graders.js exports no payout helper', G.payoutMultiple === undefined);
+  const GSRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'live', 'graders.js'), 'utf8');
+  check('and none is hiding in the module', !/function payoutMultiple/.test(GSRC));
+  const TILESRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'bets_live.js'), 'utf8');
+  check('the tile does no odds math either', !/payoutMultiple|price\s*[/*]|\/\s*100/.test(TILESRC.replace(/\/\*[\s\S]*?\*\//g, '')));
 
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {

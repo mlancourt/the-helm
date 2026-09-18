@@ -126,6 +126,10 @@ function snapshot() {
             stake_u: 2.0,
             price: -110,
             class: 'core',
+            // B2/B4 — the Bookie's Sport column, and the units a winner
+            // returns at the logged price. The page prints both and computes neither.
+            sport: '🏈',
+            to_win_u: 1.82,
           },
           {
             id: 'tkt-mock-002',
@@ -141,6 +145,8 @@ function snapshot() {
             stake_u: 1.0,
             price: -105,
             class: 'lean',
+            sport: '🏈',
+            to_win_u: 0.95,
           },
           {
             id: 'tkt-mock-003',
@@ -156,6 +162,8 @@ function snapshot() {
             stake_u: 1.0,
             price: 135,
             class: 'flier',
+            sport: '🏈',
+            to_win_u: 1.35,
           },
           {
             id: 'tkt-mock-004',
@@ -171,6 +179,8 @@ function snapshot() {
             stake_u: 1.5,
             price: -145,
             class: 'core',
+            sport: '🏀',
+            to_win_u: 1.03,
           },
           {
             id: 'tkt-mock-005',
@@ -186,8 +196,62 @@ function snapshot() {
             stake_u: 0.5,
             price: -120,
             class: 'flier',
+            sport: '⚽',
+            to_win_u: 0.42,
+          },
+          {
+            // No price in the log, so the Bookie publishes no `to_win_u`. The
+            // row shows its plain stake in every state and leans nowhere —
+            // the page will not invent a return it was not given (B4).
+            id: 'tkt-mock-006',
+            league: 'basketball/nba',
+            espn_event_id: EVT.nba1,
+            game: 'Lakeshore Current at Granite City Foremen',
+            kick_ct: `${TODAY} 20:00`,
+            market: 'spread',
+            side: 'away',
+            line: 4.5,
+            player: null,
+            label: 'Current +4.5',
+            stake_u: 0.5,
+            price: null,
+            class: 'lean',
+            sport: '🏀',
+            to_win_u: null,
           },
         ],
+        /**
+         * B1/B6 — the 7-day form, from the Bookie's § Settled rows. Invented
+         * here, exactly as the engine shapes it: W/L only (voids and pushes
+         * never reach it), newest first, at most ten.
+         *
+         * The page renders this and recomputes none of it — its own live leans
+         * must never feed the record, because the tile leans and the Bookie
+         * settles.
+         */
+        form: {
+          window_days: 7,
+          since: addDays(TODAY, -6),
+          record: '14-9',
+          wins: 14,
+          losses: 9,
+          net_u: 4.71,
+          win_pct: 61,
+          streak: 'W5',
+          last: [
+            { r: 'W', u: 1.23, d: addDays(TODAY, -1), s: '⚽', label: 'Cross Harbor ML (reg. time)' },
+            { r: 'W', u: 0.48, d: addDays(TODAY, -1), s: '⚾', label: 'Drays -1.5 run line' },
+            { r: 'W', u: 0.91, d: addDays(TODAY, -2), s: '🏈', label: 'Kestrels team total over 24.5' },
+            { r: 'W', u: 0.64, d: addDays(TODAY, -2), s: '🏀', label: 'Foremen -6.5' },
+            { r: 'W', u: 0.71, d: addDays(TODAY, -3), s: '⚽', label: 'Riverbend both teams to score' },
+            { r: 'L', u: -1.0, d: addDays(TODAY, -3), s: '🏈', label: 'Sentinels +3 (1H)' },
+            { r: 'W', u: 0.45, d: addDays(TODAY, -4), s: '⚾', label: 'Under 8.5' },
+            { r: 'L', u: -0.5, d: addDays(TODAY, -5), s: '🏀', label: 'Current ML' },
+            { r: 'L', u: -0.75, d: addDays(TODAY, -5), s: '🏈', label: 'Vasquez anytime TD' },
+            { r: 'W', u: 1.35, d: addDays(TODAY, -6), s: '⚽', label: 'Harbor Rovers ML' },
+          ],
+        },
+        source: 'mock generator — invented tickets and an invented settled log',
       }),
 
       // Today's Games: the engine publishes only the league list, the watch

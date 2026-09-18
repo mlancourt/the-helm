@@ -1468,6 +1468,292 @@ async function main() {
     check('and never parses a date string it was handed', !/new Date/.test(TAPE_SRC));
   }
 
+  // -- bets_live: the marquee board -----------------------------------------
+  //
+  // v1.6.0's two load-bearing claims are that the header is the sum of the
+  // rows (B5) and that a locked pill never regresses (B3, in test-graders).
+  // The first is asserted here by adding up what the DOM actually prints,
+  // rather than by calling the same function the tile called.
+  console.log('\nbets_live — the header, the form line and the board');
+  const bets = mods.get('bets_live');
+  const betsTile = (data, status = 'ok') => ({ band: 'DAILY', updated_at: '2026-09-18T21:00:00.000Z', status, error: null, data });
+  const statOf = (root, label) =>
+    root.querySelectorAll('.stat').find((s) => s.querySelector('.stat-label').textContent === label);
+  const statValue = (root, label) => statOf(root, label).querySelector('.stat-value').textContent;
+  const unitsCells = (root) => root.querySelectorAll('.ticket-units').map((n) => n.textContent);
+
+  /** What a printed figure contributes to the lean: unsigned figures do not. */
+  const contribution = (text) => {
+    const m = String(text).match(/^([+−])(\d+(?:\.\d+)?)u$/);
+    if (!m) return 0;
+    return (m[1] === '+' ? 1 : -1) * Number(m[2]);
+  };
+
+  const gameIn = (over = {}) => ({ state: 'in', dead: false, detail: 'Q3 4:12', period: 3, clock: '4:12', home: { abbr: 'FIS', score: 17 }, away: { abbr: 'HKS', score: 20 }, ...over });
+  const gamePost = (over = {}) => gameIn({ state: 'post', detail: 'Final', ...over });
+  const gamePre = (over = {}) => gameIn({ state: 'pre', detail: '', home: { abbr: 'FIS', score: 0 }, away: { abbr: 'HKS', score: 0 }, ...over });
+
+  const tkt = (over = {}) => ({
+    id: 'bt-1',
+    league: 'football/nfl',
+    espn_event_id: 'ev-live',
+    game: 'Harbor Kestrels at Foundry Ironsides',
+    kick_ct: '2026-09-18 15:25',
+    market: 'spread',
+    side: 'away',
+    line: -3.5,
+    player: null,
+    label: 'Kestrels -3.5',
+    stake_u: 0.5,
+    price: 125,
+    class: 'core',
+    sport: '🏈',
+    to_win_u: 0.62,
+    ...over,
+  });
+
+  const FORM = {
+    window_days: 7,
+    since: '2026-09-12',
+    record: '14-9',
+    wins: 14,
+    losses: 9,
+    net_u: 4.71,
+    win_pct: 61,
+    streak: 'W5',
+    last: [
+      { r: 'W', u: 1.23, d: '2026-09-17', s: '⚽', label: 'Cross Harbor ML' },
+      { r: 'L', u: -0.5, d: '2026-09-17', s: '🏈', label: 'Sentinels +3' },
+      { r: 'W', u: 0.48, d: '2026-09-16', s: '⚾', label: 'Drays -1.5' },
+      { r: 'W', u: 0.91, d: '2026-09-16', s: '🏈', label: 'Kestrels over 24.5' },
+      { r: 'W', u: 0.64, d: '2026-09-15', s: '🏀', label: 'Foremen -6.5' },
+      { r: 'L', u: -1.0, d: '2026-09-15', s: '⚽', label: 'Riverbend ML' },
+      { r: 'W', u: 0.45, d: '2026-09-14', s: '⚾', label: 'Under 8.5' },
+      { r: 'W', u: 0.71, d: '2026-09-13', s: '⚽', label: 'BTTS' },
+      { r: 'L', u: -0.75, d: '2026-09-13', s: '🏈', label: 'Vasquez anytime TD' },
+      { r: 'W', u: 1.35, d: '2026-09-12', s: '🏀', label: 'Current ML' },
+    ],
+  };
+
+  if (bets) {
+    // -- B5: the header is the sum of the rows -------------------------------
+    //
+    // A deliberately mixed board: a cover, a bust, a push, a game still to
+    // come, a finished win, and one ticket the Bookie could not price.
+    const MIXED = [
+      tkt({ id: 'm-lead', to_win_u: 0.62, stake_u: 0.5 }),
+      tkt({ id: 'm-trail', to_win_u: 0.95, stake_u: 1.0 }),
+      tkt({ id: 'm-push', to_win_u: 0.48, stake_u: 0.5 }),
+      tkt({ id: 'm-pre', espn_event_id: 'ev-pre', to_win_u: 1.35, stake_u: 1.0, kick_ct: '2026-09-18 19:15' }),
+      tkt({ id: 'm-win', espn_event_id: 'ev-post', to_win_u: 1.82, stake_u: 2.0 }),
+      tkt({ id: 'm-lose', espn_event_id: 'ev-post', to_win_u: 0.42, stake_u: 0.75 }),
+      tkt({ id: 'm-nopdice', to_win_u: null, price: null, stake_u: 0.25 }),
+    ];
+    const MIXED_GRADES = new Map([
+      ['m-lead', { state: 'lead', label: 'COVERING', why: 'by 3' }],
+      ['m-trail', { state: 'trail', label: 'TRAILING', why: 'short by 1' }],
+      ['m-push', { state: 'push', label: 'PUSH', why: 'on the number' }],
+      ['m-pre', { state: 'pre', label: 'PRE', why: 'not started' }],
+      ['m-win', { state: 'win', label: 'WIN', why: 'final' }],
+      ['m-lose', { state: 'lose', label: 'LOSS', why: 'final' }],
+      ['m-nopdice', { state: 'lead', label: 'COVERING', why: 'by 3' }],
+    ]);
+    const MIXED_GAMES = new Map([
+      ['ev-live', gameIn()],
+      ['ev-pre', gamePre()],
+      ['ev-post', gamePost()],
+    ]);
+
+    const mixedRoot = new El('div');
+    bets.render(mixedRoot, betsTile({ bankroll_u: 42.5, open_u: 6, record: '11-9-1', tickets: MIXED, form: FORM }), {
+      id: 'bets_live',
+      actions: {},
+      live: { grades: MIXED_GRADES, games: MIXED_GAMES, fetched_at: '2026-09-18T21:05:00.000Z', error: null },
+    });
+
+    const cells = unitsCells(mixedRoot);
+    check('every ticket prints a units figure', cells.length === MIXED.length, cells.join('|'));
+    const summed = cells.reduce((n, t) => n + contribution(t), 0);
+    // +0.62 − 1.00 + 0 + 0 + 1.82 − 0.75 + 0 = +0.69
+    check('the rows add up to what the header says (B5)', statValue(mixedRoot, 'lean now') === `+${summed.toFixed(2)}u`, `${statValue(mixedRoot, 'lean now')} vs ${summed}`);
+    check('and that is the arithmetic, not just agreement', Math.abs(summed - 0.69) < 1e-9, String(summed));
+    check('closed counts the finished games only', statValue(mixedRoot, 'closed') === '+1.07u', statValue(mixedRoot, 'closed'));
+    check('the bankroll stays a plain number (B9)', statValue(mixedRoot, 'bankroll') === '42.5u');
+    check('and wears no colour', statOf(mixedRoot, 'bankroll').className === 'stat');
+    check('nothing on the tile editorialises about it', !/slow down|drawdown|careful/i.test(textOf(mixedRoot)));
+
+    // -- B4: the figure per state -------------------------------------------
+    // Rows are in BOARD order, not array order: the live card comes first
+    // (B7), so the two finished tickets are last.
+    check('a covering ticket shows what it returns, signed up', cells[0] === '+0.62u', cells[0]);
+    check('a trailing ticket shows the stake at risk, signed down', cells[1] === '−1.00u', cells[1]);
+    check('a push is exactly nothing', cells[2] === '0.00u', cells[2]);
+    check('an unpriced ticket shows the stake even while leading (B4)', cells[3] === '0.25u', cells[3]);
+    check('and therefore leans nowhere', contribution(cells[3]) === 0);
+    check('a ticket yet to start shows its plain stake', cells[4] === '1.00u', cells[4]);
+    check('a won ticket shows the return', cells[5] === '+1.82u', cells[5]);
+    check('a lost ticket shows the stake', cells[6] === '−0.75u', cells[6]);
+    const tones = mixedRoot.querySelectorAll('.ticket-units').map((n) => n.className);
+    check('the winning side is green', tones[0].includes('ticket-units-good') && tones[5].includes('ticket-units-good'));
+    check('the losing side is red', tones[1].includes('ticket-units-bad') && tones[6].includes('ticket-units-bad'));
+    check('the undecided are neither', tones[2].includes('ticket-units-flat') && tones[4].includes('ticket-units-idle'));
+    check('the stake and price line survives beside it', /0\.5u @ \+125/.test(textOf(mixedRoot)));
+    check('and an unpriced ticket says so rather than printing undefined', / @ —/.test(textOf(mixedRoot)));
+    check('no "undefined" anywhere on the board', !/undefined/.test(textOf(mixedRoot)));
+    check('no "NaN" either', !/NaN/.test(textOf(mixedRoot)));
+    check('the footer still says lean, not settlement', /This is a lean, not a settlement\./.test(textOf(mixedRoot)));
+    check('and never says settled', !/settled/i.test(textOf(mixedRoot)));
+
+    // -- B1/B6: the form line ------------------------------------------------
+    console.log('\nbets_live — 7-day form (B1, B6)');
+    const formEl = mixedRoot.querySelector('.bets-form');
+    check('the form line is drawn', !!formEl);
+    check('it reads window, record, net and rate', formEl.querySelector('.form-summary').textContent === '7d 14-9  ·  +4.71u  ·  61%', formEl.querySelector('.form-summary').textContent);
+    check('the streak chip names the streak', formEl.querySelector('.form-streak').textContent.includes('W5'));
+    check('a winning streak is hot', formEl.querySelector('.form-streak').className.includes('form-streak-hot'));
+    check('and carries its glyph', /🔥/.test(formEl.textContent));
+    const dots = mixedRoot.querySelectorAll('.form-dot');
+    check('ten dots, one per settled ticket', dots.length === 10);
+    check('newest first, in the engine\'s order', dots.map((d) => (d.className.includes('form-dot-w') ? 'W' : 'L')).join('') === 'WLWWWLWWLW', dots.map((d) => (d.className.includes('form-dot-w') ? 'W' : 'L')).join(''));
+    check('each dot carries its own row in the tooltip', dots[0].getAttribute('title') === '2026-09-17 ⚽ Cross Harbor ML +1.23u', dots[0].getAttribute('title'));
+    check('a loss reads as a loss', dots[1].getAttribute('title') === '2026-09-17 🏈 Sentinels +3 −0.50u', dots[1].getAttribute('title'));
+    check('and says which it was to a screen reader', /^won —/.test(dots[0].getAttribute('aria-label')) && /^lost —/.test(dots[1].getAttribute('aria-label')));
+    check('the date is printed verbatim, never reformatted (rule 7)', /2026-09-17/.test(dots[0].getAttribute('title')));
+
+    const coldRoot = new El('div');
+    bets.render(coldRoot, betsTile({ tickets: [], form: { ...FORM, streak: 'L3', net_u: -2.5, record: '4-9', win_pct: 31 } }), { id: 'bets_live', actions: {} });
+    check('a losing streak is cold', coldRoot.querySelector('.form-streak').className.includes('form-streak-cold'));
+    check('and carries the other glyph', /🧊/.test(textOf(coldRoot)) && /L3/.test(textOf(coldRoot)));
+    check('a negative week is signed down', /−2.50u/.test(textOf(coldRoot)), textOf(coldRoot));
+
+    for (const [label, form] of [['null', null], ['missing', undefined], ['a string', 'good week'], ['an array', []]]) {
+      const noForm = new El('div');
+      bets.render(noForm, betsTile({ tickets: [], form }), { id: 'bets_live', actions: {} });
+      check(`form ${label} hides the whole line rather than showing zeros`, countOf(noForm, 'bets-form') === 0);
+    }
+    const partial = new El('div');
+    bets.render(partial, betsTile({ tickets: [], form: { record: '3-1', last: [{ r: 'W', u: 1 }] } }), { id: 'bets_live', actions: {} });
+    check('a form with no window still prints its record', /3-1/.test(textOf(partial)) && !/undefined/.test(textOf(partial)));
+    check('and no streak chip it was not given', countOf(partial, 'form-streak') === 0);
+    const oddStreak = new El('div');
+    bets.render(oddStreak, betsTile({ tickets: [], form: { ...FORM, streak: 'S3' } }), { id: 'bets_live', actions: {} });
+    check('a streak spelling this file cannot colour gets no chip', countOf(oddStreak, 'form-streak') === 0);
+    const longForm = new El('div');
+    bets.render(longForm, betsTile({ tickets: [], form: { ...FORM, last: [...FORM.last, ...FORM.last] } }), { id: 'bets_live', actions: {} });
+    check('never more than ten dots, whatever the engine sends', countOf(longForm, 'form-dot') === 10);
+
+    // -- B2/B7: the game cards ----------------------------------------------
+    console.log('\nbets_live — sport, and live-first order (B2, B7)');
+    const ORDER = [
+      tkt({ id: 'o-post', espn_event_id: 'ev-post', game: 'POST GAME', kick_ct: '2026-09-18 12:00' }),
+      tkt({ id: 'o-late', espn_event_id: 'ev-late', game: 'LATE GAME', kick_ct: '2026-09-18 7:30 PM', sport: '🏀' }),
+      tkt({ id: 'o-early', espn_event_id: 'ev-early', game: 'EARLY GAME', kick_ct: '2026-09-18 11:00 AM', sport: '⚾' }),
+      tkt({ id: 'o-live', espn_event_id: 'ev-live', game: 'LIVE GAME', kick_ct: '2026-09-18 15:25' }),
+      tkt({ id: 'o-dead', espn_event_id: 'ev-dead', game: 'DEAD GAME', kick_ct: '2026-09-18 09:00' }),
+    ];
+    const orderRoot = new El('div');
+    bets.render(orderRoot, betsTile({ tickets: ORDER }), {
+      id: 'bets_live',
+      actions: {},
+      live: {
+        grades: new Map(ORDER.map((t) => [t.id, { state: 'pre', label: 'PRE', why: 'not started' }])),
+        games: new Map([
+          ['ev-post', gamePost()],
+          ['ev-late', gamePre()],
+          ['ev-early', gamePre()],
+          ['ev-live', gameIn()],
+          ['ev-dead', { ...gamePre(), dead: true, detail: 'Postponed' }],
+        ]),
+        fetched_at: null,
+        error: null,
+      },
+    });
+    const cardTitles = orderRoot.querySelectorAll('.game-title').map((t) => t.textContent);
+    check(
+      'in-play first, then upcoming by kick, then decided',
+      cardTitles.map((t) => t.replace(/[^A-Z ]/g, '').trim()).join('|') === 'LIVE GAME|EARLY GAME|LATE GAME|POST GAME|DEAD GAME',
+      cardTitles.join('|')
+    );
+    check('a 7:30 PM kick sorts after an 11:00 AM one', cardTitles[1].includes('EARLY') && cardTitles[2].includes('LATE'));
+    check('the sport rides in front of the matchup', cardTitles[0].startsWith('🏈'), cardTitles[0]);
+    check('each card wears its own sport', orderRoot.querySelectorAll('.game-sport').map((s) => s.textContent).join('') === '🏈⚾🏀🏈🏈', orderRoot.querySelectorAll('.game-sport').map((s) => s.textContent).join(''));
+    const noSport = new El('div');
+    bets.render(noSport, betsTile({ tickets: [tkt({ sport: undefined })] }), { id: 'bets_live', actions: {} });
+    check('a ticket with no sport simply has none', countOf(noSport, 'game-sport') === 0 && /Harbor Kestrels/.test(textOf(noSport)));
+
+    // Tickets under one card keep the log's order.
+    const grouped = new El('div');
+    bets.render(grouped, betsTile({ tickets: [tkt({ id: 'g1', label: 'FIRST' }), tkt({ id: 'g2', label: 'SECOND' }), tkt({ id: 'g3', label: 'THIRD' })] }), { id: 'bets_live', actions: {} });
+    check('one card per game, not one per ticket', countOf(grouped, 'game') === 1);
+    check('and its tickets keep snapshot order', grouped.querySelectorAll('.ticket-label').map((n) => n.textContent).join('|') === 'FIRST|SECOND|THIRD');
+
+    // -- B8: the state-flip pulse -------------------------------------------
+    console.log('\nbets_live — the state-flip pulse (B8)');
+    const pulseTicket = tkt({ id: 'pulse-1' });
+    const pass = (state) => {
+      const root = new El('div');
+      bets.render(root, betsTile({ tickets: [pulseTicket] }), {
+        id: 'bets_live',
+        actions: {},
+        live: { grades: new Map([['pulse-1', { state, label: state.toUpperCase(), why: 'x' }]]), games: new Map([['ev-live', gameIn()]]), fetched_at: null, error: null },
+      });
+      return root.querySelector('.ticket').className;
+    };
+    check('the first sight of a ticket never flashes', !/flip-/.test(pass('lead')));
+    check('the same state again does not flash either', !/flip-/.test(pass('lead')));
+    check('a move toward the money glows green', /flip-up/.test(pass('win')));
+    check('and only for one render', !/flip-/.test(pass('win')));
+    check('a move away from it glows red', /flip-down/.test(pass('trail')));
+    check('a further slide still glows red', /flip-down/.test(pass('lose')));
+    const sideways = (() => {
+      const root = new El('div');
+      bets.render(root, betsTile({ tickets: [tkt({ id: 'pulse-2' })] }), { id: 'bets_live', actions: {}, live: { grades: new Map([['pulse-2', { state: 'pre', label: 'PRE', why: '' }]]), games: new Map(), fetched_at: null, error: null } });
+      const second = new El('div');
+      bets.render(second, betsTile({ tickets: [tkt({ id: 'pulse-2' })] }), { id: 'bets_live', actions: {}, live: { grades: new Map([['pulse-2', { state: 'push', label: 'PUSH', why: '' }]]), games: new Map(), fetched_at: null, error: null } });
+      return second.querySelector('.ticket').className;
+    })();
+    check('pre to push is not a direction, so no glow', !/flip-/.test(sideways), sideways);
+    // Losing the band and getting it back must not read as a state change.
+    const forget = (() => {
+      const root = new El('div');
+      bets.render(root, betsTile({ tickets: [tkt({ id: 'pulse-3' })] }), { id: 'bets_live', actions: {}, live: { grades: new Map([['pulse-3', { state: 'lead', label: 'COVERING', why: '' }]]), games: new Map(), fetched_at: null, error: null } });
+      const ungraded = new El('div');
+      bets.render(ungraded, betsTile({ tickets: [tkt({ id: 'pulse-3' })] }), { id: 'bets_live', actions: {} });
+      const back = new El('div');
+      bets.render(back, betsTile({ tickets: [tkt({ id: 'pulse-3' })] }), { id: 'bets_live', actions: {}, live: { grades: new Map([['pulse-3', { state: 'win', label: 'WIN', why: '' }]]), games: new Map(), fetched_at: null, error: null } });
+      return back.querySelector('.ticket').className;
+    })();
+    check('a grade arriving after an ungraded pass is not a flip', !/flip-/.test(forget), forget);
+    const BETS_SRC = fs
+      .readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'bets_live.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    check('the pulse is remembered in memory only, never stored', !/localStorage|sessionStorage/.test(BETS_SRC));
+
+    // -- degradation ---------------------------------------------------------
+    console.log('\nbets_live — no band, no tickets');
+    const bare = new El('div');
+    bets.render(bare, betsTile({ bankroll_u: 42.5, open_u: 6, record: '11-9-1', tickets: [tkt({ id: 'bare-1' })] }), { id: 'bets_live', actions: {} });
+    check('with no grader running, lean now is a dash', statValue(bare, 'lean now') === '—');
+    check('and closed is too', statValue(bare, 'closed') === '—');
+    check('the row says it is not graded yet', /not graded yet/.test(textOf(bare)));
+    check('and still shows the stake', unitsCells(bare)[0] === '0.50u');
+    const allPre = new El('div');
+    bets.render(allPre, betsTile({ tickets: [tkt({ id: 'pre-only' })] }), {
+      id: 'bets_live',
+      actions: {},
+      live: { grades: new Map([['pre-only', { state: 'pre', label: 'PRE', why: 'not started' }]]), games: new Map(), fetched_at: null, error: null },
+    });
+    check('a graded board that leans nowhere says 0.00u, not a dash', statValue(allPre, 'lean now') === '0.00u');
+    const none = new El('div');
+    bets.render(none, betsTile({ tickets: [] }), { id: 'bets_live', actions: {} });
+    check('an empty board says so', /No open tickets/.test(textOf(none)));
+    check('and still carries its header', countOf(none, 'bets-stats') === 1);
+    const downed = new El('div');
+    bets.render(downed, betsTile({ tickets: [tkt({ id: 'down-1' })] }), { id: 'bets_live', actions: {}, live: { grades: new Map(), games: new Map(), fetched_at: null, error: 'espn http 503' } });
+    check('a dead feed says so without blanking the board', /feed unavailable/.test(textOf(downed)) && countOf(downed, 'ticket') === 1);
+  }
+
   // -- cards: the desk ------------------------------------------------------
   //
   // The tile is a two-button menu and the listings are in the sheet, so the

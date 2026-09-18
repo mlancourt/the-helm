@@ -209,6 +209,59 @@ export function units(n) {
   return `${Number.isInteger(v) ? v : v.toFixed(1)}u`;
 }
 
+/**
+ * 0.62 -> '0.62u'. Two decimals, always.
+ *
+ * `units()` rounds to one — right for a bankroll, wrong for a ticket. The
+ * Bookie's `to_win_u` is a two-decimal number off a logged price (0.5u at +125
+ * is 0.62u), and rounding that to "0.6u" on the board would quietly disagree
+ * with the Bet-Log Matt is reading it against. A push must read `0.00u` and
+ * not `0u`, for the same reason: it is a figure, not an absence.
+ */
+export function exactUnits(n) {
+  const v = num(n);
+  if (v === null) return '—';
+  return `${v.toFixed(2)}u`;
+}
+
+/**
+ * The same figure, signed: '+0.62u' / '\u22120.50u' / '0.00u'.
+ *
+ * The minus is U+2212, not a hyphen — beside a '+' at 11px a hyphen reads as a
+ * dash rather than a sign. Zero carries no sign at all: a push has no
+ * direction, and "+0.00u" would imply one.
+ */
+export function signedUnits(n) {
+  const v = num(n);
+  if (v === null) return '—';
+  if (v === 0) return '0.00u';
+  return `${v > 0 ? '+' : '\u2212'}${Math.abs(v).toFixed(2)}u`;
+}
+
+/**
+ * A Central kick string -> a sortable number. Never rendered.
+ *
+ * Kick times arrive in two spellings — the engine writes '2026-09-18 6:05 PM'
+ * and the mock writes '2026-09-18 15:25' — and sorting either one as TEXT puts
+ * 6:05 PM before 7:30 AM. So the parts are read out with a regex and counted
+ * on a flat calendar with Date.UTC, which is arithmetic and not a timezone
+ * conversion: nothing here is handed `new Date(string)` (rule 7). A string
+ * that is not a kick time sorts last rather than sorting randomly.
+ */
+export function kickKey(kick) {
+  const m = String(kick ?? '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})\s*([AaPp])?/);
+  if (!m) return Infinity;
+  let h = Number(m[4]);
+  const half = m[6];
+  if (half) {
+    const pm = /p/i.test(half);
+    if (h === 12) h = pm ? 12 : 0;
+    else if (pm) h += 12;
+  }
+  if (h > 23 || Number(m[5]) > 59) return Infinity;
+  return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), h, Number(m[5]));
+}
+
 /** American odds: -110 stays, 135 becomes '+135'. */
 export function odds(n) {
   const v = num(n);

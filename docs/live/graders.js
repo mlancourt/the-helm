@@ -2,9 +2,27 @@
  * Bet graders. Pure functions: (ticket, game, extras) -> {state, label, why}.
  *
  * WORDING RULE (non-negotiable): these produce a LEAN, never a settlement. A
- * different system settles bets. While a game is in progress a ticket is only
- * ever LEADING / TRAILING / COVERING — WIN and LOSS appear once ESPN calls the
- * game final, and even then this is the scoreboard's opinion, not the book's.
+ * different system settles bets. Even a WIN here is the scoreboard's opinion,
+ * not the book's, and the tile's footer says so.
+ *
+ * EARLY LOCKS (B3, Matt 2026-09-18). A pill stops moving the moment the maths
+ * is final — not when ESPN calls the game. Matt's words: "show the bets as
+ * winning when technically winning and lost as soon as they are lost". So:
+ *
+ *   total_over    win   the moment the total clears the line
+ *   total_under   lose  the moment the total clears the line
+ *   spread_1h     decided at halftime, or once the third period starts
+ *   anytime_td    win   on the scoring play; LOSS only at the final whistle
+ *   anytime_goal  same (still behind its flag)
+ *   btts          win   as soon as both sides are on the board; LOSS at post
+ *   ml / spread   LEADING / TRAILING to the whistle — a lead is not a result
+ *
+ * Every lock above is one-way BY ARITHMETIC: a score cannot go down, so a
+ * locked state cannot regress on the next pass. That is the property the tests
+ * pin ("a locked win stays win"), and the reason ml and full-game spreads are
+ * deliberately NOT locked — a two-score lead is not final maths, it is a lead.
+ * (ESPN does occasionally correct a score downward; if that ever unlocks a
+ * pill, the grade is right and the earlier one was wrong.)
  *
  * States: pre | lead | trail | even | win | lose | push | dead | unsupported
  *
@@ -12,12 +30,12 @@
  * every market can be unit-tested against fixture games.
  */
 
-/** American odds -> profit multiple, used by the tile for lean units. */
-export function payoutMultiple(price) {
-  const p = Number(price);
-  if (!Number.isFinite(p) || p === 0) return 0;
-  return p > 0 ? p / 100 : 100 / Math.abs(p);
-}
+/*
+ * There is no payout helper here any more (B4). The Bookie logs the price and
+ * publishes `ticket.to_win_u` with it; the page renders that number and does
+ * no odds arithmetic of its own, so the board and the Bet-Log cannot disagree
+ * about what a ticket returns.
+ */
 
 const r = (state, label, why) => ({ state, label, why });
 
@@ -191,6 +209,20 @@ function sides(ticket, game) {
   return { pick, opp };
 }
 
+/**
+ * Is the game at half time?
+ *
+ * The 1H spread is decided the moment the half ends, and the third period
+ * starting is the signal that survives every sport — but between the two there
+ * is a gap ESPN spends on the interval, still `period: 2`, and a bet whose
+ * maths is finished must not read as a lean for fifteen minutes. ESPN says so
+ * twice (`STATUS_HALFTIME`, and "Halftime" in the detail line) and neither is
+ * guaranteed, so both are checked.
+ */
+function atHalftime(game) {
+  return /halftime|half time/i.test(`${game.statusName || ''} ${game.detail || ''}`);
+}
+
 /** First-half total for one side. Soccer has no linescores, so this is []. */
 function firstHalf(side) {
   const ls = Array.isArray(side.linescores) ? side.linescores : [];
@@ -240,8 +272,9 @@ function gradeSpread(ticket, game, { half = false } = {}) {
     }
     pickScore = firstHalf(pick);
     oppScore = firstHalf(opp);
-    // Per the brief: the first half is settled once the third period starts.
-    decided = game.period >= 3 || game.state === 'post';
+    // B3: the first half is over at halftime — not when the third period's
+    // clock starts, and certainly not at the final whistle.
+    decided = game.period >= 3 || atHalftime(game) || game.state === 'post';
     scope = 'first half';
   }
 
@@ -274,12 +307,21 @@ function gradeTotal(ticket, game, over) {
       : r('lose', 'LOSS', `${total} total, ${word} ${line} missed`);
   }
 
-  // Scores never go down, so once the total clears the number the over can no
-  // longer lose and the under can no longer win. Said plainly, still a lean.
+  // B3, the lock: a score cannot go down, so the moment the total clears the
+  // number the over has cashed and the under has busted. Waiting for the
+  // whistle to say so would be the tile pretending not to know.
   if (total > line) {
     return over
-      ? r('lead', 'LEADING', `${total} total, already past ${line}`)
-      : r('trail', 'TRAILING', `${total} total, already past ${line}`);
+      ? r('win', 'WIN', `${total} total, already past ${line}`)
+      : r('lose', 'LOSS', `${total} total, already past ${line}`);
+  }
+  // Level with the number: alive for the over (one more point does it) and
+  // heading for a push on the under. "needs 0 more" reads as a bug, so it is
+  // said in words instead.
+  if (total === line) {
+    return over
+      ? r('trail', 'TRAILING', `${total} total, level with ${line}`)
+      : r('lead', 'LEADING', `${total} total, level with ${line}`);
   }
   const need = (line - total).toFixed(1).replace(/\.0$/, '');
   return over
@@ -297,11 +339,11 @@ function gradeAnytimeTd(ticket, game, extras) {
   const tds = touchdownPlays(plays);
   const hit = tds.find((p) => nameHits(p.text, ticket.player));
 
+  // B3: he scored. Nothing that happens later takes it back, so the pill
+  // stops moving here rather than at the whistle.
   if (hit) {
     const q = hit.period?.number ? `Q${hit.period.number}` : 'in play';
-    return game.state === 'post'
-      ? r('win', 'WIN', `scored ${q}`)
-      : r('lead', 'LEADING', `scored ${q} — needs the whistle`);
+    return r('win', 'WIN', `scored ${q}`);
   }
   if (game.state === 'post') return r('lose', 'LOSS', `no touchdown in ${tds.length} scoring plays`);
   return r('trail', 'TRAILING', `no TD yet, ${game.detail || 'live'}`);
@@ -315,9 +357,10 @@ function gradeAnytimeGoal(ticket, game, extras) {
 
   const goals = goalEvents(extras?.keyEvents);
   const hit = goals.find((g) => nameHits(g.shortText || g.text, ticket.player));
+  // B3, as for the touchdown: a goal is not taken back.
   if (hit) {
     const when = hit.clock?.displayValue ? `${hit.clock.displayValue}` : 'in play';
-    return game.state === 'post' ? r('win', 'WIN', `scored ${when}`) : r('lead', 'LEADING', `scored ${when}`);
+    return r('win', 'WIN', `scored ${when}`);
   }
   if (game.state === 'post') return r('lose', 'LOSS', 'no goal');
   return r('trail', 'TRAILING', `no goal yet, ${game.detail || 'live'}`);
@@ -332,7 +375,8 @@ function gradeBtts(ticket, game) {
   if (game.state === 'post') {
     return both ? r('win', 'WIN', `${score} final`) : r('lose', 'LOSS', `${score} final`);
   }
-  if (both) return r('lead', 'LEADING', `${score}, both on the board`);
+  // B3: both sides have scored and neither can un-score. Locked.
+  if (both) return r('win', 'WIN', `${score}, both on the board`);
   const yet = h > 0 ? game.away.abbr : a > 0 ? game.home.abbr : 'neither side';
   return r('trail', 'TRAILING', `${score}, ${yet} yet to score`);
 }

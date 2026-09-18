@@ -221,6 +221,43 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('junk on the now side is null too', fmt.minutesUntilCt('2026-09-18T19:30', 'now'), null);
   eq('now against itself is zero', fmt.minutesUntilCt(fmt.ctNowStamp()), 0);
 
+  console.log('\nunits, to two decimals — the Bookie\'s own precision');
+  // `units()` rounds to one decimal — right for a bankroll, wrong for a
+  // ticket: 0.5u at +125 returns 0.62u, and "0.6u" would disagree with the
+  // Bet-Log this board is read against.
+  eq('two decimals, always', fmt.exactUnits(0.5), '0.50u');
+  eq('a returned figure keeps its cent', fmt.exactUnits(0.62), '0.62u');
+  eq('zero is a figure, not a blank', fmt.exactUnits(0), '0.00u');
+  eq('a whole number still shows both places', fmt.exactUnits(2), '2.00u');
+  eq('missing units read as unknown', fmt.exactUnits(null), '—');
+  eq('junk units read as unknown too', fmt.exactUnits('lots'), '—');
+  eq('an empty string is not zero', fmt.exactUnits(''), '—');
+
+  eq('a win is signed up', fmt.signedUnits(0.62), '+0.62u');
+  eq('a loss is signed down with a real minus', fmt.signedUnits(-0.5), '\u22120.50u');
+  eq('and not with a hyphen', fmt.signedUnits(-0.5).includes('-'), false);
+  eq('a push carries no sign at all', fmt.signedUnits(0), '0.00u');
+  eq('nothing to say stays a dash', fmt.signedUnits(null), '—');
+  eq('rounding is half-up at the cent', fmt.signedUnits(1.0345), '+1.03u');
+
+  console.log('\nkick times sort by the clock, not by the alphabet');
+  // The engine writes '6:05 PM' and the mock writes '15:25'. Sorting either as
+  // text puts the evening game before the morning one.
+  eq('12-hour evening is after 12-hour morning',
+    fmt.kickKey('2026-09-18 6:05 PM') > fmt.kickKey('2026-09-18 7:30 AM'), true);
+  eq('which plain text would get wrong', '2026-09-18 6:05 PM' > '2026-09-18 7:30 AM', false);
+  eq('24-hour strings order too',
+    fmt.kickKey('2026-09-18 15:25') > fmt.kickKey('2026-09-18 09:15'), true);
+  eq('noon is midday', fmt.kickKey('2026-09-18 12:00 PM') - fmt.kickKey('2026-09-18 12:00 AM'), 720 * 60000);
+  eq('midnight is the start of the day', fmt.kickKey('2026-09-18 12:00 AM'), fmt.kickKey('2026-09-18 00:00'));
+  eq('a later date is later', fmt.kickKey('2026-09-19 08:00') > fmt.kickKey('2026-09-18 23:00'), true);
+  eq('an hour apart is an hour apart', fmt.kickKey('2026-09-18 16:25') - fmt.kickKey('2026-09-18 15:25'), 3600000);
+  eq('a T separator is a separator', fmt.kickKey('2026-09-18T15:25'), fmt.kickKey('2026-09-18 15:25'));
+  eq('junk sorts last', fmt.kickKey('sometime'), Infinity);
+  eq('a date with no time sorts last', fmt.kickKey('2026-09-18'), Infinity);
+  eq('an impossible hour sorts last', fmt.kickKey('2026-09-18 26:00'), Infinity);
+  eq('null sorts last', fmt.kickKey(null), Infinity);
+
   console.log(`\n${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 })();

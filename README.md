@@ -84,14 +84,14 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 1015 assertions, no server needed
+npm test            # 1140 assertions, no server needed
 npm run test:worker # 62 assertions, needs `npm run dev` running
 ```
 
-- **`test:fmt`** (123) — every date helper, run under `America/Chicago`,
+- **`test:fmt`** (148) — every date helper, run under `America/Chicago`,
   `Asia/Tokyo`, `UTC` and `Pacific/Kiritimati`, asserting byte-identical output
   in all four. This is the rule-7 tripwire.
-- **`test-graders`** (111) — every market across pre / in / post / push, run
+- **`test-graders`** (141) — every market across pre / in / post / push, run
   against **real ESPN payloads** captured in `tools/fixtures/`. Inventing
   fixtures would only prove the graders agree with my guess about ESPN's shape,
   which is the exact thing worth testing.
@@ -117,7 +117,7 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   timeout, upstream error, corrupt snapshot, refusal, truncation). worker.js is
   a plain ES module, so the route runs in Node with no wrangler and no network.
   **No test ever calls a real model** — nothing here can spend money.
-- **`test-tiles`** (520) — every render module, against the mock snapshot and
+- **`test-tiles`** (590) — every render module, against the mock snapshot and
   against deliberately hostile payloads: empty, null, wrong-typed, all-fields-
   missing, and carrying fields no module has heard of. No module may throw at
   any of them, because a module that throws turns one card into "this tile
@@ -642,11 +642,63 @@ output. **Never add a function to `fmt.js` that passes a date-only string to
 
 ### Writes are proposals
 
-The dinner HIT/MISS buttons are the only write affordance on the board. They
-file a `meal_verdict` event and badge it **pending**; the tile keeps showing
-the vault's own verdict underneath. A submitted write is never rendered as
-applied. `withdraw` calls `DELETE /api/event/:id` — the undo valve, one event
-at a time, and only the author's own.
+There is no write affordance on the board today: the dinner tile went
+read-only in v1.5.1 (verdicts are ruled in the Meal Planner's approval pass,
+not here), so every event now arrives through the ask panel's build-request
+offer. The machinery is unchanged and still the rule for anything that files
+one — a submitted write is badged **pending** and never rendered as applied,
+and `withdraw` calls `DELETE /api/event/:id`, the undo valve, one event at a
+time and only the author's own.
+
+### Bets Live — form, units, and who does the arithmetic
+
+v1.6.0, the facelift (vault spec `Bets-Live-Tile-Spec.md`, rulings B1–B9). The
+board was a grader demo; it is now a tile Matt checks.
+
+**The page does no odds math.** The Bookie logs the price and publishes
+`ticket.to_win_u` — units returned on a winner — and the page renders that
+number. There is no payout helper in this codebase any more, and a test asserts
+there is not one. The Bet-Log is what this board is read against, and two
+implementations of the same sum eventually disagree by a cent; at that point the
+board is the thing that stops being trusted.
+
+**One number per row, summed in the header.** `ticketUnits()` decides what a
+ticket is worth right now, the row prints it, and "lean now" is the sum of
+exactly those values — `+to_win_u` leading or won, `−stake_u` trailing, lost or
+dead, `0.00u` on a push or a tie, the plain stake before kickoff. Header and
+rows reconcile *by construction*, and the test adds up what the DOM actually
+prints rather than calling the function the tile called.
+
+A ticket the Bookie could not price (`to_win_u: null`) shows its plain stake in
+every state and contributes **zero** in either direction. Half a figure is
+worse than none: a `−0.50u` in the header that no row accounts for makes the sum
+look broken, which is the one thing the design above exists to prevent.
+
+**The 7-day form is the engine's, entirely.** `data.form` comes from the
+Bookie's § Settled rows — W/L only, voids and pushes excluded — and the page's
+own live leans never feed it, because the tile leans and the Bookie settles.
+The line reads `7d 14-9 · +4.71u · 61%` with a streak chip (`🔥 W5` / `🧊 L3`)
+and ten dots, newest left, each carrying its row in its tooltip. `form: null`
+hides the whole line rather than showing zeros, which would read as a losing
+week instead of a missing one. A streak spelling this page cannot colour gets
+no chip — green is a claim.
+
+**Board order** is live first, then upcoming by kick, then decided (a postponed
+game sorts with the decided ones). Kick times arrive in two spellings —
+`15:25` from the mock and `6:05 PM` from the engine — so ordering goes through
+`kickKey()`, which reads the parts and counts them on a flat calendar. Sorting
+them as text puts a 6:05 PM game before a 7:30 AM one. Ties keep the snapshot's
+order, which is the Bet-Log's order, and tickets within a card never move.
+
+**The pulse** is one beat, ~600 ms, when a pill changes state between grader
+passes: green toward the money, red away from it, nothing kept. Previous states
+live in module memory only — persisting them would mean a phone unlocked hours
+later flashing at a bet that turned in the meantime, which is a notification,
+and this tile is not one. A ticket seen for the first time never pulses.
+
+**The bankroll is a plain number** (B9). No colour, no drawdown, no "slow
+down": the Bookie's charter says scoreboard, not a leash, and the tile does not
+editorialise either.
 
 ### The LIVE band
 
@@ -753,12 +805,34 @@ looks. Watch one live match grade correctly before flipping it.
 
 `pre | lead | trail | even | win | lose | push | dead | unsupported`
 
-`win` and `lose` appear **only** once ESPN calls the game final. While a game
-is running a ticket is LEADING / TRAILING / COVERING, and the tile footer says
-so: *this is a lean, not a settlement*. A different system settles bets.
+A pill stops moving the moment the **maths** is final — not when ESPN calls the
+game (B3, Matt 2026-09-18). Every lock below is one-way by arithmetic, because
+a score cannot go down, which is also why the two markets that are *not* locked
+are not locked: a lead is not a result.
+
+| market | locks | still a lean |
+|---|---|---|
+| `total_over` | WIN the moment the total clears the line | below or level with it |
+| `total_under` | LOSS the moment the total clears the line | below or level with it |
+| `spread_1h` | at halftime, or once the third period starts | during the first half |
+| `anytime_td` / `anytime_goal` | WIN on the scoring play | LOSS waits for the final — there is always another drive |
+| `btts` | WIN once both sides are on the board | LOSS waits for the final |
+| `ml`, `spread` | nothing — LEADING / TRAILING to the whistle | always |
+
+Halftime is read from **both** `STATUS_HALFTIME` and a "Halftime" detail line,
+because neither is guaranteed and ESPN spends the interval on `period: 2` — a
+bet whose first-half maths is finished must not read as a lean for fifteen
+minutes.
+
+Even a locked WIN is the scoreboard's opinion, not the book's, and the footer
+still says *this is a lean, not a settlement*. A different system settles bets.
 
 `even` exists so a tied game and a spread sitting exactly on the number lean
 nowhere, instead of being quietly rounded into a lead.
+
+The tests pin both halves of every lock: one case mid-game (the game still
+running) and one that the locked state survives a later pass and the whistle. A
+pill that says WIN and later says LEADING is worse than one that never locked.
 
 ### PWA
 

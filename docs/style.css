@@ -362,6 +362,77 @@ body {
 .ticket-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: 0 0 auto; }
 .ticket-stake { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
 
+/* B4 — what the ticket is worth right now, beside the pill. The header's
+   "lean now" is the sum of exactly these, so they share a weight and a
+   tabular figure: two columns of numbers that are meant to add up should
+   look like they add up. */
+.ticket-units { font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ticket-units-good { color: var(--good); }
+.ticket-units-bad  { color: var(--bad); }
+.ticket-units-flat { color: var(--text-dim); }
+.ticket-units-idle { color: var(--text-faint); font-weight: 600; }
+
+/* B1/B6 — the 7-day form line, under the stats and above the board. The
+   Bookie's settled rows only; the page's live leans never reach it. */
+.bets-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 11px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+.form-summary { font-variant-numeric: tabular-nums; }
+
+.form-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.form-streak-hot  { background: #122f24; color: var(--good);      border-color: #1d4c38; }
+.form-streak-cold { background: #19222c; color: var(--text-dim);  border-color: #2a3644; }
+.form-streak-emoji { font-size: 10px; line-height: 1; }
+
+/* A form guide: read as a shape first, interrogated by tooltip second. */
+.form-strip { display: flex; align-items: center; gap: 3px; margin-left: auto; }
+.form-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  cursor: help;
+}
+.form-dot-w { background: var(--good); }
+.form-dot-l { background: var(--bad); }
+
+/* The sport's own emoji, before the matchup (B2). */
+.game-sport { margin-right: 5px; font-size: 12px; line-height: 1; }
+
+/* B8 — one beat when a pill moves between grader passes. Green toward the
+   money, red away from it, ~600 ms and gone. No sound, no haptics, and
+   nothing kept: the class rides on a node the next render replaces.
+   `forwards` is deliberately absent — the row must end where it started. */
+.flip-up   { animation: bets-flip-up 600ms ease-out 1; }
+.flip-down { animation: bets-flip-down 600ms ease-out 1; }
+@keyframes bets-flip-up {
+  0%   { background: rgba(63, 185, 132, 0.28); }
+  100% { background: transparent; }
+}
+@keyframes bets-flip-down {
+  0%   { background: rgba(226, 86, 77, 0.28); }
+  100% { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flip-up, .flip-down { animation: none; }
+}
+
 /* ------------------------------------------------------------- today_games */
 
 /* The same menu shape as the newsstand and entertainment, because it is the
