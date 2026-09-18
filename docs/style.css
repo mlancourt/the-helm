@@ -850,6 +850,82 @@ body {
   white-space: nowrap;
 }
 
+/* -- the Top 5 sheet --
+
+   A ranked list, so the rank is the thing that anchors the row: a brass
+   numeral in the gutter, the wordmark's colour carried down one more level.
+   The poster is optional and never load-bearing (rule 4's carve-out) — when it
+   is missing the numeral simply stands on its own and the row keeps its shape,
+   because a placeholder box for a film that has no art is just a grey rectangle
+   with nothing to say. */
+.ent-top5-gutter {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ent-rank {
+  min-width: 13px;
+  /* the nameplate's condensed stack, so the numeral reads as part of the same
+     brass furniture as the card title above it */
+  font-family: 'Avenir Next Condensed', 'Helvetica Neue Condensed', 'Roboto Condensed', 'Segoe UI Semibold', -apple-system, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  text-align: right;
+  color: var(--brass);
+}
+
+/* Fixed box, so a slow or refused image never reflows the row under a thumb. */
+.ent-poster {
+  display: block;
+  width: 40px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  background: #1a1f26;
+  object-fit: cover;
+}
+
+.ent-year { font-size: 11.5px; color: var(--text-faint); }
+
+/* Pushed to the end of the title line: mono and tabular so five ratings stack
+   into a column rather than jittering with the decimals. */
+.ent-rating {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.ent-top5-sub {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.ent-genre { font-size: 11.5px; color: var(--text-faint); }
+
+/* Two lines and no more. TMDB overviews run long, and five of them unclamped
+   turn the sheet into an essay nobody scrolls. */
+.ent-overview {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
 .ent-new-mark {
   padding: 1px 5px;
   border-radius: 999px;

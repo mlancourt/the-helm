@@ -42,6 +42,15 @@
  * Rule 10: every title, show name, episode name and platform lands via
  * textContent, and every link goes through `safeUrl` — including the ones that
  * wrap a whole row.
+ *
+ * Rule 4, the listing-image carve-out: a Top 5 row may carry a TMDB `poster`
+ * URL, and that is the ONLY external asset this tile touches. It is an <img>
+ * and never a script, style or fetch; it goes through the same `safeUrl` guard
+ * as a link, so anything that is not http(s) is simply not drawn; it carries
+ * `referrerpolicy="no-referrer"` and `loading="lazy"`; and the service worker
+ * leaves cross-origin requests alone, so it is never cached. A film with no
+ * poster shows its rank numeral alone — a broken-image box is worse than no
+ * image at all.
  */
 
 import { el, empty, pill, safeUrl } from '../lib/dom.js';
@@ -323,6 +332,122 @@ function podcastsBody(faceData, list, sinceIso) {
   };
 }
 
+// ------------------------------------------------------------------ top5 face
+
+/**
+ * TMDB's vote average as '★ 8.2', or nothing at all.
+ *
+ * `Number(null)` is 0, so a guard of Number.isFinite alone would print a
+ * confident '★ 0.0' on a film the payload simply has no rating for. Absent
+ * must read as absent — the star is hidden, not zeroed.
+ */
+function ratingText(v) {
+  if (v === null || v === undefined || v === '') return '';
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return `★ ${n.toFixed(1)}`;
+}
+
+/**
+ * '(2024)', or nothing.
+ *
+ * A release year is a number and not a date: it is never parsed, never
+ * formatted through Intl, and never handed to `new Date()` (rule 7).
+ */
+function yearText(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  return `(${Math.trunc(n)})`;
+}
+
+/**
+ * One film. The rank is the row's position in the payload — the engine has
+ * already ranked them, and the page does not re-sort or re-score anything.
+ */
+function top5Row(item, rank, isNew) {
+  const poster = safeUrl(item.poster);
+  const rating = ratingText(item.rating);
+  const year = yearText(item.year);
+  const genre = item.genre ? String(item.genre) : '';
+  const provider = item.provider ? String(item.provider) : '';
+  const overview = item.overview ? String(item.overview) : '';
+
+  return linkRow(item.link, 'ent-row ent-top5-row', [
+    el('div', { cls: 'ent-top5-gutter' }, [
+      el('span', { cls: 'ent-rank', text: String(rank) }),
+      // Rule 4's carve-out, and only under it: an <img>, a vetted http(s) URL,
+      // no referrer, lazy. Absent or refused means the numeral stands alone.
+      poster
+        ? el('img', {
+            cls: 'ent-poster',
+            attrs: {
+              src: poster,
+              alt: '',
+              loading: 'lazy',
+              referrerpolicy: 'no-referrer',
+              width: '40',
+              height: '60',
+            },
+          })
+        : null,
+    ]),
+    el('div', { cls: 'ent-row-main' }, [
+      el('div', { cls: 'ent-row-title-line' }, [
+        el('span', { cls: 'ent-row-title', text: String(item.title ?? '(untitled)') }),
+        year ? el('span', { cls: 'ent-year', text: year }) : null,
+        isNew ? newMark() : null,
+        rating ? el('span', { cls: 'ent-rating', text: rating }) : null,
+      ]),
+      genre || provider
+        ? el('div', { cls: 'ent-top5-sub' }, [
+            genre ? el('span', { cls: 'ent-genre', text: genre }) : null,
+            // The same quiet chip the Watching face gives a platform: this is
+            // the same fact — where the thing can be watched.
+            provider ? pill(provider, 'neutral') : null,
+          ])
+        : null,
+      overview ? el('div', { cls: 'ent-overview', text: overview }) : null,
+    ]),
+  ]);
+}
+
+/**
+ * The weekly five.
+ *
+ * Newness is the face-level fallback and nothing cleverer: a top 5 has no
+ * per-item arrival stamp, and `week_of` is emphatically not one — it is the
+ * Monday the list belongs to, not the moment a film showed up, and treating it
+ * as an arrival would mark all five new every render for a week.
+ */
+function top5Body(faceData, list, sinceIso, attribution) {
+  const faceFresh = newerThan(faceData.updated_at, sinceIso) === true;
+  // Rule 7: `week_of` is a date-only Central string, so it goes through
+  // prettyDate, which builds the words from the parts. `new Date(week_of)`
+  // would render the Monday as the Sunday before it for anyone in Central.
+  const week = faceData.week_of ? prettyDate(faceData.week_of) : '';
+
+  return (body) => {
+    if (!list.length) {
+      body.appendChild(empty('No picks this week.'));
+    } else {
+      body.appendChild(
+        el(
+          'div',
+          { cls: 'ent-list' },
+          list.map((item, i) => top5Row(item, i + 1, itemIsNew('top5', item, sinceIso, faceFresh)))
+        )
+      );
+    }
+    errorsInto(body, faceData.errors);
+    body.appendChild(
+      el('p', { cls: 'ent-foot', text: week ? `Week of ${week} · Data from TMDB` : 'Data from TMDB' })
+    );
+    // And the vault's own attribution string under it, verbatim, exactly as
+    // the Watching face prints it.
+    if (attribution) body.appendChild(el('p', { cls: 'ent-foot', text: String(attribution) }));
+  };
+}
+
 // --------------------------------------------------------------- generic face
 
 /**
@@ -369,6 +494,7 @@ function genericBody(faceData, list, sinceIso, attribution) {
 function bodyFor(faceKey, faceData, list, sinceIso, attribution) {
   if (faceKey === 'watching') return watchingBody(faceData, list, sinceIso, attribution);
   if (faceKey === 'podcasts') return podcastsBody(faceData, list, sinceIso);
+  if (faceKey === 'top5') return top5Body(faceData, list, sinceIso, attribution);
   return genericBody(faceData, list, sinceIso, attribution);
 }
 

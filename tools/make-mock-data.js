@@ -45,6 +45,17 @@ function addDays(ymd, n) {
 }
 
 /**
+ * The Monday of the Central week 'YYYY-MM-DD' falls in — what the Top 5's
+ * `week_of` is. Read off the parts with Date.UTC (rule 7); a date-only string
+ * is never handed to `new Date()`.
+ */
+function mondayOf(ymd) {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // 0 = Sunday
+  return addDays(ymd, wd === 0 ? -6 : 1 - wd);
+}
+
+/**
  * 'YYYY-MM-DD' -> 'Sat 9/19', the way the engine writes a day heading for the
  * Lake Country tile. Built from the parts with Date.UTC — rule 7: a date-only
  * string is never handed to `new Date()`.
@@ -643,11 +654,85 @@ function snapshot() {
           errors: null,
         },
 
-        // Not built yet. The tile renders these two greyed, wearing "soon".
-        top5: null,
+        // Five invented films, already in rank order — the engine ranks them
+        // and the page never re-sorts. Service names are real (the tile has to
+        // prove a chip reading "Paramount+" fits); every title, blurb, rating
+        // and id below is made up. Posters are null on purpose: the mock must
+        // never reach out to image.tmdb.org, and the rank-numeral-alone row is
+        // the one worth seeing here.
+        top5: {
+          updated_at: agoIso(11 * 60),
+          week_of: mondayOf(TODAY),
+          items: [
+            {
+              title: 'The Kerosene Clerk',
+              year: 2025,
+              genre: 'Thriller',
+              provider: 'Paramount+',
+              link: 'https://example.com/mock/film/kerosene-clerk',
+              rating: 7.8,
+              overview:
+                'A records officer at a shuttered refinery notices that every fire report for the last decade was filed by the same hand, and starts pulling on the thread from the wrong end.',
+              tmdb_id: 910111,
+              poster: null,
+            },
+            {
+              title: 'Nine Miles of Bad Road',
+              year: 2024,
+              genre: 'Thriller · Spy',
+              provider: 'Netflix',
+              link: 'https://example.com/mock/film/nine-miles',
+              rating: 7.2,
+              overview:
+                'A courier with one delivery left discovers the address does not exist, and neither, on paper, does she.',
+              tmdb_id: 910222,
+              poster: null,
+            },
+            {
+              title: 'Halyard',
+              year: 2026,
+              genre: 'Science Fiction',
+              provider: 'Apple TV+',
+              link: 'https://example.com/mock/film/halyard',
+              rating: 8.1,
+              overview:
+                'The first crewed tether to geostationary orbit is a month from its ribbon-cutting when the engineer who built it asks for it to be cut instead.',
+              tmdb_id: 910333,
+              poster: null,
+            },
+            {
+              // Rating absent: the star is hidden, never rendered as 0.0.
+              title: 'Cold Harbour Provisional',
+              year: 2025,
+              genre: 'Spy',
+              provider: 'Max',
+              link: 'https://example.com/mock/film/cold-harbour',
+              rating: null,
+              overview:
+                'Two retired handlers meet for lunch every Thursday for thirty years. On the last Thursday, only one of them orders.',
+              tmdb_id: 910444,
+              poster: null,
+            },
+            {
+              // Half-missing on purpose — the row still has to lay out.
+              title: 'The Long Quiet',
+              year: null,
+              genre: null,
+              provider: 'Hulu',
+              link: null,
+              rating: 6.9,
+              overview: null,
+              tmdb_id: 910555,
+              poster: null,
+            },
+          ],
+          errors: null,
+        },
+
+        // Not built yet. The tile renders this one greyed, wearing "soon".
         listening: null,
 
-        sources: { tv: 'TMDB', podcasts: 'RSS via iTunes Search', movies: 'pending', books: 'pending' },
+        sources: { tv: 'TMDB', podcasts: 'RSS via iTunes Search', movies: 'TMDB discover + watch/providers', books: 'pending' },
         attribution: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
       }),
 

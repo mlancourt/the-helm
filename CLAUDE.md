@@ -189,4 +189,6 @@ Tests (Worker, `wrangler dev` + node): token 401s; event shape rejection; per-ev
 
 **v1.1 (2026-09-17):** `mke_board` retired and replaced by `today_games` (vault spec `06-AI-Stack/The-Helm/Todays-Games-Tile-Spec.md`). One ESPN scoreboard call per league per tick now serves both LIVE tiles — `live/band.js` builds a single deduped `(league, date)` plan; a tile module still never fetches. `live/espn.js` gained `broadcasts` (the `broadcasts[]`/`geoBroadcasts[]` merge), `venue`, `short` team names, and `compactCtDate()` — `date_ct` → `dates=` by string ops only.
 
+**v1.7.0 (2026-09-18):** Entertainment Top 5 sheet body — ranked rows, provider chip, rating, 2-line overview, TMDB footer.
+
 **v1.6.1 (2026-09-18):** card nameplates — brass condensed uppercase titles + rule + diamond, CSS only, spec `Card-Nameplate-Spec.md`.

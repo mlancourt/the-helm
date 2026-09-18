@@ -655,6 +655,146 @@ async function main() {
     check('a javascript: episode url is inert', !pSheet.querySelectorAll('A').some((a) => /javascript/i.test(a.getAttribute('href') || '')));
     check('the footer says what "new" actually means, once', (pText.match(/not unheard/g) || []).length === 1);
 
+    // -- the top 5 sheet ------------------------------------------------------
+    console.log('\nentertainment — the Top 5 sheet');
+    //
+    // The face the engine ranks and the page does not: five rows in payload
+    // order, numbered 1..5, with every optional field missing on at least one
+    // of them. `week_of` is the rule-7 trap — '2026-09-14' is a Monday, and
+    // parsed as an instant it renders as Sunday the 13th for anyone Central.
+    const top5Tile = entTile({
+      watching: null,
+      podcasts: null,
+      top5: {
+        updated_at: daysAgoIso(40),
+        week_of: '2026-09-14',
+        items: [
+          {
+            title: 'The Kerosene Clerk',
+            year: 2025,
+            genre: 'Thriller',
+            provider: 'Paramount+',
+            link: 'https://example.com/film/kerosene',
+            rating: 7.8,
+            overview: 'A records officer notices every fire report was filed by the same hand.',
+            tmdb_id: 910111,
+            poster: 'https://image.example.com/w185/kerosene.jpg',
+          },
+          { title: 'Nine Miles', year: 2024, genre: 'Spy', provider: 'Netflix', link: 'https://example.com/film/nine', rating: 7.2, overview: 'A courier with one delivery left.', poster: null },
+          { title: 'Halyard', year: 2026, genre: 'Science Fiction', provider: 'Apple TV+', link: 'https://example.com/film/halyard', rating: 8.1, overview: 'A tether to geostationary orbit.', poster: 'javascript:alert(1)' },
+          { title: 'Cold Harbour', year: 2025, genre: 'Spy', provider: 'Max', link: 'https://example.com/film/cold', rating: null, overview: 'Two retired handlers meet for lunch.', poster: null },
+          { title: 'The Long Quiet', year: null, genre: null, provider: null, link: null, rating: 6.9, overview: null, poster: null },
+        ],
+        errors: null,
+      },
+      listening: null,
+      attribution: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
+    });
+
+    const tPanel = fakePanel();
+    withStorage(fakeStorage({ top5: daysAgoIso(5) }), () => {
+      const r = new El('div');
+      ent.render(r, top5Tile, { id: 'entertainment', actions: tPanel.actions });
+      tap(entBtns(r)[2]);
+    });
+    const tSheet = tPanel.last.body;
+    const tText = textOf(tSheet);
+    const tRows = tSheet.querySelectorAll('.ent-row');
+    const ranks = tSheet.querySelectorAll('.ent-rank').map((n) => n.textContent);
+    const tTitles = tSheet.querySelectorAll('.ent-row-title').map((n) => n.textContent);
+
+    check('the Top 5 face has its own body now, not the generic card', !/tmdb_id:/.test(tText));
+    check('five rows', tRows.length === 5, String(tRows.length));
+    check('numbered 1 to 5', ranks.join('') === '12345', ranks.join('|'));
+    check(
+      'in the order the engine ranked them',
+      tTitles.join('|') === 'The Kerosene Clerk|Nine Miles|Halyard|Cold Harbour|The Long Quiet',
+      tTitles.join('|')
+    );
+    check('the year rides faint beside the title', /\(2025\)/.test(tText) && /\(2024\)/.test(tText));
+    check('a film with no year simply has none', tSheet.querySelectorAll('.ent-year').length === 4, String(tSheet.querySelectorAll('.ent-year').length));
+    check('the genre is a quiet second line', tSheet.querySelectorAll('.ent-genre').map((n) => n.textContent).join('|') === 'Thriller|Spy|Science Fiction|Spy');
+
+    // The provider chip is the shared pill in the Watching face's tone.
+    const tPills = tSheet.querySelectorAll('.pill');
+    check('a provider chip per film that has one', tPills.length === 4, String(tPills.length));
+    check('and it is the shared pill in the quiet tone', tPills.every((x) => x.className.includes('pill-neutral')));
+    check('reading the service name verbatim', tPills.map((x) => x.textContent).join('|') === 'Paramount+|Netflix|Apple TV+|Max', tPills.map((x) => x.textContent).join('|'));
+
+    // Rating: one decimal behind a star, and nothing at all when it is null —
+    // never a confident 0.0 on a film the payload has no rating for.
+    const tRatings = tSheet.querySelectorAll('.ent-rating').map((n) => n.textContent);
+    check('a rating reads ★ 7.8', tRatings[0] === '★ 7.8', tRatings[0]);
+    check('a null rating shows no star at all', tRatings.length === 4, tRatings.join('|'));
+    check('and never renders as zero', !/★ 0/.test(tText));
+
+    // The poster, under rule 4's carve-out only.
+    const imgs = tSheet.querySelectorAll('IMG');
+    check('a film with a poster gets one thumb', imgs.length === 1, String(imgs.length));
+    check('lazily, with no referrer', imgs[0].getAttribute('loading') === 'lazy' && imgs[0].getAttribute('referrerpolicy') === 'no-referrer');
+    check('and an empty alt, because the title is right there', imgs[0].getAttribute('alt') === '');
+    check('at a fixed 40x60 box', imgs[0].getAttribute('width') === '40' && imgs[0].getAttribute('height') === '60');
+    check('a javascript: poster is never drawn', !imgs.some((i) => /javascript/i.test(i.getAttribute('src') || '')));
+    check('a row with no poster still has its numeral', tRows[1].querySelector('.ent-rank').textContent === '2' && !tRows[1].querySelector('IMG'));
+
+    // The overview, clamped in CSS rather than cut in JS — the text stays whole
+    // for Explain and for a copy-paste.
+    const overs = tSheet.querySelectorAll('.ent-overview');
+    check('an overview per film that has one', overs.length === 4, String(overs.length));
+    check('carrying the two-line clamp class', overs[0].className.includes('ent-overview'));
+    const CSS_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+    check('and the stylesheet actually clamps it', /\.ent-overview\s*\{[^}]*-webkit-line-clamp:\s*2/m.test(CSS_SRC));
+
+    // RULE 7 again, on the footer. '2026-09-14' is a Monday; parsed as an
+    // instant it is Sunday the 13th in Central.
+    check('the week is rendered from its parts', /Week of Mon Sep 14/.test(tText), tText.slice(-200));
+    check('and never slips to the day before', !/Sep 13/.test(tText));
+    check('TMDB is credited on the same line', /Week of Mon Sep 14 · Data from TMDB/.test(tText));
+    check('and the vault attribution sits under it', /not endorsed or certified by TMDB/.test(tText));
+
+    // The whole row is the link, same mechanics as Watching.
+    const tLinks = tSheet.querySelectorAll('A');
+    check('each film with a link is a whole-row anchor', tLinks.length === 4, String(tLinks.length));
+    check('opening in a new tab', tLinks.every((a) => a.getAttribute('target') === '_blank'));
+    check('without handing the page a handle back', tLinks.every((a) => /noopener/.test(a.getAttribute('rel') || '')));
+    check('a film with no link still renders as a row', /The Long Quiet/.test(tText) && tRows.length === 5);
+
+    // E8: no per-item arrival stamp, so the whole face rides its updated_at —
+    // and `week_of` is emphatically not an arrival.
+    check('a stale face marks nothing new', countOf(tSheet, 'ent-new-mark') === 0, String(countOf(tSheet, 'ent-new-mark')));
+    const freshTop = JSON.parse(JSON.stringify(top5Tile.data));
+    freshTop.top5.updated_at = daysAgoIso(1);
+    const tFresh = fakePanel();
+    const freshBoard = withStorage(fakeStorage({ top5: daysAgoIso(5) }), () => {
+      const r = new El('div');
+      ent.render(r, entTile(freshTop), { id: 'entertainment', actions: tFresh.actions });
+      tap(entBtns(r)[2]);
+      return r;
+    });
+    check('a face refreshed since the last open marks all five', countOf(tFresh.last.body, 'ent-new-mark') === 5, String(countOf(tFresh.last.body, 'ent-new-mark')));
+    check('and the button counts the same five', chipOf(entBtns(freshBoard)[2])?.textContent === '5 new', chipOf(entBtns(freshBoard)[2])?.textContent);
+
+    // A face with no picks at all: a plain message, and the credit still stands.
+    const tEmpty = fakePanel();
+    withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, entTile({ watching: null, podcasts: null, listening: null, top5: { updated_at: daysAgoIso(1), week_of: '2026-09-14', items: [] } }), { id: 'entertainment', actions: tEmpty.actions });
+      tap(entBtns(r)[2]);
+    });
+    check('an empty Top 5 opens to a plain message', /No picks this week/.test(textOf(tEmpty.last.body)));
+    check('and still credits TMDB', /Data from TMDB/.test(textOf(tEmpty.last.body)));
+    check('and draws no rows', countOf(tEmpty.last.body, 'ent-row') === 0);
+
+    // Unchanged: a top5 the engine has not published is still the greyed
+    // "soon" button, not an empty sheet.
+    const stillSoon = withStorage(fakeStorage(null), () => {
+      const r = new El('div');
+      ent.render(r, shipped, { id: 'entertainment', actions: {} });
+      return r;
+    });
+    check('a null top5 face is still greyed, wearing "soon"', entBtns(stillSoon)[2].className.includes('ent-btn-soon') && entBtns(stillSoon)[2].querySelector('.ent-soon').textContent === 'soon');
+    check('and still cannot be tapped', entBtns(stillSoon)[2].getAttribute('disabled') === 'disabled');
+
     // -- empty and grown ------------------------------------------------------
     console.log('\nentertainment — empty faces and schema growth');
     const emptyPanel = fakePanel();
