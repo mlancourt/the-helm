@@ -1256,7 +1256,7 @@ async function main() {
   // -- wss_tape: the Crew Tape ----------------------------------------------
   //
   // The tile is a glance and a log at once: the chips have to agree with the
-  // rows, the rows have to stay in the engine's order, and the eight-row
+  // rows, the rows have to stay in the engine's order, and the five-row
   // budget has to hand everything it cut to the button. The accents are the
   // other half of the glance — one colour per actor, the same on the chip and
   // on every row that actor touched — so those are asserted as a relationship
@@ -1312,11 +1312,11 @@ async function main() {
     check('each chip carries that actor’s count', tapeChips(board).map((c) => c.querySelector('.tape-chip-n').textContent).join() === '5,4,3', tapeChips(board).map((c) => c.textContent).join());
     check('and reads as "name n"', tapeChips(board)[0].textContent === 'Rae 5', tapeChips(board)[0].textContent);
 
-    // -- the eight-row budget ------------------------------------------------
-    check('eight rows reach the board', tapeRows(board).length === 8, String(tapeRows(board).length));
-    check('newest first, untouched', tapeRows(board).map((r) => r.querySelector('.tape-time').textContent).join() === TIMES.slice(0, 8).join(), tapeRows(board).map((r) => r.querySelector('.tape-time').textContent).join());
+    // -- the five-row budget -------------------------------------------------
+    check('five rows reach the board', tapeRows(board).length === 5, String(tapeRows(board).length));
+    check('newest first, untouched', tapeRows(board).map((r) => r.querySelector('.tape-time').textContent).join() === TIMES.slice(0, 5).join(), tapeRows(board).map((r) => r.querySelector('.tape-time').textContent).join());
     check('the rest is behind one button', !!tapeMore(board));
-    check('which counts every row it is hiding', tapeMore(board).textContent === '+4 more', tapeMore(board).textContent);
+    check('which counts every row it is hiding', tapeMore(board).textContent === '+7 more', tapeMore(board).textContent);
 
     // -- a row reads time · actor · id who · summary -------------------------
     const r0 = tapeRows(board)[0];
@@ -1348,16 +1348,16 @@ async function main() {
     check('the sheet holds the whole day, not just the remainder', tapeRows(sheet).length === 12, String(tapeRows(sheet).length));
     check('in the same order', tapeRows(sheet).map((r) => r.querySelector('.tape-time').textContent).join() === TIMES.join());
     check('with the same chips at the top of it', tapeChips(sheet).map((c) => c.textContent).join('|') === 'Rae 5|Kit 4|Odis 3', tapeChips(sheet).map((c) => c.textContent).join('|'));
-    check('the board is unchanged by opening it', tapeRows(board).length === 8);
+    check('the board is unchanged by opening it', tapeRows(board).length === 5);
 
     // A day that fits needs no way into a sheet that would hold the same rows.
     const short = new El('div');
     tape.render(short, tapeTile({ ...day, count: 3, items: day.items.slice(0, 3) }), { id: 'wss_tape', actions: {} });
     check('a day that fits offers no button', !tapeMore(short) && tapeRows(short).length === 3);
-    // Exactly eight is still a day that fits.
-    const eight = new El('div');
-    tape.render(eight, tapeTile({ ...day, count: 8, items: day.items.slice(0, 8) }), { id: 'wss_tape', actions: {} });
-    check('and neither does a day of exactly eight', !tapeMore(eight) && tapeRows(eight).length === 8);
+    // Exactly five is still a day that fits.
+    const five = new El('div');
+    tape.render(five, tapeTile({ ...day, count: 5, items: day.items.slice(0, 5) }), { id: 'wss_tape', actions: {} });
+    check('and neither does a day of exactly five', !tapeMore(five) && tapeRows(five).length === 5);
 
     // -- what a row does with a missing part ---------------------------------
     console.log('\nwss_tape — ragged rows');
@@ -1411,7 +1411,7 @@ async function main() {
     // A count the parser got wrong must not out-vote the items themselves.
     const counted = new El('div');
     tape.render(counted, tapeTile({ ...day, count: 0 }), { id: 'wss_tape', actions: {} });
-    check('a wrong count never hides rows the payload does carry', tapeRows(counted).length === 8 && !/quiet so far/.test(textOf(counted)));
+    check('a wrong count never hides rows the payload does carry', tapeRows(counted).length === 5 && !/quiet so far/.test(textOf(counted)));
     const uncounted = new El('div');
     tape.render(uncounted, tapeTile({ count: 12, items: [], yesterday: day.yesterday }), { id: 'wss_tape', actions: {} });
     check('and a count with no items still reads as quiet', /quiet so far/.test(textOf(uncounted)));
@@ -1420,7 +1420,7 @@ async function main() {
     console.log('\nwss_tape — stale vs error');
     const stale = new El('div');
     tape.render(stale, tapeTile(day, 'stale', 'the 16:38 run half-finished'), { id: 'wss_tape', actions: {} });
-    check('a stale tape still renders its rows', tapeRows(stale).length === 8);
+    check('a stale tape still renders its rows', tapeRows(stale).length === 5);
     check('with a small warning mark beside them', countOf(stale, 'tape-warn') === 1);
     check('whose tooltip is the reason', stale.querySelector('.tape-warn').getAttribute('title') === 'the 16:38 run half-finished');
     const stale2 = new El('div');

@@ -44,13 +44,17 @@
 import { el, empty, genericCard } from '../lib/dom.js';
 
 /**
- * How many rows reach the board before the rest roll into "+N more" (T7).
+ * How many rows reach the board before the rest roll into "+N more" (T7, as
+ * amended).
  *
- * Eight is the spec's number and it is also the tile's height budget: these
- * rows are one line each on a phone (two when a summary is long), which keeps
- * the card in the same band as the menu tiles beside it.
+ * This is the tile's height budget, and eight rows overspent it: at 375px a
+ * row almost always takes two lines — `time · actor · id who` does not leave
+ * room for the summary beside it — so eight events made this the tallest card
+ * on the board by some distance. Five keeps the card in the same band as the
+ * menu tiles beside it. Nothing is lost: everything past the fifth row is in
+ * the sheet, and the button says how much.
  */
-const INLINE_MAX_ROWS = 8;
+const INLINE_MAX_ROWS = 5;
 
 /**
  * The engine promises a summary of 140 characters or less. This is the guard
