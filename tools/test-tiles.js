@@ -1042,6 +1042,216 @@ async function main() {
     check('a titleless item is labelled, not blank', /\(untitled\)/.test(root4.textContent));
   }
 
+
+  // -- local_events: the Lake Country week ----------------------------------
+  //
+  // Everything this module decides is a boundary: which day groups reach the
+  // board, what the "+N more" button is accountable for, which rows of a
+  // multi-day fest wear "cont.", and what a stale feed looks like next to a
+  // dead one. So the cases below are built around today's Central date rather
+  // than a fixed one — the tile is wrong the moment "today" stops meaning
+  // today, and a fixture frozen to 2026 would never catch it.
+  console.log('\nlocal_events — the Lake Country week');
+  const lc = mods.get('local_events');
+  const lcTap = (btn) => btn.listeners.click[0]({ stopPropagation() {} });
+  const lcRows = (node) => node.querySelectorAll('.lc-row');
+  const lcHeads = (node) => node.querySelectorAll('.lc-day-head').map((h) => h.textContent);
+  const lcMore = (node) => node.querySelector('.lc-more');
+
+  if (lc) {
+    const day = (date, label, events) => ({ date, label, events });
+    const ev = (title, extra = {}) => ({
+      time: '06:00 PM - 09:00 PM',
+      title,
+      venue: 'The Green',
+      address: 'somewhere',
+      link: `https://example.com/${encodeURIComponent(title)}`,
+      source: 'Visit Nowhere',
+      blurb: `blurb for ${title}`,
+      multi_day: false,
+      ...extra,
+    });
+    const lcTile = (data, status = 'ok', error = null) => ({ band: 'DAILY', status, error, data });
+
+    // A full week: two today, one tomorrow, and four spread across the rest.
+    const week = {
+      title: 'Lake Country',
+      window: { from: ymd(0), to: ymd(7) },
+      count: 7,
+      days: [
+        day(ymd(0), 'TODAY-LABEL', [ev('Beach Bands'), ev('Beer Garden')]),
+        day(ymd(1), 'TOMORROW-LABEL', [ev('Fallfest', { multi_day: true })]),
+        day(ymd(2), 'DAY-TWO', [ev('Fallfest', { multi_day: true }), ev('Farmers Market', { time: '' })]),
+        day(ymd(3), 'DAY-THREE', [ev('Fallfest', { multi_day: true })]),
+        day(ymd(6), 'DAY-SIX', [ev('Fireworks')]),
+      ],
+      sources: ['Visit Nowhere'],
+      errors: [],
+    };
+
+    const panel = fakePanel();
+    const board = new El('div');
+    lc.render(board, lcTile(week), { id: 'local_events', actions: panel.actions });
+
+    // -- what reaches the board ---------------------------------------------
+    check('only today and tomorrow are grouped onto the board', lcHeads(board).join('|') === 'TODAY-LABEL|TOMORROW-LABEL', lcHeads(board).join('|'));
+    check('the day heading is the engine’s label, printed verbatim', lcHeads(board)[0] === 'TODAY-LABEL');
+    check('and their rows come with them', lcRows(board).length === 3, String(lcRows(board).length));
+    check('a row reads time · title · venue', /6:00 PM.*·.*Beach Bands.*·.*The Green/.test(lcRows(board)[0].textContent), lcRows(board)[0].textContent);
+    check('nothing from later in the week is on the board', !/Fireworks|Farmers Market/.test(textOf(board)));
+    check('no blurb on the board', !/blurb for/.test(textOf(board)));
+    check('no source line on the board', countOf(board, 'lc-source') === 0);
+
+    // -- the +N more button --------------------------------------------------
+    check('the rest of the week is behind one button', !!lcMore(board));
+    check('and the button counts every row it is hiding', lcMore(board).textContent === '+4 more', lcMore(board).textContent);
+
+    // -- links ---------------------------------------------------------------
+    const a0 = lcRows(board)[0];
+    check('the whole row is an anchor', a0.tagName === 'A');
+    check('pointed at the event’s own link', a0.getAttribute('href') === 'https://example.com/Beach%20Bands', a0.getAttribute('href'));
+    check('opening in a new tab', a0.getAttribute('target') === '_blank');
+    check('without handing over a window handle', /noopener/.test(a0.getAttribute('rel')), a0.getAttribute('rel'));
+
+    // -- the sheet -----------------------------------------------------------
+    lcTap(lcMore(board));
+    check('the button opens the shared sheet', panel.calls.length === 1);
+    check('titled Lake Country', panel.last.title === 'Lake Country');
+    const sheet = panel.last.body;
+    check('the sheet holds the whole week, not just the rest', lcHeads(sheet).join('|') === 'TODAY-LABEL|TOMORROW-LABEL|DAY-TWO|DAY-THREE|DAY-SIX', lcHeads(sheet).join('|'));
+    check('every event in the window is in it', lcRows(sheet).length === 7, String(lcRows(sheet).length));
+    check('the sheet adds the blurb under each row', countOf(sheet, 'lc-blurb') === 7);
+    check('and the source in small text', countOf(sheet, 'lc-source') === 7);
+    check('the rows keep the same format', /6:00 PM.*·.*Beach Bands.*·.*The Green/.test(lcRows(sheet)[0].textContent));
+    check('the board is unchanged by opening it', lcRows(board).length === 3);
+
+    // -- multi_day: "cont." on every day after the first ---------------------
+    const contOf = (node) => lcRows(node).map((r) => (/cont\./.test(r.textContent) ? '1' : '0')).join('');
+    check('the fest’s first day carries no cont. mark', !/cont\./.test(lcRows(board)[2].textContent), lcRows(board)[2].textContent);
+    // rows in week order: bands, garden, fest d1, fest d2, market, fest d3, fireworks
+    check('days two and three of the fest do', contOf(sheet) === '0001010', contOf(sheet));
+    check('and nothing else on the week does', contOf(sheet).split('1').length - 1 === 2, contOf(sheet));
+    // A single-day event is never marked, however many rows share a day.
+    const single = new El('div');
+    lc.render(single, lcTile({ days: [day(ymd(0), 'D', [ev('Twice'), ev('Twice')])] }), { id: 'local_events', actions: {} });
+    check('a repeated title without multi_day is never marked cont.', !/cont\./.test(textOf(single)));
+
+    // -- grouping: a day with nothing on it is not a heading -----------------
+    const holes = new El('div');
+    lc.render(holes, lcTile({ days: [day(ymd(0), 'REAL', [ev('Only')]), day(ymd(1), 'HOLLOW', []), day(ymd(2), 'JUNK', [{}, null])] }), { id: 'local_events', actions: {} });
+    check('an empty day group renders no heading', lcHeads(holes).join('|') === 'REAL', lcHeads(holes).join('|'));
+    check('a titleless event is dropped rather than rendered blank', lcRows(holes).length === 1);
+
+    // -- today and tomorrow are picked by DATE, not by position --------------
+    //
+    // The engine only emits days that have something on them, so days[0] is
+    // often the weekend. A quiet Tuesday must read as a quiet Tuesday.
+    const later = new El('div');
+    const laterPanel = fakePanel();
+    lc.render(later, lcTile({ days: [day(ymd(2), 'SATURDAY', [ev('Fest'), ev('Market')])] }), { id: 'local_events', actions: laterPanel.actions });
+    check('a week that starts later leaves the board’s day groups empty', lcHeads(later).length === 0);
+    check('and says which kind of empty it is', /nothing today or tomorrow/.test(textOf(later)));
+    check('but never says the week is empty', !/nothing on the calendars/.test(textOf(later)));
+    check('the whole week is then behind the button', lcMore(later).textContent === '+2 more', lcMore(later).textContent);
+    lcTap(lcMore(later));
+    check('and the sheet still holds it', lcRows(laterPanel.last.body).length === 2);
+
+    // -- the board's height budget ------------------------------------------
+    const flood = new El('div');
+    lc.render(flood, lcTile({ days: [day(ymd(0), 'BUSY', Array.from({ length: 9 }, (_, i) => ev(`Thing ${i}`)))] }), { id: 'local_events', actions: {} });
+    check('one enormous day is trimmed to the tile’s height', lcRows(flood).length === 6, String(lcRows(flood).length));
+    check('and the trimmed rows are counted by the button, not lost', lcMore(flood).textContent === '+3 more', lcMore(flood).textContent);
+
+    // -- an empty window -----------------------------------------------------
+    for (const [label, data] of [['no days key', {}], ['an empty days list', { days: [] }], ['days with no events', { days: [day(ymd(0), 'D', [])] }]]) {
+      const none = new El('div');
+      lc.render(none, lcTile(data), { id: 'local_events', actions: {} });
+      check(`${label} reads as an empty window`, /nothing on the calendars this week/.test(textOf(none)), textOf(none));
+      check(`${label} offers no button into an empty sheet`, !lcMore(none));
+    }
+
+    // -- stale vs error ------------------------------------------------------
+    //
+    // Two different failures and they must not look alike: `stale` means one
+    // feed of three fell over and the rows Matt does have are real; `error`
+    // means nothing arrived worth laying out.
+    console.log('\nlocal_events — stale vs error');
+    const stale = new El('div');
+    lc.render(stale, lcTile(week, 'stale', 'delafield feed timed out'), { id: 'local_events', actions: {} });
+    check('a stale tile still renders its rows', lcRows(stale).length === 3);
+    check('and still offers the rest of the week', !!lcMore(stale));
+    check('with a small warning mark beside them', countOf(stale, 'lc-warn') === 1);
+    check('whose tooltip is the error', stale.querySelector('.lc-warn').getAttribute('title') === 'delafield feed timed out');
+    check('and which is labelled for screen readers', /delafield feed timed out/.test(stale.querySelector('.lc-warn').getAttribute('aria-label')));
+
+    // The Worker had no word for it, but the payload did.
+    const stale2 = new El('div');
+    lc.render(stale2, lcTile({ ...week, errors: ['visit-ocon 503', 'hartland parse'] }, 'stale', null), { id: 'local_events', actions: {} });
+    check('a stale tile with no tile.error falls back to the payload’s errors', stale2.querySelector('.lc-warn').getAttribute('title') === 'visit-ocon 503 · hartland parse', stale2.querySelector('.lc-warn').getAttribute('title'));
+    const stale3 = new El('div');
+    lc.render(stale3, lcTile({ ...week, errors: [] }, 'stale', null), { id: 'local_events', actions: {} });
+    check('and with neither, the mark still explains itself', !!stale3.querySelector('.lc-warn').getAttribute('title'));
+    // Nothing on at all AND a feed down: both facts survive.
+    const staleEmpty = new El('div');
+    lc.render(staleEmpty, lcTile({ days: [] }, 'stale', 'all three timed out'), { id: 'local_events', actions: {} });
+    check('an empty stale window says both things', /nothing on the calendars/.test(textOf(staleEmpty)) && countOf(staleEmpty, 'lc-warn') === 1);
+
+    const bad = new El('div');
+    lc.render(bad, lcTile(week, 'error', 'every feed refused'), { id: 'local_events', actions: {} });
+    check('an error tile lays out no rows of its own', lcRows(bad).length === 0);
+    check('no day headings', lcHeads(bad).length === 0);
+    check('no way into a sheet that would be a lie', !lcMore(bad));
+    check('it falls back to the rule-9 generic card', countOf(bad, 'generic') === 1);
+    check('which surfaces what the payload did carry', /window/.test(textOf(bad)) && /count/.test(textOf(bad)));
+    const badEmpty = new El('div');
+    lc.render(badEmpty, lcTile({}, 'error', 'every feed refused'), { id: 'local_events', actions: {} });
+    check('an error tile with no data at all still renders something', /No data/.test(textOf(badEmpty)));
+
+    // -- rule 10 and the ragged rows ----------------------------------------
+    console.log('\nlocal_events — hostile rows');
+    const ragged = new El('div');
+    lc.render(ragged, lcTile({ days: [day(ymd(0), 'D', [
+      ev('Junk link', { link: 'javascript:alert(1)' }),
+      ev('No link', { link: null }),
+      ev('No time', { time: '' }),
+      ev('No venue', { venue: '' }),
+      { title: 'Bare' },
+    ])] }), { id: 'local_events', actions: {} });
+    check('a javascript: link is never an anchor', !ragged.querySelectorAll('A').some((a) => /javascript/i.test(a.getAttribute('href') || '')));
+    check('but the row survives as text', /Junk link/.test(textOf(ragged)));
+    check('a row with no link is a div, not a dead anchor', lcRows(ragged)[1].tagName === 'DIV');
+    check('a timeless row prints no leading separator', !/^\s*·/.test(lcRows(ragged)[2].textContent), lcRows(ragged)[2].textContent);
+    check('a venueless row prints no trailing separator', !/·\s*$/.test(lcRows(ragged)[3].textContent), lcRows(ragged)[3].textContent);
+    check('a row with nothing but a title still renders', /Bare/.test(lcRows(ragged)[4].textContent) && !/·/.test(lcRows(ragged)[4].textContent));
+
+    // -- rule 7: the times are the engine's strings, verbatim ---------------
+    const verbatim = new El('div');
+    lc.render(verbatim, lcTile({ days: [day(ymd(0), 'Sat 9/19', [ev('X', { time: '08:00 AM - 12:00 PM' })])] }), { id: 'local_events', actions: {} });
+    check('a time range is printed exactly as it arrived', /08:00 AM - 12:00 PM/.test(textOf(verbatim)), textOf(verbatim));
+    check('and the label with it', /Sat 9\/19/.test(textOf(verbatim)));
+
+    // -- no sheet to open ----------------------------------------------------
+    const inertLc = new El('div');
+    let lcThrew = null;
+    try {
+      lc.render(inertLc, lcTile(week), { id: 'local_events', actions: {} });
+      lcTap(lcMore(inertLc));
+    } catch (e) { lcThrew = e; }
+    check('a tap with no panel action never reaches the page', !lcThrew, lcThrew && lcThrew.message);
+
+    // -- L6: nothing is remembered ------------------------------------------
+    // A calendar is not a backlog. The module must not touch storage at all —
+    // which is also why it cannot throw in private mode.
+    // Comments stripped first: the header SAYS "no localStorage", and a header
+    // saying so is the opposite of a violation.
+    const LC_SRC = fs
+      .readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'local_events.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    check('the module never touches localStorage', !/localStorage/.test(LC_SRC));
+    check('and ships no "new since opened" badge', !/new-mark|badge/.test(LC_SRC));
+  }
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));

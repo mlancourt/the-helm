@@ -18,6 +18,7 @@ export const REGISTRY = {
   entertainment: { band: 'DAILY', position: 35, module: './tiles/entertainment.js', title: 'Entertainment' },
   radar: { band: 'DAILY', position: 40, module: './tiles/radar.js', title: 'Radar' },
   calendar: { band: 'DAILY', position: 50, module: './tiles/calendar.js', title: 'Calendar' },
+  local_events: { band: 'DAILY', position: 52, module: './tiles/local_events.js', title: 'Lake Country' },
   reminders: { band: 'DAILY', position: 55, module: './tiles/reminders.js', title: 'Reminders' },
   dinner: { band: 'DAILY', position: 60, module: './tiles/dinner.js', title: 'Dinner' },
   purser_due: { band: 'DAILY', position: 70, module: './tiles/purser_due.js', title: 'Purser — Due' },

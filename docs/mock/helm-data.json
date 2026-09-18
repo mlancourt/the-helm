@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-17T21:33:35.502Z",
-  "run_id": "run-mock-mu61qz66",
+  "generated_at": "2026-09-18T00:04:20.738Z",
+  "run_id": "run-mock-mu674uiq",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T21:33:35.502Z",
+      "updated_at": "2026-09-18T00:04:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -94,7 +94,7 @@
     },
     "today_games": {
       "band": "LIVE",
-      "updated_at": "2026-09-17T21:33:35.502Z",
+      "updated_at": "2026-09-18T00:04:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -154,7 +154,7 @@
     },
     "radar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T21:33:35.502Z",
+      "updated_at": "2026-09-18T00:04:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -170,7 +170,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T21:33:35.502Z",
+      "updated_at": "2026-09-18T00:04:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -218,9 +218,149 @@
         ]
       }
     },
+    "local_events": {
+      "band": "DAILY",
+      "updated_at": "2026-09-18T00:04:20.738Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "title": "Lake Country",
+        "window": {
+          "from": "2026-09-17",
+          "to": "2026-09-24"
+        },
+        "count": 8,
+        "days": [
+          {
+            "date": "2026-09-17",
+            "label": "Thu 9/17",
+            "events": [
+              {
+                "date": "2026-09-17",
+                "time": "05:30 PM - 08:30 PM",
+                "title": "Bands on the Mock Beach — The Invented Tides",
+                "venue": "Mock Lakefront Bandshell",
+                "address": "100 Made Up Ave, Mockville, WI 53000",
+                "link": "https://example.com/mock/bands-on-the-beach",
+                "source": "Visit Mockville",
+                "blurb": "Invented copy. A made-up band plays a made-up bandshell; bring a chair that does not exist.",
+                "multi_day": false
+              },
+              {
+                "date": "2026-09-17",
+                "time": "06:00 PM - 09:00 PM",
+                "title": "Village Green Beer Garden",
+                "venue": "Mock Village Green",
+                "address": "7 Fictional St, Mockville, WI 53000",
+                "link": "https://example.com/mock/beer-garden",
+                "source": "City of Mockville",
+                "blurb": "Invented copy. Rotating taps from breweries that do not exist, weather that also does not exist.",
+                "multi_day": false
+              }
+            ]
+          },
+          {
+            "date": "2026-09-18",
+            "label": "Fri 9/18",
+            "events": [
+              {
+                "date": "2026-09-18",
+                "time": "10:00 AM - 10:00 PM",
+                "title": "Mock Harvest Fallfest",
+                "venue": "Invented County Fairgrounds",
+                "address": "W000 County Road Nowhere, Mockville, WI 53000",
+                "link": "https://example.com/mock/fallfest",
+                "source": "Visit Mockville",
+                "blurb": "Invented copy. Three days of a festival nobody is holding, in a county nobody lives in.",
+                "multi_day": true
+              }
+            ]
+          },
+          {
+            "date": "2026-09-19",
+            "label": "Sat 9/19",
+            "events": [
+              {
+                "date": "2026-09-19",
+                "time": "",
+                "title": "Summer Farmers Market",
+                "venue": "155 Fictional Ave",
+                "address": "155 Fictional Ave, Mockville, WI 53000",
+                "link": "https://example.com/mock/farmers-market",
+                "source": "City of Mockford",
+                "blurb": "Invented copy. Produce, kettle corn, and a man selling birdhouses who is not real.",
+                "multi_day": false
+              },
+              {
+                "date": "2026-09-19",
+                "time": "10:00 AM - 10:00 PM",
+                "title": "Mock Harvest Fallfest",
+                "venue": "Invented County Fairgrounds",
+                "address": "W000 County Road Nowhere, Mockville, WI 53000",
+                "link": "https://example.com/mock/fallfest",
+                "source": "Visit Mockville",
+                "blurb": "Invented copy. Day two: the carnival rides that do not exist open at noon.",
+                "multi_day": true
+              }
+            ]
+          },
+          {
+            "date": "2026-09-20",
+            "label": "Sun 9/20",
+            "events": [
+              {
+                "date": "2026-09-20",
+                "time": "11:00 AM - 06:00 PM",
+                "title": "Mock Harvest Fallfest",
+                "venue": "Invented County Fairgrounds",
+                "address": "W000 County Road Nowhere, Mockville, WI 53000",
+                "link": "https://example.com/mock/fallfest",
+                "source": "Visit Mockville",
+                "blurb": "Invented copy. Day three, and the parade of imaginary tractors closes it out.",
+                "multi_day": true
+              },
+              {
+                "date": "2026-09-20",
+                "time": "01:00 PM - 03:00 PM",
+                "title": "Rally for Made-Up Vets",
+                "venue": "Mock Memorial Park",
+                "address": "1 Nonexistent Pkwy, Mockford, WI 53000",
+                "link": "https://example.com/mock/rally",
+                "source": "City of Mockford",
+                "blurb": "Invented copy. A procession that is not happening, for a cause that is.",
+                "multi_day": false
+              }
+            ]
+          },
+          {
+            "date": "2026-09-23",
+            "label": "Wed 9/23",
+            "events": [
+              {
+                "date": "2026-09-23",
+                "time": "07:00 PM - 09:00 PM",
+                "title": "Fireworks Over the Fictional Lake",
+                "venue": "Mock Lakefront Bandshell",
+                "address": "100 Made Up Ave, Mockville, WI 53000",
+                "link": "https://example.com/mock/fireworks",
+                "source": "Visit Mockville",
+                "blurb": "Invented copy. Best watched from a pier this generator also made up.",
+                "multi_day": false
+              }
+            ]
+          }
+        ],
+        "sources": [
+          "Visit Mockville",
+          "City of Mockville",
+          "City of Mockford"
+        ],
+        "errors": []
+      }
+    },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T21:33:35.502Z",
+      "updated_at": "2026-09-18T00:04:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -304,7 +444,7 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T21:33:35.502Z",
+      "updated_at": "2026-09-18T00:04:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -316,7 +456,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T21:33:35.502Z",
+      "updated_at": "2026-09-18T00:04:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -350,11 +490,11 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-17T21:10:35.502Z",
+      "updated_at": "2026-09-17T23:41:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-17T21:10:35.502Z",
+        "as_of": "2026-09-17T23:41:20.738Z",
         "count": 4,
         "refresh_note": null,
         "source": "mock generator",
@@ -398,12 +538,12 @@
     },
     "entertainment": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T21:33:35.502Z",
+      "updated_at": "2026-09-18T00:04:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
         "watching": {
-          "updated_at": "2026-09-17T19:58:35.502Z",
+          "updated_at": "2026-09-17T22:29:20.738Z",
           "items": [
             {
               "title": "The Quiet Ledger",
@@ -480,13 +620,13 @@
           "errors": null
         },
         "podcasts": {
-          "updated_at": "2026-09-17T20:53:35.502Z",
+          "updated_at": "2026-09-17T23:24:20.738Z",
           "items": [
             {
               "show": "Mock Fork",
               "title": "The chatbot that filed its own taxes",
               "published": "2026-09-17",
-              "published_at": "2026-09-17T18:33:35.502Z",
+              "published_at": "2026-09-17T21:04:20.738Z",
               "duration_min": 58,
               "url": "https://example.com/mock/pod/fork-1",
               "artwork": null
@@ -495,7 +635,7 @@
               "show": "The Long Docket",
               "title": "Case 114: the disappearing deposition",
               "published": "2026-09-16",
-              "published_at": "2026-09-16T19:33:35.502Z",
+              "published_at": "2026-09-16T22:04:20.738Z",
               "duration_min": 71,
               "url": "https://example.com/mock/pod/docket-1",
               "artwork": null
@@ -504,7 +644,7 @@
               "show": "Ledger & Lamp",
               "title": "A very small bank in a very large hurry",
               "published": "2026-09-15",
-              "published_at": "2026-09-15T18:33:35.502Z",
+              "published_at": "2026-09-15T21:04:20.738Z",
               "duration_min": 44,
               "url": "https://example.com/mock/pod/ledger-1",
               "artwork": null
@@ -513,7 +653,7 @@
               "show": "Mock Fork",
               "title": "Everyone is building the same agent",
               "published": "2026-09-14",
-              "published_at": "2026-09-14T20:03:35.502Z",
+              "published_at": "2026-09-14T22:34:20.738Z",
               "duration_min": 63,
               "url": "https://example.com/mock/pod/fork-2",
               "artwork": null
@@ -522,7 +662,7 @@
               "show": "Ledger & Lamp",
               "title": "The audit nobody asked for",
               "published": "2026-09-08",
-              "published_at": "2026-09-08T21:33:35.502Z",
+              "published_at": "2026-09-09T00:04:20.738Z",
               "duration_min": null,
               "url": "https://example.com/mock/pod/ledger-2",
               "artwork": null
@@ -531,7 +671,7 @@
               "show": "Cold Open Radio",
               "title": "Twelve minutes of dead air, explained",
               "published": "2026-09-05",
-              "published_at": "2026-09-05T21:33:35.502Z",
+              "published_at": "2026-09-06T00:04:20.738Z",
               "duration_min": 12,
               "url": "https://example.com/mock/pod/cold-1",
               "artwork": null
@@ -552,18 +692,18 @@
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-17T21:33:35.502Z",
+      "updated_at": "2026-09-18T00:04:20.738Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-16T15:33:35.502Z",
+        "drift_audit_updated": "2026-09-16T18:04:20.738Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-17T21:25:35.502Z",
+        "worker_published_at": "2026-09-17T23:56:20.738Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -585,7 +725,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-17T20:03:35.502Z",
+      "updated_at": "2026-09-17T22:34:20.738Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

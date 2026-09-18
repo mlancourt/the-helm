@@ -127,6 +127,7 @@ CORS: allow `https://mlancourt.github.io` and `http://localhost:*` (dev). Handle
 | `today_games` | LIVE | `{title, date_ct, leagues:[{id, slug, label, emoji}], services:[…], watch_map:{<broadcast>: <service>}, local_teams:{<slug>: [abbr]}}` | menu tile: one button per league with a `{n} games` chip and a live-dot; tap → sheet with today's slate, chronological by kick, showing kick time (Central) / live score + clock / Final, plus watch chips — `✓ <service>` when `watch_map` has the broadcast name, the raw name when it does not, `regional — not yours` for a `Home`/`Away` feed whose team is not in `local_teams`. Page fetches ESPN `scoreboard?dates=<date_ct>` per league, shared with `bets_live`. Replaced `mke_board` (retired 2026-09-17). |
 | `radar` | DAILY | `{date, lines:[…], source}` | plain list, verbatim, date in header |
 | `calendar` | DAILY | `{days:[{date, events:[{time_ct, title, cal}]}]}` | today + tomorrow, two-tone by `cal` (family / wss) |
+| `local_events` | DAILY | `{title, window:{from,to}, count, days:[{date, label, events:[{date, time, title, venue, address, link, source, blurb, multi_day}]}], sources:[…], errors:[…]}` | "Lake Country" (vault spec `06-AI-Stack/The-Helm/Local-Tile-Spec.md`, L1–L6). Day groups: header = `label`, rows = `time · title · venue`, whole row an external link. Today + tomorrow **by date** inline, capped at the menu tiles' height; everything else behind "+N more" → the shared sheet with the full week, plus `blurb` and `source`. `multi_day` after the first appearance wears a "cont." mark. `stale` → rows + a ⚠︎ whose tooltip is `error`; `error` → the rule-9 generic card. No localStorage, no badges. |
 | `dinner` | DAILY | `{date, meal, notes, verdict}` | meal + two buttons **HIT / MISS** → `meal_verdict` event; badge pending |
 | `purser_due` | DAILY | `{items:[{card, due, amount, amount_display, autopay, reminder_armed}]}` | rows, days-to-due chip, amount only if `amount_display` |
 | `newsstand` | HOURLY | `{cards:[{title, source, url, lens}], as_of}` | compact card list, external links open new tab |
@@ -183,5 +184,7 @@ Tests (Worker, `wrangler dev` + node): token 401s; event shape rejection; per-ev
 ## Change log
 
 **v1.0 (2026-09-17):** initial brief — schema 1, nine v1 tiles, four event types, ESPN LIVE band as proven by the spike, `/ask` v1 with cap.
+
+**v1.3 (2026-09-17):** `local_events` ("Lake Country") added — vault spec `Local-Tile-Spec.md`, rulings L1–L6. First tile to read its own `status`, so `renderGeneric` moved out of `app.js` into `lib/dom.js` as `genericCard()` and both paths now share one definition of what rule 9's card looks like.
 
 **v1.1 (2026-09-17):** `mke_board` retired and replaced by `today_games` (vault spec `06-AI-Stack/The-Helm/Todays-Games-Tile-Spec.md`). One ESPN scoreboard call per league per tick now serves both LIVE tiles — `live/band.js` builds a single deduped `(league, date)` plan; a tile module still never fetches. `live/espn.js` gained `broadcasts` (the `broadcasts[]`/`geoBroadcasts[]` merge), `venue`, `short` team names, and `compactCtDate()` — `date_ct` → `dates=` by string ops only.

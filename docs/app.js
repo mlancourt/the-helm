@@ -16,7 +16,7 @@ import { apiBase, STALE_AFTER_MS, DATA_REFRESH_MS, APP_VERSION_LABEL } from './c
 import { REGISTRY, BAND_ORDER, BAND_LABEL } from './tiles/_registry.js';
 import { createLiveBand } from './live/band.js';
 import { normalizeEvent } from './live/espn.js';
-import { el, clear, empty, pill } from './lib/dom.js';
+import { el, clear, empty, genericCard, pill } from './lib/dom.js';
 import { ago, ctTime } from './lib/fmt.js';
 import { subheadText } from './lib/header.js';
 
@@ -301,37 +301,6 @@ async function loadData() {
 
 // ------------------------------------------------------------------ render
 
-/** A snapshot tile with no render module: generic key/value card (rule 9). */
-function renderGeneric(body, tile) {
-  const data = tile.data;
-  if (data === null || data === undefined || (typeof data === 'object' && !Object.keys(data).length)) {
-    body.appendChild(empty('No data.'));
-    return;
-  }
-  if (typeof data !== 'object') {
-    body.appendChild(el('div', { cls: 'row-value', text: String(data) }));
-    return;
-  }
-
-  const list = el('div', { cls: 'generic' });
-  for (const [k, v] of Object.entries(data)) {
-    const text =
-      v === null || v === undefined
-        ? '—'
-        : typeof v === 'object'
-          ? JSON.stringify(v)
-          : String(v);
-    list.appendChild(
-      el('div', { cls: 'row' }, [
-        el('span', { cls: 'row-label', text: k }),
-        el('span', { cls: 'row-value', text }),
-      ])
-    );
-  }
-  body.appendChild(list);
-  body.appendChild(el('p', { cls: 'tile-foot', text: 'No render module for this tile yet.' }));
-}
-
 /** Long-press / right-click -> Explain, on every card. */
 function attachExplain(card, tileId, data) {
   const open = () => actions.openAsk(tileId, data);
@@ -401,7 +370,7 @@ function tileCard(id, entry, tile) {
       if (mod) {
         mod(body, tile, { id, title, snapshot: state.snapshot, pending: state.pending, actions, live: state.live });
       } else {
-        renderGeneric(body, tile);
+        genericCard(body, tile);
       }
     } catch (e) {
       // One bad tile must never take the page down.

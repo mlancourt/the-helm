@@ -43,6 +43,17 @@ function addDays(ymd, n) {
   return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`;
 }
 
+/**
+ * 'YYYY-MM-DD' -> 'Sat 9/19', the way the engine writes a day heading for the
+ * Lake Country tile. Built from the parts with Date.UTC — rule 7: a date-only
+ * string is never handed to `new Date()`.
+ */
+function ctLabel(ymd) {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${wd} ${m}/${d}`;
+}
+
 const nowIso = () => new Date().toISOString();
 const agoIso = (mins) => new Date(Date.now() - mins * 60000).toISOString();
 
@@ -188,6 +199,142 @@ function snapshot() {
             ],
           },
         ],
+      }),
+
+      // Lake Country. Every village, venue, band and festival below is
+      // invented; the shape is the engine's (L3/L5) and the links go nowhere.
+      //
+      // The week is built to exercise the module rather than to look tidy:
+      // today and tomorrow are on the board, a three-day fest is pre-expanded
+      // so days two and three earn their "cont." mark, one row has no time at
+      // all (an all-day market), and the rest of the week sits behind "+N more".
+      local_events: tile('DAILY', {
+        title: 'Lake Country',
+        window: { from: TODAY, to: addDays(TODAY, 7) },
+        count: 8,
+        days: [
+          {
+            date: TODAY,
+            label: ctLabel(TODAY),
+            events: [
+              {
+                date: TODAY,
+                time: '05:30 PM - 08:30 PM',
+                title: 'Bands on the Mock Beach — The Invented Tides',
+                venue: 'Mock Lakefront Bandshell',
+                address: '100 Made Up Ave, Mockville, WI 53000',
+                link: 'https://example.com/mock/bands-on-the-beach',
+                source: 'Visit Mockville',
+                blurb: 'Invented copy. A made-up band plays a made-up bandshell; bring a chair that does not exist.',
+                multi_day: false,
+              },
+              {
+                date: TODAY,
+                time: '06:00 PM - 09:00 PM',
+                title: 'Village Green Beer Garden',
+                venue: 'Mock Village Green',
+                address: '7 Fictional St, Mockville, WI 53000',
+                link: 'https://example.com/mock/beer-garden',
+                source: 'City of Mockville',
+                blurb: 'Invented copy. Rotating taps from breweries that do not exist, weather that also does not exist.',
+                multi_day: false,
+              },
+            ],
+          },
+          {
+            date: TOMORROW,
+            label: ctLabel(TOMORROW),
+            events: [
+              {
+                date: TOMORROW,
+                time: '10:00 AM - 10:00 PM',
+                title: 'Mock Harvest Fallfest',
+                venue: 'Invented County Fairgrounds',
+                address: 'W000 County Road Nowhere, Mockville, WI 53000',
+                link: 'https://example.com/mock/fallfest',
+                source: 'Visit Mockville',
+                blurb: 'Invented copy. Three days of a festival nobody is holding, in a county nobody lives in.',
+                multi_day: true,
+              },
+            ],
+          },
+          {
+            date: addDays(TODAY, 2),
+            label: ctLabel(addDays(TODAY, 2)),
+            events: [
+              {
+                date: addDays(TODAY, 2),
+                // No time: an all-day listing, which must not print a stray separator.
+                time: '',
+                title: 'Summer Farmers Market',
+                venue: '155 Fictional Ave',
+                address: '155 Fictional Ave, Mockville, WI 53000',
+                link: 'https://example.com/mock/farmers-market',
+                source: 'City of Mockford',
+                blurb: 'Invented copy. Produce, kettle corn, and a man selling birdhouses who is not real.',
+                multi_day: false,
+              },
+              {
+                date: addDays(TODAY, 2),
+                time: '10:00 AM - 10:00 PM',
+                title: 'Mock Harvest Fallfest',
+                venue: 'Invented County Fairgrounds',
+                address: 'W000 County Road Nowhere, Mockville, WI 53000',
+                link: 'https://example.com/mock/fallfest',
+                source: 'Visit Mockville',
+                blurb: 'Invented copy. Day two: the carnival rides that do not exist open at noon.',
+                multi_day: true,
+              },
+            ],
+          },
+          {
+            date: addDays(TODAY, 3),
+            label: ctLabel(addDays(TODAY, 3)),
+            events: [
+              {
+                date: addDays(TODAY, 3),
+                time: '11:00 AM - 06:00 PM',
+                title: 'Mock Harvest Fallfest',
+                venue: 'Invented County Fairgrounds',
+                address: 'W000 County Road Nowhere, Mockville, WI 53000',
+                link: 'https://example.com/mock/fallfest',
+                source: 'Visit Mockville',
+                blurb: 'Invented copy. Day three, and the parade of imaginary tractors closes it out.',
+                multi_day: true,
+              },
+              {
+                date: addDays(TODAY, 3),
+                time: '01:00 PM - 03:00 PM',
+                title: 'Rally for Made-Up Vets',
+                venue: 'Mock Memorial Park',
+                address: '1 Nonexistent Pkwy, Mockford, WI 53000',
+                link: 'https://example.com/mock/rally',
+                source: 'City of Mockford',
+                blurb: 'Invented copy. A procession that is not happening, for a cause that is.',
+                multi_day: false,
+              },
+            ],
+          },
+          {
+            date: addDays(TODAY, 6),
+            label: ctLabel(addDays(TODAY, 6)),
+            events: [
+              {
+                date: addDays(TODAY, 6),
+                time: '07:00 PM - 09:00 PM',
+                title: 'Fireworks Over the Fictional Lake',
+                venue: 'Mock Lakefront Bandshell',
+                address: '100 Made Up Ave, Mockville, WI 53000',
+                link: 'https://example.com/mock/fireworks',
+                source: 'Visit Mockville',
+                blurb: 'Invented copy. Best watched from a pier this generator also made up.',
+                multi_day: false,
+              },
+            ],
+          },
+        ],
+        sources: ['Visit Mockville', 'City of Mockville', 'City of Mockford'],
+        errors: [],
       }),
 
       // Invented reminders, chosen to exercise every branch of the sort:

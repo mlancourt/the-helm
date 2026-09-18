@@ -83,3 +83,43 @@ export function extLink(href, text, cls = '') {
 export function empty(text) {
   return el('p', { cls: 'empty', text });
 }
+
+/**
+ * Rule 9's generic card: a tile's `data` as flat key/value rows.
+ *
+ * The shell draws this when a snapshot carries a tile no module claims, so
+ * schema growth never blanks a card. It lives here rather than in app.js
+ * because a module can need it too — `local_events` falls back to it when its
+ * own payload arrived in `status: error` and there is no shape left to lay
+ * out. One definition, so the two paths cannot drift into two different ideas
+ * of what a tile with no render looks like.
+ */
+export function genericCard(body, tile) {
+  const data = tile ? tile.data : null;
+  if (data === null || data === undefined || (typeof data === 'object' && !Object.keys(data).length)) {
+    body.appendChild(empty('No data.'));
+    return;
+  }
+  if (typeof data !== 'object') {
+    body.appendChild(el('div', { cls: 'row-value', text: String(data) }));
+    return;
+  }
+
+  const list = el('div', { cls: 'generic' });
+  for (const [k, v] of Object.entries(data)) {
+    const text =
+      v === null || v === undefined
+        ? '—'
+        : typeof v === 'object'
+          ? JSON.stringify(v)
+          : String(v);
+    list.appendChild(
+      el('div', { cls: 'row' }, [
+        el('span', { cls: 'row-label', text: k }),
+        el('span', { cls: 'row-value', text }),
+      ])
+    );
+  }
+  body.appendChild(list);
+  body.appendChild(el('p', { cls: 'tile-foot', text: 'No render module for this tile yet.' }));
+}

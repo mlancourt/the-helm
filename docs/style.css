@@ -1089,3 +1089,100 @@ body {
 .refresh-btn.busy { color: var(--brass); animation: helm-spin 0.9s linear infinite; }
 @keyframes helm-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .refresh-btn.busy { animation: none; opacity: 0.6; } }
+
+/* ------------------------------------------------------- local_events ("Lake Country")
+
+   A list, not a menu — but held to the menu tiles' height by only putting
+   today and tomorrow on the board (L6). Rows are compact and wrap rather than
+   truncate: a venue is the difference between a band on the beach and a band
+   somewhere in Delafield, so it must not be the thing that gets cut. */
+
+.lc { display: flex; flex-direction: column; }
+
+.lc-day-head {
+  margin: 10px 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.lc-day:first-child .lc-day-head { margin-top: 0; }
+
+.lc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  padding: 5px 0;
+  font-size: 13px;
+  line-height: 1.35;
+  border-bottom: 1px solid var(--line-soft);
+}
+.lc-day:last-child .lc-row:last-child { border-bottom: 0; }
+
+.lc-row-link { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transparent; }
+.lc-row-link:hover .lc-title { color: var(--brass); text-decoration: underline; }
+
+/* Tabular numerals so a column of start times lines up without a table. */
+.lc-time { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lc-title { color: var(--text); }
+.lc-venue { color: var(--text-faint); font-size: 12px; }
+/* The dot lives inside the part it introduces, so it wraps with it. */
+.lc-sep { margin-right: 4px; color: var(--text-faint); }
+
+/* Day two of a three-day fest. Small, lowercase, and never louder than the
+   title it qualifies. */
+.lc-cont {
+  margin-left: 5px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #1a1f26;
+  color: var(--text-faint);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* The way into the rest of the week. Full width, because it is the only
+   control on the tile and a phone thumb should not have to find it. */
+.lc-more {
+  display: block;
+  width: 100%;
+  margin-top: 9px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #1a1f26;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.lc-more:hover { color: var(--text); border-color: #2f3d4c; }
+.lc-more:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+/* status: stale — the rows are real, one of the feeds simply did not answer.
+   The mark is the whole message; the reason is in its tooltip. */
+.lc-stale { display: flex; align-items: center; gap: 6px; }
+.lc-warn { color: var(--warn); font-size: 12px; cursor: help; }
+
+/* -- the sheet: the same rows, with the room for what the board cut -- */
+
+.lc-detail .lc-row { border-bottom: 0; padding-bottom: 2px; }
+.lc-detail .lc-day-head { margin-top: 14px; }
+.lc-blurb {
+  margin: 0 0 2px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.lc-source {
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
