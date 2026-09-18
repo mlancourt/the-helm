@@ -5,6 +5,7 @@
  *   node tools/make-mock-data.js            > docs/mock/helm-data.json
  *   node tools/make-mock-data.js --pending  > docs/mock/pending.json
  *   node tools/make-mock-data.js --espn     > docs/mock/espn-today.json
+ *   node tools/make-mock-data.js --cards-stale > docs/mock/cards-stale.json
  *   node tools/make-mock-data.js --events   > two POST /api/event bodies
  *
  * The `--espn` slate is the other half of `today_games`: that tile's games all
@@ -52,6 +53,32 @@ function ctLabel(ymd) {
   const [y, m, d] = ymd.split('-').map(Number);
   const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
   return `${wd} ${m}/${d}`;
+}
+
+/**
+ * Central WALL-CLOCK stamp, `minutes` from now: 'YYYY-MM-DDTHH:MM'.
+ *
+ * The shape the engine publishes an auction's `ends_ct` in — already converted
+ * to Central, so the page can print it verbatim (rule 7). Built here through
+ * Intl with an explicit America/Chicago, exactly as lib/fmt.js does it, so the
+ * "ends inside two hours" fixture is genuinely inside two hours wherever the
+ * generator is run.
+ */
+const CT_STAMP = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Chicago',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  hourCycle: 'h23',
+});
+
+function ctStampIn(minutes) {
+  const p = {};
+  for (const part of CT_STAMP.formatToParts(new Date(Date.now() + minutes * 60000))) p[part.type] = part.value;
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
 }
 
 const nowIso = () => new Date().toISOString();
@@ -413,6 +440,18 @@ function snapshot() {
         source: 'mock generator (applied lines only)',
       }),
 
+      /**
+       * The card desk. Every player, rung, price and seller below is invented;
+       * "eBay" is the real service the engine pulls from and is named as such
+       * in `sources` and in the footer, which is where the credit belongs.
+       *
+       * The three flags cover the three things the Watch face has to get
+       * right: one plain BIN under the gate, one OBO that is also brand new,
+       * and one whose comp book has gone 30 days stale (so it keeps its
+       * percentage and loses the tick and the badge) and is OVER BAND besides.
+       */
+      cards: tile('HOURLY', cardsWatch()),
+
       newsstand: tile(
         'HOURLY',
         {
@@ -583,6 +622,166 @@ function snapshot() {
   };
 }
 
+/**
+ * The `cards` payload, on its own so the stale variant can degrade the same
+ * data rather than a second invented copy of it. Every figure is made up.
+ */
+function cardsWatch() {
+  return {
+    watch: {
+      updated_at: agoIso(18),
+      targets: 14,
+      booked: 12,
+      fresh: 9,
+      oldest_book_days: 30,
+      calls: 26,
+      flags: [
+        {
+          item_id: '2864-0001',
+          title: '2019 Prism Foundry Kestrel Vance RC Refractor PSA 9 — sharp corners',
+          player: 'Kestrel Vance',
+          rung: 'RC refractor',
+          fmv: 260,
+          tag: 'SOLID',
+          lane: 'FLIP',
+          type: 'BIN',
+          price: 129,
+          ship: 4.99,
+          all_in: 133.99,
+          pct_fmv: 0.51,
+          max: 169,
+          gate: 0.65,
+          book_age_days: 3,
+          book_state: 'fresh',
+          ends_ct: null,
+          seller: 'northport_cardworks',
+          seller_fb: 1204,
+          listed: addDays(TODAY, -2),
+          url: 'https://example.com/mock/cards/2864-0001',
+          image: 'https://example.com/mock/cards/2864-0001.jpg',
+          band: null,
+          new: false,
+        },
+        {
+          item_id: '2864-0002',
+          title: 'Marisol Quint Signature Patch /99 — Harbor Kestrels',
+          player: 'Marisol Quint',
+          rung: 'patch auto /99',
+          fmv: 410,
+          tag: 'SOLID',
+          lane: 'H',
+          type: 'OBO',
+          price: 232,
+          ship: 0,
+          all_in: 232,
+          pct_fmv: 0.57,
+          max: 266,
+          gate: 0.65,
+          book_age_days: 1,
+          book_state: 'fresh',
+          ends_ct: null,
+          seller: 'lakeside_slabs',
+          seller_fb: 88,
+          listed: TODAY,
+          url: 'https://example.com/mock/cards/2864-0002',
+          image: null,
+          band: null,
+          new: true,
+        },
+        {
+          item_id: '2864-0003',
+          title: 'Dov Ferreira Ironsides Rookie Auto BGS 9.5 — gem subs',
+          player: 'Dov Ferreira',
+          rung: 'rookie auto',
+          fmv: 180,
+          tag: 'THIN',
+          lane: 'FLIP',
+          type: 'BIN',
+          price: 111,
+          ship: 6.5,
+          all_in: 117.5,
+          pct_fmv: 0.65,
+          max: 117,
+          gate: 0.65,
+          book_age_days: 30,
+          book_state: 'aging',
+          ends_ct: null,
+          seller: 'attic_finds_wi',
+          seller_fb: 41,
+          listed: addDays(TODAY, -9),
+          url: 'https://example.com/mock/cards/2864-0003',
+          image: 'https://example.com/mock/cards/2864-0003.jpg',
+          band: 'OVER BAND',
+          new: false,
+        },
+      ],
+      auctions: [
+        {
+          item_id: '2864-0101',
+          title: 'Kestrel Vance Prism Foundry Gold /10 — no reserve',
+          player: 'Kestrel Vance',
+          rung: 'gold /10',
+          fmv: 900,
+          tag: 'SOLID',
+          lane: 'H',
+          type: 'AUCTION',
+          price: 410,
+          ship: 12,
+          all_in: 422,
+          pct_fmv: 0.47,
+          max: 585,
+          gate: 0.65,
+          book_age_days: 3,
+          book_state: 'fresh',
+          // Inside the two-hour window: this is the one that raises the dot.
+          ends_ct: ctStampIn(74),
+          seller: 'bayfield_auctions',
+          seller_fb: 5310,
+          listed: addDays(TODAY, -6),
+          url: 'https://example.com/mock/cards/2864-0101',
+          image: 'https://example.com/mock/cards/2864-0101.jpg',
+          band: null,
+          new: false,
+        },
+        {
+          item_id: '2864-0102',
+          title: 'Dov Ferreira Ironsides Rookie Auto raw — starts at a dollar',
+          player: 'Dov Ferreira',
+          rung: 'rookie auto',
+          fmv: 180,
+          tag: 'THIN',
+          lane: 'FLIP',
+          type: 'AUCTION',
+          price: 31,
+          ship: 5,
+          all_in: 36,
+          pct_fmv: 0.2,
+          max: 117,
+          gate: 0.65,
+          book_age_days: 4,
+          book_state: 'fresh',
+          ends_ct: ctStampIn(2 * 1440 + 30),
+          seller: 'attic_finds_wi',
+          seller_fb: 41,
+          listed: addDays(TODAY, -1),
+          url: 'https://example.com/mock/cards/2864-0102',
+          image: null,
+          band: null,
+          new: true,
+        },
+      ],
+      unbooked: [
+        { player: 'Ines Okafor', rung: 'rookie auto', book_age_days: 61, cheapest_all_in: 88.25, url: 'https://example.com/mock/cards/search-okafor' },
+        { player: 'Teo Brandt', rung: 'prizm silver', book_age_days: 44, cheapest_all_in: null, url: null },
+      ],
+      errors: [],
+    },
+    shop: null,
+    sources: { listings: 'eBay Browse API', fmv: 'mock comp engine', shop: 'pending' },
+    footer: 'lean, not an appraisal — every figure is the engine\'s',
+  };
+}
+
 /** Two events shaped for POST /api/event. Pending is the Worker's business. */
 function mockEvents() {
   return [
@@ -603,11 +802,33 @@ function mockPending() {
   });
 }
 
+/**
+ * The same snapshot with the card desk half-broken: `status: stale` plus the
+ * reason. The rows Matt DOES have are still real, so the tile renders them and
+ * wears a ⚠︎ (rule 8) — `?mock=cards-stale` is how that path gets looked at
+ * without waiting for eBay to rate-limit the engine for real.
+ */
+function cardsStaleSnapshot() {
+  const snap = snapshot();
+  const data = cardsWatch();
+  data.watch.errors = ['eBay Browse API: 3 of 14 searches rate-limited (429)'];
+  snap.tiles.cards = {
+    band: 'HOURLY',
+    updated_at: agoIso(96),
+    status: 'stale',
+    error: 'eBay Browse API rate-limited the 06:00 pull — 11 of 14 targets answered',
+    data,
+  };
+  return snap;
+}
+
 const mode = process.argv.includes('--events')
   ? mockEvents()
   : process.argv.includes('--pending')
     ? mockPending()
     : process.argv.includes('--espn')
       ? slate(TODAY)
-      : snapshot();
+      : process.argv.includes('--cards-stale')
+        ? cardsStaleSnapshot()
+        : snapshot();
 process.stdout.write(JSON.stringify(mode, null, 2) + '\n');

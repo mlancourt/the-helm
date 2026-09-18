@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-18T13:45:57.574Z",
-  "run_id": "run-mock-mu70hg7a",
+  "generated_at": "2026-09-18T13:45:57.705Z",
+  "run_id": "run-mock-mu70hgax",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.574Z",
+      "updated_at": "2026-09-18T13:45:57.705Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -94,7 +94,7 @@
     },
     "today_games": {
       "band": "LIVE",
-      "updated_at": "2026-09-18T13:45:57.574Z",
+      "updated_at": "2026-09-18T13:45:57.705Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -154,7 +154,7 @@
     },
     "radar": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.574Z",
+      "updated_at": "2026-09-18T13:45:57.705Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -170,7 +170,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.574Z",
+      "updated_at": "2026-09-18T13:45:57.705Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -220,7 +220,7 @@
     },
     "local_events": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.575Z",
+      "updated_at": "2026-09-18T13:45:57.706Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -360,7 +360,7 @@
     },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.575Z",
+      "updated_at": "2026-09-18T13:45:57.706Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -444,7 +444,7 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.575Z",
+      "updated_at": "2026-09-18T13:45:57.706Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -456,7 +456,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.575Z",
+      "updated_at": "2026-09-18T13:45:57.706Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -490,7 +490,7 @@
     },
     "wss_tape": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.575Z",
+      "updated_at": "2026-09-18T13:45:57.706Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -513,7 +513,7 @@
         ],
         "items": [
           {
-            "ts": "2026-09-18T13:27:57.575Z",
+            "ts": "2026-09-18T13:27:57.706Z",
             "time_ct": "15:42",
             "actor": "Rae",
             "action": "ticket_update",
@@ -525,7 +525,7 @@
             "evt": "mk1a2b"
           },
           {
-            "ts": "2026-09-18T12:50:57.575Z",
+            "ts": "2026-09-18T12:50:57.706Z",
             "time_ct": "15:05",
             "actor": "Kit",
             "action": "readiness",
@@ -537,7 +537,7 @@
             "evt": "mk3c4d"
           },
           {
-            "ts": "2026-09-18T12:42:57.575Z",
+            "ts": "2026-09-18T12:42:57.706Z",
             "time_ct": "14:57",
             "actor": "Rae",
             "action": "ticket_update",
@@ -549,7 +549,7 @@
             "evt": "mk5e6f"
           },
           {
-            "ts": "2026-09-18T11:15:57.575Z",
+            "ts": "2026-09-18T11:15:57.706Z",
             "time_ct": "13:30",
             "actor": "Odis",
             "action": "lead_update",
@@ -561,7 +561,7 @@
             "evt": "mk7g8h"
           },
           {
-            "ts": "2026-09-18T10:26:57.575Z",
+            "ts": "2026-09-18T10:26:57.706Z",
             "time_ct": "12:41",
             "actor": "Kit",
             "action": "ticket_update",
@@ -573,7 +573,7 @@
             "evt": "mk9i0j"
           },
           {
-            "ts": "2026-09-18T09:12:57.575Z",
+            "ts": "2026-09-18T09:12:57.706Z",
             "time_ct": "11:27",
             "actor": "Rae",
             "action": "ticket_close",
@@ -585,7 +585,7 @@
             "evt": "mkak1l"
           },
           {
-            "ts": "2026-09-18T08:43:57.575Z",
+            "ts": "2026-09-18T08:43:57.706Z",
             "time_ct": "10:58",
             "actor": "Odis",
             "action": "readiness",
@@ -597,7 +597,7 @@
             "evt": "mkbm2n"
           },
           {
-            "ts": "2026-09-18T07:57:57.575Z",
+            "ts": "2026-09-18T07:57:57.706Z",
             "time_ct": "10:12",
             "actor": "Kit",
             "action": "ticket_update",
@@ -609,7 +609,7 @@
             "evt": "mkco3p"
           },
           {
-            "ts": "2026-09-18T07:29:57.575Z",
+            "ts": "2026-09-18T07:29:57.706Z",
             "time_ct": "09:44",
             "actor": "Rae",
             "action": "lead_update",
@@ -621,7 +621,7 @@
             "evt": "mkdq4r"
           },
           {
-            "ts": "2026-09-18T06:48:57.575Z",
+            "ts": "2026-09-18T06:48:57.706Z",
             "time_ct": "09:03",
             "actor": "Odis",
             "action": "ticket_update",
@@ -633,7 +633,7 @@
             "evt": "mkes5t"
           },
           {
-            "ts": "2026-09-18T06:01:57.575Z",
+            "ts": "2026-09-18T06:01:57.706Z",
             "time_ct": "08:16",
             "actor": "Kit",
             "action": "ticket_open",
@@ -645,7 +645,7 @@
             "evt": "mkfu6v"
           },
           {
-            "ts": "2026-09-18T05:37:57.575Z",
+            "ts": "2026-09-18T05:37:57.706Z",
             "time_ct": "07:52",
             "actor": "Rae",
             "action": "other",
@@ -681,12 +681,12 @@
     },
     "cards": {
       "band": "HOURLY",
-      "updated_at": "2026-09-18T13:45:57.575Z",
-      "status": "ok",
-      "error": null,
+      "updated_at": "2026-09-18T12:09:57.706Z",
+      "status": "stale",
+      "error": "eBay Browse API rate-limited the 06:00 pull — 11 of 14 targets answered",
       "data": {
         "watch": {
-          "updated_at": "2026-09-18T13:27:57.575Z",
+          "updated_at": "2026-09-18T13:27:57.706Z",
           "targets": 14,
           "booked": 12,
           "fresh": 9,
@@ -842,7 +842,9 @@
               "url": null
             }
           ],
-          "errors": []
+          "errors": [
+            "eBay Browse API: 3 of 14 searches rate-limited (429)"
+          ]
         },
         "shop": null,
         "sources": {
@@ -855,11 +857,11 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-18T13:22:57.575Z",
+      "updated_at": "2026-09-18T13:22:57.706Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-18T13:22:57.575Z",
+        "as_of": "2026-09-18T13:22:57.706Z",
         "count": 4,
         "refresh_note": null,
         "source": "mock generator",
@@ -903,12 +905,12 @@
     },
     "entertainment": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.575Z",
+      "updated_at": "2026-09-18T13:45:57.706Z",
       "status": "ok",
       "error": null,
       "data": {
         "watching": {
-          "updated_at": "2026-09-18T12:10:57.575Z",
+          "updated_at": "2026-09-18T12:10:57.706Z",
           "items": [
             {
               "title": "The Quiet Ledger",
@@ -985,13 +987,13 @@
           "errors": null
         },
         "podcasts": {
-          "updated_at": "2026-09-18T13:05:57.575Z",
+          "updated_at": "2026-09-18T13:05:57.706Z",
           "items": [
             {
               "show": "Mock Fork",
               "title": "The chatbot that filed its own taxes",
               "published": "2026-09-18",
-              "published_at": "2026-09-18T10:45:57.575Z",
+              "published_at": "2026-09-18T10:45:57.706Z",
               "duration_min": 58,
               "url": "https://example.com/mock/pod/fork-1",
               "artwork": null
@@ -1000,7 +1002,7 @@
               "show": "The Long Docket",
               "title": "Case 114: the disappearing deposition",
               "published": "2026-09-17",
-              "published_at": "2026-09-17T11:45:57.575Z",
+              "published_at": "2026-09-17T11:45:57.706Z",
               "duration_min": 71,
               "url": "https://example.com/mock/pod/docket-1",
               "artwork": null
@@ -1009,7 +1011,7 @@
               "show": "Ledger & Lamp",
               "title": "A very small bank in a very large hurry",
               "published": "2026-09-16",
-              "published_at": "2026-09-16T10:45:57.575Z",
+              "published_at": "2026-09-16T10:45:57.706Z",
               "duration_min": 44,
               "url": "https://example.com/mock/pod/ledger-1",
               "artwork": null
@@ -1018,7 +1020,7 @@
               "show": "Mock Fork",
               "title": "Everyone is building the same agent",
               "published": "2026-09-15",
-              "published_at": "2026-09-15T12:15:57.575Z",
+              "published_at": "2026-09-15T12:15:57.706Z",
               "duration_min": 63,
               "url": "https://example.com/mock/pod/fork-2",
               "artwork": null
@@ -1027,7 +1029,7 @@
               "show": "Ledger & Lamp",
               "title": "The audit nobody asked for",
               "published": "2026-09-09",
-              "published_at": "2026-09-09T13:45:57.575Z",
+              "published_at": "2026-09-09T13:45:57.706Z",
               "duration_min": null,
               "url": "https://example.com/mock/pod/ledger-2",
               "artwork": null
@@ -1036,7 +1038,7 @@
               "show": "Cold Open Radio",
               "title": "Twelve minutes of dead air, explained",
               "published": "2026-09-06",
-              "published_at": "2026-09-06T13:45:57.575Z",
+              "published_at": "2026-09-06T13:45:57.706Z",
               "duration_min": 12,
               "url": "https://example.com/mock/pod/cold-1",
               "artwork": null
@@ -1057,18 +1059,18 @@
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T13:45:57.575Z",
+      "updated_at": "2026-09-18T13:45:57.706Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-17T07:45:57.575Z",
+        "drift_audit_updated": "2026-09-17T07:45:57.706Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-18T13:37:57.575Z",
+        "worker_published_at": "2026-09-18T13:37:57.706Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -1090,7 +1092,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-18T12:15:57.575Z",
+      "updated_at": "2026-09-18T12:15:57.706Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

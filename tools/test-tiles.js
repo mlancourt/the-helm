@@ -1468,6 +1468,388 @@ async function main() {
     check('and never parses a date string it was handed', !/new Date/.test(TAPE_SRC));
   }
 
+  // -- cards: the desk ------------------------------------------------------
+  //
+  // The tile is a two-button menu and the listings are in the sheet, so the
+  // assertions split the same way. The two that matter most are the ones that
+  // could quietly cost money: the badge must only count flags standing on a
+  // book the engine still trusts, and every figure on a row must be the
+  // engine's own — an `all_in` this page computed would look exactly like a
+  // real one and be wrong.
+  console.log('\ncards — the desk menu');
+  const cards = mods.get('cards');
+  const cardsTap = (btn) => btn.listeners.click[0]({ stopPropagation() {} });
+  const cardsTile = (data, status = 'ok', error = null) => ({
+    band: 'HOURLY',
+    updated_at: '2026-09-18T21:00:00.000Z',
+    status,
+    error,
+    data,
+  });
+
+  /**
+   * Freeze the clock. The amber dot is a comparison against Central wall time
+   * NOW, and a test that built its fixtures from the real clock would flip on
+   * whichever minute it happened to run in. `new Date()` resolves the global
+   * at call time, so replacing it reaches inside lib/fmt.js.
+   */
+  function withNow(iso, fn) {
+    const Real = Date;
+    class Frozen extends Real {
+      constructor(...a) { super(...(a.length ? a : [iso])); }
+      static now() { return Real.parse(iso); }
+    }
+    global.Date = Frozen;
+    try { return fn(); } finally { global.Date = Real; }
+  }
+  // 22:30Z is 17:30 Central — so 19:29 is 1h59 out and 19:31 is 2h01 out.
+  const NOW_UTC = '2026-09-18T22:30:00.000Z';
+  const ENDS_SOON = '2026-09-18T19:29';
+  const ENDS_LATER = '2026-09-18T19:31';
+
+  /** One invented listing. Everything the engine decides is passed in. */
+  const listing = (over = {}) => ({
+    item_id: '9000-0001',
+    title: 'Invented Player Prism Foundry RC Refractor PSA 9',
+    player: 'Invented Player',
+    rung: 'RC refractor',
+    fmv: 260,
+    tag: 'SOLID',
+    lane: 'FLIP',
+    type: 'BIN',
+    price: 129,
+    ship: 4.99,
+    all_in: 133.99,
+    pct_fmv: 0.51,
+    max: 169,
+    gate: 0.65,
+    book_age_days: 3,
+    book_state: 'fresh',
+    ends_ct: null,
+    seller: 'mock_seller',
+    seller_fb: 1204,
+    listed: '2026-09-16',
+    url: 'https://example.com/mock/cards/1',
+    image: 'https://example.com/mock/cards/1.jpg',
+    band: null,
+    new: false,
+    ...over,
+  });
+
+  const FLAGS = [
+    listing({ item_id: 'f1', title: 'FLAG-ONE', type: 'BIN' }),
+    listing({
+      item_id: 'f2',
+      title: 'FLAG-TWO',
+      type: 'OBO',
+      pct_fmv: 0.71,
+      band: 'OVER BAND',
+      max: 182,
+      all_in: 199.5,
+      new: true,
+    }),
+    listing({
+      item_id: 'f3',
+      title: 'FLAG-THREE',
+      book_state: 'aging',
+      book_age_days: 30,
+      url: 'javascript:alert(1)',
+      image: null,
+    }),
+  ];
+  const AUCTIONS = [
+    listing({ item_id: 'a1', title: 'AUCTION-ONE', type: 'AUCTION', price: 410, ends_ct: ENDS_SOON, book_state: 'fresh', pct_fmv: 0.47 }),
+    listing({ item_id: 'a2', title: 'AUCTION-TWO', type: 'AUCTION', price: 31, ends_ct: ENDS_LATER, new: true }),
+  ];
+  const UNBOOKED = [
+    { player: 'Unbooked One', rung: 'rookie auto', book_age_days: 61, cheapest_all_in: 88.25, url: 'https://example.com/mock/cards/search-1' },
+    { player: 'Unbooked Two', rung: 'prizm silver', book_age_days: 44, cheapest_all_in: null, url: null },
+  ];
+
+  const deskData = (over = {}) => ({
+    watch: {
+      updated_at: '2026-09-18T21:42:00.000Z',
+      targets: 14,
+      booked: 12,
+      fresh: 9,
+      oldest_book_days: 30,
+      calls: 26,
+      flags: FLAGS,
+      auctions: AUCTIONS,
+      unbooked: UNBOOKED,
+      errors: [],
+      ...over,
+    },
+    shop: null,
+    sources: { listings: 'eBay Browse API', fmv: 'mock comp engine', shop: 'pending' },
+    footer: 'lean, not an appraisal',
+  });
+
+  const cardBtns = (root) => root.querySelectorAll('.cards-btn');
+  const labelsOf = (root) => cardBtns(root).map((b) => b.querySelector('.cards-btn-label').textContent);
+
+  if (cards) {
+    const panel = fakePanel();
+    const root = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile(deskData()), { id: 'cards', actions: panel.actions });
+      return r;
+    });
+
+    check('two buttons, in the spec\'s order', labelsOf(root).join('|') === 'Watch|Shop', labelsOf(root).join('|'));
+    check('the board carries no listings of its own', countOf(root, 'cards-row') === 0);
+    check('one faint line under the menu', countOf(root, 'tile-foot') === 1);
+    check(
+      'and it counts targets, fresh books and the feed time',
+      /14 targets/.test(textOf(root)) && /9 fresh books/.test(textOf(root)) && /feed \d/.test(textOf(root)),
+      textOf(root)
+    );
+
+    // -- the badge: fresh flags, and nothing else ----------------------------
+    //
+    // Three flags, one of them on a 30-day-old book, plus two auctions. Only
+    // the two fresh flags may be counted: a percentage resting on a stale book
+    // is a guess, and a current bid is not a price.
+    const badge = root.querySelector('.cards-count');
+    check('the badge counts fresh flags only', badge && badge.textContent.startsWith('2'), badge && badge.textContent);
+    check('so an aging flag is not in it', !/3/.test(badge.textContent));
+    check('and no auction is either', !/4|5/.test(badge.textContent));
+    check('a fresh flag marked new puts a new mark on the badge', countOf(root, 'cards-count-new') === 1);
+
+    const quiet = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile(deskData({ flags: [], auctions: [] })), { id: 'cards', actions: {} });
+      return r;
+    });
+    check(
+      'nothing fresh means no badge at all, not a zero',
+      countOf(quiet, 'cards-count') === 0 && !/\d/.test(cardBtns(quiet)[0].textContent),
+      cardBtns(quiet)[0].textContent
+    );
+
+    const staleNew = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile(deskData({
+        flags: [listing({ item_id: 'f1', new: false }), listing({ item_id: 'f3', book_state: 'aging', book_age_days: 30, new: true })],
+      })), { id: 'cards', actions: {} });
+      return r;
+    });
+    check('a new mark on an AGING flag does not reach the badge', countOf(staleNew, 'cards-count-new') === 0);
+    check('though the flag itself still counts as a flag, not as fresh', staleNew.querySelector('.cards-count').textContent === '1');
+
+    // -- the amber dot: 1h59 vs 2h01 -----------------------------------------
+    check('an auction 1h59 out raises the amber dot', countOf(root, 'cards-dot') === 1);
+    const later = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile(deskData({ auctions: [AUCTIONS[1]] })), { id: 'cards', actions: {} });
+      return r;
+    });
+    check('2h01 out does not', countOf(later, 'cards-dot') === 0);
+    const none = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile(deskData({ auctions: [] })), { id: 'cards', actions: {} });
+      return r;
+    });
+    check('and no auctions at all certainly does not', countOf(none, 'cards-dot') === 0);
+    // A stamp the engine has not cleared out yet is at least as urgent as one
+    // two hours away — it must not go quiet at the moment it matters most.
+    const past = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile(deskData({ auctions: [listing({ type: 'AUCTION', ends_ct: '2026-09-18T16:00' })] })), { id: 'cards', actions: {} });
+      return r;
+    });
+    check('an auction already past still shows the dot', countOf(past, 'cards-dot') === 1);
+
+    // -- shop: a face that does not exist yet --------------------------------
+    const shopBtn = cardBtns(root)[1];
+    check('shop: null is a button, not a blank', shopBtn.querySelector('.cards-btn-label').textContent === 'Shop');
+    check('greyed, wearing "soon"', shopBtn.className.includes('cards-btn-soon') && /soon/.test(shopBtn.textContent));
+    check('and inert', shopBtn.getAttribute('disabled') === 'disabled');
+
+    // -- the Watch sheet -----------------------------------------------------
+    console.log('\ncards — the Watch sheet');
+    withNow(NOW_UTC, () => cardsTap(cardBtns(root)[0]));
+    check('a tap opens the sheet', panel.calls.length === 1);
+    check('titled with the emoji and the face', panel.last.title === '🎯 Watch');
+    const sheet = panel.last.body;
+    const rowTitles = sheet.querySelectorAll('.cards-title').map((t) => t.textContent);
+    check(
+      'flags then auctions, each in the order the engine sent them',
+      rowTitles.join('|') === 'FLAG-ONE|FLAG-TWO|FLAG-THREE|AUCTION-ONE|AUCTION-TWO',
+      rowTitles.join('|')
+    );
+    check('both sections are headed', sheet.querySelectorAll('.cards-head').map((h) => h.textContent).join('|') === 'Flags|Auctions');
+
+    // -- every figure is the payload's ---------------------------------------
+    //
+    // `all_in` on FLAG-TWO is deliberately NOT price + ship. The page must
+    // print what it was given: a number this file computed would be
+    // indistinguishable from a real one, and wrong.
+    const allIns = sheet.querySelectorAll('.cards-allin').map((n) => n.textContent);
+    check('all_in comes from the payload verbatim', allIns[1] === '$199.50', allIns[1]);
+    check('never recomputed from price + ship', !/\$133\.99/.test(allIns[1]) && !/\$186\.50/.test(textOf(sheet)));
+    check('and every row has one', allIns.length === 5);
+    const maxes = sheet.querySelectorAll('.cards-chip-max').map((n) => n.textContent);
+    check('MAX comes from the payload verbatim', maxes[1] === 'MAX $182.00', maxes[1]);
+    check('never recomputed from fmv × gate', !/MAX \$169\.00/.test(maxes[1]));
+
+    // -- the gate, and the tick ----------------------------------------------
+    check('a fresh flag under the gate is green', countOf(sheet, 'cards-fmv-good') === 1);
+    check('a flag over the gate is not', /71% of FMV/.test(textOf(sheet)) && countOf(sheet, 'cards-fmv-good') === 1);
+    check('an aging book loses the tick', sheet.querySelectorAll('.cards-fmv')[2].className.includes('cards-fmv-muted'));
+    check('and says how old it is', /book 30d old/.test(textOf(sheet)));
+    check('an auction is never green', sheet.querySelectorAll('.cards-fmv').slice(3).every((c) => c.className.includes('cards-fmv-muted')));
+    check('a percentage is printed as a percentage', /51% of FMV \$260\.00/.test(textOf(sheet)), textOf(sheet).slice(0, 200));
+
+    // -- chips ----------------------------------------------------------------
+    check('an OBO listing says so', countOf(sheet, 'cards-chip-obo') === 1);
+    check('an OVER BAND listing says so', sheet.querySelector('.cards-chip-band').textContent === 'OVER BAND');
+    check('a new listing wears a new mark', countOf(sheet, 'cards-new-mark') === 2);
+    check('the seller and its feedback are shown', /mock_seller/.test(textOf(sheet)) && /1,204 fb/.test(textOf(sheet)));
+
+    // -- ends_ct: verbatim, amber inside two hours ---------------------------
+    for (const a of AUCTIONS) {
+      check(`ends_ct ${a.ends_ct} appears exactly as given`, textOf(sheet).includes(`ends ${a.ends_ct}`));
+    }
+    const ends = sheet.querySelectorAll('.cards-ends');
+    check('the auction inside two hours is amber', ends[0].className.includes('cards-ends-soon'));
+    check('the one two days out is not', !ends[1].className.includes('cards-ends-soon'));
+    check('no ends line on a flag', ends.length === 2);
+
+    // -- links ---------------------------------------------------------------
+    const anchors = sheet.querySelectorAll('A');
+    check('a row with a url is a link', anchors.length >= 4);
+    check('every link opens a new tab', anchors.every((a) => a.getAttribute('target') === '_blank'));
+    check('and never hands over a handle on this page', anchors.every((a) => /noopener/.test(a.getAttribute('rel') || '')));
+    check('a javascript: url is inert, and the row survives', !anchors.some((a) => /javascript/i.test(a.getAttribute('href') || '')) && /FLAG-THREE/.test(textOf(sheet)));
+    const imgs = sheet.querySelectorAll('IMG');
+    check('a photo is a photo', imgs.length === 4 && imgs[0].getAttribute('src') === 'https://example.com/mock/cards/1.jpg');
+    check('its alt is the title, as text', imgs[0].getAttribute('alt') === 'FLAG-ONE');
+    check('it leaks no referrer and waits to load', imgs[0].getAttribute('referrerpolicy') === 'no-referrer' && imgs[0].getAttribute('loading') === 'lazy');
+    check('a listing with no photo still holds the space', countOf(sheet, 'cards-thumb-none') === 1);
+
+    // -- no book: folded shut ------------------------------------------------
+    const fold = sheet.querySelector('.cards-fold');
+    check('the no-book list is behind one button', !!fold && /No book \(2\)/.test(fold.textContent));
+    check('and is collapsed by default', sheet.querySelector('.cards-nb').classList.contains('hidden'));
+    check('it says so to a screen reader too', fold.getAttribute('aria-expanded') === 'false');
+    cardsTap(fold);
+    check('tapping unfolds it', !sheet.querySelector('.cards-nb').classList.contains('hidden'));
+    check('and flips the state', fold.getAttribute('aria-expanded') === 'true');
+    check('the rows read player · rung — book age · cheapest', /Unbooked One/.test(textOf(sheet)) && /book 61d old/.test(textOf(sheet)) && /cheapest \$88\.25/.test(textOf(sheet)));
+    check('a target with no cheapest simply does not mention one', !/cheapest —/.test(textOf(sheet)));
+    check('a no-book row with a url is tappable', sheet.querySelectorAll('.cards-nb-row').some((r) => r.tagName === 'A'));
+    check('and one without stays a plain row', sheet.querySelectorAll('.cards-nb-row').some((r) => r.tagName === 'DIV'));
+
+    // -- the footer, once ----------------------------------------------------
+    check('one footer, at the bottom', countOf(sheet, 'cards-foot') === 1);
+    check('the vault\'s words plus eBay\'s credit', sheet.querySelector('.cards-foot').textContent === 'lean, not an appraisal · eBay data via Browse API', sheet.querySelector('.cards-foot').textContent);
+
+    // -- nothing anywhere reads as a bug -------------------------------------
+    check('no "undefined" on the board or in the sheet', !/undefined/.test(textOf(root)) && !/undefined/.test(textOf(sheet)));
+    check('no "NaN" either', !/NaN/.test(textOf(root)) && !/NaN/.test(textOf(sheet)));
+
+    // -- empty states --------------------------------------------------------
+    console.log('\ncards — empty, ragged and degraded');
+    const emptyPanel = fakePanel();
+    const emptyRoot = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile(deskData({ flags: [], auctions: [], unbooked: [] })), { id: 'cards', actions: emptyPanel.actions });
+      return r;
+    });
+    withNow(NOW_UTC, () => cardsTap(cardBtns(emptyRoot)[0]));
+    check('no flags says so plainly', /Nothing under the gate right now/.test(textOf(emptyPanel.last.body)));
+    check('no auctions omits the section entirely', !/Auctions/.test(textOf(emptyPanel.last.body)));
+    check('no unbooked omits the fold', countOf(emptyPanel.last.body, 'cards-fold') === 0);
+    check('the footer still appears exactly once', countOf(emptyPanel.last.body, 'cards-foot') === 1);
+
+    // A payload with holes in every field: the row must still lay out, and no
+    // hole may render as a zero, an "undefined" or a "NaN".
+    const raggedPanel = fakePanel();
+    const raggedRoot = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile({
+        watch: {
+          flags: [{ item_id: 'x', book_state: 'fresh' }, { title: 'HALF', price: 10, book_state: 'fresh' }],
+          auctions: [{ title: 'NO-END', type: 'AUCTION' }],
+          unbooked: [{ player: 'Bare' }, {}, null, 'nope'],
+        },
+      }), { id: 'cards', actions: raggedPanel.actions });
+      return r;
+    });
+    withNow(NOW_UTC, () => cardsTap(cardBtns(raggedRoot)[0]));
+    const ragged = raggedPanel.last.body;
+    check('a row missing everything still lays out', countOf(ragged, 'cards-row') === 3);
+    check('and says so rather than printing undefined', /\(untitled listing\)/.test(textOf(ragged)));
+    check('no "undefined" survives a half-missing payload', !/undefined/.test(textOf(ragged)) && !/undefined/.test(textOf(raggedRoot)));
+    check('no "NaN" survives it either', !/NaN/.test(textOf(ragged)) && !/NaN/.test(textOf(raggedRoot)));
+    check('a missing amount reads as unknown, never as $0.00', /—/.test(textOf(ragged)) && !/\$0\.00/.test(textOf(ragged)));
+    check('an auction with no end time prints no ends line', countOf(ragged, 'cards-ends') === 0);
+    check('junk in the unbooked list is dropped, not rendered', countOf(ragged, 'cards-nb-row') === 1);
+    check('a payload with no footer still credits eBay', ragged.querySelector('.cards-foot').textContent === 'eBay data via Browse API');
+
+    // -- stale vs error ------------------------------------------------------
+    const staleRoot = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile(deskData({ errors: ['eBay Browse API: 3 of 14 searches rate-limited (429)'] }), 'stale', 'the 06:00 pull did not finish'), { id: 'cards', actions: panel.actions });
+      return r;
+    });
+    check('a stale desk still renders its menu', cardBtns(staleRoot).length === 2 && !!staleRoot.querySelector('.cards-count'));
+    check('with a small warning mark', countOf(staleRoot, 'cards-warn') === 1);
+    check('whose tooltip is the reason', staleRoot.querySelector('.cards-warn').getAttribute('title') === 'the 06:00 pull did not finish');
+    withNow(NOW_UTC, () => cardsTap(cardBtns(staleRoot)[0]));
+    check('the sheet reports what the feed could not reach', /rate-limited/.test(textOf(panel.last.body)));
+    const noReason = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile(deskData(), 'stale', null), { id: 'cards', actions: {} });
+      return r;
+    });
+    check('and with no reason given, the mark still explains itself', !!noReason.querySelector('.cards-warn').getAttribute('title'));
+
+    const bad = new El('div');
+    cards.render(bad, cardsTile(deskData(), 'error', 'the listing pull failed outright'), { id: 'cards', actions: {} });
+    check('an error tile lays out no desk of its own', cardBtns(bad).length === 0 && countOf(bad, 'cards-row') === 0);
+    check('it falls back to the rule-9 generic card', countOf(bad, 'generic') === 1);
+
+    // -- rule 9: the payload is allowed to grow ------------------------------
+    const grown = withNow(NOW_UTC, () => {
+      const r = new El('div');
+      cards.render(r, cardsTile({ watch: { flags: [listing({ grade_note: 'PSA pop 12' })], targets: 3 }, shop: { queue: 2, note: 'shipped' }, footer: 'x' }), { id: 'cards', actions: panel.actions });
+      return r;
+    });
+    check('a shop face that arrives stops saying "soon"', countOf(grown, 'cards-btn-soon') === 0 && cardBtns(grown).length === 2);
+    withNow(NOW_UTC, () => cardsTap(cardBtns(grown)[1]));
+    check('and opens as a generic card rather than nothing', /queue/.test(textOf(panel.last.body)) && /shipped/.test(textOf(panel.last.body)));
+    const noWatch = new El('div');
+    cards.render(noWatch, cardsTile({ shop: null }), { id: 'cards', actions: {} });
+    check('a payload with no watch face greys that button too', countOf(noWatch, 'cards-btn-soon') === 2);
+
+    // -- no sheet to open ----------------------------------------------------
+    let cardsThrew = null;
+    try {
+      const inert = withNow(NOW_UTC, () => {
+        const r = new El('div');
+        cards.render(r, cardsTile(deskData()), { id: 'cards', actions: {} });
+        return r;
+      });
+      cardsTap(cardBtns(inert)[0]);
+    } catch (e) { cardsThrew = e; }
+    check('a tap with no panel action never reaches the page', !cardsThrew, cardsThrew && cardsThrew.message);
+
+    // -- rule 7: nothing here parses a date ----------------------------------
+    const CARDS_SRC = fs
+      .readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'cards.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    check('the module never parses a date string', !/new Date|Date\.parse/.test(CARDS_SRC));
+    // The engine's arithmetic is the engine's. A number computed here would
+    // be indistinguishable from a real one on the screen, and wrong.
+    check('it never adds price and ship into an all-in', !/(price|ship)\s*\+\s*[a-z]*\.?(ship|price)/i.test(CARDS_SRC));
+    check('nor multiplies an FMV by the gate', !/(fmv\s*\*|\*\s*[a-z]*\.?gate)/i.test(CARDS_SRC));
+    check('and never reformats ends_ct', !/ends_ct[\s\S]{0,60}(ctKick|ctClock|prettyDate)/.test(CARDS_SRC));
+    check('it holds no state between renders', !/localStorage/.test(CARDS_SRC));
+  }
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));

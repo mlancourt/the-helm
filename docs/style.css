@@ -1315,3 +1315,249 @@ body {
 
 .tape-detail .tape-row { border-bottom: 1px solid var(--line-soft); }
 .tape-detail .tape-summary { -webkit-line-clamp: none; line-clamp: none; display: block; }
+
+/* ------------------------------------------------------------------- cards
+
+   The trading-card desk. A two-button menu on the board, exactly like
+   Entertainment; the listings live in the sheet, where a row is a 40px photo
+   beside four short lines: title, who it is, the money, and the marks.
+
+   The tick and the green are reserved for one thing — a fresh book under the
+   engine's gate. Everything else (an aging book, an auction still moving) is
+   muted, because the number is worth showing and not worth trusting at a
+   glance. Amber is likewise reserved: the dot on the button and the `ends`
+   line both mean "inside two hours", and nothing else on this tile is amber. */
+
+.cards-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 7px;
+}
+
+.cards-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg-sink);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 560;
+  text-align: left;
+  cursor: pointer;
+}
+.cards-btn:hover { color: var(--text); border-color: #2f3d4c; }
+.cards-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.cards-btn-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cards-emoji { font-size: 12px; line-height: 1; }
+
+.cards-btn-hunt { background: #2a2413; color: var(--brass); border-color: #4a4020; }
+.cards-btn-shop { background: #12232c; color: var(--info);  border-color: #1d4152; }
+
+/* A face the engine has not built yet: visible, so it reads as coming. */
+.cards-btn-soon {
+  background: #15191f;
+  color: var(--text-faint);
+  border-style: dashed;
+  cursor: default;
+}
+.cards-btn-soon:hover { color: var(--text-faint); border-color: var(--line); }
+.cards-soon {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.cards-count {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--brass);
+  color: #150f02;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.cards-count-new { font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.8; }
+
+/* Inside two hours. Ahead of the count, because it is the only thing on this
+   tile with a clock on it. */
+.cards-dot {
+  margin-left: auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--warn);
+  flex: 0 0 auto;
+}
+.cards-dot + .cards-count { margin-left: 4px; }
+
+/* -- the sheet -------------------------------------------------------- */
+
+.cards-head {
+  margin: 16px 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.cards-head:first-child { margin-top: 2px; }
+
+.cards-list { display: flex; flex-direction: column; }
+
+.cards-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.cards-list .cards-row:last-child { border-bottom: 0; }
+.cards-row-link { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transparent; }
+.cards-row-link:hover .cards-title { color: var(--brass); text-decoration: underline; }
+
+.cards-thumb {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  border: 1px solid var(--line-soft);
+  background: var(--bg-sink);
+  object-fit: cover;
+}
+.cards-thumb-none { background: #151b22; }
+
+.cards-main { min-width: 0; flex: 1; }
+.cards-title-line { display: flex; gap: 6px; align-items: baseline; }
+.cards-title {
+  font-size: 13.5px;
+  color: var(--text);
+  /* Two lines, then an ellipsis: eBay titles are keyword soup and a long one
+     would push the money off the screen. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cards-who { margin-top: 2px; font-size: 11.5px; color: var(--text-dim); }
+.cards-rung { color: var(--text-faint); }
+
+.cards-money {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.cards-allin { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.cards-arrow { color: var(--text-faint); }
+
+.cards-marks {
+  margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.cards-fmv {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.cards-fmv-good  { background: #122f24; color: var(--good); border-color: #1d4c38; }
+.cards-fmv-muted { background: #15191f; color: var(--text-faint); }
+.cards-check { font-weight: 700; }
+.cards-bookage { font-size: 11px; color: var(--text-faint); }
+
+.cards-chip {
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-sink);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+.cards-chip-max  { color: var(--brass); background: #2a2413; border-color: #4a4020; font-variant-numeric: tabular-nums; }
+.cards-chip-obo  { color: var(--info);  background: #12232c; border-color: #1d4152; }
+.cards-chip-band { color: var(--bad);   background: #331a18; border-color: #522a26; }
+
+.cards-ends {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.cards-ends-soon { color: var(--warn); font-weight: 650; }
+
+.cards-seller { margin-top: 3px; font-size: 11px; color: var(--text-faint); }
+.cards-sep { margin: 0 4px; color: var(--text-faint); }
+
+.cards-new-mark {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #2a2413;
+  border: 1px solid #4a4020;
+  color: var(--brass);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* -- the folded "no book" list -- */
+
+.cards-fold {
+  margin-top: 14px;
+  align-self: flex-start;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px dashed var(--line);
+  background: transparent;
+  color: var(--text-faint);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.cards-fold:hover { color: var(--text-dim); border-color: #2f3d4c; }
+.cards-fold:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.cards-nb { display: flex; flex-direction: column; margin-top: 6px; }
+.cards-nb-row {
+  padding: 6px 0;
+  font-size: 12px;
+  color: var(--text-faint);
+  border-bottom: 1px solid var(--line-soft);
+}
+.cards-nb .cards-nb-row:last-child { border-bottom: 0; }
+.cards-nb-player { color: var(--text-dim); }
+
+.cards-errors { margin: 2px 0 8px; font-size: 11.5px; color: var(--warn); }
+.cards-foot { margin: 14px 0 0; font-size: 11px; color: var(--text-faint); line-height: 1.4; }
+.cards-stale { display: flex; align-items: center; gap: 6px; }
+.cards-warn { color: var(--warn); font-size: 12px; cursor: help; }

@@ -248,3 +248,65 @@ export function line(n) {
   if (v === null) return '';
   return v > 0 ? `+${v}` : String(v);
 }
+
+/**
+ * Central WALL-CLOCK now, as 'YYYY-MM-DDTHH:MM'.
+ *
+ * The counterpart to `ctToday()` for payloads that carry a Central wall time
+ * the engine has already converted — `ends_ct` on an auction. Those strings
+ * must be rendered verbatim and must never be parsed (rule 7), so the only
+ * honest way to ask "is that inside two hours" is to bring NOW down to the
+ * same kind of string and compare the two as calendar text.
+ *
+ * `new Date()` is an instant and carries no timezone of its own, so formatting
+ * it through Intl with an explicit America/Chicago is safe — it is the same
+ * move `ctDate()` makes. h23 so midnight is '00:00' and never '24:00'.
+ */
+const CT_STAMP = new Intl.DateTimeFormat('en-CA', {
+  timeZone: CT,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  hourCycle: 'h23',
+});
+
+export function ctNowStamp(now = new Date()) {
+  const p = {};
+  for (const part of CT_STAMP.formatToParts(now)) p[part.type] = part.value;
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+}
+
+const WALL_RE = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/;
+
+/** A Central wall-clock stamp -> minutes on a flat calendar, or null. */
+function wallMinutes(stamp) {
+  const m = WALL_RE.exec(String(stamp ?? ''));
+  if (!m) return null;
+  const [y, mo, d, h, mi] = m.slice(1).map(Number);
+  if (mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59) return null;
+  return Date.UTC(y, mo - 1, d, h, mi) / 60000;
+}
+
+/**
+ * Minutes from `now` until a Central wall-clock stamp. Negative = already past,
+ * null = one of them is not a stamp.
+ *
+ * Both sides are Central wall time, so this is pure calendar arithmetic on the
+ * parts — Date.UTC is used as a counting frame and no timezone is ever applied
+ * to either string. That is what keeps rule 7 intact: `ends_ct` is never
+ * handed to `new Date()`, here or anywhere downstream.
+ *
+ * The one place it can be wrong is the hour a year that Central wall time
+ * repeats or skips, where a count that straddles the change is off by 60
+ * minutes. An auction alarm an hour early on the second Sunday in March is a
+ * fair price for never parsing a wall-clock string as an instant.
+ */
+export function minutesUntilCt(stamp, now = ctNowStamp()) {
+  const then = wallMinutes(stamp);
+  const here = wallMinutes(now);
+  if (then === null || here === null) return null;
+  return then - here;
+}

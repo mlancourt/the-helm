@@ -14,6 +14,7 @@
 export const REGISTRY = {
   bets_live: { band: 'LIVE', position: 10, module: './tiles/bets_live.js', title: 'Open Bets' },
   today_games: { band: 'LIVE', position: 20, module: './tiles/today_games.js', title: "Today's Games" },
+  cards: { band: 'HOURLY', position: 21, module: './tiles/cards.js', title: 'Cards' },
   newsstand: { band: 'HOURLY', position: 30, module: './tiles/newsstand.js', title: 'Newsstand' },
   entertainment: { band: 'DAILY', position: 35, module: './tiles/entertainment.js', title: 'Entertainment' },
   radar: { band: 'DAILY', position: 40, module: './tiles/radar.js', title: 'Radar' },

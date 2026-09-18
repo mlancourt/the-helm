@@ -73,6 +73,7 @@ Then open one of:
 |---|---|
 | `http://127.0.0.1:8080/?mock=1` | renders the fake snapshot, no Worker at all |
 | `http://127.0.0.1:8080/?mock=drift` | the schema-drift fixture (see rule 9 below) |
+| `http://127.0.0.1:8080/?mock=cards-stale` | the card desk half rate-limited (rule 8's grey treatment) |
 | `http://127.0.0.1:8080/?mock=live.local` | real event ids — watch the graders work |
 | `http://127.0.0.1:8080/?api=http://127.0.0.1:8787&t=<token>` | the real local Worker |
 
@@ -83,29 +84,29 @@ link would make the page post Matt's bearer token straight at an attacker.
 ### Tests
 
 ```bash
-npm test            # 682 assertions, no server needed
+npm test            # 1015 assertions, no server needed
 npm run test:worker # 62 assertions, needs `npm run dev` running
 ```
 
-- **`test:fmt`** (104) — every date helper, run under `America/Chicago`,
+- **`test:fmt`** (123) — every date helper, run under `America/Chicago`,
   `Asia/Tokyo`, `UTC` and `Pacific/Kiritimati`, asserting byte-identical output
   in all four. This is the rule-7 tripwire.
 - **`test-graders`** (111) — every market across pre / in / post / push, run
   against **real ESPN payloads** captured in `tools/fixtures/`. Inventing
   fixtures would only prove the graders agree with my guess about ESPN's shape,
   which is the exact thing worth testing.
-- **`test-band`** (44) — the LIVE loop's decisions rather than its arithmetic:
+- **`test-band`** (56) — the LIVE loop's decisions rather than its arithmetic:
   cadence, one summary per game and only once it is under way, one scoreboard
   per league, event-id matching, and that a dead feed keeps the last good
   grades instead of blanking them.
-- **`test-shell`** (78) — the header and the two sheets, which are the only
+- **`test-shell`** (81) — the header and the two sheets, which are the only
   part of the page with no other coverage because `app.js` cannot be imported
   outside a browser. It asserts the version comes from one constant, that the
   subhead cannot print `me.name`, that the phone sheets carry no fixed height,
   and that `style.css` reaches nowhere off this origin. Its sharpest assertion
   is a **cascade-order** check: a desktop override written above the phone rule
   it overrides loses silently, and only on a wide screen. That bug was real.
-- **`test:sw`** (39) — the service worker's routing policy: ESPN and `/ask` are
+- **`test:sw`** (42) — the service worker's routing policy: ESPN and `/ask` are
   never cached, `/api/data` is network-first with a cache fallback, the shell is
   stale-while-revalidate, and a 404 in the precache list cannot fail an install.
   It also asserts precache parity: every module the registry names is in `SHELL`.
@@ -116,7 +117,7 @@ npm run test:worker # 62 assertions, needs `npm run dev` running
   timeout, upstream error, corrupt snapshot, refusal, truncation). worker.js is
   a plain ES module, so the route runs in Node with no wrangler and no network.
   **No test ever calls a real model** — nothing here can spend money.
-- **`test-tiles`** (224) — every render module, against the mock snapshot and
+- **`test-tiles`** (520) — every render module, against the mock snapshot and
   against deliberately hostile payloads: empty, null, wrong-typed, all-fields-
   missing, and carrying fields no module has heard of. No module may throw at
   any of them, because a module that throws turns one card into "this tile
@@ -541,6 +542,56 @@ means published since you last opened this, not unheard."* The page can see a
 publish date; it cannot see a play. The watching sheet's footer carries TMDB's
 attribution string verbatim, from `data.attribution`.
 
+### Cards — the desk, and who does the arithmetic
+
+`cards` is a two-button menu in Entertainment's mould — 🎯 **Watch** · 🏷️
+**Shop** — because a shopping list is never urgent enough to earn board height.
+`shop` is `null` until that face ships, which the payload says out loud: a null
+face is still a button, greyed and wearing *soon*, so a face that is coming is
+visible as coming rather than silently absent.
+
+**The engine does every piece of judgement.** It sets the FMV, picks the gate,
+computes the all-in, decides the MAX bid, ages the comp book, marks a listing
+`OVER BAND`, and sorts both lists before publishing (flags by `pct_fmv`
+ascending, auctions by end time). The page recomputes none of it — in
+particular `all_in` is never derived from `price + ship` and `MAX` is never
+derived from `fmv × gate`. A number this page invented would look exactly like
+a real one on the screen and be wrong; the tests pin that by shipping a fixture
+whose `all_in` deliberately does not equal `price + ship`, and asserting the
+payload's figure is what renders.
+
+**The badge counts fresh flags only.** A 30-day-old comp book is a 30-day-old
+opinion about what a card is worth, so "51% of FMV" resting on one is a guess
+wearing a number's clothes: an `aging` flag still renders and still shows its
+percentage, but loses the green tick, loses the badge, and says `book 30d old`
+beside the chip. Auctions never count either — a current bid is not a price and
+has hours left to move, so an auction's chip is never green. Nothing under the
+gate means **no chip at all**, not a zero.
+
+**The amber dot means one thing: an auction inside two hours.** That is the
+last window in which Matt can actually get to a desk and decide, which is all a
+dot on a homepage is good for. `ends_ct` is a Central **wall-clock** string the
+engine already converted, so rule 7 forbids parsing it — the comparison brings
+NOW down to the same kind of string with `ctNowStamp()` and counts on the parts
+via `minutesUntilCt()`. The stamp itself is printed exactly as it arrived. A
+stamp already past still raises the dot: a snapshot published ten minutes late
+must not drop the alarm at the moment it matters most.
+
+One deliberate exception to rule 4 is worth knowing about: the 40px thumbnails
+are `<img>` tags pointing at the listing host's own CDN, which is a **third
+external origin** the hard rules do not list. A card you cannot see is a card
+you cannot judge, so it is here on purpose — kept as narrow as it goes. http(s)
+only through `safeUrl`, `referrerpolicy="no-referrer"` so the homepage's URL
+never reaches the host, `loading="lazy"` so nothing is fetched until the sheet
+is open, a grey box of the same size whenever there is no usable image, and the
+service worker never caches them. If that trade ever stops being worth it,
+deleting `thumb()` is a five-line change.
+
+`?mock=cards-stale` is the tile half-broken — `status: stale` with the engine's
+reason and a `watch.errors` entry. The rows Matt does have are still real, so
+they render and the tile wears a ⚠︎ whose tooltip is the reason (rule 8);
+`status: error` falls all the way back to rule 9's generic card.
+
 ### Rule 9 — drift in both directions
 
 The engine and the page ship on different clocks, so the page treats schema
@@ -841,7 +892,7 @@ else is the page's problem, and the page tolerates schema growth: an unknown
 tile id renders as a generic key/value card, a registered tile missing from the
 snapshot renders as an empty grey card.
 
-Tiles in the contract today: `bets_live`, `today_games`, `newsstand`,
+Tiles in the contract today: `bets_live`, `today_games`, `cards`, `newsstand`,
 `entertainment`, `radar`, `calendar`, `local_events`, `reminders`, `dinner`,
 `purser_due`, `wss_tape`, `ship_status`. The page reads their payloads
 field by field and skips what the engine has not sent — a missing field is

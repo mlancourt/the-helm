@@ -194,6 +194,33 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('an impossible hour is blank', fmt.ctClock('25:00'), '');
   eq('null is blank', fmt.ctClock(null), '');
 
+  console.log('\nCentral wall-clock now, and the two-hour window');
+  // `ends_ct` is Central wall time the engine already converted. The page may
+  // never parse it (rule 7), so "is that inside two hours" is decided by
+  // bringing NOW down to the same kind of string and counting on the parts.
+  // The harness runs this file in four timezones and diffs the transcripts:
+  // if any of this leaked the machine's zone, these would disagree.
+  eq('ctNowStamp is a Central wall stamp', /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(fmt.ctNowStamp()), true);
+  eq('and its date half is the Central business date', fmt.ctNowStamp().slice(0, 10), fmt.ctToday());
+  eq('midnight is 00:00, never 24:00', fmt.ctNowStamp(new Date('2026-09-18T05:00:00Z')).slice(11), '00:00');
+  eq('a fixed instant lands on Central wall time', fmt.ctNowStamp(new Date('2026-09-18T21:30:00Z')), '2026-09-18T16:30');
+
+  eq('1h59 out is inside two hours', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T17:31'), 119);
+  eq('2h01 out is not', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T17:29'), 121);
+  eq('exactly two hours is still two hours', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T17:30'), 120);
+  eq('already past counts negative', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T20:00'), -30);
+  eq('the same minute is zero', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T19:30'), 0);
+  eq('across midnight', fmt.minutesUntilCt('2026-09-19T00:15', '2026-09-18T23:45'), 30);
+  eq('across a month end', fmt.minutesUntilCt('2026-10-01T00:30', '2026-09-30T23:30'), 60);
+  eq('across a year end', fmt.minutesUntilCt('2027-01-01T00:10', '2026-12-31T23:50'), 20);
+  eq('a space instead of a T is still a stamp', fmt.minutesUntilCt('2026-09-18 19:30', '2026-09-18T18:30'), 60);
+  eq('a date-only stamp is not a wall time', fmt.minutesUntilCt('2026-09-18', '2026-09-18T18:30'), null);
+  eq('junk is null', fmt.minutesUntilCt('tonight', '2026-09-18T18:30'), null);
+  eq('an impossible hour is null', fmt.minutesUntilCt('2026-09-18T25:00', '2026-09-18T18:30'), null);
+  eq('null is null', fmt.minutesUntilCt(null, '2026-09-18T18:30'), null);
+  eq('junk on the now side is null too', fmt.minutesUntilCt('2026-09-18T19:30', 'now'), null);
+  eq('now against itself is zero', fmt.minutesUntilCt(fmt.ctNowStamp()), 0);
+
   console.log(`\n${pass} passed, ${fail} failed`);
   if (fail) process.exit(1);
 })();
