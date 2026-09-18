@@ -22,6 +22,7 @@ export const REGISTRY = {
   reminders: { band: 'DAILY', position: 55, module: './tiles/reminders.js', title: 'Reminders' },
   dinner: { band: 'DAILY', position: 60, module: './tiles/dinner.js', title: 'Dinner' },
   purser_due: { band: 'DAILY', position: 70, module: './tiles/purser_due.js', title: 'Purser — Due' },
+  wss_tape: { band: 'DAILY', position: 75, module: './tiles/wss_tape.js', title: 'Crew Tape' },
   ship_status: { band: 'DAILY', position: 80, module: './tiles/ship_status.js', title: 'Ship Status' },
   ask: { band: 'ASK', position: 99, module: './tiles/ask.js', title: 'Ask' },
 };

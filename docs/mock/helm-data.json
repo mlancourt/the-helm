@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-18T00:04:20.738Z",
-  "run_id": "run-mock-mu674uiq",
+  "generated_at": "2026-09-18T00:38:25.478Z",
+  "run_id": "run-mock-mu68co92",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.478Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -94,7 +94,7 @@
     },
     "today_games": {
       "band": "LIVE",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.478Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -154,7 +154,7 @@
     },
     "radar": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.478Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -170,7 +170,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.478Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -220,7 +220,7 @@
     },
     "local_events": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.478Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -360,7 +360,7 @@
     },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.478Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -444,7 +444,7 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.479Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -456,7 +456,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.479Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -488,13 +488,204 @@
         ]
       }
     },
-    "newsstand": {
-      "band": "HOURLY",
-      "updated_at": "2026-09-17T23:41:20.738Z",
+    "wss_tape": {
+      "band": "DAILY",
+      "updated_at": "2026-09-18T00:38:25.479Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-17T23:41:20.738Z",
+        "title": "Crew Tape",
+        "date": "2026-09-17",
+        "count": 12,
+        "by_actor": [
+          {
+            "name": "Rae",
+            "n": 5
+          },
+          {
+            "name": "Kit",
+            "n": 4
+          },
+          {
+            "name": "Odis",
+            "n": 3
+          }
+        ],
+        "items": [
+          {
+            "ts": "2026-09-18T00:20:25.479Z",
+            "time_ct": "15:42",
+            "actor": "Rae",
+            "action": "ticket_update",
+            "kind": "ticket",
+            "id": "S1104",
+            "unit": null,
+            "who": "Mock Chemical Co.",
+            "summary": "stage IN-PROGRESS → NEEDS-QUOTE",
+            "evt": "mk1a2b"
+          },
+          {
+            "ts": "2026-09-17T23:43:25.479Z",
+            "time_ct": "15:05",
+            "actor": "Kit",
+            "action": "readiness",
+            "kind": "unit",
+            "id": "148021",
+            "unit": null,
+            "who": "Invented Floor Scrubber 2024",
+            "summary": "readiness NEEDS-PREP → READY",
+            "evt": "mk3c4d"
+          },
+          {
+            "ts": "2026-09-17T23:35:25.479Z",
+            "time_ct": "14:57",
+            "actor": "Rae",
+            "action": "ticket_update",
+            "kind": "ticket",
+            "id": "S1098",
+            "unit": "112900",
+            "who": "Fictional Foods",
+            "summary": "stage WAITING-ON-CUSTOMER → IN-PROGRESS",
+            "evt": "mk5e6f"
+          },
+          {
+            "ts": "2026-09-17T22:08:25.479Z",
+            "time_ct": "13:30",
+            "actor": "Odis",
+            "action": "lead_update",
+            "kind": "lead",
+            "id": "L1077",
+            "unit": null,
+            "who": "Nowhere Logistics",
+            "summary": "value set; stage CONTACTED → QUOTED",
+            "evt": "mk7g8h"
+          },
+          {
+            "ts": "2026-09-17T21:19:25.479Z",
+            "time_ct": "12:41",
+            "actor": "Kit",
+            "action": "ticket_update",
+            "kind": "ticket",
+            "id": "S1101",
+            "unit": null,
+            "who": "Made-Up Metal Works",
+            "summary": "parts ordered; stage NEEDS-PARTS → WAITING-ON-PARTS",
+            "evt": "mk9i0j"
+          },
+          {
+            "ts": "2026-09-17T20:05:25.479Z",
+            "time_ct": "11:27",
+            "actor": "Rae",
+            "action": "ticket_close",
+            "kind": "ticket",
+            "id": "S1042",
+            "unit": null,
+            "who": "",
+            "summary": "stage IN-PROGRESS → CLOSED",
+            "evt": "mkak1l"
+          },
+          {
+            "ts": "2026-09-17T19:36:25.479Z",
+            "time_ct": "10:58",
+            "actor": "Odis",
+            "action": "readiness",
+            "kind": "unit",
+            "id": "146533",
+            "unit": null,
+            "who": "Invented Ride-On Sweeper 2021",
+            "summary": "readiness READY → IN-SERVICE",
+            "evt": "mkbm2n"
+          },
+          {
+            "ts": "2026-09-17T18:50:25.479Z",
+            "time_ct": "10:12",
+            "actor": "Kit",
+            "action": "ticket_update",
+            "kind": "ticket",
+            "id": "S1103",
+            "unit": null,
+            "who": "Invented Plating",
+            "summary": "note added; tech scheduled for the morning run",
+            "evt": "mkco3p"
+          },
+          {
+            "ts": "2026-09-17T18:22:25.479Z",
+            "time_ct": "09:44",
+            "actor": "Rae",
+            "action": "lead_update",
+            "kind": "lead",
+            "id": "L1074",
+            "unit": null,
+            "who": "Pretend Packaging",
+            "summary": "stage NEW → CONTACTED",
+            "evt": "mkdq4r"
+          },
+          {
+            "ts": "2026-09-17T17:41:25.479Z",
+            "time_ct": "09:03",
+            "actor": "Odis",
+            "action": "ticket_update",
+            "kind": "ticket",
+            "id": "S1099",
+            "unit": "113044",
+            "who": "Mock Chemical Co.",
+            "summary": "stage NEEDS-PARTS → IN-PROGRESS",
+            "evt": "mkes5t"
+          },
+          {
+            "ts": "2026-09-17T16:54:25.479Z",
+            "time_ct": "08:16",
+            "actor": "Kit",
+            "action": "ticket_open",
+            "kind": "ticket",
+            "id": "S1105",
+            "unit": null,
+            "who": "Fictional Foods",
+            "summary": "opened RECEIVED — brush drive noise",
+            "evt": "mkfu6v"
+          },
+          {
+            "ts": "2026-09-17T16:30:25.479Z",
+            "time_ct": "07:52",
+            "actor": "Rae",
+            "action": "other",
+            "kind": "other",
+            "id": "—",
+            "unit": null,
+            "who": "",
+            "summary": "reserve set for the week",
+            "evt": "mkgw7x"
+          }
+        ],
+        "yesterday": {
+          "date": "2026-09-16",
+          "count": 9,
+          "by_actor": [
+            {
+              "name": "Rae",
+              "n": 4
+            },
+            {
+              "name": "Kit",
+              "n": 3
+            },
+            {
+              "name": "Mission Control",
+              "n": 2
+            }
+          ]
+        },
+        "last_fleet_run_ct": "16:38",
+        "source": "mock generator (applied lines only)"
+      }
+    },
+    "newsstand": {
+      "band": "HOURLY",
+      "updated_at": "2026-09-18T00:15:25.479Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "as_of": "2026-09-18T00:15:25.479Z",
         "count": 4,
         "refresh_note": null,
         "source": "mock generator",
@@ -538,12 +729,12 @@
     },
     "entertainment": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.479Z",
       "status": "ok",
       "error": null,
       "data": {
         "watching": {
-          "updated_at": "2026-09-17T22:29:20.738Z",
+          "updated_at": "2026-09-17T23:03:25.479Z",
           "items": [
             {
               "title": "The Quiet Ledger",
@@ -620,13 +811,13 @@
           "errors": null
         },
         "podcasts": {
-          "updated_at": "2026-09-17T23:24:20.738Z",
+          "updated_at": "2026-09-17T23:58:25.479Z",
           "items": [
             {
               "show": "Mock Fork",
               "title": "The chatbot that filed its own taxes",
               "published": "2026-09-17",
-              "published_at": "2026-09-17T21:04:20.738Z",
+              "published_at": "2026-09-17T21:38:25.479Z",
               "duration_min": 58,
               "url": "https://example.com/mock/pod/fork-1",
               "artwork": null
@@ -635,7 +826,7 @@
               "show": "The Long Docket",
               "title": "Case 114: the disappearing deposition",
               "published": "2026-09-16",
-              "published_at": "2026-09-16T22:04:20.738Z",
+              "published_at": "2026-09-16T22:38:25.479Z",
               "duration_min": 71,
               "url": "https://example.com/mock/pod/docket-1",
               "artwork": null
@@ -644,7 +835,7 @@
               "show": "Ledger & Lamp",
               "title": "A very small bank in a very large hurry",
               "published": "2026-09-15",
-              "published_at": "2026-09-15T21:04:20.738Z",
+              "published_at": "2026-09-15T21:38:25.479Z",
               "duration_min": 44,
               "url": "https://example.com/mock/pod/ledger-1",
               "artwork": null
@@ -653,7 +844,7 @@
               "show": "Mock Fork",
               "title": "Everyone is building the same agent",
               "published": "2026-09-14",
-              "published_at": "2026-09-14T22:34:20.738Z",
+              "published_at": "2026-09-14T23:08:25.479Z",
               "duration_min": 63,
               "url": "https://example.com/mock/pod/fork-2",
               "artwork": null
@@ -662,7 +853,7 @@
               "show": "Ledger & Lamp",
               "title": "The audit nobody asked for",
               "published": "2026-09-08",
-              "published_at": "2026-09-09T00:04:20.738Z",
+              "published_at": "2026-09-09T00:38:25.479Z",
               "duration_min": null,
               "url": "https://example.com/mock/pod/ledger-2",
               "artwork": null
@@ -671,7 +862,7 @@
               "show": "Cold Open Radio",
               "title": "Twelve minutes of dead air, explained",
               "published": "2026-09-05",
-              "published_at": "2026-09-06T00:04:20.738Z",
+              "published_at": "2026-09-06T00:38:25.479Z",
               "duration_min": 12,
               "url": "https://example.com/mock/pod/cold-1",
               "artwork": null
@@ -692,18 +883,18 @@
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T00:04:20.738Z",
+      "updated_at": "2026-09-18T00:38:25.479Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-16T18:04:20.738Z",
+        "drift_audit_updated": "2026-09-16T18:38:25.479Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-17T23:56:20.738Z",
+        "worker_published_at": "2026-09-18T00:30:25.479Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -725,7 +916,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-17T22:34:20.738Z",
+      "updated_at": "2026-09-17T23:08:25.479Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

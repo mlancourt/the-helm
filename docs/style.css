@@ -1186,3 +1186,132 @@ body {
   font-size: 11px;
   color: var(--text-faint);
 }
+
+/* ------------------------------------------------------------ wss_tape ("Crew Tape")
+
+   The day's applied fleet updates. A dense log, deliberately: the chips at the
+   top are the glance, the rows under them are the detail, and both are read in
+   one sweep rather than studied. Held to the menu tiles' height by the module's
+   eight-row budget (T7), with the rest behind "+N more".
+
+   Every actor carries one accent — the same colour on the chip and on every row
+   they touched — which is what lets four names read as a shape. The palette is
+   six slots deep; the module hashes the name into one of them. */
+
+.tape { display: flex; flex-direction: column; }
+
+/* -- the glance -- */
+
+.tape-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.tape-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-sink);
+  font-size: 11.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.tape-chip-n { color: var(--text-faint); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* -- the rows -- */
+
+.tape-rows { display: flex; flex-direction: column; }
+
+.tape-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  padding: 5px 0;
+  font-size: 13px;
+  line-height: 1.35;
+  border-bottom: 1px solid var(--line-soft);
+}
+.tape-rows .tape-row:last-child { border-bottom: 0; }
+
+/* Tabular numerals so a column of clock times lines up without a table. */
+.tape-time { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tape-actor { font-weight: 650; white-space: nowrap; }
+
+/* The id and the customer it belongs to are one unit: a serial that wraps away
+   from its name is two facts instead of one. */
+.tape-what { display: inline-flex; align-items: baseline; gap: 5px; min-width: 0; }
+.tape-id { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.tape-unit {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.tape-who { color: var(--text-dim); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* Two lines and no more: the engine caps the summary at 140 characters, and
+   this is the same promise kept in pixels. */
+.tape-summary {
+  color: var(--text-dim);
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* The dot lives inside the part it introduces, so it wraps with it. */
+.tape-sep { margin-right: 4px; color: var(--text-faint); }
+
+/* -- the accents: one per actor, six slots, hashed in the module -- */
+
+.tape-a0 { color: var(--info); }
+.tape-a1 { color: var(--good); }
+.tape-a2 { color: var(--brass); }
+.tape-a3 { color: #9f8fd8; }
+.tape-a4 { color: #e08a6a; }
+.tape-a5 { color: #63c6c0; }
+
+/* A chip is the actor's colour at chip weight — tinted ground, coloured text,
+   and a border that belongs to the same family rather than the default line. */
+.tape-chip.tape-a0 { background: #12232c; border-color: #1d4152; }
+.tape-chip.tape-a1 { background: #122f24; border-color: #1d4c38; }
+.tape-chip.tape-a2 { background: #2a2413; border-color: #4a4020; }
+.tape-chip.tape-a3 { background: #1d1b2e; border-color: #332e4d; }
+.tape-chip.tape-a4 { background: #2c1d17; border-color: #4a3227; }
+.tape-chip.tape-a5 { background: #10282a; border-color: #1c4547; }
+
+/* The way into the rest of the day. Same control as Lake Country's, because it
+   opens the same sheet and should not read as a different kind of button. */
+.tape-more {
+  display: block;
+  width: 100%;
+  margin-top: 9px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #1a1f26;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tape-more:hover { color: var(--text); border-color: #2f3d4c; }
+.tape-more:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.tape-yesterday { margin-top: 2px; }
+.tape-stale { display: flex; align-items: center; gap: 6px; }
+.tape-warn { color: var(--warn); font-size: 12px; cursor: help; }
+
+/* -- the sheet: the same rows, with room for the whole day -- */
+
+.tape-detail .tape-row { border-bottom: 1px solid var(--line-soft); }
+.tape-detail .tape-summary { -webkit-line-clamp: none; line-clamp: none; display: block; }

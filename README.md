@@ -842,8 +842,8 @@ tile id renders as a generic key/value card, a registered tile missing from the
 snapshot renders as an empty grey card.
 
 Tiles in the contract today: `bets_live`, `today_games`, `newsstand`,
-`entertainment`, `radar`, `calendar`, `reminders`, `dinner`, `purser_due`,
-`ship_status`. The page reads their payloads
+`entertainment`, `radar`, `calendar`, `local_events`, `reminders`, `dinner`,
+`purser_due`, `wss_tape`, `ship_status`. The page reads their payloads
 field by field and skips what the engine has not sent — a missing field is
 never rendered as a zero, a `false`, or an `Invalid Date`.
 

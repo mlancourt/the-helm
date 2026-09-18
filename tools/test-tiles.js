@@ -1252,6 +1252,222 @@ async function main() {
     check('and ships no "new since opened" badge', !/new-mark|badge/.test(LC_SRC));
   }
 
+
+  // -- wss_tape: the Crew Tape ----------------------------------------------
+  //
+  // The tile is a glance and a log at once: the chips have to agree with the
+  // rows, the rows have to stay in the engine's order, and the eight-row
+  // budget has to hand everything it cut to the button. The accents are the
+  // other half of the glance — one colour per actor, the same on the chip and
+  // on every row that actor touched — so those are asserted as a relationship
+  // rather than against a fixed palette slot.
+  console.log('\nwss_tape — the Crew Tape');
+  const tape = mods.get('wss_tape');
+  const tapeTap = (btn) => btn.listeners.click[0]({ stopPropagation() {} });
+  const tapeRows = (node) => node.querySelectorAll('.tape-row');
+  const tapeChips = (node) => node.querySelectorAll('.tape-chip');
+  const tapeMore = (node) => node.querySelector('.tape-more');
+  const accentOf = (node) => [...node.classList.set].find((c) => /^tape-a\d$/.test(c));
+  // Every part but the first opens with its own separator dot (the dot wraps
+  // with the part it introduces), so a part's text is read without it.
+  const bare = (node) => node.textContent.replace(/^\u00b7/, '');
+
+  if (tape) {
+    // Invented crew, invented customers, invented serials (rule 1).
+    const item = (time_ct, actor, extra = {}) => ({
+      ts: daysAgoIso(0),
+      time_ct,
+      actor,
+      action: 'ticket_update',
+      kind: 'ticket',
+      id: 'S1104',
+      unit: null,
+      who: 'Mock Chemical Co.',
+      summary: 'stage IN-PROGRESS → NEEDS-QUOTE',
+      evt: 'mk1a2b',
+      ...extra,
+    });
+    const tapeTile = (data, status = 'ok', error = null) => ({ band: 'DAILY', status, error, data });
+
+    // Twelve items, newest first, three actors — the shape the engine emits.
+    const TIMES = ['15:42', '15:05', '14:57', '13:30', '12:41', '11:27', '10:58', '10:12', '09:44', '09:03', '08:16', '07:52'];
+    const ACTORS = ['Rae', 'Kit', 'Rae', 'Odis', 'Kit', 'Rae', 'Odis', 'Kit', 'Rae', 'Odis', 'Kit', 'Rae'];
+    const day = {
+      title: 'Crew Tape',
+      date: ymd(0),
+      count: 12,
+      by_actor: [{ name: 'Rae', n: 5 }, { name: 'Kit', n: 4 }, { name: 'Odis', n: 3 }],
+      items: TIMES.map((t, i) => item(t, ACTORS[i], { id: `S11${String(i).padStart(2, '0')}` })),
+      yesterday: { date: ymd(-1), count: 9, by_actor: [{ name: 'Rae', n: 4 }, { name: 'Kit', n: 3 }, { name: 'Mission Control', n: 2 }] },
+      last_fleet_run_ct: '16:38',
+      source: 'test',
+    };
+
+    const panel = fakePanel();
+    const board = new El('div');
+    tape.render(board, tapeTile(day), { id: 'wss_tape', actions: panel.actions });
+
+    // -- the glance ----------------------------------------------------------
+    check('one chip per actor, in the payload’s order', tapeChips(board).map((c) => c.querySelector('.tape-chip-name').textContent).join('|') === 'Rae|Kit|Odis', tapeChips(board).map((c) => c.textContent).join('|'));
+    check('each chip carries that actor’s count', tapeChips(board).map((c) => c.querySelector('.tape-chip-n').textContent).join() === '5,4,3', tapeChips(board).map((c) => c.textContent).join());
+    check('and reads as "name n"', tapeChips(board)[0].textContent === 'Rae 5', tapeChips(board)[0].textContent);
+
+    // -- the eight-row budget ------------------------------------------------
+    check('eight rows reach the board', tapeRows(board).length === 8, String(tapeRows(board).length));
+    check('newest first, untouched', tapeRows(board).map((r) => r.querySelector('.tape-time').textContent).join() === TIMES.slice(0, 8).join(), tapeRows(board).map((r) => r.querySelector('.tape-time').textContent).join());
+    check('the rest is behind one button', !!tapeMore(board));
+    check('which counts every row it is hiding', tapeMore(board).textContent === '+4 more', tapeMore(board).textContent);
+
+    // -- a row reads time · actor · id who · summary -------------------------
+    const r0 = tapeRows(board)[0];
+    check('a row reads time · actor · id who · summary', /15:42.*·.*Rae.*·.*S1100.*Mock Chemical Co\..*·.*NEEDS-QUOTE/.test(r0.textContent), r0.textContent);
+    check('the clock string is printed verbatim', r0.querySelector('.tape-time').textContent === '15:42');
+
+    // -- accents: one per actor, chip and row agree --------------------------
+    const chipAccent = (name) => accentOf(tapeChips(board).find((c) => c.querySelector('.tape-chip-name').textContent === name));
+    const rowAccents = tapeRows(board).map((r) => ({ actor: bare(r.querySelector('.tape-actor')), accent: accentOf(r.querySelector('.tape-actor')) }));
+    check('every actor wears an accent', rowAccents.every((r) => !!r.accent) && tapeChips(board).every((c) => !!accentOf(c)));
+    check('a row wears the same accent as its chip', rowAccents.every((r) => r.accent === chipAccent(r.actor)), JSON.stringify(rowAccents));
+    check('two different actors are not the same colour by accident', new Set(['Rae', 'Kit', 'Odis'].map(chipAccent)).size === 3, ['Rae', 'Kit', 'Odis'].map(chipAccent).join());
+    // The accent is a pure hash, so it must survive a second render unchanged.
+    const again = new El('div');
+    tape.render(again, tapeTile(day), { id: 'wss_tape', actions: {} });
+    check('and the same name lands on the same accent every render', accentOf(again.querySelectorAll('.tape-chip')[0]) === chipAccent('Rae'));
+
+    // -- the footer ----------------------------------------------------------
+    check('a muted footer says how fresh the tape is', /as of 16:38 CT/.test(textOf(board)), textOf(board));
+    const noRun = new El('div');
+    tape.render(noRun, tapeTile({ ...day, last_fleet_run_ct: null }), { id: 'wss_tape', actions: {} });
+    check('with no run time the footer is omitted entirely', !/as of/.test(textOf(noRun)) && countOf(noRun, 'tape-asof') === 0);
+
+    // -- the sheet -----------------------------------------------------------
+    tapeTap(tapeMore(board));
+    check('the button opens the shared sheet', panel.calls.length === 1);
+    check('titled Crew Tape', panel.last.title === 'Crew Tape');
+    const sheet = panel.last.body;
+    check('the sheet holds the whole day, not just the remainder', tapeRows(sheet).length === 12, String(tapeRows(sheet).length));
+    check('in the same order', tapeRows(sheet).map((r) => r.querySelector('.tape-time').textContent).join() === TIMES.join());
+    check('with the same chips at the top of it', tapeChips(sheet).map((c) => c.textContent).join('|') === 'Rae 5|Kit 4|Odis 3', tapeChips(sheet).map((c) => c.textContent).join('|'));
+    check('the board is unchanged by opening it', tapeRows(board).length === 8);
+
+    // A day that fits needs no way into a sheet that would hold the same rows.
+    const short = new El('div');
+    tape.render(short, tapeTile({ ...day, count: 3, items: day.items.slice(0, 3) }), { id: 'wss_tape', actions: {} });
+    check('a day that fits offers no button', !tapeMore(short) && tapeRows(short).length === 3);
+    // Exactly eight is still a day that fits.
+    const eight = new El('div');
+    tape.render(eight, tapeTile({ ...day, count: 8, items: day.items.slice(0, 8) }), { id: 'wss_tape', actions: {} });
+    check('and neither does a day of exactly eight', !tapeMore(eight) && tapeRows(eight).length === 8);
+
+    // -- what a row does with a missing part ---------------------------------
+    console.log('\nwss_tape — ragged rows');
+    const ragged = new El('div');
+    tape.render(ragged, tapeTile({
+      ...day,
+      count: 5,
+      items: [
+        item('14:57', 'Rae', { id: 'S1042', who: '', summary: 'stage IN-PROGRESS → CLOSED' }),
+        item('13:30', 'Odis', { id: 'S1008', unit: '112900', who: 'Fictional Foods' }),
+        item('12:41', 'Mission Control', { kind: 'lead', id: 'L1077', who: 'Nowhere Logistics', summary: 'opened NEW' }),
+        item('11:27', '', { id: 'S1101', who: 'Invented Plating' }),
+        item('', 'Kit', { id: '', who: '', summary: 'reserve set for the week' }),
+      ],
+    }), { id: 'wss_tape', actions: {} });
+    const rr = tapeRows(ragged);
+    check('a closed ticket renders its id alone', countOf(rr[0], 'tape-who') === 0 && rr[0].querySelector('.tape-id').textContent === 'S1042');
+    check('and prints no empty slot where the customer was', bare(rr[0].querySelector('.tape-what')) === 'S1042', bare(rr[0].querySelector('.tape-what')));
+    check('a ticket that names a serial wears it as a mono suffix', rr[1].querySelector('.tape-unit').textContent === '112900');
+    check('after the id, before the customer', /S1008.*112900.*Fictional Foods/.test(rr[1].textContent), rr[1].textContent);
+    check('a serial-less row grows no unit suffix', countOf(rr[0], 'tape-unit') === 0 && countOf(rr[2], 'tape-unit') === 0);
+    check('the intake bot is an actor like any other', bare(rr[2].querySelector('.tape-actor')) === 'Mission Control' && !!accentOf(rr[2].querySelector('.tape-actor')));
+    check('an actorless row prints no leading separator', !/^\s*·/.test(rr[3].textContent), rr[3].textContent);
+    check('and a row with neither an id nor a customer still renders', countOf(rr[4], 'tape-what') === 0 && /reserve set for the week/.test(rr[4].textContent), rr[4].textContent);
+    // An item with nothing to say is a timestamp on a blank line, not an event.
+    const hollow = new El('div');
+    tape.render(hollow, tapeTile({ ...day, count: 2, items: [item('09:00', 'Kit', { id: '', summary: '' }), item('08:00', 'Rae')] }), { id: 'wss_tape', actions: {} });
+    check('an item with neither an id nor a summary is dropped', tapeRows(hollow).length === 1);
+
+    // The engine caps a summary at 140 characters; the board cannot recover if
+    // it ever does not, so the module holds the same line.
+    const long = new El('div');
+    tape.render(long, tapeTile({ ...day, count: 1, items: [item('09:00', 'Kit', { summary: 'x'.repeat(400) })] }), { id: 'wss_tape', actions: {} });
+    check('a runaway summary is clipped rather than left to push the board', long.querySelector('.tape-summary').textContent.length <= 141, String(long.querySelector('.tape-summary').textContent.length));
+    check('and says it was clipped', /…$/.test(long.querySelector('.tape-summary').textContent));
+
+    // -- a quiet day ---------------------------------------------------------
+    console.log('\nwss_tape — a quiet day');
+    const quiet = new El('div');
+    tape.render(quiet, tapeTile({ title: 'Crew Tape', date: ymd(0), count: 0, by_actor: [], items: [], yesterday: day.yesterday, last_fleet_run_ct: '06:10' }), { id: 'wss_tape', actions: {} });
+    check('an empty day says so plainly', /quiet so far/.test(textOf(quiet)));
+    check('and lays out no rows', tapeRows(quiet).length === 0 && !tapeMore(quiet));
+    check('with one muted line of yesterday', quiet.querySelector('.tape-yesterday').textContent === 'yesterday: 9 · Rae 4 · Kit 3 · Mission Control 2', quiet.querySelector('.tape-yesterday').textContent);
+    check('the footer still says how fresh the tape is', /as of 06:10 CT/.test(textOf(quiet)));
+
+    for (const [label, yesterday] of [['a quiet yesterday too', { date: ymd(-1), count: 0, by_actor: [] }], ['no yesterday at all', undefined], ['a yesterday of junk', { count: 'lots' }]]) {
+      const alone = new El('div');
+      tape.render(alone, tapeTile({ count: 0, items: [], yesterday }), { id: 'wss_tape', actions: {} });
+      check(`${label} leaves "quiet so far" standing alone`, /quiet so far/.test(textOf(alone)) && countOf(alone, 'tape-yesterday') === 0, textOf(alone));
+    }
+    // A count the parser got wrong must not out-vote the items themselves.
+    const counted = new El('div');
+    tape.render(counted, tapeTile({ ...day, count: 0 }), { id: 'wss_tape', actions: {} });
+    check('a wrong count never hides rows the payload does carry', tapeRows(counted).length === 8 && !/quiet so far/.test(textOf(counted)));
+    const uncounted = new El('div');
+    tape.render(uncounted, tapeTile({ count: 12, items: [], yesterday: day.yesterday }), { id: 'wss_tape', actions: {} });
+    check('and a count with no items still reads as quiet', /quiet so far/.test(textOf(uncounted)));
+
+    // -- stale vs error ------------------------------------------------------
+    console.log('\nwss_tape — stale vs error');
+    const stale = new El('div');
+    tape.render(stale, tapeTile(day, 'stale', 'the 16:38 run half-finished'), { id: 'wss_tape', actions: {} });
+    check('a stale tape still renders its rows', tapeRows(stale).length === 8);
+    check('with a small warning mark beside them', countOf(stale, 'tape-warn') === 1);
+    check('whose tooltip is the reason', stale.querySelector('.tape-warn').getAttribute('title') === 'the 16:38 run half-finished');
+    const stale2 = new El('div');
+    tape.render(stale2, tapeTile(day, 'stale', null), { id: 'wss_tape', actions: {} });
+    check('and with no reason given, the mark still explains itself', !!stale2.querySelector('.tape-warn').getAttribute('title'));
+
+    const bad = new El('div');
+    tape.render(bad, tapeTile(day, 'error', 'no run report for today'), { id: 'wss_tape', actions: {} });
+    check('an error tile lays out no rows of its own', tapeRows(bad).length === 0 && tapeChips(bad).length === 0);
+    check('no way into a sheet that would be a lie', !tapeMore(bad));
+    check('it falls back to the rule-9 generic card', countOf(bad, 'generic') === 1);
+    check('which surfaces what the payload did carry', /count/.test(textOf(bad)) && /last_fleet_run_ct/.test(textOf(bad)));
+
+    // -- rule 9: the payload is allowed to grow ------------------------------
+    const grown = new El('div');
+    tape.render(grown, tapeTile({
+      ...day,
+      count: 1,
+      items: [{ ...item('14:57', 'Rae'), shift: 'second', applied_by_run: 'run-2026-09-17-1638' }],
+      window: { from: ymd(0) },
+      schema_note: 'v2 someday',
+    }), { id: 'wss_tape', actions: {} });
+    check('an unknown key on the payload changes nothing', tapeRows(grown).length === 1 && !/v2 someday/.test(textOf(grown)));
+    check('and an unknown key on an item changes nothing', !/second|run-2026/.test(textOf(grown)), textOf(grown));
+
+    // -- no sheet to open ----------------------------------------------------
+    const inertTape = new El('div');
+    let tapeThrew = null;
+    try {
+      tape.render(inertTape, tapeTile(day), { id: 'wss_tape', actions: {} });
+      tapeTap(tapeMore(inertTape));
+    } catch (e) { tapeThrew = e; }
+    check('a tap with no panel action never reaches the page', !tapeThrew, tapeThrew && tapeThrew.message);
+
+    // -- T7: nothing is remembered ------------------------------------------
+    // A day's tape is not a backlog: no badges, no "new since opened", and no
+    // storage to hold either. Comments stripped first — the header SAYS "no
+    // localStorage", and a header saying so is the opposite of a violation.
+    const TAPE_SRC = fs
+      .readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'wss_tape.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    check('the module never touches localStorage', !/localStorage/.test(TAPE_SRC));
+    check('and ships no badge or "new since opened" mark', !/new-mark|badge/.test(TAPE_SRC));
+    check('and never parses a date string it was handed', !/new Date/.test(TAPE_SRC));
+  }
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));

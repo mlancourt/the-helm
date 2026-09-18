@@ -371,6 +371,48 @@ function snapshot() {
         ],
       }),
 
+      // Crew Tape. Every crew member, customer and serial below is invented —
+      // the shape is the Fleet engine's (T2/T6) and nothing in it names anyone
+      // real. Twelve items so the board's eight-row budget bites and "+4 more"
+      // has something to open; one row carries a unit serial on a ticket, one
+      // has lost its customer (a closed ticket), and the intake bot appears
+      // under its own name.
+      wss_tape: tile('DAILY', {
+        title: 'Crew Tape',
+        date: TODAY,
+        count: 12,
+        by_actor: [
+          { name: 'Rae', n: 5 },
+          { name: 'Kit', n: 4 },
+          { name: 'Odis', n: 3 },
+        ],
+        items: [
+          { ts: agoIso(18), time_ct: '15:42', actor: 'Rae', action: 'ticket_update', kind: 'ticket', id: 'S1104', unit: null, who: 'Mock Chemical Co.', summary: 'stage IN-PROGRESS \u2192 NEEDS-QUOTE', evt: 'mk1a2b' },
+          { ts: agoIso(55), time_ct: '15:05', actor: 'Kit', action: 'readiness', kind: 'unit', id: '148021', unit: null, who: 'Invented Floor Scrubber 2024', summary: 'readiness NEEDS-PREP \u2192 READY', evt: 'mk3c4d' },
+          { ts: agoIso(63), time_ct: '14:57', actor: 'Rae', action: 'ticket_update', kind: 'ticket', id: 'S1098', unit: '112900', who: 'Fictional Foods', summary: 'stage WAITING-ON-CUSTOMER \u2192 IN-PROGRESS', evt: 'mk5e6f' },
+          { ts: agoIso(150), time_ct: '13:30', actor: 'Odis', action: 'lead_update', kind: 'lead', id: 'L1077', unit: null, who: 'Nowhere Logistics', summary: 'value set; stage CONTACTED \u2192 QUOTED', evt: 'mk7g8h' },
+          { ts: agoIso(199), time_ct: '12:41', actor: 'Kit', action: 'ticket_update', kind: 'ticket', id: 'S1101', unit: null, who: 'Made-Up Metal Works', summary: 'parts ordered; stage NEEDS-PARTS \u2192 WAITING-ON-PARTS', evt: 'mk9i0j' },
+          { ts: agoIso(273), time_ct: '11:27', actor: 'Rae', action: 'ticket_close', kind: 'ticket', id: 'S1042', unit: null, who: '', summary: 'stage IN-PROGRESS \u2192 CLOSED', evt: 'mkak1l' },
+          { ts: agoIso(302), time_ct: '10:58', actor: 'Odis', action: 'readiness', kind: 'unit', id: '146533', unit: null, who: 'Invented Ride-On Sweeper 2021', summary: 'readiness READY \u2192 IN-SERVICE', evt: 'mkbm2n' },
+          { ts: agoIso(348), time_ct: '10:12', actor: 'Kit', action: 'ticket_update', kind: 'ticket', id: 'S1103', unit: null, who: 'Invented Plating', summary: 'note added; tech scheduled for the morning run', evt: 'mkco3p' },
+          { ts: agoIso(376), time_ct: '09:44', actor: 'Rae', action: 'lead_update', kind: 'lead', id: 'L1074', unit: null, who: 'Pretend Packaging', summary: 'stage NEW \u2192 CONTACTED', evt: 'mkdq4r' },
+          { ts: agoIso(417), time_ct: '09:03', actor: 'Odis', action: 'ticket_update', kind: 'ticket', id: 'S1099', unit: '113044', who: 'Mock Chemical Co.', summary: 'stage NEEDS-PARTS \u2192 IN-PROGRESS', evt: 'mkes5t' },
+          { ts: agoIso(464), time_ct: '08:16', actor: 'Kit', action: 'ticket_open', kind: 'ticket', id: 'S1105', unit: null, who: 'Fictional Foods', summary: 'opened RECEIVED \u2014 brush drive noise', evt: 'mkfu6v' },
+          { ts: agoIso(488), time_ct: '07:52', actor: 'Rae', action: 'other', kind: 'other', id: '\u2014', unit: null, who: '', summary: 'reserve set for the week', evt: 'mkgw7x' },
+        ],
+        yesterday: {
+          date: addDays(TODAY, -1),
+          count: 9,
+          by_actor: [
+            { name: 'Rae', n: 4 },
+            { name: 'Kit', n: 3 },
+            { name: 'Mission Control', n: 2 },
+          ],
+        },
+        last_fleet_run_ct: '16:38',
+        source: 'mock generator (applied lines only)',
+      }),
+
       newsstand: tile(
         'HOURLY',
         {
