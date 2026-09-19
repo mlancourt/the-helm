@@ -369,6 +369,19 @@ function attachExplain(card, tileId, data) {
   card.addEventListener('touchcancel', cancel);
 }
 
+/**
+ * Does this tile's module take responsibility for reporting its own trouble?
+ *
+ * Opt-IN, and strictly so: `=== true` rather than truthiness, and anything
+ * that is not a loaded module namespace answers no. A tile that never heard
+ * of the flag — which is every tile but `newsstand` — keeps the shell's red
+ * line exactly as before.
+ */
+function ownsErrorLine(id) {
+  const ns = moduleNs.get(id);
+  return !!ns && ns.ownsErrorLine === true;
+}
+
 function tileCard(id, entry, tile) {
   const title = entry?.title || id;
   const status = tile?.status || (tile ? 'ok' : 'missing');
@@ -402,7 +415,16 @@ function tileCard(id, entry, tile) {
     // Registered here but absent from the snapshot (rule 9).
     body.appendChild(empty('Not in this snapshot.'));
   } else {
-    if (tile.error) body.appendChild(el('p', { cls: 'card-error', text: String(tile.error) }));
+    // The shell paints the error line for every tile, EXCEPT one that has
+    // said it would rather say it itself. `newsstand` is the case that forced
+    // this: forty RSS feeds means one is rate-limited most runs, and a raw
+    // "HTTP Error 429" across the top turns a working aggregator into a red
+    // card, where "36 of 40 sources answered" is the same fact in a form Matt
+    // can act on. Declared by the MODULE and honoured here, so the shell stays
+    // the only thing that touches the shell's own markup.
+    if (tile.error && !ownsErrorLine(id)) {
+      body.appendChild(el('p', { cls: 'card-error', text: String(tile.error) }));
+    }
 
     const mod = modules.get(id);
     try {

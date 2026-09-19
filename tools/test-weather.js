@@ -686,9 +686,14 @@ const liveState = (over = {}) => ({
   check('and its module is gone from the tree', !fs.existsSync(path.join(__dirname, '..', 'docs', 'tiles', 'radar.js')));
   check('the service worker no longer precaches it', !/tiles\/radar\.js/.test(read('docs', 'sw.js')));
   check('the service worker precaches the new modules', /tiles\/weather\.js/.test(read('docs', 'sw.js')) && /live\/nws\.js/.test(read('docs', 'sw.js')));
-  // Pinned to the batch that shipped this tile, and bumped with the page. It
-  // is here to catch a deploy that forgot the version, not to freeze it.
-  check('APP_VERSION is 1.10.0', /APP_VERSION = '1\.10\.0'/.test(read('docs', 'config.js')));
+  // This tile shipped in 1.9.0, so the page must be AT LEAST that — the check
+  // is here to catch a deploy that forgot the version, not to freeze it. A
+  // literal was tripping every later bump and teaching whoever hit it to edit
+  // the test rather than read it. The version's own shape, and the rule that
+  // nobody hardcodes it, are tools/test-shell.js's business.
+  const APP_VERSION = (read('docs', 'config.js').match(/APP_VERSION\s*=\s*'([^']+)'/) || [])[1];
+  const rank = (v) => String(v).split('.').map(Number).reduce((a, n) => a * 1000 + (n || 0), 0);
+  check(`APP_VERSION is at least 1.9.0 (${APP_VERSION})`, !!APP_VERSION && rank(APP_VERSION) >= rank('1.9.0'), APP_VERSION);
 
   // -- the mock ------------------------------------------------------------
   console.log('\nthe mock (no external fetch on the mock path)');

@@ -6,6 +6,7 @@
  *   node tools/make-mock-data.js --pending  > docs/mock/pending.json
  *   node tools/make-mock-data.js --espn     > docs/mock/espn-today.json
  *   node tools/make-mock-data.js --cards-stale > docs/mock/cards-stale.json
+ *   node tools/make-mock-data.js --newsstand-stale > docs/mock/newsstand-stale.json
  *   node tools/make-mock-data.js --events   > two POST /api/event bodies
  *
  * The `--espn` slate is the other half of `today_games`: that tile's games all
@@ -522,57 +523,7 @@ function snapshot() {
        */
       cards: tile('HOURLY', cardsWatch()),
 
-      newsstand: tile(
-        'HOURLY',
-        {
-          as_of: agoIso(23),
-          count: 4,
-          refresh_note: null,
-          source: 'mock generator',
-          cards: [
-            {
-              title: 'Regional freight rates flatten after a long climb',
-              synopsis:
-                'Invented copy. Spot rates on the mock lanes held flat for a fourth straight week after eighteen months of climbing, which carriers in this made-up market are reading as the top rather than a pause. Nothing here describes a real market, a real carrier, or a real rate.',
-              source: 'Mock Wire',
-              url: 'https://example.com/mock/freight-rates',
-              category: 'Business',
-              emoji: '\u{1F69B}',
-              lens: 'Freight is an input cost, so a flat month reads straight through to the mock P&L.',
-            },
-            {
-              title: 'Small-shop automation is getting cheap faster than expected',
-              synopsis:
-                'Invented copy. A fictional survey of fictional shops puts payback on entry-level automation under a year for the first time, mostly on the strength of used equipment coming back to market. Every number in this card was made up by tools/make-mock-data.js.',
-              source: 'Mock Review',
-              url: 'https://example.com/mock/shop-automation',
-              category: 'Tech',
-              emoji: '\u{1F4BB}',
-              lens: 'Cheap automation cuts both ways for a service business: lower cost to run, lower moat.',
-            },
-            {
-              title: 'Mock County approves the long-delayed riverfront plan',
-              synopsis:
-                'Invented copy. The imaginary board voted 5-2 after a third public hearing, clearing a plan that has been redrawn twice since it was first proposed by nobody in particular. No real municipality, vote, or plan is described here.',
-              source: 'Mock Ledger',
-              url: 'https://example.com/mock/riverfront',
-              category: 'Local News',
-              emoji: '\u{1F3D9}\uFE0F',
-              lens: '',
-            },
-            {
-              // No category and no emoji: the render module must not invent one.
-              title: 'A slow argument for keeping one analog habit',
-              synopsis: 'Invented copy. A short essay, kept deliberately brief here so the clamp has a card that does not need it.',
-              source: 'Mock Quarterly',
-              url: 'https://example.com/mock/analog-habit',
-              lens: 'long',
-            },
-          ],
-        },
-        'ok',
-        agoIso(23)
-      ),
+      newsstand: tile('HOURLY', newsstandPayload(), 'ok', agoIso(23)),
 
       // Entertainment: a menu tile with two faces populated and two still
       // null, which is exactly the shape the engine ships today. Streaming
@@ -1186,6 +1137,242 @@ function mockPending() {
 }
 
 /**
+ * The newsstand, as raw RSS (v2, 2026-09-19).
+ *
+ * The engine stopped curating: ~150 cards from ~40 feeds arrive newest-first
+ * with `lens` always null and `synopsis` null whenever the feed did not
+ * bother. The mock has to be that shape or `?mock=1` stops exercising the
+ * tile it is there to exercise. Four things it must get right:
+ *
+ *   - INTERLEAVED. The payload is one list in time order, not a list grouped
+ *     by category. That is the whole reason `by_category` exists, and a mock
+ *     that happened to arrive grouped would let a first-mention-ordered menu
+ *     pass by accident.
+ *   - AGED ACROSS EVERY RUNG. The ages below fan out non-linearly — minutes
+ *     at the head, then hours, yesterday, weekdays, and a tail past a week —
+ *     so every rung of `ageChip()` is on screen at once. A few cards carry no
+ *     `published_at` at all, which must render as no chip rather than a gap.
+ *   - `n` AGREES WITH THE CARDS. `by_category` is the config's order, and
+ *     its counts are derived here from the cards actually emitted rather than
+ *     typed — a mock whose summary disagreed with its own body would teach
+ *     the tile the wrong lesson.
+ *   - ONE CARD WITH NO CATEGORY, so the trailing Uncategorised bucket is
+ *     always on the board.
+ *
+ * Rule 1: every outlet, headline, URL and number below is invented. The
+ * outlets are named in the house style of the rest of this file — Mock,
+ * Invented, Fictional, Pretend, Nowhere — precisely so no one can mistake one
+ * for a real masthead. Nothing here describes a real story.
+ *
+ * Deterministic: no Math.random, so regenerating the mock does not churn the
+ * diff.
+ */
+const NEWS_FEED = [
+  {
+    name: 'Local News', emoji: '\u{1F3D9}️', n: 22,
+    outlets: ['Mock Ledger', 'Nowhere Chronicle', 'Pretend Post'],
+    subjects: ['The invented county board', 'A made-up village committee', 'The fictional water utility', 'Mock County planners', 'An imaginary school district'],
+    predicates: ['approves the long-delayed riverfront plan', 'puts the levy question back on the ballot', 'signs off on a roundabout nobody wanted', 'delays the budget vote a third time', 'buys the old mill site for a dollar'],
+    filler: 'The vote, the board and the parcel are all invented for this fixture.',
+  },
+  {
+    name: 'Local Sports', emoji: '\u{1F3DF}️', n: 14,
+    outlets: ['Mock Wire', 'Invented Dispatch'],
+    subjects: ['The Lakeshore Current', 'Granite City Foremen', 'Cedar Valley Drays', 'North Pike Sentinels', 'Foundry Ironsides'],
+    predicates: ['take the conference opener in overtime', 'lose their starting keeper for the season', 'name a first-year head coach', 'move their home dates to the new turf', 'run their unbeaten streak to nine'],
+    filler: 'Every club, result and player in this card was made up by the generator.',
+  },
+  {
+    name: 'National Politics', emoji: '\u{1F3DB}️', n: 16,
+    outlets: ['The Made-Up Times', 'Pretend Post', 'Mock Ledger'],
+    subjects: ['A fictional committee', 'The invented appropriations bill', 'An imaginary caucus', 'The made-up rules panel', 'A nonexistent working group'],
+    predicates: ['clears its first procedural hurdle', 'stalls over a single line item', 'gets a markup date at last', 'loses two votes it was counting on', 'is rewritten a fourth time'],
+    filler: 'No real body, bill or vote is described here.',
+  },
+  {
+    name: 'Tech', emoji: '\u{1F4BB}', n: 19,
+    outlets: ['Mock Review', 'Invented Dispatch', 'Fictional Gazette'],
+    subjects: ['Small-shop automation', 'An invented file format', 'A made-up scheduling library', 'The fictional standards group', 'An imaginary handset maker'],
+    predicates: ['is getting cheap faster than expected', 'ships a release nobody asked for', 'drops support for a decade-old runtime', 'wins an argument it started in 2019', 'quietly doubles its storage tier'],
+    filler: 'Every product, version and company in this card is invented.',
+  },
+  {
+    name: 'Business', emoji: '\u{1F4BC}', n: 13,
+    outlets: ['Mock Wire', 'Fictional Gazette'],
+    subjects: ['Regional freight rates', 'An invented equipment dealer', 'The made-up parts distributor', 'A fictional leasing arm', 'Nowhere Logistics'],
+    predicates: ['flatten after a long climb', 'opens a third branch on a hunch', 'loses its largest account to a rival', 'raises prices and says so plainly', 'buys back a warehouse it sold in 2021'],
+    filler: 'No real market, carrier, rate or company is described here.',
+  },
+  {
+    name: 'Markets', emoji: '\u{1F4C8}', n: 11,
+    outlets: ['Mock Wire', 'The Made-Up Times'],
+    subjects: ['The invented index', 'A fictional commodity', 'The pretend bond desk', 'An imaginary sector fund', 'Made-up spot pricing'],
+    predicates: ['closes flat for a fourth straight week', 'gives back a month in an afternoon', 'finds a floor nobody trusts', 'is being read as the top rather than a pause', 'ends the quarter roughly where it started'],
+    filler: 'Every figure here was made up; money never moves from this page.',
+  },
+  {
+    name: 'Soccer', emoji: '⚽', n: 15,
+    outlets: ['Invented Dispatch', 'Mock Review'],
+    subjects: ['A fictional second-division side', 'The invented cup holders', 'An imaginary promotion chase', 'The made-up derby', 'A pretend academy graduate'],
+    predicates: ['goes down to ten and wins anyway', 'is decided by a goal in the ninth minute of added time', 'ends goalless and nobody minds', 'gets a replay after a floodlight failure', 'signs for a fee that is also invented'],
+    filler: 'No real club, match or player appears in this card.',
+  },
+  {
+    name: 'Science', emoji: '\u{1F52C}', n: 9,
+    outlets: ['Mock Quarterly', 'Fictional Gazette'],
+    subjects: ['An invented survey', 'A made-up replication attempt', 'The fictional field station', 'An imaginary instrument', 'A pretend long-run study'],
+    predicates: ['finds rather less than the press release claimed', 'holds up on the third try', 'loses a decade of data to a bad tape', 'is cheaper than the thing it replaces', 'reaches its twentieth year quietly'],
+    filler: 'No real study, result or institution is described here.',
+  },
+  {
+    name: 'Space', emoji: '\u{1F680}', n: 8,
+    outlets: ['Mock Quarterly', 'Invented Dispatch'],
+    subjects: ['An invented launch window', 'A fictional lander', 'The made-up ground station', 'An imaginary constellation operator', 'A pretend sample return'],
+    predicates: ['slips a fortnight for weather', 'phones home a day late', 'is retired after outliving its brief by years', 'files for a hundred more slots', 'comes back with less than hoped'],
+    filler: 'Every mission, vehicle and date here is invented.',
+  },
+  {
+    name: 'Gaming', emoji: '\u{1F3AE}', n: 10,
+    outlets: ['Mock Review', 'Fictional Gazette'],
+    subjects: ['An invented studio', 'A made-up remaster', 'The fictional handheld', 'An imaginary tournament', 'A pretend early-access title'],
+    predicates: ['delays its sequel into next autumn', 'runs better on the old hardware', 'cuts its entry fee in half', 'ships without the mode it advertised', 'quietly becomes the best-selling thing they make'],
+    filler: 'No real studio, title or platform is described here.',
+  },
+  {
+    name: 'Books', emoji: '\u{1F4DA}', n: 7,
+    outlets: ['Mock Quarterly', 'Pretend Post'],
+    subjects: ['An invented novelist', 'A made-up translation', 'The fictional prize jury', 'An imaginary backlist', 'A pretend debut'],
+    predicates: ['finishes a trilogy eleven years late', 'is better than the original and says so', 'shortlists nothing anyone expected', 'outsells the new releases again', 'arrives with no marketing at all'],
+    filler: 'Every author, title and prize in this card is invented.',
+  },
+  {
+    name: 'Odd Lots', emoji: '\u{1F3A9}', n: 6,
+    outlets: ['Pretend Post', 'Nowhere Chronicle'],
+    subjects: ['An invented auction house', 'A made-up hobbyist', 'The fictional museum basement', 'An imaginary estate sale', 'A pretend collector'],
+    predicates: ['sells a filing cabinet for rather too much', 'catalogues nine thousand bottle caps', 'turns up a map nobody had missed', 'goes to a single bidder in four minutes', 'gives the lot away rather than split it'],
+    filler: 'Nothing in this card happened.',
+  },
+];
+
+/**
+ * Minutes-old for the k-th card. Non-linear on purpose: k^1.9 puts the head of
+ * the list minutes old, the middle in hours, and the tail past a week, so
+ * every rung of the age chip — now / 12m / 3h / yesterday / Tue / 9/12 — is
+ * visible in one screenshot.
+ */
+const newsAge = (k) => 5 + Math.round(Math.pow(k, 1.9));
+
+const newsSlug = (s) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+
+/**
+ * The raw-RSS payload. `stale` swaps in a run where two feeds did not answer,
+ * which is what the "38 of 40 sources answered" footer is for.
+ */
+function newsstandPayload({ stale = false } = {}) {
+  // Build per category, then interleave by age — the engine publishes one
+  // time-ordered list, not a grouped one.
+  const built = [];
+  for (const cat of NEWS_FEED) {
+    for (let i = 0; i < cat.n; i++) {
+      const subject = cat.subjects[i % cat.subjects.length];
+      const predicate = cat.predicates[(i + Math.floor(i / cat.predicates.length)) % cat.predicates.length];
+      const title = `${subject} ${predicate}`;
+      built.push({
+        title,
+        outlet: cat.outlets[i % cat.outlets.length],
+        category: cat.name,
+        emoji: cat.emoji,
+        filler: cat.filler,
+        slug: newsSlug(title),
+      });
+    }
+  }
+
+  // One stable interleave: deal round-robin across the categories, which is
+  // roughly what forty feeds polled at once produce.
+  const byCat = new Map(NEWS_FEED.map((c) => [c.name, built.filter((b) => b.category === c.name)]));
+  const order = [];
+  for (let round = 0; order.length < built.length; round++) {
+    for (const c of NEWS_FEED) {
+      const list = byCat.get(c.name);
+      if (round < list.length) order.push(list[round]);
+    }
+  }
+
+  const cards = order.map((b, k) => ({
+    title: b.title,
+    // Roughly one feed in five publishes no description at all.
+    synopsis: k % 5 === 3 ? null : `Invented copy. ${b.title}. ${b.filler} No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.`,
+    source: b.outlet,
+    url: `https://example.com/mock/news/${b.slug}`,
+    // Raw RSS, no model: the lens is gone and stays gone.
+    lens: null,
+    category: b.category,
+    emoji: b.emoji,
+    // A handful of feeds send no date. No stamp must mean no chip.
+    published_at: k % 23 === 11 ? null : agoIso(newsAge(k)),
+  }));
+
+  // The one card with no category at all, so the trailing Uncategorised
+  // bucket is always on the board and the module never invents a glyph.
+  cards.splice(4, 0, {
+    title: 'A slow argument for keeping one analog habit',
+    synopsis: 'Invented copy. A short essay, kept deliberately brief here so the clamp has a card that does not need it.',
+    source: 'Mock Quarterly',
+    url: 'https://example.com/mock/news/analog-habit',
+    lens: null,
+    category: null,
+    emoji: null,
+    published_at: agoIso(41),
+  });
+
+  // Counted off the cards that actually exist, never typed — a summary that
+  // disagreed with its own body would teach the tile the wrong lesson.
+  const by_category = NEWS_FEED.map((c) => ({
+    name: c.name,
+    emoji: c.emoji,
+    n: cards.filter((x) => x.category === c.name).length,
+  }));
+
+  const failed = stale
+    ? [
+        'r/invented-subreddit: HTTP Error 429: Too Many Requests',
+        'Nowhere Chronicle RSS: timed out after 10s',
+      ]
+    : [];
+
+  return {
+    cards,
+    as_of: agoIso(23),
+    count: cards.length,
+    by_category,
+    sources: { ok: 40 - failed.length, failed, total: 40 },
+    refresh_note: null,
+    source: 'mock generator — raw RSS shape, no model',
+  };
+}
+
+/**
+ * The same snapshot with two feeds down: `status: stale` plus the reason the
+ * Worker would carry. The tile renders every card it does have and says "38
+ * of 40 sources answered" — and the raw error, which is on the tile here,
+ * must NOT reach the board (the module owns that line; see app.js
+ * `ownsErrorLine`). `?mock=newsstand-stale` is how that path gets looked at.
+ */
+function newsstandStaleSnapshot() {
+  const snap = snapshot();
+  snap.tiles.newsstand = {
+    band: 'HOURLY',
+    updated_at: agoIso(23),
+    status: 'stale',
+    error: 'r/invented-subreddit: HTTP Error 429: Too Many Requests',
+    data: newsstandPayload({ stale: true }),
+  };
+  return snap;
+}
+
+/**
  * The same snapshot with the card desk half-broken: `status: stale` plus the
  * reason. The rows Matt DOES have are still real, so the tile renders them and
  * wears a ⚠︎ (rule 8) — `?mock=cards-stale` is how that path gets looked at
@@ -1210,6 +1397,7 @@ const MODES = [
   ['--pending', () => mockPending()],
   ['--espn', () => slate(TODAY)],
   ['--cards-stale', () => cardsStaleSnapshot()],
+  ['--newsstand-stale', () => newsstandStaleSnapshot()],
   // The weather tile's four faces (W6). The default snapshot carries the
   // Watch; these are the other three.
   ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],

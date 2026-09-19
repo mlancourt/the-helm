@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-19T13:32:12.312Z",
-  "run_id": "run-mock-mu8ffm3c",
+  "generated_at": "2026-09-19T22:52:29.595Z",
+  "run_id": "run-mock-mu8zg5cr",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.595Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -204,7 +204,7 @@
     },
     "today_games": {
       "band": "LIVE",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.595Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -264,7 +264,7 @@
     },
     "weather": {
       "band": "LIVE",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.596Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -340,7 +340,7 @@
           "forecast_s": 1800
         },
         "fallback": {
-          "as_of": "2026-09-19T12:58:12.312Z",
+          "as_of": "2026-09-19T22:18:29.594Z",
           "now": {
             "source": "KMCK",
             "temp_f": 61,
@@ -433,8 +433,8 @@
               "description": "The National Weather Service in Mockton has issued a Tornado Warning for invented county.\n\nAt 100 PM, a severe thunderstorm capable of producing a tornado was located over nowhere, moving northeast at 30 mph.\n\nThis alert is fake. Every word of it was written by the mock generator.",
               "instruction": "TAKE COVER NOW! Move to a basement or an interior room on the lowest floor of a sturdy building.",
               "areaDesc": "Invented County, XX",
-              "onset": "2026-09-19T13:20:12.311Z",
-              "ends": "2026-09-19T14:12:12.311Z",
+              "onset": "2026-09-19T22:40:29.594Z",
+              "ends": "2026-09-19T23:32:29.594Z",
               "url": "https://api.weather.gov/alerts/urn:oid:0.0.0.0.mock.warn"
             },
             {
@@ -446,8 +446,8 @@
               "description": "Visibility one quarter mile or less in dense fog. This alert is fake.",
               "instruction": "If driving, slow down, use your low beams and leave plenty of distance ahead of you.",
               "areaDesc": "Invented County, XX",
-              "onset": "2026-09-19T12:02:12.311Z",
-              "ends": "2026-09-19T15:32:12.311Z",
+              "onset": "2026-09-19T21:22:29.594Z",
+              "ends": "2026-09-20T00:52:29.594Z",
               "url": "https://api.weather.gov/alerts/urn:oid:0.0.0.0.mock.advisory"
             }
           ]
@@ -456,7 +456,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.595Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -506,7 +506,7 @@
     },
     "local_events": {
       "band": "DAILY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.595Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -646,7 +646,7 @@
     },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.595Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -730,7 +730,7 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.595Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -742,7 +742,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.595Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -776,7 +776,7 @@
     },
     "wss_tape": {
       "band": "DAILY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.595Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -799,7 +799,7 @@
         ],
         "items": [
           {
-            "ts": "2026-09-19T13:14:12.312Z",
+            "ts": "2026-09-19T22:34:29.595Z",
             "time_ct": "15:42",
             "actor": "Rae",
             "action": "ticket_update",
@@ -811,7 +811,7 @@
             "evt": "mk1a2b"
           },
           {
-            "ts": "2026-09-19T12:37:12.312Z",
+            "ts": "2026-09-19T21:57:29.595Z",
             "time_ct": "15:05",
             "actor": "Kit",
             "action": "readiness",
@@ -823,7 +823,7 @@
             "evt": "mk3c4d"
           },
           {
-            "ts": "2026-09-19T12:29:12.312Z",
+            "ts": "2026-09-19T21:49:29.595Z",
             "time_ct": "14:57",
             "actor": "Rae",
             "action": "ticket_update",
@@ -835,7 +835,7 @@
             "evt": "mk5e6f"
           },
           {
-            "ts": "2026-09-19T11:02:12.312Z",
+            "ts": "2026-09-19T20:22:29.595Z",
             "time_ct": "13:30",
             "actor": "Odis",
             "action": "lead_update",
@@ -847,7 +847,7 @@
             "evt": "mk7g8h"
           },
           {
-            "ts": "2026-09-19T10:13:12.312Z",
+            "ts": "2026-09-19T19:33:29.595Z",
             "time_ct": "12:41",
             "actor": "Kit",
             "action": "ticket_update",
@@ -859,7 +859,7 @@
             "evt": "mk9i0j"
           },
           {
-            "ts": "2026-09-19T08:59:12.312Z",
+            "ts": "2026-09-19T18:19:29.595Z",
             "time_ct": "11:27",
             "actor": "Rae",
             "action": "ticket_close",
@@ -871,7 +871,7 @@
             "evt": "mkak1l"
           },
           {
-            "ts": "2026-09-19T08:30:12.312Z",
+            "ts": "2026-09-19T17:50:29.595Z",
             "time_ct": "10:58",
             "actor": "Odis",
             "action": "readiness",
@@ -883,7 +883,7 @@
             "evt": "mkbm2n"
           },
           {
-            "ts": "2026-09-19T07:44:12.312Z",
+            "ts": "2026-09-19T17:04:29.595Z",
             "time_ct": "10:12",
             "actor": "Kit",
             "action": "ticket_update",
@@ -895,7 +895,7 @@
             "evt": "mkco3p"
           },
           {
-            "ts": "2026-09-19T07:16:12.312Z",
+            "ts": "2026-09-19T16:36:29.595Z",
             "time_ct": "09:44",
             "actor": "Rae",
             "action": "lead_update",
@@ -907,7 +907,7 @@
             "evt": "mkdq4r"
           },
           {
-            "ts": "2026-09-19T06:35:12.312Z",
+            "ts": "2026-09-19T15:55:29.595Z",
             "time_ct": "09:03",
             "actor": "Odis",
             "action": "ticket_update",
@@ -919,7 +919,7 @@
             "evt": "mkes5t"
           },
           {
-            "ts": "2026-09-19T05:48:12.312Z",
+            "ts": "2026-09-19T15:08:29.595Z",
             "time_ct": "08:16",
             "actor": "Kit",
             "action": "ticket_open",
@@ -931,7 +931,7 @@
             "evt": "mkfu6v"
           },
           {
-            "ts": "2026-09-19T05:24:12.312Z",
+            "ts": "2026-09-19T14:44:29.595Z",
             "time_ct": "07:52",
             "actor": "Rae",
             "action": "other",
@@ -967,12 +967,12 @@
     },
     "cards": {
       "band": "HOURLY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.595Z",
       "status": "ok",
       "error": null,
       "data": {
         "watch": {
-          "updated_at": "2026-09-19T13:14:12.312Z",
+          "updated_at": "2026-09-19T22:34:29.595Z",
           "targets": 14,
           "booked": 12,
           "fresh": 9,
@@ -1076,7 +1076,7 @@
               "gate": 0.65,
               "book_age_days": 3,
               "book_state": "fresh",
-              "ends_ct": "2026-09-19T09:46",
+              "ends_ct": "2026-09-19T19:06",
               "seller": "bayfield_auctions",
               "seller_fb": 5310,
               "listed": "2026-09-13",
@@ -1102,7 +1102,7 @@
               "gate": 0.65,
               "book_age_days": 4,
               "book_state": "fresh",
-              "ends_ct": "2026-09-21T09:02",
+              "ends_ct": "2026-09-21T18:22",
               "seller": "attic_finds_wi",
               "seller_fb": 41,
               "listed": "2026-09-18",
@@ -1141,60 +1141,1603 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-19T13:09:12.312Z",
+      "updated_at": "2026-09-19T22:29:29.596Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-19T13:09:12.312Z",
-        "count": 4,
-        "refresh_note": null,
-        "source": "mock generator",
         "cards": [
           {
-            "title": "Regional freight rates flatten after a long climb",
-            "synopsis": "Invented copy. Spot rates on the mock lanes held flat for a fourth straight week after eighteen months of climbing, which carriers in this made-up market are reading as the top rather than a pause. Nothing here describes a real market, a real carrier, or a real rate.",
+            "title": "The invented county board approves the long-delayed riverfront plan",
+            "synopsis": "Invented copy. The invented county board approves the long-delayed riverfront plan. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/the-invented-county-board-approves-the-long-delayed-riverfro",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-19T22:47:29.595Z"
+          },
+          {
+            "title": "The Lakeshore Current take the conference opener in overtime",
+            "synopsis": "Invented copy. The Lakeshore Current take the conference opener in overtime. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
             "source": "Mock Wire",
-            "url": "https://example.com/mock/freight-rates",
-            "category": "Business",
-            "emoji": "🚛",
-            "lens": "Freight is an input cost, so a flat month reads straight through to the mock P&L."
+            "url": "https://example.com/mock/news/the-lakeshore-current-take-the-conference-opener-in-overtime",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-19T22:46:29.595Z"
+          },
+          {
+            "title": "A fictional committee clears its first procedural hurdle",
+            "synopsis": "Invented copy. A fictional committee clears its first procedural hurdle. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/a-fictional-committee-clears-its-first-procedural-hurdle",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-19T22:43:29.595Z"
           },
           {
             "title": "Small-shop automation is getting cheap faster than expected",
-            "synopsis": "Invented copy. A fictional survey of fictional shops puts payback on entry-level automation under a year for the first time, mostly on the strength of used equipment coming back to market. Every number in this card was made up by tools/make-mock-data.js.",
+            "synopsis": null,
             "source": "Mock Review",
-            "url": "https://example.com/mock/shop-automation",
+            "url": "https://example.com/mock/news/small-shop-automation-is-getting-cheap-faster-than-expected",
+            "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "lens": "Cheap automation cuts both ways for a service business: lower cost to run, lower moat."
-          },
-          {
-            "title": "Mock County approves the long-delayed riverfront plan",
-            "synopsis": "Invented copy. The imaginary board voted 5-2 after a third public hearing, clearing a plan that has been redrawn twice since it was first proposed by nobody in particular. No real municipality, vote, or plan is described here.",
-            "source": "Mock Ledger",
-            "url": "https://example.com/mock/riverfront",
-            "category": "Local News",
-            "emoji": "🏙️",
-            "lens": ""
+            "published_at": "2026-09-19T22:39:29.595Z"
           },
           {
             "title": "A slow argument for keeping one analog habit",
             "synopsis": "Invented copy. A short essay, kept deliberately brief here so the clamp has a card that does not need it.",
             "source": "Mock Quarterly",
-            "url": "https://example.com/mock/analog-habit",
-            "lens": "long"
+            "url": "https://example.com/mock/news/analog-habit",
+            "lens": null,
+            "category": null,
+            "emoji": null,
+            "published_at": "2026-09-19T22:11:29.596Z"
+          },
+          {
+            "title": "Regional freight rates flatten after a long climb",
+            "synopsis": "Invented copy. Regional freight rates flatten after a long climb. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/regional-freight-rates-flatten-after-a-long-climb",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-19T22:33:29.595Z"
+          },
+          {
+            "title": "The invented index closes flat for a fourth straight week",
+            "synopsis": "Invented copy. The invented index closes flat for a fourth straight week. Every figure here was made up; money never moves from this page. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/the-invented-index-closes-flat-for-a-fourth-straight-week",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-19T22:26:29.595Z"
+          },
+          {
+            "title": "A fictional second-division side goes down to ten and wins anyway",
+            "synopsis": "Invented copy. A fictional second-division side goes down to ten and wins anyway. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/a-fictional-second-division-side-goes-down-to-ten-and-wins-a",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-19T22:17:29.595Z"
+          },
+          {
+            "title": "An invented survey finds rather less than the press release claimed",
+            "synopsis": "Invented copy. An invented survey finds rather less than the press release claimed. No real study, result or institution is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/an-invented-survey-finds-rather-less-than-the-press-release-",
+            "lens": null,
+            "category": "Science",
+            "emoji": "🔬",
+            "published_at": "2026-09-19T22:07:29.595Z"
+          },
+          {
+            "title": "An invented launch window slips a fortnight for weather",
+            "synopsis": null,
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/an-invented-launch-window-slips-a-fortnight-for-weather",
+            "lens": null,
+            "category": "Space",
+            "emoji": "🚀",
+            "published_at": "2026-09-19T21:55:29.595Z"
+          },
+          {
+            "title": "An invented studio delays its sequel into next autumn",
+            "synopsis": "Invented copy. An invented studio delays its sequel into next autumn. No real studio, title or platform is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/an-invented-studio-delays-its-sequel-into-next-autumn",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": "2026-09-19T21:42:29.595Z"
+          },
+          {
+            "title": "An invented novelist finishes a trilogy eleven years late",
+            "synopsis": "Invented copy. An invented novelist finishes a trilogy eleven years late. Every author, title and prize in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/an-invented-novelist-finishes-a-trilogy-eleven-years-late",
+            "lens": null,
+            "category": "Books",
+            "emoji": "📚",
+            "published_at": "2026-09-19T21:28:29.595Z"
+          },
+          {
+            "title": "An invented auction house sells a filing cabinet for rather too much",
+            "synopsis": "Invented copy. An invented auction house sells a filing cabinet for rather too much. Nothing in this card happened. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/an-invented-auction-house-sells-a-filing-cabinet-for-rather-",
+            "lens": null,
+            "category": "Odd Lots",
+            "emoji": "🎩",
+            "published_at": null
+          },
+          {
+            "title": "A made-up village committee puts the levy question back on the ballot",
+            "synopsis": "Invented copy. A made-up village committee puts the levy question back on the ballot. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/a-made-up-village-committee-puts-the-levy-question-back-on-t",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-19T20:55:29.595Z"
+          },
+          {
+            "title": "Granite City Foremen lose their starting keeper for the season",
+            "synopsis": null,
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/granite-city-foremen-lose-their-starting-keeper-for-the-seas",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-19T20:36:29.595Z"
+          },
+          {
+            "title": "The invented appropriations bill stalls over a single line item",
+            "synopsis": "Invented copy. The invented appropriations bill stalls over a single line item. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/the-invented-appropriations-bill-stalls-over-a-single-line-i",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-19T20:16:29.595Z"
+          },
+          {
+            "title": "An invented file format ships a release nobody asked for",
+            "synopsis": "Invented copy. An invented file format ships a release nobody asked for. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/an-invented-file-format-ships-a-release-nobody-asked-for",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-19T19:55:29.595Z"
+          },
+          {
+            "title": "An invented equipment dealer opens a third branch on a hunch",
+            "synopsis": "Invented copy. An invented equipment dealer opens a third branch on a hunch. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/an-invented-equipment-dealer-opens-a-third-branch-on-a-hunch",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-19T19:33:29.595Z"
+          },
+          {
+            "title": "A fictional commodity gives back a month in an afternoon",
+            "synopsis": "Invented copy. A fictional commodity gives back a month in an afternoon. Every figure here was made up; money never moves from this page. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/a-fictional-commodity-gives-back-a-month-in-an-afternoon",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-19T19:09:29.595Z"
+          },
+          {
+            "title": "The invented cup holders is decided by a goal in the ninth minute of added time",
+            "synopsis": null,
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/the-invented-cup-holders-is-decided-by-a-goal-in-the-ninth-m",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-19T18:44:29.595Z"
+          },
+          {
+            "title": "A made-up replication attempt holds up on the third try",
+            "synopsis": "Invented copy. A made-up replication attempt holds up on the third try. No real study, result or institution is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/a-made-up-replication-attempt-holds-up-on-the-third-try",
+            "lens": null,
+            "category": "Science",
+            "emoji": "🔬",
+            "published_at": "2026-09-19T18:18:29.595Z"
+          },
+          {
+            "title": "A fictional lander phones home a day late",
+            "synopsis": "Invented copy. A fictional lander phones home a day late. Every mission, vehicle and date here is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/a-fictional-lander-phones-home-a-day-late",
+            "lens": null,
+            "category": "Space",
+            "emoji": "🚀",
+            "published_at": "2026-09-19T17:51:29.595Z"
+          },
+          {
+            "title": "A made-up remaster runs better on the old hardware",
+            "synopsis": "Invented copy. A made-up remaster runs better on the old hardware. No real studio, title or platform is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/a-made-up-remaster-runs-better-on-the-old-hardware",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": "2026-09-19T17:22:29.595Z"
+          },
+          {
+            "title": "A made-up translation is better than the original and says so",
+            "synopsis": "Invented copy. A made-up translation is better than the original and says so. Every author, title and prize in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/a-made-up-translation-is-better-than-the-original-and-says-s",
+            "lens": null,
+            "category": "Books",
+            "emoji": "📚",
+            "published_at": "2026-09-19T16:52:29.595Z"
+          },
+          {
+            "title": "A made-up hobbyist catalogues nine thousand bottle caps",
+            "synopsis": null,
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/a-made-up-hobbyist-catalogues-nine-thousand-bottle-caps",
+            "lens": null,
+            "category": "Odd Lots",
+            "emoji": "🎩",
+            "published_at": "2026-09-19T16:20:29.596Z"
+          },
+          {
+            "title": "The fictional water utility signs off on a roundabout nobody wanted",
+            "synopsis": "Invented copy. The fictional water utility signs off on a roundabout nobody wanted. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/the-fictional-water-utility-signs-off-on-a-roundabout-nobody",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-19T15:48:29.596Z"
+          },
+          {
+            "title": "Cedar Valley Drays name a first-year head coach",
+            "synopsis": "Invented copy. Cedar Valley Drays name a first-year head coach. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/cedar-valley-drays-name-a-first-year-head-coach",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-19T15:14:29.596Z"
+          },
+          {
+            "title": "An imaginary caucus gets a markup date at last",
+            "synopsis": "Invented copy. An imaginary caucus gets a markup date at last. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/an-imaginary-caucus-gets-a-markup-date-at-last",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-19T14:39:29.596Z"
+          },
+          {
+            "title": "A made-up scheduling library drops support for a decade-old runtime",
+            "synopsis": "Invented copy. A made-up scheduling library drops support for a decade-old runtime. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/a-made-up-scheduling-library-drops-support-for-a-decade-old-",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-19T14:03:29.596Z"
+          },
+          {
+            "title": "The made-up parts distributor loses its largest account to a rival",
+            "synopsis": null,
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/the-made-up-parts-distributor-loses-its-largest-account-to-a",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-19T13:25:29.596Z"
+          },
+          {
+            "title": "The pretend bond desk finds a floor nobody trusts",
+            "synopsis": "Invented copy. The pretend bond desk finds a floor nobody trusts. Every figure here was made up; money never moves from this page. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/the-pretend-bond-desk-finds-a-floor-nobody-trusts",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-19T12:46:29.596Z"
+          },
+          {
+            "title": "An imaginary promotion chase ends goalless and nobody minds",
+            "synopsis": "Invented copy. An imaginary promotion chase ends goalless and nobody minds. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/an-imaginary-promotion-chase-ends-goalless-and-nobody-minds",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-19T12:06:29.596Z"
+          },
+          {
+            "title": "The fictional field station loses a decade of data to a bad tape",
+            "synopsis": "Invented copy. The fictional field station loses a decade of data to a bad tape. No real study, result or institution is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/the-fictional-field-station-loses-a-decade-of-data-to-a-bad-",
+            "lens": null,
+            "category": "Science",
+            "emoji": "🔬",
+            "published_at": "2026-09-19T11:25:29.596Z"
+          },
+          {
+            "title": "The made-up ground station is retired after outliving its brief by years",
+            "synopsis": "Invented copy. The made-up ground station is retired after outliving its brief by years. Every mission, vehicle and date here is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/the-made-up-ground-station-is-retired-after-outliving-its-br",
+            "lens": null,
+            "category": "Space",
+            "emoji": "🚀",
+            "published_at": "2026-09-19T10:43:29.596Z"
+          },
+          {
+            "title": "The fictional handheld cuts its entry fee in half",
+            "synopsis": null,
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/the-fictional-handheld-cuts-its-entry-fee-in-half",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": "2026-09-19T09:59:29.596Z"
+          },
+          {
+            "title": "The fictional prize jury shortlists nothing anyone expected",
+            "synopsis": "Invented copy. The fictional prize jury shortlists nothing anyone expected. Every author, title and prize in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/the-fictional-prize-jury-shortlists-nothing-anyone-expected",
+            "lens": null,
+            "category": "Books",
+            "emoji": "📚",
+            "published_at": null
+          },
+          {
+            "title": "The fictional museum basement turns up a map nobody had missed",
+            "synopsis": "Invented copy. The fictional museum basement turns up a map nobody had missed. Nothing in this card happened. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/the-fictional-museum-basement-turns-up-a-map-nobody-had-miss",
+            "lens": null,
+            "category": "Odd Lots",
+            "emoji": "🎩",
+            "published_at": "2026-09-19T08:29:29.596Z"
+          },
+          {
+            "title": "Mock County planners delays the budget vote a third time",
+            "synopsis": "Invented copy. Mock County planners delays the budget vote a third time. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/mock-county-planners-delays-the-budget-vote-a-third-time",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-19T07:41:29.596Z"
+          },
+          {
+            "title": "North Pike Sentinels move their home dates to the new turf",
+            "synopsis": "Invented copy. North Pike Sentinels move their home dates to the new turf. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/north-pike-sentinels-move-their-home-dates-to-the-new-turf",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-19T06:53:29.596Z"
+          },
+          {
+            "title": "The made-up rules panel loses two votes it was counting on",
+            "synopsis": null,
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/the-made-up-rules-panel-loses-two-votes-it-was-counting-on",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-19T06:03:29.596Z"
+          },
+          {
+            "title": "The fictional standards group wins an argument it started in 2019",
+            "synopsis": "Invented copy. The fictional standards group wins an argument it started in 2019. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/the-fictional-standards-group-wins-an-argument-it-started-in",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-19T05:13:29.596Z"
+          },
+          {
+            "title": "A fictional leasing arm raises prices and says so plainly",
+            "synopsis": "Invented copy. A fictional leasing arm raises prices and says so plainly. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/a-fictional-leasing-arm-raises-prices-and-says-so-plainly",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-19T04:21:29.596Z"
+          },
+          {
+            "title": "An imaginary sector fund is being read as the top rather than a pause",
+            "synopsis": "Invented copy. An imaginary sector fund is being read as the top rather than a pause. Every figure here was made up; money never moves from this page. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/an-imaginary-sector-fund-is-being-read-as-the-top-rather-tha",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-19T03:27:29.596Z"
+          },
+          {
+            "title": "The made-up derby gets a replay after a floodlight failure",
+            "synopsis": "Invented copy. The made-up derby gets a replay after a floodlight failure. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/the-made-up-derby-gets-a-replay-after-a-floodlight-failure",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-19T02:33:29.596Z"
+          },
+          {
+            "title": "An imaginary instrument is cheaper than the thing it replaces",
+            "synopsis": null,
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/an-imaginary-instrument-is-cheaper-than-the-thing-it-replace",
+            "lens": null,
+            "category": "Science",
+            "emoji": "🔬",
+            "published_at": "2026-09-19T01:38:29.596Z"
+          },
+          {
+            "title": "An imaginary constellation operator files for a hundred more slots",
+            "synopsis": "Invented copy. An imaginary constellation operator files for a hundred more slots. Every mission, vehicle and date here is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/an-imaginary-constellation-operator-files-for-a-hundred-more",
+            "lens": null,
+            "category": "Space",
+            "emoji": "🚀",
+            "published_at": "2026-09-19T00:41:29.596Z"
+          },
+          {
+            "title": "An imaginary tournament ships without the mode it advertised",
+            "synopsis": "Invented copy. An imaginary tournament ships without the mode it advertised. No real studio, title or platform is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/an-imaginary-tournament-ships-without-the-mode-it-advertised",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": "2026-09-18T23:43:29.596Z"
+          },
+          {
+            "title": "An imaginary backlist outsells the new releases again",
+            "synopsis": "Invented copy. An imaginary backlist outsells the new releases again. Every author, title and prize in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/an-imaginary-backlist-outsells-the-new-releases-again",
+            "lens": null,
+            "category": "Books",
+            "emoji": "📚",
+            "published_at": "2026-09-18T22:44:29.596Z"
+          },
+          {
+            "title": "An imaginary estate sale goes to a single bidder in four minutes",
+            "synopsis": "Invented copy. An imaginary estate sale goes to a single bidder in four minutes. Nothing in this card happened. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/an-imaginary-estate-sale-goes-to-a-single-bidder-in-four-min",
+            "lens": null,
+            "category": "Odd Lots",
+            "emoji": "🎩",
+            "published_at": "2026-09-18T21:44:29.596Z"
+          },
+          {
+            "title": "An imaginary school district buys the old mill site for a dollar",
+            "synopsis": null,
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/an-imaginary-school-district-buys-the-old-mill-site-for-a-do",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-18T20:43:29.596Z"
+          },
+          {
+            "title": "Foundry Ironsides run their unbeaten streak to nine",
+            "synopsis": "Invented copy. Foundry Ironsides run their unbeaten streak to nine. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/foundry-ironsides-run-their-unbeaten-streak-to-nine",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-18T19:40:29.596Z"
+          },
+          {
+            "title": "A nonexistent working group is rewritten a fourth time",
+            "synopsis": "Invented copy. A nonexistent working group is rewritten a fourth time. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/a-nonexistent-working-group-is-rewritten-a-fourth-time",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-18T18:36:29.596Z"
+          },
+          {
+            "title": "An imaginary handset maker quietly doubles its storage tier",
+            "synopsis": "Invented copy. An imaginary handset maker quietly doubles its storage tier. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/an-imaginary-handset-maker-quietly-doubles-its-storage-tier",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-18T17:32:29.596Z"
+          },
+          {
+            "title": "Nowhere Logistics buys back a warehouse it sold in 2021",
+            "synopsis": "Invented copy. Nowhere Logistics buys back a warehouse it sold in 2021. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/nowhere-logistics-buys-back-a-warehouse-it-sold-in-2021",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-18T16:26:29.596Z"
+          },
+          {
+            "title": "Made-up spot pricing ends the quarter roughly where it started",
+            "synopsis": null,
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/made-up-spot-pricing-ends-the-quarter-roughly-where-it-start",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-18T15:18:29.596Z"
+          },
+          {
+            "title": "A pretend academy graduate signs for a fee that is also invented",
+            "synopsis": "Invented copy. A pretend academy graduate signs for a fee that is also invented. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/a-pretend-academy-graduate-signs-for-a-fee-that-is-also-inve",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-18T14:10:29.596Z"
+          },
+          {
+            "title": "A pretend long-run study reaches its twentieth year quietly",
+            "synopsis": "Invented copy. A pretend long-run study reaches its twentieth year quietly. No real study, result or institution is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/a-pretend-long-run-study-reaches-its-twentieth-year-quietly",
+            "lens": null,
+            "category": "Science",
+            "emoji": "🔬",
+            "published_at": "2026-09-18T13:01:29.596Z"
+          },
+          {
+            "title": "A pretend sample return comes back with less than hoped",
+            "synopsis": "Invented copy. A pretend sample return comes back with less than hoped. Every mission, vehicle and date here is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/a-pretend-sample-return-comes-back-with-less-than-hoped",
+            "lens": null,
+            "category": "Space",
+            "emoji": "🚀",
+            "published_at": "2026-09-18T11:50:29.596Z"
+          },
+          {
+            "title": "A pretend early-access title quietly becomes the best-selling thing they make",
+            "synopsis": "Invented copy. A pretend early-access title quietly becomes the best-selling thing they make. No real studio, title or platform is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/a-pretend-early-access-title-quietly-becomes-the-best-sellin",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": null
+          },
+          {
+            "title": "A pretend debut arrives with no marketing at all",
+            "synopsis": null,
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/a-pretend-debut-arrives-with-no-marketing-at-all",
+            "lens": null,
+            "category": "Books",
+            "emoji": "📚",
+            "published_at": "2026-09-18T09:26:29.596Z"
+          },
+          {
+            "title": "A pretend collector gives the lot away rather than split it",
+            "synopsis": "Invented copy. A pretend collector gives the lot away rather than split it. Nothing in this card happened. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/a-pretend-collector-gives-the-lot-away-rather-than-split-it",
+            "lens": null,
+            "category": "Odd Lots",
+            "emoji": "🎩",
+            "published_at": "2026-09-18T08:12:29.596Z"
+          },
+          {
+            "title": "The invented county board puts the levy question back on the ballot",
+            "synopsis": "Invented copy. The invented county board puts the levy question back on the ballot. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/the-invented-county-board-puts-the-levy-question-back-on-the",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-18T06:57:29.596Z"
+          },
+          {
+            "title": "The Lakeshore Current lose their starting keeper for the season",
+            "synopsis": "Invented copy. The Lakeshore Current lose their starting keeper for the season. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/the-lakeshore-current-lose-their-starting-keeper-for-the-sea",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-18T05:40:29.596Z"
+          },
+          {
+            "title": "A fictional committee stalls over a single line item",
+            "synopsis": "Invented copy. A fictional committee stalls over a single line item. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/a-fictional-committee-stalls-over-a-single-line-item",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-18T04:23:29.596Z"
+          },
+          {
+            "title": "Small-shop automation ships a release nobody asked for",
+            "synopsis": null,
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/small-shop-automation-ships-a-release-nobody-asked-for",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-18T03:04:29.596Z"
+          },
+          {
+            "title": "Regional freight rates opens a third branch on a hunch",
+            "synopsis": "Invented copy. Regional freight rates opens a third branch on a hunch. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/regional-freight-rates-opens-a-third-branch-on-a-hunch",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-18T01:45:29.596Z"
+          },
+          {
+            "title": "The invented index gives back a month in an afternoon",
+            "synopsis": "Invented copy. The invented index gives back a month in an afternoon. Every figure here was made up; money never moves from this page. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/the-invented-index-gives-back-a-month-in-an-afternoon",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-18T00:24:29.596Z"
+          },
+          {
+            "title": "A fictional second-division side is decided by a goal in the ninth minute of added time",
+            "synopsis": "Invented copy. A fictional second-division side is decided by a goal in the ninth minute of added time. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/a-fictional-second-division-side-is-decided-by-a-goal-in-the",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-17T23:02:29.596Z"
+          },
+          {
+            "title": "An invented survey holds up on the third try",
+            "synopsis": "Invented copy. An invented survey holds up on the third try. No real study, result or institution is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/an-invented-survey-holds-up-on-the-third-try",
+            "lens": null,
+            "category": "Science",
+            "emoji": "🔬",
+            "published_at": "2026-09-17T21:39:29.596Z"
+          },
+          {
+            "title": "An invented launch window phones home a day late",
+            "synopsis": null,
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/an-invented-launch-window-phones-home-a-day-late",
+            "lens": null,
+            "category": "Space",
+            "emoji": "🚀",
+            "published_at": "2026-09-17T20:15:29.596Z"
+          },
+          {
+            "title": "An invented studio runs better on the old hardware",
+            "synopsis": "Invented copy. An invented studio runs better on the old hardware. No real studio, title or platform is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/an-invented-studio-runs-better-on-the-old-hardware",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": "2026-09-17T18:49:29.596Z"
+          },
+          {
+            "title": "An invented novelist is better than the original and says so",
+            "synopsis": "Invented copy. An invented novelist is better than the original and says so. Every author, title and prize in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/an-invented-novelist-is-better-than-the-original-and-says-so",
+            "lens": null,
+            "category": "Books",
+            "emoji": "📚",
+            "published_at": "2026-09-17T17:23:29.596Z"
+          },
+          {
+            "title": "An invented auction house catalogues nine thousand bottle caps",
+            "synopsis": "Invented copy. An invented auction house catalogues nine thousand bottle caps. Nothing in this card happened. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/an-invented-auction-house-catalogues-nine-thousand-bottle-ca",
+            "lens": null,
+            "category": "Odd Lots",
+            "emoji": "🎩",
+            "published_at": "2026-09-17T15:56:29.596Z"
+          },
+          {
+            "title": "A made-up village committee signs off on a roundabout nobody wanted",
+            "synopsis": "Invented copy. A made-up village committee signs off on a roundabout nobody wanted. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/a-made-up-village-committee-signs-off-on-a-roundabout-nobody",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-17T14:27:29.596Z"
+          },
+          {
+            "title": "Granite City Foremen name a first-year head coach",
+            "synopsis": null,
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/granite-city-foremen-name-a-first-year-head-coach",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-17T12:57:29.596Z"
+          },
+          {
+            "title": "The invented appropriations bill gets a markup date at last",
+            "synopsis": "Invented copy. The invented appropriations bill gets a markup date at last. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/the-invented-appropriations-bill-gets-a-markup-date-at-last",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-17T11:26:29.596Z"
+          },
+          {
+            "title": "An invented file format drops support for a decade-old runtime",
+            "synopsis": "Invented copy. An invented file format drops support for a decade-old runtime. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/an-invented-file-format-drops-support-for-a-decade-old-runti",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-17T09:54:29.596Z"
+          },
+          {
+            "title": "An invented equipment dealer loses its largest account to a rival",
+            "synopsis": "Invented copy. An invented equipment dealer loses its largest account to a rival. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/an-invented-equipment-dealer-loses-its-largest-account-to-a-",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-17T08:21:29.596Z"
+          },
+          {
+            "title": "A fictional commodity finds a floor nobody trusts",
+            "synopsis": "Invented copy. A fictional commodity finds a floor nobody trusts. Every figure here was made up; money never moves from this page. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/a-fictional-commodity-finds-a-floor-nobody-trusts",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-17T06:47:29.596Z"
+          },
+          {
+            "title": "The invented cup holders ends goalless and nobody minds",
+            "synopsis": null,
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/the-invented-cup-holders-ends-goalless-and-nobody-minds",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-17T05:12:29.596Z"
+          },
+          {
+            "title": "A made-up replication attempt loses a decade of data to a bad tape",
+            "synopsis": "Invented copy. A made-up replication attempt loses a decade of data to a bad tape. No real study, result or institution is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/a-made-up-replication-attempt-loses-a-decade-of-data-to-a-ba",
+            "lens": null,
+            "category": "Science",
+            "emoji": "🔬",
+            "published_at": "2026-09-17T03:35:29.596Z"
+          },
+          {
+            "title": "A fictional lander is retired after outliving its brief by years",
+            "synopsis": "Invented copy. A fictional lander is retired after outliving its brief by years. Every mission, vehicle and date here is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/a-fictional-lander-is-retired-after-outliving-its-brief-by-y",
+            "lens": null,
+            "category": "Space",
+            "emoji": "🚀",
+            "published_at": null
+          },
+          {
+            "title": "A made-up remaster cuts its entry fee in half",
+            "synopsis": "Invented copy. A made-up remaster cuts its entry fee in half. No real studio, title or platform is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/a-made-up-remaster-cuts-its-entry-fee-in-half",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": "2026-09-17T00:19:29.596Z"
+          },
+          {
+            "title": "A made-up translation shortlists nothing anyone expected",
+            "synopsis": "Invented copy. A made-up translation shortlists nothing anyone expected. Every author, title and prize in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/a-made-up-translation-shortlists-nothing-anyone-expected",
+            "lens": null,
+            "category": "Books",
+            "emoji": "📚",
+            "published_at": "2026-09-16T22:39:29.596Z"
+          },
+          {
+            "title": "The fictional water utility delays the budget vote a third time",
+            "synopsis": null,
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/the-fictional-water-utility-delays-the-budget-vote-a-third-t",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-16T20:59:29.596Z"
+          },
+          {
+            "title": "Cedar Valley Drays move their home dates to the new turf",
+            "synopsis": "Invented copy. Cedar Valley Drays move their home dates to the new turf. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/cedar-valley-drays-move-their-home-dates-to-the-new-turf",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-16T19:17:29.596Z"
+          },
+          {
+            "title": "An imaginary caucus loses two votes it was counting on",
+            "synopsis": "Invented copy. An imaginary caucus loses two votes it was counting on. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/an-imaginary-caucus-loses-two-votes-it-was-counting-on",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-16T17:34:29.596Z"
+          },
+          {
+            "title": "A made-up scheduling library wins an argument it started in 2019",
+            "synopsis": "Invented copy. A made-up scheduling library wins an argument it started in 2019. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/a-made-up-scheduling-library-wins-an-argument-it-started-in-",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-16T15:50:29.596Z"
+          },
+          {
+            "title": "The made-up parts distributor raises prices and says so plainly",
+            "synopsis": "Invented copy. The made-up parts distributor raises prices and says so plainly. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/the-made-up-parts-distributor-raises-prices-and-says-so-plai",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-16T14:04:29.596Z"
+          },
+          {
+            "title": "The pretend bond desk is being read as the top rather than a pause",
+            "synopsis": null,
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/the-pretend-bond-desk-is-being-read-as-the-top-rather-than-a",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-16T12:18:29.596Z"
+          },
+          {
+            "title": "An imaginary promotion chase gets a replay after a floodlight failure",
+            "synopsis": "Invented copy. An imaginary promotion chase gets a replay after a floodlight failure. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/an-imaginary-promotion-chase-gets-a-replay-after-a-floodligh",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-16T10:31:29.596Z"
+          },
+          {
+            "title": "The fictional field station is cheaper than the thing it replaces",
+            "synopsis": "Invented copy. The fictional field station is cheaper than the thing it replaces. No real study, result or institution is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/the-fictional-field-station-is-cheaper-than-the-thing-it-rep",
+            "lens": null,
+            "category": "Science",
+            "emoji": "🔬",
+            "published_at": "2026-09-16T08:42:29.596Z"
+          },
+          {
+            "title": "The made-up ground station files for a hundred more slots",
+            "synopsis": "Invented copy. The made-up ground station files for a hundred more slots. Every mission, vehicle and date here is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/the-made-up-ground-station-files-for-a-hundred-more-slots",
+            "lens": null,
+            "category": "Space",
+            "emoji": "🚀",
+            "published_at": "2026-09-16T06:53:29.596Z"
+          },
+          {
+            "title": "The fictional handheld ships without the mode it advertised",
+            "synopsis": "Invented copy. The fictional handheld ships without the mode it advertised. No real studio, title or platform is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/the-fictional-handheld-ships-without-the-mode-it-advertised",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": "2026-09-16T05:02:29.596Z"
+          },
+          {
+            "title": "Mock County planners buys the old mill site for a dollar",
+            "synopsis": null,
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/mock-county-planners-buys-the-old-mill-site-for-a-dollar",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-16T03:10:29.596Z"
+          },
+          {
+            "title": "North Pike Sentinels run their unbeaten streak to nine",
+            "synopsis": "Invented copy. North Pike Sentinels run their unbeaten streak to nine. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/north-pike-sentinels-run-their-unbeaten-streak-to-nine",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-16T01:17:29.596Z"
+          },
+          {
+            "title": "The made-up rules panel is rewritten a fourth time",
+            "synopsis": "Invented copy. The made-up rules panel is rewritten a fourth time. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/the-made-up-rules-panel-is-rewritten-a-fourth-time",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-15T23:23:29.596Z"
+          },
+          {
+            "title": "The fictional standards group quietly doubles its storage tier",
+            "synopsis": "Invented copy. The fictional standards group quietly doubles its storage tier. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/the-fictional-standards-group-quietly-doubles-its-storage-ti",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-15T21:28:29.596Z"
+          },
+          {
+            "title": "A fictional leasing arm buys back a warehouse it sold in 2021",
+            "synopsis": "Invented copy. A fictional leasing arm buys back a warehouse it sold in 2021. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/a-fictional-leasing-arm-buys-back-a-warehouse-it-sold-in-202",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-15T19:32:29.596Z"
+          },
+          {
+            "title": "An imaginary sector fund ends the quarter roughly where it started",
+            "synopsis": null,
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/an-imaginary-sector-fund-ends-the-quarter-roughly-where-it-s",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-15T17:35:29.596Z"
+          },
+          {
+            "title": "The made-up derby signs for a fee that is also invented",
+            "synopsis": "Invented copy. The made-up derby signs for a fee that is also invented. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/the-made-up-derby-signs-for-a-fee-that-is-also-invented",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-15T15:37:29.596Z"
+          },
+          {
+            "title": "An imaginary instrument reaches its twentieth year quietly",
+            "synopsis": "Invented copy. An imaginary instrument reaches its twentieth year quietly. No real study, result or institution is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Quarterly",
+            "url": "https://example.com/mock/news/an-imaginary-instrument-reaches-its-twentieth-year-quietly",
+            "lens": null,
+            "category": "Science",
+            "emoji": "🔬",
+            "published_at": "2026-09-15T13:37:29.596Z"
+          },
+          {
+            "title": "An imaginary tournament quietly becomes the best-selling thing they make",
+            "synopsis": "Invented copy. An imaginary tournament quietly becomes the best-selling thing they make. No real studio, title or platform is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/an-imaginary-tournament-quietly-becomes-the-best-selling-thi",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": "2026-09-15T11:37:29.596Z"
+          },
+          {
+            "title": "An imaginary school district approves the long-delayed riverfront plan",
+            "synopsis": "Invented copy. An imaginary school district approves the long-delayed riverfront plan. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/an-imaginary-school-district-approves-the-long-delayed-river",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-15T09:36:29.596Z"
+          },
+          {
+            "title": "Foundry Ironsides take the conference opener in overtime",
+            "synopsis": null,
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/foundry-ironsides-take-the-conference-opener-in-overtime",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": null
+          },
+          {
+            "title": "A nonexistent working group clears its first procedural hurdle",
+            "synopsis": "Invented copy. A nonexistent working group clears its first procedural hurdle. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/a-nonexistent-working-group-clears-its-first-procedural-hurd",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-15T05:29:29.596Z"
+          },
+          {
+            "title": "An imaginary handset maker is getting cheap faster than expected",
+            "synopsis": "Invented copy. An imaginary handset maker is getting cheap faster than expected. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/an-imaginary-handset-maker-is-getting-cheap-faster-than-expe",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-15T03:25:29.596Z"
+          },
+          {
+            "title": "Nowhere Logistics flatten after a long climb",
+            "synopsis": "Invented copy. Nowhere Logistics flatten after a long climb. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/nowhere-logistics-flatten-after-a-long-climb",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-15T01:19:29.596Z"
+          },
+          {
+            "title": "Made-up spot pricing closes flat for a fourth straight week",
+            "synopsis": "Invented copy. Made-up spot pricing closes flat for a fourth straight week. Every figure here was made up; money never moves from this page. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/made-up-spot-pricing-closes-flat-for-a-fourth-straight-week",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-14T23:12:29.596Z"
+          },
+          {
+            "title": "A pretend academy graduate goes down to ten and wins anyway",
+            "synopsis": null,
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/a-pretend-academy-graduate-goes-down-to-ten-and-wins-anyway",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-14T21:04:29.596Z"
+          },
+          {
+            "title": "A pretend early-access title delays its sequel into next autumn",
+            "synopsis": "Invented copy. A pretend early-access title delays its sequel into next autumn. No real studio, title or platform is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/a-pretend-early-access-title-delays-its-sequel-into-next-aut",
+            "lens": null,
+            "category": "Gaming",
+            "emoji": "🎮",
+            "published_at": "2026-09-14T18:55:29.596Z"
+          },
+          {
+            "title": "The invented county board signs off on a roundabout nobody wanted",
+            "synopsis": "Invented copy. The invented county board signs off on a roundabout nobody wanted. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/the-invented-county-board-signs-off-on-a-roundabout-nobody-w",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-14T16:45:29.596Z"
+          },
+          {
+            "title": "The Lakeshore Current name a first-year head coach",
+            "synopsis": "Invented copy. The Lakeshore Current name a first-year head coach. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/the-lakeshore-current-name-a-first-year-head-coach",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-14T14:34:29.596Z"
+          },
+          {
+            "title": "A fictional committee gets a markup date at last",
+            "synopsis": "Invented copy. A fictional committee gets a markup date at last. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/a-fictional-committee-gets-a-markup-date-at-last",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-14T12:21:29.596Z"
+          },
+          {
+            "title": "Small-shop automation drops support for a decade-old runtime",
+            "synopsis": null,
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/small-shop-automation-drops-support-for-a-decade-old-runtime",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-14T10:08:29.596Z"
+          },
+          {
+            "title": "Regional freight rates loses its largest account to a rival",
+            "synopsis": "Invented copy. Regional freight rates loses its largest account to a rival. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/regional-freight-rates-loses-its-largest-account-to-a-rival",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-14T07:54:29.596Z"
+          },
+          {
+            "title": "The invented index finds a floor nobody trusts",
+            "synopsis": "Invented copy. The invented index finds a floor nobody trusts. Every figure here was made up; money never moves from this page. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/the-invented-index-finds-a-floor-nobody-trusts",
+            "lens": null,
+            "category": "Markets",
+            "emoji": "📈",
+            "published_at": "2026-09-14T05:38:29.596Z"
+          },
+          {
+            "title": "A fictional second-division side ends goalless and nobody minds",
+            "synopsis": "Invented copy. A fictional second-division side ends goalless and nobody minds. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/a-fictional-second-division-side-ends-goalless-and-nobody-mi",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-14T03:22:29.596Z"
+          },
+          {
+            "title": "A made-up village committee delays the budget vote a third time",
+            "synopsis": "Invented copy. A made-up village committee delays the budget vote a third time. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/a-made-up-village-committee-delays-the-budget-vote-a-third-t",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-14T01:04:29.596Z"
+          },
+          {
+            "title": "Granite City Foremen move their home dates to the new turf",
+            "synopsis": null,
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/granite-city-foremen-move-their-home-dates-to-the-new-turf",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-13T22:46:29.596Z"
+          },
+          {
+            "title": "The invented appropriations bill loses two votes it was counting on",
+            "synopsis": "Invented copy. The invented appropriations bill loses two votes it was counting on. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/the-invented-appropriations-bill-loses-two-votes-it-was-coun",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-13T20:26:29.596Z"
+          },
+          {
+            "title": "An invented file format wins an argument it started in 2019",
+            "synopsis": "Invented copy. An invented file format wins an argument it started in 2019. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/an-invented-file-format-wins-an-argument-it-started-in-2019",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-13T18:05:29.596Z"
+          },
+          {
+            "title": "An invented equipment dealer raises prices and says so plainly",
+            "synopsis": "Invented copy. An invented equipment dealer raises prices and says so plainly. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/an-invented-equipment-dealer-raises-prices-and-says-so-plain",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-13T15:44:29.596Z"
+          },
+          {
+            "title": "The invented cup holders gets a replay after a floodlight failure",
+            "synopsis": "Invented copy. The invented cup holders gets a replay after a floodlight failure. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/the-invented-cup-holders-gets-a-replay-after-a-floodlight-fa",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-13T13:21:29.596Z"
+          },
+          {
+            "title": "The fictional water utility buys the old mill site for a dollar",
+            "synopsis": null,
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/the-fictional-water-utility-buys-the-old-mill-site-for-a-dol",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-13T10:57:29.596Z"
+          },
+          {
+            "title": "Cedar Valley Drays run their unbeaten streak to nine",
+            "synopsis": "Invented copy. Cedar Valley Drays run their unbeaten streak to nine. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/cedar-valley-drays-run-their-unbeaten-streak-to-nine",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-13T08:32:29.596Z"
+          },
+          {
+            "title": "An imaginary caucus is rewritten a fourth time",
+            "synopsis": "Invented copy. An imaginary caucus is rewritten a fourth time. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/an-imaginary-caucus-is-rewritten-a-fourth-time",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-13T06:06:29.596Z"
+          },
+          {
+            "title": "A made-up scheduling library quietly doubles its storage tier",
+            "synopsis": "Invented copy. A made-up scheduling library quietly doubles its storage tier. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/a-made-up-scheduling-library-quietly-doubles-its-storage-tie",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": null
+          },
+          {
+            "title": "The made-up parts distributor buys back a warehouse it sold in 2021",
+            "synopsis": "Invented copy. The made-up parts distributor buys back a warehouse it sold in 2021. No real market, carrier, rate or company is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Wire",
+            "url": "https://example.com/mock/news/the-made-up-parts-distributor-buys-back-a-warehouse-it-sold-",
+            "lens": null,
+            "category": "Business",
+            "emoji": "💼",
+            "published_at": "2026-09-13T01:11:29.596Z"
+          },
+          {
+            "title": "An imaginary promotion chase signs for a fee that is also invented",
+            "synopsis": null,
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/an-imaginary-promotion-chase-signs-for-a-fee-that-is-also-in",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-12T22:41:29.596Z"
+          },
+          {
+            "title": "Mock County planners approves the long-delayed riverfront plan",
+            "synopsis": "Invented copy. Mock County planners approves the long-delayed riverfront plan. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/mock-county-planners-approves-the-long-delayed-riverfront-pl",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-12T20:11:29.596Z"
+          },
+          {
+            "title": "North Pike Sentinels take the conference opener in overtime",
+            "synopsis": "Invented copy. North Pike Sentinels take the conference opener in overtime. Every club, result and player in this card was made up by the generator. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/north-pike-sentinels-take-the-conference-opener-in-overtime",
+            "lens": null,
+            "category": "Local Sports",
+            "emoji": "🏟️",
+            "published_at": "2026-09-12T17:40:29.596Z"
+          },
+          {
+            "title": "The made-up rules panel clears its first procedural hurdle",
+            "synopsis": "Invented copy. The made-up rules panel clears its first procedural hurdle. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/the-made-up-rules-panel-clears-its-first-procedural-hurdle",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-12T15:08:29.596Z"
+          },
+          {
+            "title": "The fictional standards group is getting cheap faster than expected",
+            "synopsis": "Invented copy. The fictional standards group is getting cheap faster than expected. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/the-fictional-standards-group-is-getting-cheap-faster-than-e",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-12T12:34:29.596Z"
+          },
+          {
+            "title": "The made-up derby goes down to ten and wins anyway",
+            "synopsis": null,
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/the-made-up-derby-goes-down-to-ten-and-wins-anyway",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-12T10:00:29.596Z"
+          },
+          {
+            "title": "An imaginary school district puts the levy question back on the ballot",
+            "synopsis": "Invented copy. An imaginary school district puts the levy question back on the ballot. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/an-imaginary-school-district-puts-the-levy-question-back-on-",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-12T07:24:29.596Z"
+          },
+          {
+            "title": "A nonexistent working group stalls over a single line item",
+            "synopsis": "Invented copy. A nonexistent working group stalls over a single line item. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/a-nonexistent-working-group-stalls-over-a-single-line-item",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-12T04:48:29.596Z"
+          },
+          {
+            "title": "An imaginary handset maker ships a release nobody asked for",
+            "synopsis": "Invented copy. An imaginary handset maker ships a release nobody asked for. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/an-imaginary-handset-maker-ships-a-release-nobody-asked-for",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-12T02:10:29.596Z"
+          },
+          {
+            "title": "A pretend academy graduate is decided by a goal in the ninth minute of added time",
+            "synopsis": "Invented copy. A pretend academy graduate is decided by a goal in the ninth minute of added time. No real club, match or player appears in this card. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/a-pretend-academy-graduate-is-decided-by-a-goal-in-the-ninth",
+            "lens": null,
+            "category": "Soccer",
+            "emoji": "⚽",
+            "published_at": "2026-09-11T23:32:29.596Z"
+          },
+          {
+            "title": "The invented county board delays the budget vote a third time",
+            "synopsis": null,
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/the-invented-county-board-delays-the-budget-vote-a-third-tim",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-11T20:52:29.596Z"
+          },
+          {
+            "title": "A fictional committee loses two votes it was counting on",
+            "synopsis": "Invented copy. A fictional committee loses two votes it was counting on. No real body, bill or vote is described here. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "The Made-Up Times",
+            "url": "https://example.com/mock/news/a-fictional-committee-loses-two-votes-it-was-counting-on",
+            "lens": null,
+            "category": "National Politics",
+            "emoji": "🏛️",
+            "published_at": "2026-09-11T18:11:29.596Z"
+          },
+          {
+            "title": "Small-shop automation wins an argument it started in 2019",
+            "synopsis": "Invented copy. Small-shop automation wins an argument it started in 2019. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/small-shop-automation-wins-an-argument-it-started-in-2019",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-11T15:29:29.596Z"
+          },
+          {
+            "title": "A made-up village committee buys the old mill site for a dollar",
+            "synopsis": "Invented copy. A made-up village committee buys the old mill site for a dollar. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/a-made-up-village-committee-buys-the-old-mill-site-for-a-dol",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-11T12:47:29.596Z"
+          },
+          {
+            "title": "An invented file format quietly doubles its storage tier",
+            "synopsis": "Invented copy. An invented file format quietly doubles its storage tier. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Invented Dispatch",
+            "url": "https://example.com/mock/news/an-invented-file-format-quietly-doubles-its-storage-tier",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-11T10:03:29.596Z"
+          },
+          {
+            "title": "The fictional water utility approves the long-delayed riverfront plan",
+            "synopsis": null,
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/the-fictional-water-utility-approves-the-long-delayed-riverf",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-11T07:18:29.596Z"
+          },
+          {
+            "title": "A made-up scheduling library is getting cheap faster than expected",
+            "synopsis": "Invented copy. A made-up scheduling library is getting cheap faster than expected. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Fictional Gazette",
+            "url": "https://example.com/mock/news/a-made-up-scheduling-library-is-getting-cheap-faster-than-ex",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-11T04:32:29.596Z"
+          },
+          {
+            "title": "Mock County planners puts the levy question back on the ballot",
+            "synopsis": "Invented copy. Mock County planners puts the levy question back on the ballot. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/mock-county-planners-puts-the-levy-question-back-on-the-ball",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-11T01:45:29.596Z"
+          },
+          {
+            "title": "The fictional standards group ships a release nobody asked for",
+            "synopsis": "Invented copy. The fictional standards group ships a release nobody asked for. Every product, version and company in this card is invented. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Review",
+            "url": "https://example.com/mock/news/the-fictional-standards-group-ships-a-release-nobody-asked-f",
+            "lens": null,
+            "category": "Tech",
+            "emoji": "💻",
+            "published_at": "2026-09-10T22:57:29.596Z"
+          },
+          {
+            "title": "An imaginary school district signs off on a roundabout nobody wanted",
+            "synopsis": "Invented copy. An imaginary school district signs off on a roundabout nobody wanted. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Nowhere Chronicle",
+            "url": "https://example.com/mock/news/an-imaginary-school-district-signs-off-on-a-roundabout-nobod",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-10T20:08:29.596Z"
+          },
+          {
+            "title": "The invented county board buys the old mill site for a dollar",
+            "synopsis": null,
+            "source": "Pretend Post",
+            "url": "https://example.com/mock/news/the-invented-county-board-buys-the-old-mill-site-for-a-dolla",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": "2026-09-10T17:18:29.596Z"
+          },
+          {
+            "title": "A made-up village committee approves the long-delayed riverfront plan",
+            "synopsis": "Invented copy. A made-up village committee approves the long-delayed riverfront plan. The vote, the board and the parcel are all invented for this fixture. No real person, organisation or event is described, and every number in it was made up by tools/make-mock-data.js.",
+            "source": "Mock Ledger",
+            "url": "https://example.com/mock/news/a-made-up-village-committee-approves-the-long-delayed-riverf",
+            "lens": null,
+            "category": "Local News",
+            "emoji": "🏙️",
+            "published_at": null
           }
-        ]
+        ],
+        "as_of": "2026-09-19T22:29:29.596Z",
+        "count": 151,
+        "by_category": [
+          {
+            "name": "Local News",
+            "emoji": "🏙️",
+            "n": 22
+          },
+          {
+            "name": "Local Sports",
+            "emoji": "🏟️",
+            "n": 14
+          },
+          {
+            "name": "National Politics",
+            "emoji": "🏛️",
+            "n": 16
+          },
+          {
+            "name": "Tech",
+            "emoji": "💻",
+            "n": 19
+          },
+          {
+            "name": "Business",
+            "emoji": "💼",
+            "n": 13
+          },
+          {
+            "name": "Markets",
+            "emoji": "📈",
+            "n": 11
+          },
+          {
+            "name": "Soccer",
+            "emoji": "⚽",
+            "n": 15
+          },
+          {
+            "name": "Science",
+            "emoji": "🔬",
+            "n": 9
+          },
+          {
+            "name": "Space",
+            "emoji": "🚀",
+            "n": 8
+          },
+          {
+            "name": "Gaming",
+            "emoji": "🎮",
+            "n": 10
+          },
+          {
+            "name": "Books",
+            "emoji": "📚",
+            "n": 7
+          },
+          {
+            "name": "Odd Lots",
+            "emoji": "🎩",
+            "n": 6
+          }
+        ],
+        "sources": {
+          "ok": 40,
+          "failed": [],
+          "total": 40
+        },
+        "refresh_note": null,
+        "source": "mock generator — raw RSS shape, no model"
       }
     },
     "entertainment": {
       "band": "DAILY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.596Z",
       "status": "ok",
       "error": null,
       "data": {
         "watching": {
-          "updated_at": "2026-09-19T11:57:12.312Z",
+          "updated_at": "2026-09-19T21:17:29.596Z",
           "items": [
             {
               "title": "The Quiet Ledger",
@@ -1271,13 +2814,13 @@
           "errors": null
         },
         "podcasts": {
-          "updated_at": "2026-09-19T12:52:12.312Z",
+          "updated_at": "2026-09-19T22:12:29.596Z",
           "items": [
             {
               "show": "Mock Fork",
               "title": "The chatbot that filed its own taxes",
               "published": "2026-09-19",
-              "published_at": "2026-09-19T10:32:12.312Z",
+              "published_at": "2026-09-19T19:52:29.596Z",
               "duration_min": 58,
               "url": "https://example.com/mock/pod/fork-1",
               "artwork": null
@@ -1286,7 +2829,7 @@
               "show": "The Long Docket",
               "title": "Case 114: the disappearing deposition",
               "published": "2026-09-18",
-              "published_at": "2026-09-18T11:32:12.312Z",
+              "published_at": "2026-09-18T20:52:29.596Z",
               "duration_min": 71,
               "url": "https://example.com/mock/pod/docket-1",
               "artwork": null
@@ -1295,7 +2838,7 @@
               "show": "Ledger & Lamp",
               "title": "A very small bank in a very large hurry",
               "published": "2026-09-17",
-              "published_at": "2026-09-17T10:32:12.312Z",
+              "published_at": "2026-09-17T19:52:29.596Z",
               "duration_min": 44,
               "url": "https://example.com/mock/pod/ledger-1",
               "artwork": null
@@ -1304,7 +2847,7 @@
               "show": "Mock Fork",
               "title": "Everyone is building the same agent",
               "published": "2026-09-16",
-              "published_at": "2026-09-16T12:02:12.312Z",
+              "published_at": "2026-09-16T21:22:29.596Z",
               "duration_min": 63,
               "url": "https://example.com/mock/pod/fork-2",
               "artwork": null
@@ -1313,7 +2856,7 @@
               "show": "Ledger & Lamp",
               "title": "The audit nobody asked for",
               "published": "2026-09-10",
-              "published_at": "2026-09-10T13:32:12.312Z",
+              "published_at": "2026-09-10T22:52:29.596Z",
               "duration_min": null,
               "url": "https://example.com/mock/pod/ledger-2",
               "artwork": null
@@ -1322,7 +2865,7 @@
               "show": "Cold Open Radio",
               "title": "Twelve minutes of dead air, explained",
               "published": "2026-09-07",
-              "published_at": "2026-09-07T13:32:12.312Z",
+              "published_at": "2026-09-07T22:52:29.596Z",
               "duration_min": 12,
               "url": "https://example.com/mock/pod/cold-1",
               "artwork": null
@@ -1331,7 +2874,7 @@
           "errors": null
         },
         "top5": {
-          "updated_at": "2026-09-19T02:32:12.312Z",
+          "updated_at": "2026-09-19T11:52:29.596Z",
           "week_of": "2026-09-14",
           "items": [
             {
@@ -1393,7 +2936,7 @@
           "errors": null
         },
         "listening": {
-          "updated_at": "2026-09-19T00:32:12.312Z",
+          "updated_at": "2026-09-19T09:52:29.596Z",
           "week_of": "2026-09-14",
           "status": "ok",
           "series_checked": 17,
@@ -1460,18 +3003,18 @@
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-19T13:32:12.312Z",
+      "updated_at": "2026-09-19T22:52:29.596Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-18T07:32:12.312Z",
+        "drift_audit_updated": "2026-09-18T16:52:29.596Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-19T13:24:12.312Z",
+        "worker_published_at": "2026-09-19T22:44:29.596Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -1493,7 +3036,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-19T12:02:12.312Z",
+      "updated_at": "2026-09-19T21:22:29.596Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

@@ -320,25 +320,22 @@ function sourcesLine(sources) {
 }
 
 /**
- * The shell prints `tile.error` above the body for every tile before the
- * module runs. For a forty-feed aggregator that string is the normal cost of
- * doing business — one feed rate-limited — and putting it on the board turns a
- * working tile into a red one. So the newsstand takes its own body back and
- * says "36 of 40 sources answered" instead.
+ * This tile reports its own trouble; the shell must not also paint the red
+ * `tile.error` line above it (app.js `ownsErrorLine`).
  *
- * Only this tile's body, only its own direct children, and only when there is
- * a sources line to say it better.
+ * For a forty-feed aggregator a failed feed is the normal cost of doing
+ * business, and a raw "r/whatever: HTTP Error 429" across the top turns a
+ * working tile into a red one. "36 of 40 sources answered" is the same fact
+ * in the form Matt can actually act on, and it is the only form that reaches
+ * the board.
+ *
+ * Declared rather than done: an earlier cut had this module delete the node
+ * the shell had already painted, which worked and was the wrong direction of
+ * dependency — it would have broken silently the day app.js changed that
+ * markup. A flag the shell reads keeps the shell the only thing that touches
+ * the shell's own DOM.
  */
-function hushShellError(root) {
-  // A real DOM hands back a live NodeList, the test shim hands back an array;
-  // both spread, and both must be COPIED before removing from them.
-  if (!root || !root.childNodes) return;
-  for (const kid of Array.from(root.childNodes)) {
-    if (kid && kid.classList && typeof kid.classList.contains === 'function' && kid.classList.contains('card-error')) {
-      root.removeChild(kid);
-    }
-  }
-}
+export const ownsErrorLine = true;
 
 /**
  * The last set this module successfully drew, so `status: error` has something
@@ -399,9 +396,8 @@ export function render(el_, tile, ctx) {
         ? `showing the last paper · ${line}`
         : 'showing the last paper'
       : line || 'some sources did not answer';
-    // Said in this module's own words, so the shell's copy of the raw error
-    // does not also stand on the board.
-    hushShellError(el_);
+    // The board's whole account of what went wrong. The shell stands down for
+    // this tile — see `ownsErrorLine` above.
     el_.appendChild(el('p', { cls: 'tile-foot news-sources', text: words }));
   }
 

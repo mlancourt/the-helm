@@ -184,6 +184,64 @@ console.log('\nsubhead never contains me.name');
   );
   check('the board does not print me.name anywhere', !/\bme\?\.name|\bme\.name\b/.test(CODE));
 
+  // -- 2b. the tile error line, and who may opt out of it -------------------
+  //
+  // The shell paints `tile.error` as a red line above every tile body. One
+  // tile — `newsstand`, an aggregator over ~40 RSS feeds — says it better
+  // itself ("36 of 40 sources answered"), so it exports a flag and the shell
+  // stands down for it.
+  //
+  // An earlier cut had the TILE delete the node the shell had painted. That
+  // worked and was backwards: a tile reaching into the shell's own markup
+  // breaks silently the day the shell changes it. So the direction is tested
+  // here, from the shell's side, on the shipped source — and the predicate is
+  // pulled out and actually RUN, rather than pattern-matched.
+  console.log('\nthe tile error line is opt-out, and the opt-out is opt-in');
+  {
+    const src = (CODE.match(/function ownsErrorLine\(id\)\s*\{[\s\S]*?\n\}/) || [''])[0];
+    check('app.js defines ownsErrorLine', src.length > 0);
+
+    // The real function, with a stub standing in for the module map it closes
+    // over. If the shipped predicate changes shape, this stops compiling.
+    const ns = new Map();
+    const ownsErrorLine = new Function('moduleNs', `${src}\nreturn ownsErrorLine;`)(ns);
+
+    ns.set('newsstand', { render() {}, ownsErrorLine: true });
+    ns.set('calendar', { render() {} });
+    check('a module that exports the flag opts out', ownsErrorLine('newsstand') === true);
+    check('a module WITHOUT the flag still gets the shell\u2019s error line', ownsErrorLine('calendar') === false);
+    check('and so does a tile whose module never loaded', ownsErrorLine('nothing_here') === false);
+
+    // Strictly `=== true`: a tile that grows some unrelated truthy export of
+    // the same name must not silently lose its error line.
+    ns.set('almost', { render() {}, ownsErrorLine: 'yes' });
+    check('truthy is not enough — the flag must be exactly true', ownsErrorLine('almost') === false);
+
+    // The shell's half: exactly one place prints the SNAPSHOT's error, and it
+    // is gated. (`card-error` is also the class on "this tile threw", which
+    // is a different thing and deliberately not covered below.)
+    const paints = [...CODE.matchAll(/text:\s*String\(tile\.error\)/g)].length;
+    check('one place in the shell prints the snapshot error', paints === 1, String(paints));
+    check(
+      'and it is gated on the flag',
+      /if\s*\(tile\.error\s*&&\s*!ownsErrorLine\(id\)\)/.test(CODE),
+      'the error line is no longer gated'
+    );
+
+    // The opt-out covers the ENGINE's error, not a crash. A module that
+    // throws has just proved it cannot report anything, including itself, so
+    // the shell says so whatever flag the module exports.
+    const crash = (CODE.match(/catch \(e\) \{[\s\S]{0,400}?This tile failed to render[^\n]*\n/) || [''])[0];
+    check('a tile that throws is still reported by the shell', crash.length > 0);
+    check('and that line is not gated on the flag', !/ownsErrorLine/.test(crash));
+
+    // The tile's half: declared, never done by hand.
+    const NEWS = read('docs', 'tiles', 'newsstand.js');
+    check('newsstand exports the flag', /export const ownsErrorLine = true;/.test(NEWS));
+    check('and never touches card-error itself', !/card-error/.test(NEWS));
+    check('nor removes nodes from the body it was handed', !/removeChild/.test(NEWS));
+  }
+
   // -- 3. the sheets --------------------------------------------------------
   console.log('\nsheets size to content in the phone breakpoint');
   const sheet = baseRules('.sheet');

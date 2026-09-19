@@ -523,19 +523,20 @@ async function main() {
     );
     check('the raw error never reaches the board', !/429/.test(textOf(staleRoot)) && !/bobiverse/i.test(textOf(staleRoot)));
 
-    // The shell prints tile.error above the body before the module runs; the
-    // newsstand takes that back, because "one feed was rate-limited" is not a
-    // red card.
-    const hushRoot = new El('div');
-    hushRoot.appendChild(new El('p'));
-    hushRoot.childNodes[0].className = 'card-error';
-    hushRoot.childNodes[0].textContent = ERR;
-    news.render(
-      hushRoot,
-      { band: 'HOURLY', status: 'stale', error: ERR, data: { cards: bulk.slice(0, 5), sources: { ok: 36, failed: [ERR], total: 40 } } },
-      { id: 'newsstand', actions: {} }
-    );
-    check('the shell’s copy of the error is taken off the board too', countOf(hushRoot, 'card-error') === 0 && !/429/.test(textOf(hushRoot)));
+    // The shell paints tile.error above every tile body. This tile says the
+    // same thing better, so it DECLARES that and app.js stands down — rather
+    // than the tile reaching back and deleting a node the shell painted,
+    // which is the wrong direction of dependency and would break silently
+    // the day app.js changed that markup. The shell's half of the contract
+    // is tested in tools/test-shell.js.
+    check('the module claims its own error line', news.ownsErrorLine === true);
+
+    // Opt-IN: the flag is a thing a tile has to say. Every other module stays
+    // silent and keeps the shell's red line.
+    const claimers = [...mods.entries()]
+      .filter(([, m]) => m.ownsErrorLine !== undefined)
+      .map(([tileId]) => tileId);
+    check('and it is the only tile that claims one', claimers.join() === 'newsstand', claimers.join() || '(none)');
 
     // Missing totals must not print "NaN of NaN".
     const vagueRoot = new El('div');
