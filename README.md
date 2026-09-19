@@ -30,7 +30,8 @@ docs/                   GitHub Pages root — serve this directory, nothing else
   tiles/<id>.js         one file per tile: export function render(el, tile, ctx)
   live/espn.js          ESPN fetch + normalize
   live/graders.js       market -> grader, pure functions
-  live/band.js          the polling loop and cadence
+  live/nws.js           NWS fetch + normalize (alerts, forecast, now-line, radar)
+  live/band.js          the polling loops and their cadences (ESPN, NWS)
   manifest.webmanifest sw.js icons/
   mock/                 generated fake data, fake by construction
 
@@ -42,6 +43,8 @@ tools/fixtures/         real ESPN payloads, captured for the grader tests
 tools/test-fmt.js       date/format unit tests, run across four timezones
 tools/test-sw.js        service worker caching-policy + precache-parity tests
 tools/test-tiles.js     every render module, incl. hostile payloads (DOM shim)
+tools/test-weather.js   the weather tile: fold, tiers, clock, radar, fallback
+tools/dom-shim.js       the 60-line DOM both tile test files render into
 tools/test-ask.js       the /ask route, against a fake KV and a stubbed model
 tools/test-worker.js    Worker API tests (needs wrangler dev)
 tools/ask-probe.sh      one real /ask against the deployed Worker, shape only
@@ -74,6 +77,9 @@ Then open one of:
 | `http://127.0.0.1:8080/?mock=1` | renders the fake snapshot, no Worker at all |
 | `http://127.0.0.1:8080/?mock=drift` | the schema-drift fixture (see rule 9 below) |
 | `http://127.0.0.1:8080/?mock=cards-stale` | the card desk half rate-limited (rule 8's grey treatment) |
+| `http://127.0.0.1:8080/?mock=weather-warn` | a Tornado Warning — red row **and** the board banner |
+| `http://127.0.0.1:8080/?mock=weather-clear` | the weather tile with nothing to shout about |
+| `http://127.0.0.1:8080/?mock=weather-down` | no live feed **and** no offline copy: "feed unavailable" |
 | `http://127.0.0.1:8080/?mock=live.local` | real event ids — watch the graders work |
 | `http://127.0.0.1:8080/?api=http://127.0.0.1:8787&t=<token>` | the real local Worker |
 
@@ -145,6 +151,15 @@ and trip the "regional — not yours" rule. Without it, `today_games` could only
 be seen working on a day the real world happened to supply those cases.
 `app.js` injects that slate into the band; `live/band.js` itself has no mock
 branch.
+
+`?mock=1` reaches **api.weather.gov not at all**. The mock's gridpoint and
+station ids are invented, so those URLs would 404, and a mock that fires four
+requests at a federal endpoint to render fake data is not a mock. `app.js`
+hands the weather band a client that refuses, which lands the tile on exactly
+the path worth looking at by eye: `data.fallback`, greyed, with its own `as of`.
+The radar box points at `docs/mock/radar-placeholder.svg`, a local asset —
+**never** the live NWS URL. The live normalizers are covered by
+`tools/test-weather.js` instead, against real NWS shapes.
 
 `bets_live`'s mock tickets still carry **invented event ids**, so the band
 correctly reports "no ESPN event matched this ticket" for every one of them.
@@ -702,16 +717,24 @@ editorialise either.
 
 ### The LIVE band
 
-`bets_live` is graded and `today_games` is filled **in the browser**, not by the
-engine.
-The page calls `site.api.espn.com` directly (CORS-open, no key). With the
-Worker, that is the only external origin the page touches.
+`bets_live` is graded, `today_games` is filled and `weather` is fetched **in the
+browser**, not by the engine. The page calls `site.api.espn.com` and
+`api.weather.gov` directly (both CORS-open, neither needs a key), and displays
+`radar.weather.gov`'s pre-rendered loop as an `<img>`. With the Worker, those
+are the only external origins the page touches.
 
 ```
 live/espn.js     fetch + normalize      — returns facts, judges nothing
 live/graders.js  market -> grader       — pure functions, no fetch, no DOM
-live/band.js     the loop               — cadence, summaries, assembling ctx.live
+live/nws.js      fetch + normalize      — alerts, forecast fold, now-line, radar url
+live/band.js     the loops              — two controllers, two clocks
 ```
+
+**No custom header on the NWS calls, ever.** A header makes the request
+non-simple and triggers a CORS preflight the NWS is under no obligation to
+answer. The engine's Python client *does* need a `User-Agent`; the browser does
+not. If a weather fetch starts failing, that is the first thing to check and
+the last thing to "fix".
 
 **Cadence:** 45s while any relevant game is in progress, 5 min while everything
 is still pre, and it stops once every relevant game is final. It also stops
@@ -842,8 +865,10 @@ procedurally by `tools/make-icons.js` — a ship's wheel, no brand marks, no ico
 font, no CDN.
 
 `sw.js` caches the shell stale-while-revalidate and `/api/data` network-first.
-It **never** caches ESPN or `/ask`: a cached score would show stale numbers as
-live, and a cached answer would replay itself forever.
+It **never** caches ESPN, `*.weather.gov` or `/ask`: a cached score or forecast
+would show stale numbers as live, a cached answer would replay itself forever,
+and the RIDGE radar loop is a ~1 MB GIF that would evict the shell inside a
+week.
 
 ---
 
@@ -966,9 +991,11 @@ else is the page's problem, and the page tolerates schema growth: an unknown
 tile id renders as a generic key/value card, a registered tile missing from the
 snapshot renders as an empty grey card.
 
-Tiles in the contract today: `bets_live`, `today_games`, `cards`, `newsstand`,
-`entertainment`, `radar`, `calendar`, `local_events`, `reminders`, `dinner`,
-`purser_due`, `wss_tape`, `ship_status`. The page reads their payloads
+Tiles in the contract today: `bets_live`, `today_games`, `weather`, `cards`,
+`newsstand`, `entertainment`, `calendar`, `local_events`, `reminders`, `dinner`,
+`purser_due`, `wss_tape`, `ship_status`. (`radar` was retired 2026-09-19 and
+replaced by `weather`; an old snapshot still carrying it renders as rule 9's
+generic card and harms nothing.) The page reads their payloads
 field by field and skips what the engine has not sent — a missing field is
 never rendered as a zero, a `false`, or an `Invalid Date`.
 

@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-18T17:14:28.893Z",
-  "run_id": "run-mock-mu77xlzx",
+  "generated_at": "2026-09-19T13:32:12.184Z",
+  "run_id": "run-mock-mu8fflzs",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.184Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -19,7 +19,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770114",
             "game": "Harbor Kestrels at Foundry Ironsides",
-            "kick_ct": "2026-09-18 15:25",
+            "kick_ct": "2026-09-19 15:25",
             "market": "spread",
             "side": "away",
             "line": -3.5,
@@ -36,7 +36,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770114",
             "game": "Harbor Kestrels at Foundry Ironsides",
-            "kick_ct": "2026-09-18 15:25",
+            "kick_ct": "2026-09-19 15:25",
             "market": "total_over",
             "side": null,
             "line": 44.5,
@@ -53,7 +53,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770119",
             "game": "Cedar Valley Drays at North Pike Sentinels",
-            "kick_ct": "2026-09-18 19:15",
+            "kick_ct": "2026-09-19 19:15",
             "market": "anytime_td",
             "side": null,
             "line": null,
@@ -70,7 +70,7 @@
             "league": "basketball/nba",
             "espn_event_id": "401810422",
             "game": "Lakeshore Current at Granite City Foremen",
-            "kick_ct": "2026-09-18 20:00",
+            "kick_ct": "2026-09-19 20:00",
             "market": "ml",
             "side": "home",
             "line": null,
@@ -87,7 +87,7 @@
             "league": "soccer/usa.1",
             "espn_event_id": "731204",
             "game": "Riverbend FC vs Cross Harbor SC",
-            "kick_ct": "2026-09-19 19:30",
+            "kick_ct": "2026-09-20 19:30",
             "market": "btts",
             "side": null,
             "line": null,
@@ -104,7 +104,7 @@
             "league": "basketball/nba",
             "espn_event_id": "401810422",
             "game": "Lakeshore Current at Granite City Foremen",
-            "kick_ct": "2026-09-18 20:00",
+            "kick_ct": "2026-09-19 20:00",
             "market": "spread",
             "side": "away",
             "line": 4.5,
@@ -119,7 +119,7 @@
         ],
         "form": {
           "window_days": 7,
-          "since": "2026-09-12",
+          "since": "2026-09-13",
           "record": "14-9",
           "wins": 14,
           "losses": 9,
@@ -130,70 +130,70 @@
             {
               "r": "W",
               "u": 1.23,
-              "d": "2026-09-17",
+              "d": "2026-09-18",
               "s": "⚽",
               "label": "Cross Harbor ML (reg. time)"
             },
             {
               "r": "W",
               "u": 0.48,
-              "d": "2026-09-17",
+              "d": "2026-09-18",
               "s": "⚾",
               "label": "Drays -1.5 run line"
             },
             {
               "r": "W",
               "u": 0.91,
-              "d": "2026-09-16",
+              "d": "2026-09-17",
               "s": "🏈",
               "label": "Kestrels team total over 24.5"
             },
             {
               "r": "W",
               "u": 0.64,
-              "d": "2026-09-16",
+              "d": "2026-09-17",
               "s": "🏀",
               "label": "Foremen -6.5"
             },
             {
               "r": "W",
               "u": 0.71,
-              "d": "2026-09-15",
+              "d": "2026-09-16",
               "s": "⚽",
               "label": "Riverbend both teams to score"
             },
             {
               "r": "L",
               "u": -1,
-              "d": "2026-09-15",
+              "d": "2026-09-16",
               "s": "🏈",
               "label": "Sentinels +3 (1H)"
             },
             {
               "r": "W",
               "u": 0.45,
-              "d": "2026-09-14",
+              "d": "2026-09-15",
               "s": "⚾",
               "label": "Under 8.5"
             },
             {
               "r": "L",
               "u": -0.5,
-              "d": "2026-09-13",
+              "d": "2026-09-14",
               "s": "🏀",
               "label": "Current ML"
             },
             {
               "r": "L",
               "u": -0.75,
-              "d": "2026-09-13",
+              "d": "2026-09-14",
               "s": "🏈",
               "label": "Vasquez anytime TD"
             },
             {
               "r": "W",
               "u": 1.35,
-              "d": "2026-09-12",
+              "d": "2026-09-13",
               "s": "⚽",
               "label": "Harbor Rovers ML"
             }
@@ -204,12 +204,12 @@
     },
     "today_games": {
       "band": "LIVE",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.184Z",
       "status": "ok",
       "error": null,
       "data": {
         "title": "Today's Games",
-        "date_ct": "2026-09-18",
+        "date_ct": "2026-09-19",
         "leagues": [
           {
             "id": "mlb",
@@ -262,31 +262,194 @@
         }
       }
     },
-    "radar": {
-      "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+    "weather": {
+      "band": "LIVE",
+      "updated_at": "2026-09-19T13:32:12.184Z",
       "status": "ok",
       "error": null,
       "data": {
-        "date": "2026-09-18",
-        "lines": [
-          "Shop compressor still cycling short — watch it before the Thursday run.",
-          "Two quotes out past 10 days; neither has been nudged.",
-          "Weather turns Friday afternoon. Move the outdoor work up.",
-          "Nothing on the calendar defends the 9-11 block tomorrow. Guard it."
+        "title": "Weather",
+        "place": "Mockton",
+        "point": {
+          "lat": 40,
+          "lon": -90
+        },
+        "grid": {
+          "office": "MCK",
+          "x": 42,
+          "y": 17,
+          "forecast": "https://api.weather.gov/gridpoints/MCK/42,17/forecast",
+          "hourly": "https://api.weather.gov/gridpoints/MCK/42,17/forecast/hourly"
+        },
+        "zone": "XXZ000",
+        "county": "XXC000",
+        "alerts_url": "https://api.weather.gov/alerts/active?point=40.0000,-90.0000",
+        "station": {
+          "id": "KMCK",
+          "name": "Mockton Municipal Airport",
+          "obs": "https://api.weather.gov/stations/KMCK/observations/latest"
+        },
+        "radar": {
+          "site": "KMCK",
+          "label": "Mockton (KMCK)",
+          "loop": "./mock/radar-placeholder.svg",
+          "w": 600,
+          "h": 550,
+          "behind_min": 4
+        },
+        "sun": {
+          "date": "2026-09-19",
+          "sunrise_ct": "06:38",
+          "sunset_ct": "18:57"
+        },
+        "glyphs": {
+          "skc": "☀️",
+          "few": "🌤️",
+          "sct": "⛅",
+          "bkn": "🌥️",
+          "ovc": "☁️",
+          "rain": "🌧️",
+          "rain_showers": "🌦️",
+          "tsra": "⛈️",
+          "tsra_sct": "⛈️",
+          "tsra_hi": "⛈️",
+          "snow": "🌨️",
+          "fzra": "🧊",
+          "fog": "🌫️",
+          "wind_bkn": "💨",
+          "hot": "🥵",
+          "cold": "🥶"
+        },
+        "warn_events": [
+          "Tornado Warning",
+          "Severe Thunderstorm Warning",
+          "Flash Flood Warning",
+          "Flood Warning",
+          "Winter Storm Warning",
+          "Blizzard Warning",
+          "Ice Storm Warning",
+          "High Wind Warning"
         ],
-        "source": "mock-generator"
+        "mute": [
+          "Special Marine Warning",
+          "Beach Hazards Statement"
+        ],
+        "clock": {
+          "normal_s": 300,
+          "warned_s": 60,
+          "forecast_s": 1800
+        },
+        "fallback": {
+          "as_of": "2026-09-19T12:58:12.184Z",
+          "now": {
+            "source": "KMCK",
+            "temp_f": 61,
+            "short": "Light Rain and Fog/Mist",
+            "glyph_token": "rain",
+            "wind": "9 mph E",
+            "rh": 100,
+            "dew_f": 61,
+            "obs_time_ct": "7:45 AM"
+          },
+          "days": [
+            {
+              "date": "2026-09-19",
+              "label": "Today",
+              "glyph_token": "tsra",
+              "hi_f": 69,
+              "lo_f": 59,
+              "pop": 83,
+              "short": "Showers And Thunderstorms Likely",
+              "detail": "Showers and thunderstorms likely before 9am, then a chance of showers and thunderstorms. Cloudy, with a high near 69. Southeast wind 5 to 10 mph. Chance of precipitation is 80%."
+            },
+            {
+              "date": "2026-09-20",
+              "label": "Sun",
+              "glyph_token": "rain_showers",
+              "hi_f": 66,
+              "lo_f": 52,
+              "pop": 46,
+              "short": "Chance Rain Showers then Cloudy",
+              "detail": "A chance of rain showers before 10am. Cloudy, with a high near 66. Northeast wind 10 to 15 mph, with gusts as high as 30 mph."
+            },
+            {
+              "date": "2026-09-21",
+              "label": "Mon",
+              "glyph_token": "bkn",
+              "hi_f": 62,
+              "lo_f": 48,
+              "pop": 7,
+              "short": "Mostly Cloudy",
+              "detail": "Mostly cloudy, with a high near 62. Northeast wind 10 to 15 mph."
+            },
+            {
+              "date": "2026-09-22",
+              "label": "Tue",
+              "glyph_token": "bkn",
+              "hi_f": 61,
+              "lo_f": 47,
+              "pop": 7,
+              "short": "Partly Sunny",
+              "detail": "Partly sunny, with a high near 61. Northeast wind 5 to 15 mph."
+            },
+            {
+              "date": "2026-09-23",
+              "label": "Wed",
+              "glyph_token": "sct",
+              "hi_f": 64,
+              "lo_f": 48,
+              "pop": 4,
+              "short": "Mostly Sunny",
+              "detail": "Mostly sunny, with a high near 64. Partly cloudy, with a low around 48."
+            },
+            {
+              "date": "2026-09-24",
+              "label": "Thu",
+              "glyph_token": "sct",
+              "hi_f": 66,
+              "lo_f": 49,
+              "pop": 4,
+              "short": "Mostly Sunny",
+              "detail": "Mostly sunny, with a high near 66. Partly cloudy, with a low around 49."
+            },
+            {
+              "date": "2026-09-25",
+              "label": "Fri",
+              "glyph_token": "skc",
+              "hi_f": 70,
+              "lo_f": 50,
+              "pop": 3,
+              "short": "Sunny",
+              "detail": "Sunny, with a high near 70. Partly cloudy, with a low around 50."
+            }
+          ],
+          "alerts": [
+            {
+              "id": "mock-alert-watch",
+              "event": "Flood Watch",
+              "tier": "watch",
+              "severity": "Severe",
+              "headline": "Flood Watch issued by NWS Mockton (invented)",
+              "description": "* WHAT...Flooding caused by excessive rainfall is possible.\n\n* WHERE...Portions of invented county.\n\n* WHEN...Through this evening.\n\n* ADDITIONAL DETAILS...\n- This alert is fake. Every word of it was written by the mock generator.\n- http://example.com/mock/flood",
+              "instruction": "You should monitor later forecasts and be alert for possible Flood Warnings.",
+              "areaDesc": "Invented County, XX",
+              "onset": "2026-09-19T08:32:12.184Z",
+              "ends": "2026-09-19T18:32:12.184Z",
+              "url": "https://api.weather.gov/alerts/urn:oid:0.0.0.0.mock.watch"
+            }
+          ]
+        }
       }
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.184Z",
       "status": "ok",
       "error": null,
       "data": {
         "days": [
           {
-            "date": "2026-09-18",
+            "date": "2026-09-19",
             "events": [
               {
                 "time_ct": "08:30",
@@ -306,7 +469,7 @@
             ]
           },
           {
-            "date": "2026-09-19",
+            "date": "2026-09-20",
             "events": [
               {
                 "time_ct": "09:00",
@@ -330,23 +493,23 @@
     },
     "local_events": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.185Z",
       "status": "ok",
       "error": null,
       "data": {
         "title": "Lake Country",
         "window": {
-          "from": "2026-09-18",
-          "to": "2026-09-25"
+          "from": "2026-09-19",
+          "to": "2026-09-26"
         },
         "count": 8,
         "days": [
           {
-            "date": "2026-09-18",
-            "label": "Fri 9/18",
+            "date": "2026-09-19",
+            "label": "Sat 9/19",
             "events": [
               {
-                "date": "2026-09-18",
+                "date": "2026-09-19",
                 "time": "05:30 PM - 08:30 PM",
                 "title": "Bands on the Mock Beach — The Invented Tides",
                 "venue": "Mock Lakefront Bandshell",
@@ -357,7 +520,7 @@
                 "multi_day": false
               },
               {
-                "date": "2026-09-18",
+                "date": "2026-09-19",
                 "time": "06:00 PM - 09:00 PM",
                 "title": "Village Green Beer Garden",
                 "venue": "Mock Village Green",
@@ -370,11 +533,11 @@
             ]
           },
           {
-            "date": "2026-09-19",
-            "label": "Sat 9/19",
+            "date": "2026-09-20",
+            "label": "Sun 9/20",
             "events": [
               {
-                "date": "2026-09-19",
+                "date": "2026-09-20",
                 "time": "10:00 AM - 10:00 PM",
                 "title": "Mock Harvest Fallfest",
                 "venue": "Invented County Fairgrounds",
@@ -387,11 +550,11 @@
             ]
           },
           {
-            "date": "2026-09-20",
-            "label": "Sun 9/20",
+            "date": "2026-09-21",
+            "label": "Mon 9/21",
             "events": [
               {
-                "date": "2026-09-20",
+                "date": "2026-09-21",
                 "time": "",
                 "title": "Summer Farmers Market",
                 "venue": "155 Fictional Ave",
@@ -402,7 +565,7 @@
                 "multi_day": false
               },
               {
-                "date": "2026-09-20",
+                "date": "2026-09-21",
                 "time": "10:00 AM - 10:00 PM",
                 "title": "Mock Harvest Fallfest",
                 "venue": "Invented County Fairgrounds",
@@ -415,11 +578,11 @@
             ]
           },
           {
-            "date": "2026-09-21",
-            "label": "Mon 9/21",
+            "date": "2026-09-22",
+            "label": "Tue 9/22",
             "events": [
               {
-                "date": "2026-09-21",
+                "date": "2026-09-22",
                 "time": "11:00 AM - 06:00 PM",
                 "title": "Mock Harvest Fallfest",
                 "venue": "Invented County Fairgrounds",
@@ -430,7 +593,7 @@
                 "multi_day": true
               },
               {
-                "date": "2026-09-21",
+                "date": "2026-09-22",
                 "time": "01:00 PM - 03:00 PM",
                 "title": "Rally for Made-Up Vets",
                 "venue": "Mock Memorial Park",
@@ -443,11 +606,11 @@
             ]
           },
           {
-            "date": "2026-09-24",
-            "label": "Thu 9/24",
+            "date": "2026-09-25",
+            "label": "Fri 9/25",
             "events": [
               {
-                "date": "2026-09-24",
+                "date": "2026-09-25",
                 "time": "07:00 PM - 09:00 PM",
                 "title": "Fireworks Over the Fictional Lake",
                 "venue": "Mock Lakefront Bandshell",
@@ -470,7 +633,7 @@
     },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.185Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -482,7 +645,7 @@
           {
             "title": "Nearest due date, should sort under the misses",
             "list": "Shop",
-            "due": "2026-09-18",
+            "due": "2026-09-19",
             "due_time": "16:30",
             "days": 0,
             "overdue": false,
@@ -502,7 +665,7 @@
           {
             "title": "Badly overdue, high priority",
             "list": "Shop",
-            "due": "2026-09-09",
+            "due": "2026-09-10",
             "due_time": null,
             "days": -9,
             "overdue": true,
@@ -512,7 +675,7 @@
           {
             "title": "Due next week",
             "list": "Home",
-            "due": "2026-09-24",
+            "due": "2026-09-25",
             "due_time": null,
             "days": 6,
             "overdue": false,
@@ -522,7 +685,7 @@
           {
             "title": "Slipped yesterday",
             "list": "Home",
-            "due": "2026-09-17",
+            "due": "2026-09-18",
             "due_time": "08:00",
             "days": -1,
             "overdue": true,
@@ -532,7 +695,7 @@
           {
             "title": "Due tomorrow",
             "list": "Shop",
-            "due": "2026-09-19",
+            "due": "2026-09-20",
             "due_time": "09:15",
             "days": 1,
             "overdue": false,
@@ -554,11 +717,11 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.185Z",
       "status": "ok",
       "error": null,
       "data": {
-        "date": "2026-09-18",
+        "date": "2026-09-19",
         "meal": "Sheet-pan sausage and peppers",
         "notes": "Start the oven at 5:15 or it slips past bedtime.",
         "verdict": null
@@ -566,14 +729,14 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.185Z",
       "status": "ok",
       "error": null,
       "data": {
         "items": [
           {
             "card": "Blue card",
-            "due": "2026-09-21",
+            "due": "2026-09-22",
             "amount": 412.88,
             "amount_display": true,
             "autopay": false,
@@ -581,7 +744,7 @@
           },
           {
             "card": "Shop card",
-            "due": "2026-09-27",
+            "due": "2026-09-28",
             "amount": 1290.4,
             "amount_display": false,
             "autopay": true,
@@ -589,7 +752,7 @@
           },
           {
             "card": "Travel card",
-            "due": "2026-10-04",
+            "due": "2026-10-05",
             "amount": 76.12,
             "amount_display": true,
             "autopay": true,
@@ -600,12 +763,12 @@
     },
     "wss_tape": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.185Z",
       "status": "ok",
       "error": null,
       "data": {
         "title": "Crew Tape",
-        "date": "2026-09-18",
+        "date": "2026-09-19",
         "count": 12,
         "by_actor": [
           {
@@ -623,7 +786,7 @@
         ],
         "items": [
           {
-            "ts": "2026-09-18T16:56:28.893Z",
+            "ts": "2026-09-19T13:14:12.185Z",
             "time_ct": "15:42",
             "actor": "Rae",
             "action": "ticket_update",
@@ -635,7 +798,7 @@
             "evt": "mk1a2b"
           },
           {
-            "ts": "2026-09-18T16:19:28.893Z",
+            "ts": "2026-09-19T12:37:12.185Z",
             "time_ct": "15:05",
             "actor": "Kit",
             "action": "readiness",
@@ -647,7 +810,7 @@
             "evt": "mk3c4d"
           },
           {
-            "ts": "2026-09-18T16:11:28.893Z",
+            "ts": "2026-09-19T12:29:12.185Z",
             "time_ct": "14:57",
             "actor": "Rae",
             "action": "ticket_update",
@@ -659,7 +822,7 @@
             "evt": "mk5e6f"
           },
           {
-            "ts": "2026-09-18T14:44:28.893Z",
+            "ts": "2026-09-19T11:02:12.185Z",
             "time_ct": "13:30",
             "actor": "Odis",
             "action": "lead_update",
@@ -671,7 +834,7 @@
             "evt": "mk7g8h"
           },
           {
-            "ts": "2026-09-18T13:55:28.893Z",
+            "ts": "2026-09-19T10:13:12.185Z",
             "time_ct": "12:41",
             "actor": "Kit",
             "action": "ticket_update",
@@ -683,7 +846,7 @@
             "evt": "mk9i0j"
           },
           {
-            "ts": "2026-09-18T12:41:28.893Z",
+            "ts": "2026-09-19T08:59:12.185Z",
             "time_ct": "11:27",
             "actor": "Rae",
             "action": "ticket_close",
@@ -695,7 +858,7 @@
             "evt": "mkak1l"
           },
           {
-            "ts": "2026-09-18T12:12:28.893Z",
+            "ts": "2026-09-19T08:30:12.185Z",
             "time_ct": "10:58",
             "actor": "Odis",
             "action": "readiness",
@@ -707,7 +870,7 @@
             "evt": "mkbm2n"
           },
           {
-            "ts": "2026-09-18T11:26:28.893Z",
+            "ts": "2026-09-19T07:44:12.185Z",
             "time_ct": "10:12",
             "actor": "Kit",
             "action": "ticket_update",
@@ -719,7 +882,7 @@
             "evt": "mkco3p"
           },
           {
-            "ts": "2026-09-18T10:58:28.893Z",
+            "ts": "2026-09-19T07:16:12.185Z",
             "time_ct": "09:44",
             "actor": "Rae",
             "action": "lead_update",
@@ -731,7 +894,7 @@
             "evt": "mkdq4r"
           },
           {
-            "ts": "2026-09-18T10:17:28.893Z",
+            "ts": "2026-09-19T06:35:12.185Z",
             "time_ct": "09:03",
             "actor": "Odis",
             "action": "ticket_update",
@@ -743,7 +906,7 @@
             "evt": "mkes5t"
           },
           {
-            "ts": "2026-09-18T09:30:28.893Z",
+            "ts": "2026-09-19T05:48:12.185Z",
             "time_ct": "08:16",
             "actor": "Kit",
             "action": "ticket_open",
@@ -755,7 +918,7 @@
             "evt": "mkfu6v"
           },
           {
-            "ts": "2026-09-18T09:06:28.893Z",
+            "ts": "2026-09-19T05:24:12.185Z",
             "time_ct": "07:52",
             "actor": "Rae",
             "action": "other",
@@ -768,7 +931,7 @@
           }
         ],
         "yesterday": {
-          "date": "2026-09-17",
+          "date": "2026-09-18",
           "count": 9,
           "by_actor": [
             {
@@ -791,12 +954,12 @@
     },
     "cards": {
       "band": "HOURLY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.185Z",
       "status": "ok",
       "error": null,
       "data": {
         "watch": {
-          "updated_at": "2026-09-18T16:56:28.893Z",
+          "updated_at": "2026-09-19T13:14:12.185Z",
           "targets": 14,
           "booked": 12,
           "fresh": 9,
@@ -823,7 +986,7 @@
               "ends_ct": null,
               "seller": "northport_cardworks",
               "seller_fb": 1204,
-              "listed": "2026-09-16",
+              "listed": "2026-09-17",
               "url": "https://example.com/mock/cards/2864-0001",
               "image": "https://example.com/mock/cards/2864-0001.jpg",
               "band": null,
@@ -849,7 +1012,7 @@
               "ends_ct": null,
               "seller": "lakeside_slabs",
               "seller_fb": 88,
-              "listed": "2026-09-18",
+              "listed": "2026-09-19",
               "url": "https://example.com/mock/cards/2864-0002",
               "image": null,
               "band": null,
@@ -875,7 +1038,7 @@
               "ends_ct": null,
               "seller": "attic_finds_wi",
               "seller_fb": 41,
-              "listed": "2026-09-09",
+              "listed": "2026-09-10",
               "url": "https://example.com/mock/cards/2864-0003",
               "image": "https://example.com/mock/cards/2864-0003.jpg",
               "band": "OVER BAND",
@@ -900,10 +1063,10 @@
               "gate": 0.65,
               "book_age_days": 3,
               "book_state": "fresh",
-              "ends_ct": "2026-09-18T13:28",
+              "ends_ct": "2026-09-19T09:46",
               "seller": "bayfield_auctions",
               "seller_fb": 5310,
-              "listed": "2026-09-12",
+              "listed": "2026-09-13",
               "url": "https://example.com/mock/cards/2864-0101",
               "image": "https://example.com/mock/cards/2864-0101.jpg",
               "band": null,
@@ -926,10 +1089,10 @@
               "gate": 0.65,
               "book_age_days": 4,
               "book_state": "fresh",
-              "ends_ct": "2026-09-20T12:44",
+              "ends_ct": "2026-09-21T09:02",
               "seller": "attic_finds_wi",
               "seller_fb": 41,
-              "listed": "2026-09-17",
+              "listed": "2026-09-18",
               "url": "https://example.com/mock/cards/2864-0102",
               "image": null,
               "band": null,
@@ -965,11 +1128,11 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-18T16:51:28.893Z",
+      "updated_at": "2026-09-19T13:09:12.185Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-09-18T16:51:28.893Z",
+        "as_of": "2026-09-19T13:09:12.185Z",
         "count": 4,
         "refresh_note": null,
         "source": "mock generator",
@@ -1013,12 +1176,12 @@
     },
     "entertainment": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.185Z",
       "status": "ok",
       "error": null,
       "data": {
         "watching": {
-          "updated_at": "2026-09-18T15:39:28.893Z",
+          "updated_at": "2026-09-19T11:57:12.185Z",
           "items": [
             {
               "title": "The Quiet Ledger",
@@ -1029,12 +1192,12 @@
                 "season": 3,
                 "episode": 4,
                 "name": "A Clerical Error",
-                "air_date": "2026-09-20"
+                "air_date": "2026-09-21"
               },
               "last": {
                 "season": 3,
                 "episode": 3,
-                "air_date": "2026-09-13"
+                "air_date": "2026-09-14"
               },
               "days": 2,
               "status_note": "airing weekly"
@@ -1048,12 +1211,12 @@
                 "season": 2,
                 "episode": 7,
                 "name": "Slack Water",
-                "air_date": "2026-09-18"
+                "air_date": "2026-09-19"
               },
               "last": {
                 "season": 2,
                 "episode": 6,
-                "air_date": "2026-09-11"
+                "air_date": "2026-09-12"
               },
               "days": 0,
               "status_note": null
@@ -1067,7 +1230,7 @@
               "last": {
                 "season": 1,
                 "episode": 8,
-                "air_date": "2026-09-17"
+                "air_date": "2026-09-18"
               },
               "days": null,
               "status_note": "schedule not published"
@@ -1081,12 +1244,12 @@
                 "season": 4,
                 "episode": 1,
                 "name": "Season premiere",
-                "air_date": "2026-12-01"
+                "air_date": "2026-12-02"
               },
               "last": {
                 "season": 3,
                 "episode": 10,
-                "air_date": "2026-03-12"
+                "air_date": "2026-03-13"
               },
               "days": 74,
               "status_note": null
@@ -1095,13 +1258,13 @@
           "errors": null
         },
         "podcasts": {
-          "updated_at": "2026-09-18T16:34:28.893Z",
+          "updated_at": "2026-09-19T12:52:12.185Z",
           "items": [
             {
               "show": "Mock Fork",
               "title": "The chatbot that filed its own taxes",
-              "published": "2026-09-18",
-              "published_at": "2026-09-18T14:14:28.893Z",
+              "published": "2026-09-19",
+              "published_at": "2026-09-19T10:32:12.185Z",
               "duration_min": 58,
               "url": "https://example.com/mock/pod/fork-1",
               "artwork": null
@@ -1109,8 +1272,8 @@
             {
               "show": "The Long Docket",
               "title": "Case 114: the disappearing deposition",
-              "published": "2026-09-17",
-              "published_at": "2026-09-17T15:14:28.893Z",
+              "published": "2026-09-18",
+              "published_at": "2026-09-18T11:32:12.185Z",
               "duration_min": 71,
               "url": "https://example.com/mock/pod/docket-1",
               "artwork": null
@@ -1118,8 +1281,8 @@
             {
               "show": "Ledger & Lamp",
               "title": "A very small bank in a very large hurry",
-              "published": "2026-09-16",
-              "published_at": "2026-09-16T14:14:28.893Z",
+              "published": "2026-09-17",
+              "published_at": "2026-09-17T10:32:12.185Z",
               "duration_min": 44,
               "url": "https://example.com/mock/pod/ledger-1",
               "artwork": null
@@ -1127,8 +1290,8 @@
             {
               "show": "Mock Fork",
               "title": "Everyone is building the same agent",
-              "published": "2026-09-15",
-              "published_at": "2026-09-15T15:44:28.893Z",
+              "published": "2026-09-16",
+              "published_at": "2026-09-16T12:02:12.185Z",
               "duration_min": 63,
               "url": "https://example.com/mock/pod/fork-2",
               "artwork": null
@@ -1136,8 +1299,8 @@
             {
               "show": "Ledger & Lamp",
               "title": "The audit nobody asked for",
-              "published": "2026-09-09",
-              "published_at": "2026-09-09T17:14:28.893Z",
+              "published": "2026-09-10",
+              "published_at": "2026-09-10T13:32:12.185Z",
               "duration_min": null,
               "url": "https://example.com/mock/pod/ledger-2",
               "artwork": null
@@ -1145,8 +1308,8 @@
             {
               "show": "Cold Open Radio",
               "title": "Twelve minutes of dead air, explained",
-              "published": "2026-09-06",
-              "published_at": "2026-09-06T17:14:28.893Z",
+              "published": "2026-09-07",
+              "published_at": "2026-09-07T13:32:12.185Z",
               "duration_min": 12,
               "url": "https://example.com/mock/pod/cold-1",
               "artwork": null
@@ -1155,7 +1318,7 @@
           "errors": null
         },
         "top5": {
-          "updated_at": "2026-09-18T06:14:28.893Z",
+          "updated_at": "2026-09-19T02:32:12.185Z",
           "week_of": "2026-09-14",
           "items": [
             {
@@ -1217,7 +1380,7 @@
           "errors": null
         },
         "listening": {
-          "updated_at": "2026-09-18T04:14:28.893Z",
+          "updated_at": "2026-09-19T00:32:12.185Z",
           "week_of": "2026-09-14",
           "status": "ok",
           "series_checked": 17,
@@ -1227,7 +1390,7 @@
               "sequence": "12",
               "title": "Deadweight Tonnage",
               "author": "R. J. Mockton",
-              "release_date": "2026-09-16",
+              "release_date": "2026-09-17",
               "days": -2,
               "just_out": true,
               "asin": "B0MOCK0001",
@@ -1239,7 +1402,7 @@
               "sequence": null,
               "title": "The Second Tuesday",
               "author": "Imogen Pell",
-              "release_date": "2026-09-22",
+              "release_date": "2026-09-23",
               "days": 4,
               "just_out": false,
               "asin": "B0MOCK0002",
@@ -1251,7 +1414,7 @@
               "sequence": "4.5",
               "title": "A Short Passage",
               "author": "Dana Q. Hollis",
-              "release_date": "2026-12-08",
+              "release_date": "2026-12-09",
               "days": 81,
               "just_out": false,
               "asin": "B0MOCK0003",
@@ -1263,7 +1426,7 @@
               "sequence": "3",
               "title": "Dark Union Station",
               "author": null,
-              "release_date": "2027-02-23",
+              "release_date": "2027-02-24",
               "days": 158,
               "just_out": false,
               "asin": "B0MOCK0004",
@@ -1284,18 +1447,18 @@
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-18T17:14:28.893Z",
+      "updated_at": "2026-09-19T13:32:12.185Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-17T11:14:28.893Z",
+        "drift_audit_updated": "2026-09-18T07:32:12.185Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-18T17:06:28.893Z",
+        "worker_published_at": "2026-09-19T13:24:12.185Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -1317,7 +1480,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-18T15:44:28.893Z",
+      "updated_at": "2026-09-19T12:02:12.185Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

@@ -34,6 +34,12 @@
 
 <div id="banner" class="banner"></div>
 
+<!-- The weather tile's Warning banner (Weather spec, W6). Above the grid,
+     below the shell's own stale/mock banner, dismissible for the session and
+     never in localStorage: a dismissed tornado warning must come back on
+     reload. It opens nothing. -->
+<div id="board-banner" class="board-banner" role="status" aria-live="polite"></div>
+
 <main id="board" class="board"></main>
 
 <button id="ask-fab" class="fab" type="button" aria-label="Open ask panel">Ask</button>

@@ -35,63 +35,11 @@ function check(name, cond, detail) {
 }
 
 // ----------------------------------------------------------------- DOM shim
+//
+// Shared with tools/test-weather.js — see tools/dom-shim.js. Requiring it
+// installs `global.document`.
 
-class ClassList {
-  constructor(node) { this.node = node; this.set = new Set(); }
-  add(...c) { for (const x of c) if (x) this.set.add(x); }
-  remove(...c) { for (const x of c) this.set.delete(x); }
-  contains(c) { return this.set.has(c); }
-  toggle(c) { if (this.set.has(c)) { this.set.delete(c); return false; } this.set.add(c); return true; }
-  get value() { return [...this.set].join(' '); }
-}
-
-class El {
-  constructor(tag) {
-    this.tagName = String(tag).toUpperCase();
-    this.childNodes = [];
-    this.attrs = {};
-    this.listeners = {};
-    this.classList = new ClassList(this);
-    this._text = '';
-    // Layout does not exist here; the newsstand's overflow probe must survive
-    // that rather than assume a real box.
-    this.clientHeight = 0;
-    this.scrollHeight = 0;
-  }
-  set className(v) { this.classList.set = new Set(String(v).split(/\s+/).filter(Boolean)); }
-  get className() { return this.classList.value; }
-  set textContent(v) { this._text = String(v); this.childNodes = []; }
-  get textContent() { return this.childNodes.length ? this.childNodes.map((c) => c.textContent).join('') : this._text; }
-  appendChild(n) { this.childNodes.push(n); return n; }
-  removeChild(n) { this.childNodes = this.childNodes.filter((c) => c !== n); return n; }
-  get firstChild() { return this.childNodes[0] || null; }
-  get previousSibling() { return null; }
-  setAttribute(k, v) { this.attrs[k] = String(v); }
-  getAttribute(k) { return this.attrs[k]; }
-  addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
-  querySelectorAll(sel) { return all(this).filter((n) => matches(n, sel)); }
-  querySelector(sel) { return this.querySelectorAll(sel)[0] || null; }
-}
-
-function all(node, out = []) {
-  for (const c of node.childNodes) { if (c instanceof El) { out.push(c); all(c, out); } }
-  return out;
-}
-function matches(node, sel) {
-  return sel.split(',').map((s) => s.trim()).some((s) =>
-    s.startsWith('.') ? node.classList.contains(s.slice(1)) : node.tagName === s.toUpperCase()
-  );
-}
-
-class TextNode {
-  constructor(t) { this._text = String(t); }
-  get textContent() { return this._text; }
-}
-
-global.document = {
-  createElement: (t) => new El(t),
-  createTextNode: (t) => new TextNode(t),
-};
+const { El } = require('./dom-shim.js');
 
 /**
  * A localStorage shim, because the entertainment tile's "new" counts are a

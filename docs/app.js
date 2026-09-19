@@ -14,7 +14,7 @@
 
 import { apiBase, STALE_AFTER_MS, DATA_REFRESH_MS, APP_VERSION_LABEL } from './config.js';
 import { REGISTRY, BAND_ORDER, BAND_LABEL } from './tiles/_registry.js';
-import { createLiveBand } from './live/band.js';
+import { createLiveBand, createWeatherBand } from './live/band.js';
 import { normalizeEvent } from './live/espn.js';
 import { el, clear, empty, genericCard, pill } from './lib/dom.js';
 import { ago, ctTime } from './lib/fmt.js';
@@ -53,10 +53,16 @@ const state = {
   offline: false, // true when the last fetch failed and we fell back to cache
   error: null,
   live: null, // the LIVE band fills this: {games, grades, today, fetched_at, error}
+  weather: null, // the weather band fills this: {alerts, now, days, ok, error}
 };
 
 let askController = null;
 const modules = new Map(); // tile id -> render fn (or null if it failed to load)
+// The same modules, whole. A tile can export more than a renderer — `weather`
+// exports the active Warning so the shell can paint the board banner (W6) —
+// and the shell must be able to reach that WITHOUT a static import, or a typo
+// in one tile file would stop the board booting at all.
+const moduleNs = new Map();
 
 /**
  * `?mock=1` gets a FAKE ESPN slate too.
@@ -115,6 +121,39 @@ const liveBand = createLiveBand(
     renderAll();
   },
   MOCK_ESPN ? mockEspn : {}
+);
+
+/**
+ * `?mock=1` reaches api.weather.gov NOT AT ALL.
+ *
+ * The mock's gridpoint and station ids are invented, so every one of those
+ * URLs would 404 — and a mock that fires four requests at a federal endpoint
+ * to render fake data is not a mock. So the band is handed a client that
+ * refuses, which lands the tile on exactly the path the ruling cares most
+ * about: `data.fallback`, greyed, with its own `as_of` (W11). The live
+ * normalizers are covered by tools/test-weather.js instead, against real NWS
+ * shapes, which is where that coverage belongs anyway.
+ */
+const noWeatherFeed = () => Promise.reject(new Error('mock mode — no NWS'));
+const mockNws = {
+  fetchAlerts: noWeatherFeed,
+  fetchForecast: noWeatherFeed,
+  fetchHourly: noWeatherFeed,
+  fetchObservation: noWeatherFeed,
+};
+
+/**
+ * The weather band — its own clock again (5 min, 60 s under a Warning), for
+ * the same reason the LIVE band has one: the snapshot's 5-minute refresh is
+ * about what the ENGINE published, and the weather on the face is not the
+ * engine's.
+ */
+const weatherBand = createWeatherBand(
+  (next) => {
+    state.weather = next;
+    renderAll();
+  },
+  MOCK ? mockNws : {}
 );
 
 // --------------------------------------------------------------------- token
@@ -368,7 +407,7 @@ function tileCard(id, entry, tile) {
     const mod = modules.get(id);
     try {
       if (mod) {
-        mod(body, tile, { id, title, snapshot: state.snapshot, pending: state.pending, actions, live: state.live });
+        mod(body, tile, { id, title, snapshot: state.snapshot, pending: state.pending, actions, live: state.live, weather: state.weather });
       } else {
         genericCard(body, tile);
       }
@@ -422,6 +461,65 @@ function renderBanner() {
 }
 
 /**
+ * The weather tile's Warning banner (Weather spec, W6).
+ *
+ * A Warning is the one thing on this board loud enough to leave its own tile,
+ * so it paints a strip above the grid: `⚠️ {event} · until {h:mm}`. Watches and
+ * advisories stay inside the tile where they belong.
+ *
+ * Three things it deliberately does NOT do:
+ *   - it never opens anything. The Helm is opened for a reason and does not get
+ *     to hijack it, so there is no auto-open and the strip is not a link.
+ *   - it is not a push. H10 is unruled; this is as loud as the tile gets.
+ *   - it never remembers a dismissal in localStorage. Dismissed lives in this
+ *     module variable and dies with the page, because a tornado warning that
+ *     stays dismissed across a reload is a bug with a body count.
+ *
+ * The warning comes from the weather module's own export rather than from a
+ * static import, so a tile file that fails to load costs the banner and
+ * nothing else.
+ */
+let bannerDismissed = null; // the alert id the session has waved away
+
+function renderBoardBanner() {
+  const bar = document.getElementById('board-banner');
+  if (!bar) return;
+  clear(bar);
+  bar.classList.remove('show');
+
+  let warn = null;
+  try {
+    const ns = moduleNs.get('weather');
+    const fn = ns && typeof ns.activeWarning === 'function' ? ns.activeWarning : null;
+    if (fn) warn = fn(state.snapshot?.tiles?.weather || null, state.weather);
+  } catch {
+    /* rule 8: a broken banner must never take the board with it */
+  }
+
+  if (!warn) return;
+  // A NEW warning shows even if an older one was dismissed — the id is the
+  // alert's, not a global "hush".
+  if (bannerDismissed && bannerDismissed === warn.id) return;
+
+  bar.classList.add('show');
+  bar.appendChild(el('span', { cls: 'board-banner-text', text: warn.text }));
+  if (warn.more) bar.appendChild(el('span', { cls: 'board-banner-more', text: `+${warn.more}` }));
+  bar.appendChild(
+    el('button', {
+      cls: 'board-banner-x',
+      text: '\u00d7',
+      attrs: { type: 'button', 'aria-label': `Dismiss the ${warn.event} banner` },
+      on: {
+        click: () => {
+          bannerDismissed = warn.id;
+          renderBoardBanner();
+        },
+      },
+    })
+  );
+}
+
+/**
  * The build chip beside the wordmark. Written once at boot — it cannot change
  * without a reload, and it must be on screen even when boot() bails at the
  * token gate, because "which build is this phone running" is the first
@@ -452,6 +550,7 @@ function renderHeader() {
 
 function renderAll() {
   renderBanner();
+  renderBoardBanner();
   renderHeader();
 
   const main = document.getElementById('board');
@@ -512,6 +611,7 @@ async function loadModules() {
       if (!entry.module || entry.band === 'ASK') return;
       try {
         const m = await import(entry.module);
+        moduleNs.set(id, m);
         modules.set(id, typeof m.render === 'function' ? m.render : null);
       } catch (e) {
         console.warn(`tile module failed to load: ${id}`, e.message);
@@ -670,6 +770,8 @@ function showGate(title, lines, { tokenForm = false } = {}) {
   const main = document.getElementById('board');
   clear(main);
   document.getElementById('banner').classList.remove('show');
+  const bb = document.getElementById('board-banner');
+  if (bb) { clear(bb); bb.classList.remove('show'); }
   const body = el('div', { cls: 'card-body' }, lines.map((l) => el('p', { cls: 'gate-line', text: l })));
   if (tokenForm) {
     // An installed iOS web app launches at the manifest's start_url, not the
@@ -736,6 +838,7 @@ async function refreshAll() {
   try {
     await refresh();
     liveBand.refreshNow(() => state.snapshot);
+    weatherBand.refreshNow(() => state.snapshot);
     if ('serviceWorker' in navigator) {
       const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
       if (reg) reg.update().catch(() => {});
@@ -745,10 +848,14 @@ async function refreshAll() {
   }
 }
 
-/** Start the LIVE band once there is a snapshot telling us what to watch. */
+/**
+ * Start the LIVE bands once there is a snapshot telling them what to watch.
+ * Two bands, two clocks: scores move on ESPN's, weather on the NWS's.
+ */
 function startLiveBand() {
   if (!state.snapshot) return;
   liveBand.start(() => state.snapshot);
+  weatherBand.start(() => state.snapshot);
 }
 
 async function boot() {
@@ -775,13 +882,17 @@ async function boot() {
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') {
-      // A phone in a pocket has no business hitting ESPN every 45 seconds.
+      // A phone in a pocket has no business hitting ESPN every 45 seconds,
+      // and none at all polling the NWS (W5).
       liveBand.stop();
+      weatherBand.stop();
       return;
     }
     refresh();
-    // Scores may have moved a long way while the tab was hidden.
+    // Scores may have moved a long way while the tab was hidden — and so may
+    // the sky. Both bands fetch immediately on the way back in.
     liveBand.start(() => state.snapshot);
+    weatherBand.start(() => state.snapshot);
   });
 }
 

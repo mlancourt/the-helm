@@ -271,16 +271,11 @@ function snapshot() {
       // from the same file so the broadcast names hit this watch map.
       today_games: tile('LIVE', todayGamesPayload(TODAY)),
 
-      radar: tile('DAILY', {
-        date: TODAY,
-        lines: [
-          'Shop compressor still cycling short — watch it before the Thursday run.',
-          'Two quotes out past 10 days; neither has been nudged.',
-          'Weather turns Friday afternoon. Move the outdoor work up.',
-          'Nothing on the calendar defends the 9-11 block tomorrow. Guard it.',
-        ],
-        source: 'mock-generator',
-      }),
+      // Weather: configuration plus ONE offline copy, exactly as the engine
+      // publishes it (W2/W11). Every live number on the face comes from
+      // api.weather.gov in the browser — and `?mock=1` reaches it not at all
+      // (see app.js), so the mock lands on the fallback path by construction.
+      weather: tile('LIVE', weatherPayload()),
 
       calendar: tile('DAILY', {
         days: [
@@ -992,6 +987,184 @@ function cardsWatch() {
   };
 }
 
+/**
+ * The weather tile's payload — configuration + one offline copy (W2/W11).
+ *
+ * INVENTED: the place, the gridpoint, the station, the radar site. Real NWS
+ * *shapes* and real token vocabulary, because those are what the module parses;
+ * no real coordinates for a house, because this is a public repo.
+ *
+ * The radar `loop` points at docs/mock/radar-placeholder.svg — a local asset,
+ * NEVER the live NWS URL. `?mock=1` must reach no origin at all, and a mock
+ * that pulls a real 1 MB GIF off a federal server to render fake weather is
+ * not a mock (W10 / rule 4).
+ *
+ * `alerts` decides which of the three tiers the fixture shows:
+ *   []            the clean board
+ *   [watch]       amber chip, inside the tile (the default snapshot)
+ *   [warning]     red row AND the board banner, on the 60-second clock
+ * and `fallback: null` is the only case that may say "feed unavailable".
+ */
+function weatherPayload({ alerts = [watchAlert()], fallback = true } = {}) {
+  const data = {
+    title: 'Weather',
+    place: 'Mockton',
+    point: { lat: 40.0, lon: -90.0 },
+    grid: {
+      office: 'MCK',
+      x: 42,
+      y: 17,
+      forecast: 'https://api.weather.gov/gridpoints/MCK/42,17/forecast',
+      hourly: 'https://api.weather.gov/gridpoints/MCK/42,17/forecast/hourly',
+    },
+    zone: 'XXZ000',
+    county: 'XXC000',
+    alerts_url: 'https://api.weather.gov/alerts/active?point=40.0000,-90.0000',
+    station: { id: 'KMCK', name: 'Mockton Municipal Airport', obs: 'https://api.weather.gov/stations/KMCK/observations/latest' },
+    radar: {
+      site: 'KMCK',
+      label: 'Mockton (KMCK)',
+      // LOCAL. Never radar.weather.gov from the mock path.
+      loop: './mock/radar-placeholder.svg',
+      w: 600,
+      h: 550,
+      behind_min: 4,
+    },
+    sun: { date: TODAY, sunrise_ct: '06:38', sunset_ct: '18:57' },
+    glyphs: {
+      skc: '☀️', few: '🌤️', sct: '⛅', bkn: '🌥️',
+      ovc: '☁️', rain: '🌧️', rain_showers: '🌦️',
+      tsra: '⛈️', tsra_sct: '⛈️', tsra_hi: '⛈️',
+      snow: '🌨️', fzra: '🧊', fog: '🌫️',
+      wind_bkn: '💨', hot: '🥵', cold: '🥶',
+    },
+    warn_events: [
+      'Tornado Warning',
+      'Severe Thunderstorm Warning',
+      'Flash Flood Warning',
+      'Flood Warning',
+      'Winter Storm Warning',
+      'Blizzard Warning',
+      'Ice Storm Warning',
+      'High Wind Warning',
+    ],
+    mute: ['Special Marine Warning', 'Beach Hazards Statement'],
+    clock: { normal_s: 300, warned_s: 60, forecast_s: 1800 },
+    fallback: null,
+  };
+
+  if (!fallback) return data;
+
+  data.fallback = {
+    as_of: agoIso(34),
+    now: {
+      source: 'KMCK',
+      temp_f: 61,
+      short: 'Light Rain and Fog/Mist',
+      glyph_token: 'rain',
+      wind: '9 mph E',
+      rh: 100,
+      dew_f: 61,
+      obs_time_ct: '7:45 AM',
+    },
+    days: WX_DAYS.map((d, i) => ({
+      date: addDays(TODAY, i),
+      label: i === 0 ? 'Today' : ctLabel(addDays(TODAY, i)).split(' ')[0],
+      ...d,
+    })),
+    alerts,
+  };
+  return data;
+}
+
+/** Seven invented days, in the shape the engine folds day/night into (W8). */
+const WX_DAYS = [
+  { glyph_token: 'tsra', hi_f: 69, lo_f: 59, pop: 83, short: 'Showers And Thunderstorms Likely',
+    detail: 'Showers and thunderstorms likely before 9am, then a chance of showers and thunderstorms. Cloudy, with a high near 69. Southeast wind 5 to 10 mph. Chance of precipitation is 80%.' },
+  { glyph_token: 'rain_showers', hi_f: 66, lo_f: 52, pop: 46, short: 'Chance Rain Showers then Cloudy',
+    detail: 'A chance of rain showers before 10am. Cloudy, with a high near 66. Northeast wind 10 to 15 mph, with gusts as high as 30 mph.' },
+  { glyph_token: 'bkn', hi_f: 62, lo_f: 48, pop: 7, short: 'Mostly Cloudy',
+    detail: 'Mostly cloudy, with a high near 62. Northeast wind 10 to 15 mph.' },
+  { glyph_token: 'bkn', hi_f: 61, lo_f: 47, pop: 7, short: 'Partly Sunny',
+    detail: 'Partly sunny, with a high near 61. Northeast wind 5 to 15 mph.' },
+  { glyph_token: 'sct', hi_f: 64, lo_f: 48, pop: 4, short: 'Mostly Sunny',
+    detail: 'Mostly sunny, with a high near 64. Partly cloudy, with a low around 48.' },
+  { glyph_token: 'sct', hi_f: 66, lo_f: 49, pop: 4, short: 'Mostly Sunny',
+    detail: 'Mostly sunny, with a high near 66. Partly cloudy, with a low around 49.' },
+  { glyph_token: 'skc', hi_f: 70, lo_f: 50, pop: 3, short: 'Sunny',
+    detail: 'Sunny, with a high near 70. Partly cloudy, with a low around 50.' },
+];
+
+/** An invented Flood Watch — amber, inside the tile, no banner (W6). */
+function watchAlert() {
+  return {
+    id: 'mock-alert-watch',
+    event: 'Flood Watch',
+    tier: 'watch',
+    severity: 'Severe',
+    headline: 'Flood Watch issued by NWS Mockton (invented)',
+    description:
+      '* WHAT...Flooding caused by excessive rainfall is possible.\n\n' +
+      '* WHERE...Portions of invented county.\n\n' +
+      '* WHEN...Through this evening.\n\n' +
+      '* ADDITIONAL DETAILS...\n- This alert is fake. Every word of it was written by the mock generator.\n- http://example.com/mock/flood',
+    instruction: 'You should monitor later forecasts and be alert for possible Flood Warnings.',
+    areaDesc: 'Invented County, XX',
+    onset: agoIso(300),
+    ends: new Date(Date.now() + 5 * 3600 * 1000).toISOString(),
+    url: 'https://api.weather.gov/alerts/urn:oid:0.0.0.0.mock.watch',
+  };
+}
+
+/** An invented Tornado Warning — red, AND the board banner, AND the 60s clock. */
+function warnAlert() {
+  return {
+    id: 'mock-alert-warn',
+    event: 'Tornado Warning',
+    tier: 'warn',
+    severity: 'Extreme',
+    headline: 'Tornado Warning issued by NWS Mockton (invented)',
+    description:
+      'The National Weather Service in Mockton has issued a Tornado Warning for invented county.\n\n' +
+      'At 100 PM, a severe thunderstorm capable of producing a tornado was located over nowhere, moving northeast at 30 mph.\n\n' +
+      'This alert is fake. Every word of it was written by the mock generator.',
+    instruction: 'TAKE COVER NOW! Move to a basement or an interior room on the lowest floor of a sturdy building.',
+    areaDesc: 'Invented County, XX',
+    onset: agoIso(12),
+    ends: new Date(Date.now() + 40 * 60000).toISOString(),
+    url: 'https://api.weather.gov/alerts/urn:oid:0.0.0.0.mock.warn',
+  };
+}
+
+/** An invented advisory — the grey line, the quietest of the three tiers. */
+function advisoryAlert() {
+  return {
+    id: 'mock-alert-advisory',
+    event: 'Dense Fog Advisory',
+    tier: 'advisory',
+    severity: 'Minor',
+    headline: 'Dense Fog Advisory issued by NWS Mockton (invented)',
+    description: 'Visibility one quarter mile or less in dense fog. This alert is fake.',
+    instruction: 'If driving, slow down, use your low beams and leave plenty of distance ahead of you.',
+    areaDesc: 'Invented County, XX',
+    onset: agoIso(90),
+    ends: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
+    url: 'https://api.weather.gov/alerts/urn:oid:0.0.0.0.mock.advisory',
+  };
+}
+
+/**
+ * The three other weather fixtures, as whole snapshots (`?mock=weather-warn`
+ * and friends). Only the weather tile differs; everything else on the board
+ * stays exactly as the default mock, so what changed on screen is never in
+ * doubt.
+ */
+function weatherSnapshot(payload) {
+  const snap = snapshot();
+  snap.tiles.weather = tile('LIVE', payload);
+  return snap;
+}
+
 /** Two events shaped for POST /api/event. Pending is the Worker's business. */
 function mockEvents() {
   return [
@@ -1032,13 +1205,20 @@ function cardsStaleSnapshot() {
   return snap;
 }
 
-const mode = process.argv.includes('--events')
-  ? mockEvents()
-  : process.argv.includes('--pending')
-    ? mockPending()
-    : process.argv.includes('--espn')
-      ? slate(TODAY)
-      : process.argv.includes('--cards-stale')
-        ? cardsStaleSnapshot()
-        : snapshot();
+const MODES = [
+  ['--events', () => mockEvents()],
+  ['--pending', () => mockPending()],
+  ['--espn', () => slate(TODAY)],
+  ['--cards-stale', () => cardsStaleSnapshot()],
+  // The weather tile's four faces (W6). The default snapshot carries the
+  // Watch; these are the other three.
+  ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],
+  ['--weather-clear', () => weatherSnapshot(weatherPayload({ alerts: [] }))],
+  // Live gone AND no offline copy: the ONLY case allowed to say "feed
+  // unavailable" (W11).
+  ['--weather-down', () => weatherSnapshot(weatherPayload({ fallback: false }))],
+];
+
+const chosen = MODES.find(([flag]) => process.argv.includes(flag));
+const mode = chosen ? chosen[1]() : snapshot();
 process.stdout.write(JSON.stringify(mode, null, 2) + '\n');

@@ -211,7 +211,7 @@ async function route(world, url, method = 'GET') {
     // Every module the registry names, plus the registry itself.
     const missing = [...TILE_MODULES, 'tiles/_registry.js'].filter((m) => !w.log.added.includes(`./${m}`));
     check('install precaches every tile module', missing.length === 0, `missing: ${missing.join(', ')}`);
-    check('install precaches the LIVE band modules', w.log.added.filter((u) => u.includes('/live/')).length === 3);
+    check('install precaches every LIVE band module', w.log.added.filter((u) => u.includes('/live/')).length === 4);
     check('install precaches the icons', w.log.added.filter((u) => u.includes('/icons/')).length === 3);
     check('install calls skipWaiting', w.log.skipWaiting === 1);
   }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A stand-in for the NWS RIDGE loop, drawn here so the mock path reaches no
+     origin at all (Weather spec, W10 / rule 4). Invented county lines, an
+     invented storm, an invented legend. 600x550 to match the real product's
+     box, so the mock exercises the same aspect-ratio reservation. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 550" width="600" height="550" role="img" aria-label="Mock radar">
+  <rect width="600" height="550" fill="#0b1015"/>
+  <g stroke="#24303d" stroke-width="1" fill="none">
+    <path d="M0 110H600M0 220H600M0 330H600M0 440H600"/>
+    <path d="M120 0V550M240 0V550M360 0V550M480 0V550"/>
+  </g>
+  <g fill="none" stroke="#3d5164" stroke-width="1.4">
+    <path d="M60 470 L140 430 L215 455 L260 400 L340 415 L420 360 L500 385 L560 340"/>
+    <path d="M40 180 L120 205 L190 165 L280 195 L365 150 L455 185 L545 145"/>
+  </g>
+  <g opacity="0.85">
+    <ellipse cx="250" cy="250" rx="120" ry="78" fill="#1f6f46"/>
+    <ellipse cx="268" cy="248" rx="80" ry="52" fill="#3fb984"/>
+    <ellipse cx="288" cy="245" rx="44" ry="29" fill="#e0a13a"/>
+    <ellipse cx="300" cy="243" rx="20" ry="13" fill="#e2564d"/>
+    <ellipse cx="452" cy="150" rx="52" ry="34" fill="#1f6f46"/>
+    <ellipse cx="458" cy="150" rx="26" ry="17" fill="#3fb984"/>
+  </g>
+  <circle cx="300" cy="275" r="4" fill="#c9a227"/>
+  <g font-family="monospace" font-size="13" fill="#9aabbd">
+    <text x="312" y="279">MOCK</text>
+    <text x="14" y="26">MOCK RADAR — not a real product</text>
+    <text x="14" y="536">00:00Z  invented frame 1/10</text>
+  </g>
+  <g font-family="monospace" font-size="11" fill="#6b7d91">
+    <rect x="470" y="500" width="20" height="10" fill="#1f6f46"/>
+    <rect x="494" y="500" width="20" height="10" fill="#3fb984"/>
+    <rect x="518" y="500" width="20" height="10" fill="#e0a13a"/>
+    <rect x="542" y="500" width="20" height="10" fill="#e2564d"/>
+    <text x="470" y="494">light      heavy</text>
+  </g>
+</svg>

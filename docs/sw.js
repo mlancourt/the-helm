@@ -5,11 +5,14 @@
  *   /api/data  network-first, cache fallback (the offline snapshot)
  *   /api/ask   NEVER cached — answers are one-shot and can contain anything
  *   ESPN       NEVER cached — a stale score is worse than no score
+ *   *.weather.gov  NEVER cached (Weather spec, W3) — a cached forecast is a
+ *              stale forecast, and the RIDGE radar loop is a 1 MB GIF that
+ *              would evict the shell from the cache inside a week
  *
  * Bump CACHE_VERSION to evict the old shell on deploy.
  */
 
-const CACHE_VERSION = 'helm-v23';
+const CACHE_VERSION = 'helm-v24';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -26,6 +29,7 @@ const SHELL = [
   './live/band.js',
   './live/espn.js',
   './live/graders.js',
+  './live/nws.js',
   './tiles/_registry.js',
   './tiles/ask.js',
   './tiles/bets_live.js',
@@ -36,10 +40,10 @@ const SHELL = [
   './tiles/local_events.js',
   './tiles/newsstand.js',
   './tiles/purser_due.js',
-  './tiles/radar.js',
   './tiles/reminders.js',
   './tiles/ship_status.js',
   './tiles/today_games.js',
+  './tiles/weather.js',
   './tiles/wss_tape.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -78,8 +82,16 @@ self.addEventListener('fetch', (e) => {
 
   const url = new URL(req.url);
 
-  // Never cache: live scores, and anything from /ask.
-  if (url.hostname.endsWith('espn.com') || url.pathname.endsWith('/api/ask')) return;
+  // Never cache: live scores, live weather, and anything from /ask.
+  // The weather.gov bail covers BOTH amended origins — api.weather.gov, whose
+  // whole point is being current, and radar.weather.gov, whose loop is ~1 MB
+  // a pull and must never be allowed near a cache the shell also lives in.
+  if (
+    url.hostname.endsWith('espn.com') ||
+    url.hostname.endsWith('weather.gov') ||
+    url.pathname.endsWith('/api/ask')
+  )
+    return;
 
   // Network-first for the snapshot, so a live Worker always wins.
   if (url.pathname.endsWith('/api/data')) {

@@ -1,18 +1,18 @@
 {
   "_comment": "INVENTED ESPN SLATE for ?mock=1. Real league slugs and response shapes; every team, score, channel and event id is fake. Regenerate with: node tools/make-mock-data.js --espn > docs/mock/espn-today.json",
-  "date_ct": "2026-09-18",
+  "date_ct": "2026-09-19",
   "leagues": {
     "baseball/mlb": [
       {
         "id": "401998201",
         "uid": "s:1~l:1~e:401998201",
-        "date": "2026-09-19T00:10:00.000Z",
+        "date": "2026-09-20T00:10:00.000Z",
         "name": "Lakeshore Loons at Cream City Nine",
         "shortName": "LKL @ CCN",
         "competitions": [
           {
             "id": "401998201",
-            "date": "2026-09-19T00:10:00.000Z",
+            "date": "2026-09-20T00:10:00.000Z",
             "venue": {
               "fullName": "Cream City Yard",
               "address": {
@@ -183,13 +183,13 @@
       {
         "id": "401998202",
         "uid": "s:1~l:1~e:401998202",
-        "date": "2026-09-18T18:10:00.000Z",
+        "date": "2026-09-19T18:10:00.000Z",
         "name": "Harbor Herons at Foundry Ironsides",
         "shortName": "HRN @ FIS",
         "competitions": [
           {
             "id": "401998202",
-            "date": "2026-09-18T18:10:00.000Z",
+            "date": "2026-09-19T18:10:00.000Z",
             "venue": {
               "fullName": "Foundry Field",
               "address": {
@@ -382,13 +382,13 @@
       {
         "id": "401998203",
         "uid": "s:1~l:1~e:401998203",
-        "date": "2026-09-19T02:40:00.000Z",
+        "date": "2026-09-20T02:40:00.000Z",
         "name": "Granite City Foremen at Cedar Valley Drays",
         "shortName": "GCF @ CVD",
         "competitions": [
           {
             "id": "401998203",
-            "date": "2026-09-19T02:40:00.000Z",
+            "date": "2026-09-20T02:40:00.000Z",
             "venue": {
               "fullName": "Drayworks Park",
               "address": {
@@ -487,13 +487,13 @@
       {
         "id": "742118",
         "uid": "s:1~l:1~e:742118",
-        "date": "2026-09-19T00:30:00.000Z",
+        "date": "2026-09-20T00:30:00.000Z",
         "name": "Cross Harbor SC at Riverbend FC",
         "shortName": "CHS @ RVB",
         "competitions": [
           {
             "id": "742118",
-            "date": "2026-09-19T00:30:00.000Z",
+            "date": "2026-09-20T00:30:00.000Z",
             "venue": {
               "fullName": "Riverbend Grounds",
               "address": {
@@ -573,13 +573,13 @@
       {
         "id": "742119",
         "uid": "s:1~l:1~e:742119",
-        "date": "2026-09-19T01:00:00.000Z",
+        "date": "2026-09-20T01:00:00.000Z",
         "name": "North Pike Sentinels at Slack Water United",
         "shortName": "NPS @ SWU",
         "competitions": [
           {
             "id": "742119",
-            "date": "2026-09-19T01:00:00.000Z",
+            "date": "2026-09-20T01:00:00.000Z",
             "venue": {
               "fullName": "Pike Street Stadium",
               "address": {
@@ -643,13 +643,13 @@
       {
         "id": "731447",
         "uid": "s:1~l:1~e:731447",
-        "date": "2026-09-18T19:00:00.000Z",
+        "date": "2026-09-19T19:00:00.000Z",
         "name": "Almendro CF at Val de Mar",
         "shortName": "ALM @ VDM",
         "competitions": [
           {
             "id": "731447",
-            "date": "2026-09-18T19:00:00.000Z",
+            "date": "2026-09-19T19:00:00.000Z",
             "venue": {
               "fullName": "Estadio Inventado",
               "address": {
@@ -743,13 +743,13 @@
       {
         "id": "731448",
         "uid": "s:1~l:1~e:731448",
-        "date": "2026-09-18T14:00:00.000Z",
+        "date": "2026-09-19T14:00:00.000Z",
         "name": "Puerto Faro at Montaraz",
         "shortName": "PTF @ MNT",
         "competitions": [
           {
             "id": "731448",
-            "date": "2026-09-18T14:00:00.000Z",
+            "date": "2026-09-19T14:00:00.000Z",
             "venue": {
               "fullName": "Campo del Faro",
               "address": {

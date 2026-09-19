@@ -13,11 +13,11 @@
 
 export const REGISTRY = {
   bets_live: { band: 'LIVE', position: 10, module: './tiles/bets_live.js', title: 'Open Bets' },
+  weather: { band: 'LIVE', position: 14, module: './tiles/weather.js', title: 'Weather' },
   today_games: { band: 'LIVE', position: 20, module: './tiles/today_games.js', title: "Today's Games" },
   cards: { band: 'HOURLY', position: 21, module: './tiles/cards.js', title: 'Cards' },
   newsstand: { band: 'HOURLY', position: 30, module: './tiles/newsstand.js', title: 'Newsstand' },
   entertainment: { band: 'DAILY', position: 35, module: './tiles/entertainment.js', title: 'Entertainment' },
-  radar: { band: 'DAILY', position: 40, module: './tiles/radar.js', title: 'Radar' },
   calendar: { band: 'DAILY', position: 50, module: './tiles/calendar.js', title: 'Calendar' },
   local_events: { band: 'DAILY', position: 52, module: './tiles/local_events.js', title: 'Lake Country' },
   reminders: { band: 'DAILY', position: 55, module: './tiles/reminders.js', title: 'Reminders' },
