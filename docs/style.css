@@ -983,6 +983,22 @@ body {
 .news-cat-tech  { background: #1d1b2e; color: #9f8fd8;      border-color: #332e4d; }
 .news-cat-money { background: #2f2512; color: var(--warn);  border-color: #4c3c1a; }
 
+/* The source name is required on every row now (raw RSS, ~40 feeds) and the
+   age chip sits after it. Both are furniture: quiet, tabular, and never
+   allowed to outweigh the headline they belong to. */
+.news-source { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.news-age {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* "36 of 40 sources answered" — what a stale run says instead of the raw
+   error. One line, the same weight as the as_of line under it. */
+.news-sources { color: var(--text-faint); }
+
 .news-synopsis {
   margin: 6px 0 0;
   font-size: 12.5px;

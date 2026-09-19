@@ -285,6 +285,282 @@ async function main() {
       tap(btnsOf(inert)[0]);
     } catch (e) { threw = e; }
     check('a tap with no panel action never reaches the page', !threw, threw && threw.message);
+
+    // -- raw RSS v2 ----------------------------------------------------------
+    //
+    // The engine stopped curating: up to 200 cards from ~40 feeds, newest
+    // first, `lens` always null and `synopsis` often null. Everything below is
+    // about the tile surviving that — and about the three things the payload
+    // grew: `by_category`, `published_at`, and `sources`.
+    //
+    // Every headline, source and URL here is invented (rule 1).
+    console.log('\nnewsstand — raw RSS v2');
+
+    const fmt = await import('../docs/lib/fmt.js');
+
+    // Seventeen categories in the feed config's order — which is the order the
+    // buttons must come out in, whatever order the cards arrive in. The last
+    // one is deliberately something no tone palette has heard of.
+    const CATS = [
+      { name: 'Local News', emoji: '🏙️' },
+      { name: 'Local Sports', emoji: '🏟️' },
+      { name: 'National Politics', emoji: '🏛️' },
+      { name: 'Tech', emoji: '💻' },
+      { name: 'Business', emoji: '💼' },
+      { name: 'Markets', emoji: '📈' },
+      { name: 'Soccer', emoji: '⚽' },
+      { name: 'Science', emoji: '🔬' },
+      { name: 'Space', emoji: '🚀' },
+      { name: 'Gaming', emoji: '🎮' },
+      { name: 'Books', emoji: '📚' },
+      { name: 'Film', emoji: '🎬' },
+      { name: 'Music', emoji: '🎵' },
+      { name: 'Food', emoji: '🍲' },
+      { name: 'Weather', emoji: '🌦️' },
+      { name: 'Odd Lots', emoji: '🎩' },
+      { name: 'Ferret Fancying', emoji: '🦦' },
+    ];
+
+    // 200 cards, dealt so that FIRST-MENTION order is nothing like the config
+    // order — otherwise the ordering assertion would pass on the old
+    // behaviour. gcd(7, 17) = 1, so every category is hit.
+    const bulk = [];
+    for (let i = 0; i < 200; i++) {
+      const cat = CATS[(i * 7) % CATS.length];
+      bulk.push({
+        title: `Invented headline ${i}`,
+        synopsis: i % 3 === 0 ? null : `Invented synopsis ${i}.`,
+        source: `Fictional Gazette ${i % 40}`,
+        url: `https://example.com/story/${i}`,
+        lens: null,
+        category: cat.name,
+        emoji: cat.emoji,
+        published_at: new Date(Date.now() - i * 60000).toISOString(),
+      });
+    }
+    const expectedCounts = CATS.map((c) => bulk.filter((b) => b.category === c.name).length);
+
+    const bulkPanel = fakePanel();
+    const bulkRoot = new El('div');
+    news.render(
+      bulkRoot,
+      newsTile(bulk, {
+        count: bulk.length,
+        as_of: new Date().toISOString(),
+        // `n` here is deliberately wrong: the counts on the buttons must be
+        // counted off the cards that actually arrived, never trusted from the
+        // engine's summary.
+        by_category: CATS.map((c) => ({ name: c.name, emoji: c.emoji, n: 999 })),
+        sources: { ok: 40, failed: [], total: 40 },
+      }),
+      { id: 'newsstand', actions: bulkPanel.actions }
+    );
+
+    const bulkBtns = btnsOf(bulkRoot);
+    check('200 cards across 17 categories give 17 buttons', bulkBtns.length === 17, String(bulkBtns.length));
+    check(
+      'the buttons follow by_category, not first mention',
+      bulkBtns.map((b) => b.querySelector('.news-menu-label').textContent).join('|') ===
+        CATS.map((c) => c.name).join('|'),
+      bulkBtns.map((b) => b.querySelector('.news-menu-label').textContent).join('|')
+    );
+    check(
+      'counts are counted off the cards, not read from by_category.n',
+      bulkBtns.map(countChip).join() === expectedCounts.join(),
+      bulkBtns.map(countChip).join()
+    );
+    check('no button claims the summary count', !/999/.test(textOf(bulkRoot)));
+    check('200 cards still put no story on the board', countOf(bulkRoot, 'news-card') === 0);
+
+    // A category the config lists but no card arrived for gets no button: the
+    // count is the cards', so an empty button would be a lie one tap deep.
+    const ghostRoot = new El('div');
+    news.render(
+      ghostRoot,
+      newsTile([{ title: 'Only one', source: 'Fictional Gazette', url: 'https://example.com/only', category: 'Tech', emoji: '💻' }], {
+        by_category: [{ name: 'Markets', emoji: '📈', n: 4 }, { name: 'Tech', emoji: '💻', n: 1 }],
+      }),
+      { id: 'newsstand', actions: {} }
+    );
+    check('a by_category entry with no cards gets no button', btnsOf(ghostRoot).length === 1);
+    check('and the one that does arrive still renders', /Tech/.test(textOf(ghostRoot)));
+
+    // A category the cards mention but the config forgot must still appear —
+    // rule 9, appended after the ordered ones rather than dropped.
+    const strayRoot = new El('div');
+    news.render(
+      strayRoot,
+      newsTile(
+        [
+          { title: 'A', source: 'Fictional Gazette', url: 'https://example.com/a', category: 'Ferret Fancying', emoji: '🦦' },
+          { title: 'B', source: 'Fictional Gazette', url: 'https://example.com/b', category: 'Tech', emoji: '💻' },
+        ],
+        { by_category: [{ name: 'Tech', emoji: '💻', n: 1 }] }
+      ),
+      { id: 'newsstand', actions: {} }
+    );
+    check(
+      'a category missing from by_category is appended, not dropped',
+      btnsOf(strayRoot).map((b) => b.querySelector('.news-menu-label').textContent).join('|') === 'Tech|Ferret Fancying',
+      btnsOf(strayRoot).map((b) => b.querySelector('.news-menu-label').textContent).join('|')
+    );
+
+    // -- no cap --------------------------------------------------------------
+    //
+    // A busy category can hold dozens of stories. The sheet scrolls; it does
+    // not truncate, because there is nothing on screen that would say it had.
+    const deep = [];
+    for (let i = 0; i < 200; i++) {
+      deep.push({
+        title: `Deep headline ${i}`,
+        source: 'Fictional Gazette',
+        url: `https://example.com/deep/${i}`,
+        category: 'Tech',
+        emoji: '💻',
+        published_at: new Date(Date.now() - i * 60000).toISOString(),
+      });
+    }
+    const deepPanel = fakePanel();
+    const deepRoot = new El('div');
+    news.render(deepRoot, newsTile(deep), { id: 'newsstand', actions: deepPanel.actions });
+    tap(btnsOf(deepRoot)[0]);
+    check('the sheet holds every card in the category, uncapped', countOf(deepPanel.last.body, 'news-card') === 200, String(countOf(deepPanel.last.body, 'news-card')));
+    check('including the last one', /Deep headline 199/.test(textOf(deepPanel.last.body)));
+
+    // -- nulls are absences, never the word "null" ---------------------------
+    const nullPanel = fakePanel();
+    const nullRoot = new El('div');
+    const nullCards = [
+      { title: 'Title only', synopsis: null, source: 'Fictional Gazette', url: 'https://example.com/n1', lens: null, category: 'Tech', emoji: '💻', published_at: null },
+      { title: 'Bare card', synopsis: null, source: null, url: 'https://example.com/n2', lens: null, category: 'Tech', emoji: null, published_at: null },
+    ];
+    news.render(nullRoot, newsTile(nullCards, { count: 2 }), { id: 'newsstand', actions: nullPanel.actions });
+    tap(btnsOf(nullRoot)[0]);
+    const nullSheet = nullPanel.last.body;
+    check('no "null" anywhere in the tile body', !/null/i.test(textOf(nullRoot)), textOf(nullRoot));
+    check('no "null" anywhere in the sheet', !/null/i.test(textOf(nullSheet)), textOf(nullSheet));
+    check('a null lens renders nothing at all', countOf(nullSheet, 'news-lens') === 0);
+    check('a null synopsis renders nothing at all', countOf(nullSheet, 'news-synopsis') === 0 && countOf(nullSheet, 'news-more') === 0);
+    check('a card with only a title is still a card', countOf(nullSheet, 'news-card') === 2);
+    check('and its title is still a link', nullSheet.querySelectorAll('A').some((a) => a.getAttribute('href') === 'https://example.com/n1'));
+
+    // -- the age chip --------------------------------------------------------
+    //
+    // The rungs are checked against a FIXED clock on the helper itself; the
+    // tile is then checked to be rendering that same helper's answer.
+    const FIXED = Date.parse('2026-09-19T18:00:00Z'); // 1:00 PM Central
+    const before = (ms) => new Date(FIXED - ms).toISOString();
+    check('ageChip: under a minute is "now"', fmt.ageChip(before(30 * 1000), FIXED) === 'now', fmt.ageChip(before(30 * 1000), FIXED));
+    check('ageChip: minutes', fmt.ageChip(before(12 * 60000), FIXED) === '12m', fmt.ageChip(before(12 * 60000), FIXED));
+    check('ageChip: hours', fmt.ageChip(before(3 * 3600000), FIXED) === '3h', fmt.ageChip(before(3 * 3600000), FIXED));
+    check('ageChip: just over a day is "yesterday"', fmt.ageChip(before(25 * 3600000), FIXED) === 'yesterday', fmt.ageChip(before(25 * 3600000), FIXED));
+    check('ageChip: inside the week is a weekday', fmt.ageChip(before(3 * 86400000), FIXED) === 'Wed', fmt.ageChip(before(3 * 86400000), FIXED));
+    check('ageChip: older than a week is a date', fmt.ageChip(before(9 * 86400000), FIXED) === '9/10', fmt.ageChip(before(9 * 86400000), FIXED));
+    check('ageChip: a stamp from the future is just new', fmt.ageChip(new Date(FIXED + 60000).toISOString(), FIXED) === 'now');
+    check('ageChip: junk gives no chip', fmt.ageChip('not a date', FIXED) === '' && fmt.ageChip(null, FIXED) === '');
+    // Rule 7: a date-only string is never parsed as an instant.
+    check('ageChip: a date-only string is refused, not parsed', fmt.ageChip('2026-09-12', FIXED) === '', fmt.ageChip('2026-09-12', FIXED));
+
+    const agePanel = fakePanel();
+    const ageRoot = new El('div');
+    const stamped = new Date(Date.now() - 12 * 60000).toISOString();
+    news.render(
+      ageRoot,
+      newsTile([
+        { title: 'Stamped', source: 'Fictional Gazette', url: 'https://example.com/s1', category: 'Tech', emoji: '💻', published_at: stamped },
+        { title: 'Unstamped', source: 'Fictional Gazette', url: 'https://example.com/s2', category: 'Tech', emoji: '💻' },
+      ]),
+      { id: 'newsstand', actions: agePanel.actions }
+    );
+    tap(btnsOf(ageRoot)[0]);
+    const ageSheet = agePanel.last.body;
+    const ageCards = ageSheet.querySelectorAll('.news-card');
+    check('a card with published_at wears a chip', countOf(ageCards[0], 'news-age') === 1);
+    check(
+      'and the chip is the helper’s own answer',
+      ageCards[0].querySelector('.news-age').textContent === fmt.ageChip(stamped),
+      ageCards[0].querySelector('.news-age').textContent
+    );
+    check('a card with no published_at wears no chip element', countOf(ageCards[1], 'news-age') === 0);
+
+    // -- the source name is required -----------------------------------------
+    check('every row shows its source', ageSheet.querySelectorAll('.news-source').length === 2);
+    check('the source is the feed’s own name', ageSheet.querySelector('.news-source').textContent === 'Fictional Gazette');
+
+    // -- external links ------------------------------------------------------
+    const anchors = ageSheet.querySelectorAll('A');
+    check('external links still open in a new tab', anchors.length > 0 && anchors.every((a) => a.getAttribute('target') === '_blank'));
+    check('and still carry rel="noopener"', anchors.every((a) => /noopener/.test(a.getAttribute('rel') || '')));
+
+    // -- stale: the cards, and a count of feeds -------------------------------
+    //
+    // Forty feeds means one fails most runs. That is the normal cost of doing
+    // business, not an incident — the board says how many answered, and the
+    // raw error stays off it entirely.
+    const ERR = 'r/bobiverse: HTTP Error 429: Too Many Requests';
+    const stalePanel = fakePanel();
+    const staleRoot = new El('div');
+    news.render(
+      staleRoot,
+      {
+        band: 'HOURLY',
+        status: 'stale',
+        error: ERR,
+        data: {
+          cards: bulk.slice(0, 20),
+          by_category: CATS.map((c) => ({ name: c.name, emoji: c.emoji, n: 1 })),
+          sources: { ok: 36, failed: [ERR, 'another feed: HTTP Error 500'], total: 40 },
+          as_of: new Date().toISOString(),
+        },
+      },
+      { id: 'newsstand', actions: stalePanel.actions }
+    );
+    check('a stale run still renders its cards', btnsOf(staleRoot).length > 0);
+    check(
+      'and one muted line counts the feeds',
+      countOf(staleRoot, 'news-sources') === 1 && staleRoot.querySelector('.news-sources').textContent === '36 of 40 sources answered',
+      staleRoot.querySelector('.news-sources') && staleRoot.querySelector('.news-sources').textContent
+    );
+    check('the raw error never reaches the board', !/429/.test(textOf(staleRoot)) && !/bobiverse/i.test(textOf(staleRoot)));
+
+    // The shell prints tile.error above the body before the module runs; the
+    // newsstand takes that back, because "one feed was rate-limited" is not a
+    // red card.
+    const hushRoot = new El('div');
+    hushRoot.appendChild(new El('p'));
+    hushRoot.childNodes[0].className = 'card-error';
+    hushRoot.childNodes[0].textContent = ERR;
+    news.render(
+      hushRoot,
+      { band: 'HOURLY', status: 'stale', error: ERR, data: { cards: bulk.slice(0, 5), sources: { ok: 36, failed: [ERR], total: 40 } } },
+      { id: 'newsstand', actions: {} }
+    );
+    check('the shell’s copy of the error is taken off the board too', countOf(hushRoot, 'card-error') === 0 && !/429/.test(textOf(hushRoot)));
+
+    // Missing totals must not print "NaN of NaN".
+    const vagueRoot = new El('div');
+    news.render(
+      vagueRoot,
+      { band: 'HOURLY', status: 'stale', error: 'something', data: { cards: bulk.slice(0, 5) } },
+      { id: 'newsstand', actions: {} }
+    );
+    check('no sources block still says something honest', /sources/.test(textOf(vagueRoot)) && !/NaN/.test(textOf(vagueRoot)), textOf(vagueRoot));
+
+    // -- error: the last paper stays up --------------------------------------
+    news._resetMemory();
+    const coldRoot = new El('div');
+    news.render(coldRoot, { band: 'HOURLY', status: 'error', error: 'engine down', data: { cards: [] } }, { id: 'newsstand', actions: {} });
+    check('error with nothing behind it falls back to the generic card', countOf(coldRoot, 'news-menu-btn') === 0 && countOf(coldRoot, 'generic') + countOf(coldRoot, 'empty') > 0);
+
+    const warmRoot = new El('div');
+    news.render(warmRoot, newsTile(bulk.slice(0, 20), { by_category: CATS.map((c) => ({ name: c.name, emoji: c.emoji, n: 1 })), sources: { ok: 40, failed: [], total: 40 } }), { id: 'newsstand', actions: {} });
+    const warmBtns = btnsOf(warmRoot).length;
+    const afterRoot = new El('div');
+    news.render(afterRoot, { band: 'HOURLY', status: 'error', error: 'engine down', data: { cards: [] } }, { id: 'newsstand', actions: {} });
+    check('error keeps the last set that rendered', btnsOf(afterRoot).length === warmBtns && warmBtns > 0);
+    check('and says it is the last one', /last paper/.test(textOf(afterRoot)) && /40 of 40 sources answered/.test(textOf(afterRoot)), textOf(afterRoot));
+    check('the raw error stays off that board too', !/engine down/.test(textOf(afterRoot)));
+    news._resetMemory();
   }
 
   // -- entertainment: the four-face menu ------------------------------------

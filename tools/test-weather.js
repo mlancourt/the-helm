@@ -686,7 +686,9 @@ const liveState = (over = {}) => ({
   check('and its module is gone from the tree', !fs.existsSync(path.join(__dirname, '..', 'docs', 'tiles', 'radar.js')));
   check('the service worker no longer precaches it', !/tiles\/radar\.js/.test(read('docs', 'sw.js')));
   check('the service worker precaches the new modules', /tiles\/weather\.js/.test(read('docs', 'sw.js')) && /live\/nws\.js/.test(read('docs', 'sw.js')));
-  check('APP_VERSION is 1.9.0', /APP_VERSION = '1\.9\.0'/.test(read('docs', 'config.js')));
+  // Pinned to the batch that shipped this tile, and bumped with the page. It
+  // is here to catch a deploy that forgot the version, not to freeze it.
+  check('APP_VERSION is 1.10.0', /APP_VERSION = '1\.10\.0'/.test(read('docs', 'config.js')));
 
   // -- the mock ------------------------------------------------------------
   console.log('\nthe mock (no external fetch on the mock path)');

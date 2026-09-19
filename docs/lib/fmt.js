@@ -363,3 +363,52 @@ export function minutesUntilCt(stamp, now = ctNowStamp()) {
   if (then === null || here === null) return null;
   return then - here;
 }
+
+/**
+ * A UTC ISO *instant* -> the tiny age chip a headline wears:
+ * 'now' / '12m' / '3h' / 'yesterday' / 'Tue' / '9/12'.
+ *
+ * `ago()` is the same idea in the footer's voice — "4m ago", a sentence
+ * fragment. That is right under a tile and wrong beside a headline, where the
+ * chip sits in a metadata row next to a source name and has to stay two or
+ * three characters wide. So: a number while the story is hours old, a day name
+ * while it is still in the week, and a bare date once it is older than that.
+ *
+ * Rule 7 holds on both halves. `published_at` is an instant carrying a Z, so
+ * parsing it is safe; the day-level rungs come from `ctDate()`, which converts
+ * the instant to a Central business date *string*, and from calendar
+ * arithmetic on those strings. No date-only value is ever handed to
+ * `new Date()`.
+ *
+ * `now` is injectable so the rungs can be tested against a fixed clock.
+ * Anything unparseable returns '' — the caller renders no chip rather than a
+ * broken one.
+ */
+export function ageChip(iso, now = Date.now()) {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return '';
+
+  // A stamp in the future is clock skew between the engine and the phone, not
+  // a story from tomorrow. It reads as brand new, which is what it is.
+  const secs = Math.round((now - t) / 1000);
+  if (secs < 60) return 'now';
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+
+  const then = ctDate(iso);
+  const here = ctDate(new Date(now).toISOString());
+  const delta = daysBetween(then, here);
+  if (delta === null) return '';
+  // Past 24h the calendar takes over. `<= 1` rather than `=== 1` because the
+  // hour Central wall time shifts can put a 24-hour-old story on the same
+  // nominal delta; either way it is yesterday's paper.
+  if (delta <= 1) return 'yesterday';
+  if (delta < 7) {
+    const [y, m, d] = then.split('-').map(Number);
+    return WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  }
+  const [, m, d] = then.split('-').map(Number);
+  return `${m}/${d}`;
+}
