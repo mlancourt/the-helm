@@ -561,10 +561,10 @@ attribution string verbatim, from `data.attribution`.
 
 `cards` is a three-button menu in Entertainment's mould — 🎯 **Watch** · 🏷️
 **Shop** · 🎖️ **PC** — because a shopping list is never urgent enough to earn
-board height. `shop` is `null` until that face ships, which the payload says
-out loud: a null face is still a button, greyed and wearing *soon*, so a face
-that is coming is visible as coming rather than silently absent. `pc` is
-null-safe the same way.
+board height. All three faces are live as of v1.13.0, and all three are
+null-safe the same way: a face the engine could not fill is still a button,
+greyed and wearing *soon*, so a face that is degraded is visible as degraded
+rather than silently absent.
 
 **Watch and PC ask different questions, and must not look alike.** Watch asks
 *is this under 65% of book* — a gate, with an answer the engine computed: a
@@ -703,6 +703,59 @@ raw is out of scope by ruling.
 `?mock=cards-no-pc` is the face greyed to *soon*; `?mock=cards-pc-errors` is
 the net half-answering, with its reasons at the top of the sheet and the finds
 it did get still rendered.
+
+#### The Shop face
+
+`shop` is Matt's **own** eBay storefront: what is up, and what has dropped off
+the board since the last sweep. It is **not** watchers and **not** pending best
+offers — both need user OAuth and the legacy Trading API, and eBay's own app
+already pushes them to his phone the moment they happen. They are out of scope
+by ruling, and there is deliberately no stub here promising them later.
+
+Like PC it is not a gate: no FMV, no percentage, no ✓, no MAX. Unlike PC it
+has no serial and no grade badges either — these are his listings, not finds.
+A row carries the photo, the title, the asking price, what kind of listing it
+is, and how long it has been up, and nothing else:
+
+```
+[thumb]  2024 Cosmic Chrome Jackson Chourio Planetary Pursuit
+         $179.00 · OBO · 45 days
+```
+
+The chip says the format and only the format: `AUCTION` for an auction, `OBO`
+when `offers` is true, and **nothing at all** for a plain Buy It Now, because
+"BIN" on a row with a single price is a word that earns no space. It is the
+neutral tone on purpose — a coloured one would rank these listings against
+each other, and they are not in a race.
+
+**The age is a number, not a verdict.** `days_listed` renders plain and grey
+at three days and at three hundred. No red, no amber, no *stale* badge, no
+reordering that implies judgement, no *45 days and no offers* line. Matt owns
+this board and has a standing ruling against the tile narrating his own shop
+back at him: the number is information, and a colour would be an opinion. The
+tests hold that three ways — a class scan across every row including a
+365-day fixture, a source scan asserting that **every class the Shop region
+emits is a bare string literal** (so no branch anywhere can pick a tone from
+an age), and a stylesheet check that `.shop-days` has exactly one rule and no
+warn-toned sibling. A row with no `days_listed` drops the clause entirely
+rather than printing *null days*.
+
+**`No longer active`, never "Sold".** eBay's public Browse API shows what is
+active; a listing that has left either sold or expired, and nothing in the
+data says which. So the heading does not claim to know, a muted line says the
+ambiguity out loud — *Sold or ended — eBay's public data can't tell them
+apart.* — and those rows are plain `<div>`s rather than links, because the
+listing is gone and its URL 404s. The section is absent entirely when nothing
+has dropped off; a header over "none" would read as something that broke.
+Order throughout is the engine's, newest-listed first, never re-sorted here.
+
+Nothing in this sheet ticks: a storefront moves slowly and has no hammer
+coming, so — unlike Watch and PC — the builder hands back no teardown and the
+board raises no amber dot from this face.
+
+`?mock=cards-no-shop` is the face greyed to *soon*; `?mock=cards-shop-empty`
+is a quiet shop — *Nothing listed right now.* with no dropped-off section at
+all.
 
 `?mock=cards-stale` is the tile half-broken — `status: stale` with the engine's
 reason and a `watch.errors` entry. The rows Matt does have are still real, so

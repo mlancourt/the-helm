@@ -2,11 +2,16 @@
  * cards — the trading-card desk. Three faces: 🎯 Watch · 🏷️ Shop · 🎖️ PC.
  *
  * A menu tile in the `entertainment` mould: the board carries the buttons and
- * two faint lines, and everything with a price on it lives in the sheet. A
- * shopping list is never urgent enough to earn board height, and a card that
- * listed every flag would be the tallest thing on the page within a week.
+ * a faint line per live face, and everything with a price on it lives in the
+ * sheet. A shopping list is never urgent enough to earn board height, and a
+ * card that listed every flag would be the tallest thing on the page within a
+ * week.
  *
- * WATCH AND PC ASK DIFFERENT QUESTIONS, AND MUST NOT LOOK ALIKE.
+ * THE THREE FACES ASK THREE DIFFERENT QUESTIONS, AND MUST NOT LOOK ALIKE.
+ * Watch: is this cheap enough. PC: does this exist. Shop: what is up, and
+ * what has left. Only Watch has a gate, so only Watch has green, a ✓, a
+ * percentage and a MAX — see the Shop section's own header for what that face
+ * deliberately does not do.
  *
  *   Watch asks "is this under 65% of book?" — a gate, with an answer the
  *   engine computed: a percentage, a MAX bid, and a green tick when it
@@ -805,29 +810,188 @@ function pcBody(pc, data, tile) {
   };
 }
 
+// --------------------------------------------------------------------- shop
+
 /**
- * A face the engine lights up later — `shop` the day it arrives.
+ * 🏷️ Shop — Matt's OWN eBay storefront. What is up, and what has dropped off.
  *
- * Rule 9: the sheet shows what came rather than nothing, and a page deploy
- * makes it pretty once there is a spec to make it pretty against.
+ * WHAT THIS FACE IS NOT. It is not a gate and it is not a collection. There is
+ * no FMV, no percentage, no ✓, no MAX — Watch's whole vocabulary is absent,
+ * because nothing here is being judged against a comp book. And unlike PC
+ * there is no serial and no grade either: these are Matt's listings, not
+ * finds. The only things a row carries are the photo, the title, the asking
+ * price, what kind of listing it is, and how long it has been up.
+ *
+ * NOR does it show watchers or pending best offers. Both need user OAuth and
+ * the legacy Trading API, and eBay's own app already pushes them to his phone
+ * the moment they happen — so they are out of scope by ruling, and there is
+ * deliberately no stub here promising them later.
+ *
+ * THE AGE IS A NUMBER, NOT A VERDICT. `days_listed` renders plain and grey at
+ * every value. No red, no amber, no "stale" badge, no reordering that implies
+ * judgement, no "45 days and no offers" line. Matt owns this board and has a
+ * standing ruling against the tile narrating his own shop back at him: the
+ * number is information, and a colour would be an opinion. If this ever needs
+ * changing it is his call, not a styling decision.
+ *
+ * SOLD OR ENDED — THE PAGE CANNOT TELL. eBay's public Browse API shows what is
+ * active; a listing that has left the board either sold or expired and nothing
+ * in the data says which. So the section is headed `No longer active` and NOT
+ * "Sold", and a muted line says the ambiguity out loud. Those rows are also
+ * not tappable: the listing is gone and the URL 404s, so a link there would be
+ * a promise the page cannot keep.
+ *
+ * ORDER IS THE ENGINE'S. `listings` arrives newest-listed first and is
+ * rendered in that order — see the division-of-labour note in the header.
  */
-function genericFaceBody(face) {
+
+/** One of Matt's listings, cleaned up. Nothing is computed, only formatted. */
+function planShopItem(raw) {
+  const i = obj(raw);
+  return {
+    id: str(i.item_id).trim(),
+    title: str(i.title).trim(),
+    price: num(i.price),
+    type: str(i.type).trim().toUpperCase(),
+    // Best Offer, as the engine found it. A boolean, treated as one: anything
+    // that is not literally true is not an invitation to make an offer.
+    offers: i.offers === true,
+    // A Central business date and a plain count. Both are printed, never
+    // parsed and never compared — rule 7, and the age ruling above.
+    listed: str(i.listed).trim(),
+    days: num(i.days_listed),
+    url: str(i.url),
+    image: str(i.image),
+  };
+}
+
+/** A listing that has left the board. Less of everything, on purpose. */
+function planGone(raw) {
+  const g = obj(raw);
+  return {
+    id: str(g.item_id).trim(),
+    title: str(g.title).trim(),
+    price: num(g.price),
+    listed: str(g.listed).trim(),
+    since: str(g.gone_since).trim(),
+  };
+}
+
+/**
+ * One live listing.
+ *
+ *     [thumb]  2024 Cosmic Chrome Jackson Chourio Planetary Pursuit
+ *              $179.00 · OBO · 45 days
+ *
+ * The chip says what kind of listing it is and nothing else. An auction says
+ * AUCTION; a fixed price that takes offers says OBO; a plain Buy It Now says
+ * nothing at all, because "BIN" on a row with a single price is a word that
+ * earns no space. AUCTION wins where both could apply — an auction's format
+ * is the more consequential fact about it.
+ *
+ * The chip is deliberately the neutral tone. A coloured one would rank these
+ * listings against each other, and they are not in a race.
+ */
+function shopRow(item) {
+  const line = [el('span', { cls: 'shop-price', text: usd(item.price) })];
+
+  const mark = item.type === 'AUCTION' ? chip('AUCTION') : item.offers ? chip('OBO', 'obo') : null;
+  if (mark) {
+    line.push(sep());
+    line.push(mark);
+  }
+
+  // Grey at three days and grey at three hundred. See the age ruling above:
+  // there is no branch here on purpose, and adding one would be the bug.
+  // A listing with no age at all simply loses the clause — never "null days".
+  if (item.days !== null) {
+    line.push(sep());
+    line.push(el('span', { cls: 'shop-days', text: `${item.days} day${item.days === 1 ? '' : 's'}` }));
+  }
+
+  const kids = [
+    thumb(item),
+    el('div', { cls: 'cards-main' }, [
+      el('div', { cls: 'cards-title-line' }, [
+        el('span', { cls: 'cards-title', text: item.title || '(untitled listing)' }),
+      ]),
+      el('div', { cls: 'shop-line' }, line),
+    ]),
+  ];
+
+  const safe = safeUrl(item.url);
+  if (!safe) return el('div', { cls: 'shop-row' }, kids);
+  return el(
+    'a',
+    { cls: 'shop-row cards-row-link', attrs: { href: safe, target: '_blank', rel: 'noopener noreferrer' } },
+    kids
+  );
+}
+
+/**
+ * One listing that has gone. Muted, and a plain div rather than a link.
+ *
+ * `gone_since` is a Central `YYYY-MM-DD` and is printed exactly as it arrived
+ * (rule 7). The price is the last thing Matt was asking, which is worth
+ * knowing whether it sold or expired — and is the only figure here, because
+ * there is no sale price in this data and inventing one would be worse than
+ * silence.
+ */
+function goneRow(g) {
+  const tail = [];
+  if (g.price !== null) tail.push(el('span', { text: usd(g.price) }));
+  if (g.since) {
+    if (tail.length) tail.push(sep());
+    tail.push(el('span', { text: `since ${g.since}` }));
+  }
+  return el('div', { cls: 'shop-gone-row' }, [
+    el('span', { cls: 'shop-gone-title', text: g.title || '(untitled listing)' }),
+    tail.length ? el('span', { cls: 'shop-gone-line' }, tail) : null,
+  ]);
+}
+
+/**
+ * The Shop sheet: errors, what is listed, what has dropped off, one footer.
+ *
+ * Nothing in here ticks, so — unlike Watch and PC — the builder hands back no
+ * teardown. A storefront is a slow-moving thing and a countdown on it would
+ * be the tile inventing urgency it has no evidence for.
+ */
+function shopBody(shop, data, tile) {
+  const listings = arr(shop.listings).map(planShopItem);
+  const gone = arr(shop.gone).map(planGone);
+  const errors = arr(shop.errors).filter(Boolean).map(String);
+
   return (body) => {
-    const entries = Object.entries(obj(face)).filter(([, v]) => v !== null && v !== undefined);
-    if (!entries.length) {
-      body.appendChild(empty('Nothing here yet.'));
-      return;
+    // What the sweep could not reach, said once and quietly, at the top —
+    // because everything below it may be an incomplete picture.
+    if (errors.length) {
+      body.appendChild(el('p', { cls: 'cards-errors', text: `feed trouble: ${errors.join(' · ')}` }));
     }
-    const list = el('div', { cls: 'generic' });
-    for (const [k, v] of entries) {
-      list.appendChild(
-        el('div', { cls: 'row' }, [
-          el('span', { cls: 'row-label', text: k }),
-          el('span', { cls: 'row-value', text: typeof v === 'object' ? JSON.stringify(v) : String(v) }),
-        ])
+    const warn = staleMark(tile, shop);
+    if (warn) body.appendChild(warn);
+
+    body.appendChild(sectionHead(`Listed (${listings.length})`));
+    if (!listings.length) {
+      body.appendChild(empty('Nothing listed right now.'));
+    } else {
+      // Newest-listed first, as delivered. No re-sort — an order chosen here
+      // would be this page having an opinion about which listing matters.
+      body.appendChild(el('div', { cls: 'shop-list' }, listings.map(shopRow)));
+    }
+
+    // Nothing has dropped off: no heading, no empty state. A header over
+    // "none" would read as a section that broke rather than a quiet week.
+    if (gone.length) {
+      body.appendChild(sectionHead('No longer active'));
+      body.appendChild(
+        el('p', { cls: 'shop-note', text: "Sold or ended — eBay's public data can't tell them apart." })
       );
+      body.appendChild(el('div', { cls: 'shop-gone' }, gone.map(goneRow)));
     }
-    body.appendChild(list);
+
+    const foot = [str(data.shop_footer).trim(), 'eBay data via Browse API'].filter(Boolean).join(' · ');
+    body.appendChild(el('p', { cls: 'cards-foot', text: foot }));
   };
 }
 
@@ -919,16 +1083,29 @@ export function render(root, tile, ctx) {
     );
   }
 
-  // `shop: null` is the payload saying the face is coming, not that it is
-  // empty — so it is a button either way, greyed until the day it answers.
+  // 🏷️ Shop — Matt's own storefront. `shop: null` is the engine degraded, not
+  // an empty shop, so the button stays put and greys to "soon" exactly as it
+  // did before the face shipped rather than vanishing off the menu.
+  //
+  // Its chip is `active`, the engine's own count of what is up — a plain
+  // number with no decision in it, which is the whole point of this face. And
+  // no dot: nothing in a storefront is ending in two hours.
   const hasShop = isFace(data.shop);
-  buttons.push(
-    hasShop
-      ? liveButton(SHOP_FACE, {
-          open: openPanel ? () => openPanel('🏷️ Shop', genericFaceBody(data.shop)) : null,
-        })
-      : soonButton(SHOP_FACE)
-  );
+  const shop = obj(data.shop);
+  const shopActive = num(shop.active);
+  if (!hasShop) {
+    buttons.push(soonButton(SHOP_FACE));
+  } else {
+    buttons.push(
+      liveButton(SHOP_FACE, {
+        chipNode:
+          shopActive === null
+            ? null
+            : el('span', { cls: 'cards-count cards-count-shop', text: String(shopActive) }),
+        open: openPanel ? () => openPanel('🏷️ Shop', shopBody(shop, data, tile)) : null,
+      })
+    );
+  }
 
   // 🎖️ PC — the bookend net. Its chip counts arrivals and nothing else:
   // there is no gate here to have cleared, so a count of finds would be a
@@ -966,6 +1143,17 @@ export function render(root, tile, ctx) {
   const feed = ctTime(watch.updated_at);
   if (feed) bits.push(`feed ${feed}`);
   if (bits.length) root.appendChild(el('p', { cls: 'tile-foot', text: bits.join(' · ') }));
+
+  // The shop's own line, in the menu's order. `{n} listed`, and what has left
+  // the board only when something has — "0 dropped off" would be the tile
+  // reporting on a week in which nothing happened.
+  if (hasShop) {
+    const shopBits = [];
+    if (shopActive !== null) shopBits.push(`${shopActive} listed`);
+    const dropped = arr(shop.gone).length;
+    if (dropped) shopBits.push(`${dropped} dropped off`);
+    if (shopBits.length) root.appendChild(el('p', { cls: 'tile-foot', text: shopBits.join(' · ') }));
+  }
 
   // The PC net's own line, under Watch's. The two faces count different
   // things and neither number belongs in the other's sentence.

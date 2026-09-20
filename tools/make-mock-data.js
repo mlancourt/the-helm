@@ -1016,11 +1016,110 @@ function cardsWatch() {
       ],
       errors: [],
     },
-    shop: null,
+    shop: cardsShop(),
+    shop_footer:
+      'Active listings and sold-detection. Watchers and pending offers live in the eBay app — see C6.',
     pc: cardsPc(),
     pc_footer: 'No book, no gate — a bookend is one of one by definition. Price is yours to judge.',
-    sources: { listings: 'eBay Browse API', fmv: 'mock comp engine', shop: 'pending' },
+    sources: { listings: 'eBay Browse API', fmv: 'mock comp engine', shop: 'eBay Browse API' },
     footer: 'lean, not an appraisal — every figure is the engine\'s',
+  };
+}
+
+/**
+ * The Shop face's payload — Matt's own storefront.
+ *
+ * INVENTED throughout: the cards, the players, the item ids. The service name
+ * (eBay) is real because the footer credits it; nothing here is a listing
+ * anyone has ever had up.
+ *
+ * The fixture exercises every branch the face has, so it carries on purpose:
+ * four live listings — one AUCTION, two that take offers, one plain BIN —
+ * with one whose `days_listed` never arrived (the days clause must vanish,
+ * not print "null days"), one with no photo (the grey box, never a broken
+ * img), and one that has been up most of a year (which must look exactly like
+ * the three-day-old one: the age is never coloured). Plus two that have
+ * dropped off the board, so the `No longer active` section has something to
+ * say. `active` matches the list rather than being an independent number —
+ * an honest mock is easier to read a bug out of.
+ */
+function cardsShop() {
+  return {
+    updated_at: agoIso(22),
+    seller: 'mock_storefront',
+    active: 4,
+    calls: 1,
+    // Newest-listed first, as the engine delivers it. The page must not
+    // re-sort, so the mock is deliberately not in price or age order.
+    listings: [
+      {
+        item_id: '5512-0001',
+        title: '2024 Prism Foundry Kestrel Vance Planetary Pursuit /99 PSA 9',
+        price: 179,
+        type: 'OBO',
+        offers: true,
+        listed: addDays(TODAY, -3),
+        days_listed: 3,
+        url: 'https://example.com/mock/shop/5512-0001',
+        image: 'https://example.com/mock/shop/5512-0001.jpg',
+      },
+      {
+        item_id: '5512-0002',
+        // No age on this one: the engine could not date the listing, so the
+        // row drops the clause entirely.
+        title: 'Marisol Quint Ironsides Rookie Auto — no reserve',
+        price: 61.5,
+        type: 'AUCTION',
+        offers: false,
+        listed: null,
+        days_listed: null,
+        url: 'https://example.com/mock/shop/5512-0002',
+        image: 'https://example.com/mock/shop/5512-0002.jpg',
+      },
+      {
+        item_id: '5512-0003',
+        // No photo: a grey box of the same size, never a broken img.
+        title: 'Dov Ferreira Prism Foundry Sapphire Wave — corners sharp',
+        price: 44,
+        type: 'OBO',
+        offers: true,
+        listed: addDays(TODAY, -214),
+        days_listed: 214,
+        url: 'https://example.com/mock/shop/5512-0003',
+        image: null,
+      },
+      {
+        item_id: '5512-0004',
+        title: 'Teo Brandt Ironsides Base RC — lot of 4',
+        price: 22,
+        type: 'BIN',
+        offers: false,
+        listed: addDays(TODAY, -31),
+        days_listed: 31,
+        url: 'https://example.com/mock/shop/5512-0004',
+        image: 'https://example.com/mock/shop/5512-0004.jpg',
+      },
+    ],
+    // Sold or expired — eBay's public data cannot say which, and neither
+    // does the tile.
+    gone: [
+      {
+        item_id: '5512-0091',
+        title: 'Ines Okafor Prism Foundry Gold Wave /10 BGS 9.5',
+        price: 410,
+        listed: addDays(TODAY, -58),
+        gone_since: addDays(TODAY, -2),
+      },
+      {
+        item_id: '5512-0092',
+        title: 'Sable Nkemdi Ironsides Emerald Parallel PSA 10',
+        price: 96,
+        listed: addDays(TODAY, -120),
+        gone_since: addDays(TODAY, -6),
+      },
+    ],
+    errors: [],
+    note: 'active listings + sold-detection; watchers and offers need OAuth',
   };
 }
 
@@ -1644,7 +1743,33 @@ function cardsStaleSnapshot() {
   return snap;
 }
 
-/** `pc: null` — the face greyed to "soon", exactly as `shop` is today. */
+/** `shop: null` — the engine degraded, and the face greyed back to "soon". */
+function cardsNoShopSnapshot() {
+  const snap = snapshot();
+  const data = cardsWatch();
+  data.shop = null;
+  snap.tiles.cards = { band: 'HOURLY', updated_at: agoIso(18), status: 'ok', error: null, data };
+  return snap;
+}
+
+/**
+ * A quiet shop: nothing listed and nothing dropped off.
+ *
+ * The empty state has to say so rather than opening a blank sheet, and the
+ * `No longer active` section has to be absent rather than headed over nothing.
+ */
+function cardsShopEmptySnapshot() {
+  const snap = snapshot();
+  const data = cardsWatch();
+  data.shop = cardsShop();
+  data.shop.listings = [];
+  data.shop.gone = [];
+  data.shop.active = 0;
+  snap.tiles.cards = { band: 'HOURLY', updated_at: agoIso(18), status: 'ok', error: null, data };
+  return snap;
+}
+
+/** `pc: null` — the face greyed to "soon". */
 function cardsNoPcSnapshot() {
   const snap = snapshot();
   const data = cardsWatch();
@@ -1670,6 +1795,8 @@ const MODES = [
   ['--espn', () => slate(TODAY)],
   ['--cards-stale', () => cardsStaleSnapshot()],
   ['--cards-no-pc', () => cardsNoPcSnapshot()],
+  ['--cards-no-shop', () => cardsNoShopSnapshot()],
+  ['--cards-shop-empty', () => cardsShopEmptySnapshot()],
   ['--cards-pc-errors', () => cardsPcErrorsSnapshot()],
   ['--newsstand-stale', () => newsstandStaleSnapshot()],
   // The weather tile's four faces (W6). The default snapshot carries the

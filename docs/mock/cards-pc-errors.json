@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-20T12:28:21.273Z",
-  "run_id": "run-mock-mu9slcpl",
+  "generated_at": "2026-09-20T12:51:02.641Z",
+  "run_id": "run-mock-mu9tej5d",
   "tz": "America/Chicago",
   "tiles": {
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-09-20T12:28:21.273Z",
+      "updated_at": "2026-09-20T12:51:02.641Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -204,7 +204,7 @@
     },
     "today_games": {
       "band": "LIVE",
-      "updated_at": "2026-09-20T12:28:21.273Z",
+      "updated_at": "2026-09-20T12:51:02.641Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -264,7 +264,7 @@
     },
     "weather": {
       "band": "LIVE",
-      "updated_at": "2026-09-20T12:28:21.273Z",
+      "updated_at": "2026-09-20T12:51:02.641Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -340,7 +340,7 @@
           "forecast_s": 1800
         },
         "fallback": {
-          "as_of": "2026-09-20T11:54:21.273Z",
+          "as_of": "2026-09-20T12:17:02.641Z",
           "now": {
             "source": "KMCK",
             "temp_f": 61,
@@ -433,8 +433,8 @@
               "description": "* WHAT...Flooding caused by excessive rainfall is possible.\n\n* WHERE...Portions of invented county.\n\n* WHEN...Through this evening.\n\n* ADDITIONAL DETAILS...\n- This alert is fake. Every word of it was written by the mock generator.\n- http://example.com/mock/flood",
               "instruction": "You should monitor later forecasts and be alert for possible Flood Warnings.",
               "areaDesc": "Invented County, XX",
-              "onset": "2026-09-20T07:28:21.273Z",
-              "ends": "2026-09-20T17:28:21.273Z",
+              "onset": "2026-09-20T07:51:02.641Z",
+              "ends": "2026-09-20T17:51:02.641Z",
               "url": "https://api.weather.gov/alerts/urn:oid:0.0.0.0.mock.watch"
             }
           ]
@@ -443,7 +443,7 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-09-20T12:28:21.273Z",
+      "updated_at": "2026-09-20T12:51:02.641Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -493,7 +493,7 @@
     },
     "local_events": {
       "band": "DAILY",
-      "updated_at": "2026-09-20T12:28:21.273Z",
+      "updated_at": "2026-09-20T12:51:02.641Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -633,7 +633,7 @@
     },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-09-20T12:28:21.273Z",
+      "updated_at": "2026-09-20T12:51:02.641Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -717,7 +717,7 @@
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-09-20T12:28:21.273Z",
+      "updated_at": "2026-09-20T12:51:02.641Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -729,7 +729,7 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-09-20T12:28:21.273Z",
+      "updated_at": "2026-09-20T12:51:02.641Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -763,7 +763,7 @@
     },
     "wss_tape": {
       "band": "DAILY",
-      "updated_at": "2026-09-20T12:28:21.273Z",
+      "updated_at": "2026-09-20T12:51:02.641Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -786,7 +786,7 @@
         ],
         "items": [
           {
-            "ts": "2026-09-20T12:10:21.273Z",
+            "ts": "2026-09-20T12:33:02.641Z",
             "time_ct": "15:42",
             "actor": "Rae",
             "action": "ticket_update",
@@ -798,7 +798,7 @@
             "evt": "mk1a2b"
           },
           {
-            "ts": "2026-09-20T11:33:21.273Z",
+            "ts": "2026-09-20T11:56:02.641Z",
             "time_ct": "15:05",
             "actor": "Kit",
             "action": "readiness",
@@ -810,7 +810,7 @@
             "evt": "mk3c4d"
           },
           {
-            "ts": "2026-09-20T11:25:21.273Z",
+            "ts": "2026-09-20T11:48:02.641Z",
             "time_ct": "14:57",
             "actor": "Rae",
             "action": "ticket_update",
@@ -822,7 +822,7 @@
             "evt": "mk5e6f"
           },
           {
-            "ts": "2026-09-20T09:58:21.273Z",
+            "ts": "2026-09-20T10:21:02.641Z",
             "time_ct": "13:30",
             "actor": "Odis",
             "action": "lead_update",
@@ -834,7 +834,7 @@
             "evt": "mk7g8h"
           },
           {
-            "ts": "2026-09-20T09:09:21.273Z",
+            "ts": "2026-09-20T09:32:02.641Z",
             "time_ct": "12:41",
             "actor": "Kit",
             "action": "ticket_update",
@@ -846,7 +846,7 @@
             "evt": "mk9i0j"
           },
           {
-            "ts": "2026-09-20T07:55:21.273Z",
+            "ts": "2026-09-20T08:18:02.641Z",
             "time_ct": "11:27",
             "actor": "Rae",
             "action": "ticket_close",
@@ -858,7 +858,7 @@
             "evt": "mkak1l"
           },
           {
-            "ts": "2026-09-20T07:26:21.273Z",
+            "ts": "2026-09-20T07:49:02.641Z",
             "time_ct": "10:58",
             "actor": "Odis",
             "action": "readiness",
@@ -870,7 +870,7 @@
             "evt": "mkbm2n"
           },
           {
-            "ts": "2026-09-20T06:40:21.273Z",
+            "ts": "2026-09-20T07:03:02.641Z",
             "time_ct": "10:12",
             "actor": "Kit",
             "action": "ticket_update",
@@ -882,7 +882,7 @@
             "evt": "mkco3p"
           },
           {
-            "ts": "2026-09-20T06:12:21.273Z",
+            "ts": "2026-09-20T06:35:02.641Z",
             "time_ct": "09:44",
             "actor": "Rae",
             "action": "lead_update",
@@ -894,7 +894,7 @@
             "evt": "mkdq4r"
           },
           {
-            "ts": "2026-09-20T05:31:21.273Z",
+            "ts": "2026-09-20T05:54:02.641Z",
             "time_ct": "09:03",
             "actor": "Odis",
             "action": "ticket_update",
@@ -906,7 +906,7 @@
             "evt": "mkes5t"
           },
           {
-            "ts": "2026-09-20T04:44:21.273Z",
+            "ts": "2026-09-20T05:07:02.641Z",
             "time_ct": "08:16",
             "actor": "Kit",
             "action": "ticket_open",
@@ -918,7 +918,7 @@
             "evt": "mkfu6v"
           },
           {
-            "ts": "2026-09-20T04:20:21.273Z",
+            "ts": "2026-09-20T04:43:02.641Z",
             "time_ct": "07:52",
             "actor": "Rae",
             "action": "other",
@@ -954,12 +954,12 @@
     },
     "cards": {
       "band": "HOURLY",
-      "updated_at": "2026-09-20T12:10:21.274Z",
+      "updated_at": "2026-09-20T12:33:02.642Z",
       "status": "stale",
       "error": "the 06:00 PC sweep did not finish",
       "data": {
         "watch": {
-          "updated_at": "2026-09-20T12:10:21.274Z",
+          "updated_at": "2026-09-20T12:33:02.642Z",
           "targets": 14,
           "booked": 12,
           "fresh": 9,
@@ -1066,8 +1066,8 @@
               "gate": 0.65,
               "book_age_days": 3,
               "book_state": "fresh",
-              "ends_ct": "2026-09-20T08:58",
-              "ends_utc": "2026-09-20T13:58:00.000Z",
+              "ends_ct": "2026-09-20T09:21",
+              "ends_utc": "2026-09-20T14:21:00.000Z",
               "seller": "bayfield_auctions",
               "seller_fb": 5310,
               "listed": "2026-09-14",
@@ -1093,8 +1093,8 @@
               "gate": 0.65,
               "book_age_days": 1,
               "book_state": "fresh",
-              "ends_ct": "2026-09-20T07:36",
-              "ends_utc": "2026-09-20T12:36:00.000Z",
+              "ends_ct": "2026-09-20T07:59",
+              "ends_utc": "2026-09-20T12:59:00.000Z",
               "seller": "bayfield_auctions",
               "seller_fb": 5310,
               "listed": "2026-09-16",
@@ -1120,8 +1120,8 @@
               "gate": 0.65,
               "book_age_days": 4,
               "book_state": "fresh",
-              "ends_ct": "2026-09-23T07:30",
-              "ends_utc": "2026-09-23T12:30:00.000Z",
+              "ends_ct": "2026-09-23T07:53",
+              "ends_utc": "2026-09-23T12:53:00.000Z",
               "seller": "attic_finds_wi",
               "seller_fb": 41,
               "listed": "2026-09-19",
@@ -1147,7 +1147,7 @@
               "gate": 0.65,
               "book_age_days": 6,
               "book_state": "fresh",
-              "ends_ct": "2026-09-20T12:28",
+              "ends_ct": "2026-09-20T12:51",
               "ends_utc": null,
               "seller": "attic_finds_wi",
               "seller_fb": 41,
@@ -1176,9 +1176,79 @@
           ],
           "errors": []
         },
-        "shop": null,
+        "shop": {
+          "updated_at": "2026-09-20T12:29:02.642Z",
+          "seller": "mock_storefront",
+          "active": 4,
+          "calls": 1,
+          "listings": [
+            {
+              "item_id": "5512-0001",
+              "title": "2024 Prism Foundry Kestrel Vance Planetary Pursuit /99 PSA 9",
+              "price": 179,
+              "type": "OBO",
+              "offers": true,
+              "listed": "2026-09-17",
+              "days_listed": 3,
+              "url": "https://example.com/mock/shop/5512-0001",
+              "image": "https://example.com/mock/shop/5512-0001.jpg"
+            },
+            {
+              "item_id": "5512-0002",
+              "title": "Marisol Quint Ironsides Rookie Auto — no reserve",
+              "price": 61.5,
+              "type": "AUCTION",
+              "offers": false,
+              "listed": null,
+              "days_listed": null,
+              "url": "https://example.com/mock/shop/5512-0002",
+              "image": "https://example.com/mock/shop/5512-0002.jpg"
+            },
+            {
+              "item_id": "5512-0003",
+              "title": "Dov Ferreira Prism Foundry Sapphire Wave — corners sharp",
+              "price": 44,
+              "type": "OBO",
+              "offers": true,
+              "listed": "2026-02-18",
+              "days_listed": 214,
+              "url": "https://example.com/mock/shop/5512-0003",
+              "image": null
+            },
+            {
+              "item_id": "5512-0004",
+              "title": "Teo Brandt Ironsides Base RC — lot of 4",
+              "price": 22,
+              "type": "BIN",
+              "offers": false,
+              "listed": "2026-08-20",
+              "days_listed": 31,
+              "url": "https://example.com/mock/shop/5512-0004",
+              "image": "https://example.com/mock/shop/5512-0004.jpg"
+            }
+          ],
+          "gone": [
+            {
+              "item_id": "5512-0091",
+              "title": "Ines Okafor Prism Foundry Gold Wave /10 BGS 9.5",
+              "price": 410,
+              "listed": "2026-07-24",
+              "gone_since": "2026-09-18"
+            },
+            {
+              "item_id": "5512-0092",
+              "title": "Sable Nkemdi Ironsides Emerald Parallel PSA 10",
+              "price": 96,
+              "listed": "2026-05-23",
+              "gone_since": "2026-09-14"
+            }
+          ],
+          "errors": [],
+          "note": "active listings + sold-detection; watchers and offers need OAuth"
+        },
+        "shop_footer": "Active listings and sold-detection. Watchers and pending offers live in the eBay app — see C6.",
         "pc": {
-          "updated_at": "2026-09-20T12:10:21.274Z",
+          "updated_at": "2026-09-20T12:33:02.642Z",
           "players": 26,
           "calls": 121,
           "total_found": 108,
@@ -1289,8 +1359,8 @@
               "price": 920,
               "ship": 15,
               "all_in": 935,
-              "ends_ct": "2026-09-20T08:08",
-              "ends_utc": "2026-09-20T13:08:00.000Z",
+              "ends_ct": "2026-09-20T08:31",
+              "ends_utc": "2026-09-20T13:31:00.000Z",
               "seller": "bayfield_auctions",
               "seller_fb": 5310,
               "listed": "2026-09-14",
@@ -1330,14 +1400,14 @@
         "sources": {
           "listings": "eBay Browse API",
           "fmv": "mock comp engine",
-          "shop": "pending"
+          "shop": "eBay Browse API"
         },
         "footer": "lean, not an appraisal — every figure is the engine's"
       }
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-09-20T12:05:21.274Z",
+      "updated_at": "2026-09-20T12:28:02.642Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -1350,7 +1420,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-20T12:23:21.274Z"
+            "published_at": "2026-09-20T12:46:02.642Z"
           },
           {
             "title": "The Lakeshore Current take the conference opener in overtime",
@@ -1360,7 +1430,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-20T12:22:21.274Z"
+            "published_at": "2026-09-20T12:45:02.642Z"
           },
           {
             "title": "A fictional committee clears its first procedural hurdle",
@@ -1370,7 +1440,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-20T12:19:21.274Z"
+            "published_at": "2026-09-20T12:42:02.642Z"
           },
           {
             "title": "Small-shop automation is getting cheap faster than expected",
@@ -1380,7 +1450,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-20T12:15:21.274Z"
+            "published_at": "2026-09-20T12:38:02.642Z"
           },
           {
             "title": "A slow argument for keeping one analog habit",
@@ -1390,7 +1460,7 @@
             "lens": null,
             "category": null,
             "emoji": null,
-            "published_at": "2026-09-20T11:47:21.274Z"
+            "published_at": "2026-09-20T12:10:02.642Z"
           },
           {
             "title": "Regional freight rates flatten after a long climb",
@@ -1400,7 +1470,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-20T12:09:21.274Z"
+            "published_at": "2026-09-20T12:32:02.642Z"
           },
           {
             "title": "The invented index closes flat for a fourth straight week",
@@ -1410,7 +1480,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-20T12:02:21.274Z"
+            "published_at": "2026-09-20T12:25:02.642Z"
           },
           {
             "title": "A fictional second-division side goes down to ten and wins anyway",
@@ -1420,7 +1490,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-20T11:53:21.274Z"
+            "published_at": "2026-09-20T12:16:02.642Z"
           },
           {
             "title": "An invented survey finds rather less than the press release claimed",
@@ -1430,7 +1500,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-09-20T11:43:21.274Z"
+            "published_at": "2026-09-20T12:06:02.642Z"
           },
           {
             "title": "An invented launch window slips a fortnight for weather",
@@ -1440,7 +1510,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-09-20T11:31:21.274Z"
+            "published_at": "2026-09-20T11:54:02.642Z"
           },
           {
             "title": "An invented studio delays its sequel into next autumn",
@@ -1450,7 +1520,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-09-20T11:18:21.274Z"
+            "published_at": "2026-09-20T11:41:02.642Z"
           },
           {
             "title": "An invented novelist finishes a trilogy eleven years late",
@@ -1460,7 +1530,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-09-20T11:04:21.274Z"
+            "published_at": "2026-09-20T11:27:02.642Z"
           },
           {
             "title": "An invented auction house sells a filing cabinet for rather too much",
@@ -1480,7 +1550,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-20T10:31:21.274Z"
+            "published_at": "2026-09-20T10:54:02.642Z"
           },
           {
             "title": "Granite City Foremen lose their starting keeper for the season",
@@ -1490,7 +1560,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-20T10:12:21.274Z"
+            "published_at": "2026-09-20T10:35:02.642Z"
           },
           {
             "title": "The invented appropriations bill stalls over a single line item",
@@ -1500,7 +1570,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-20T09:52:21.274Z"
+            "published_at": "2026-09-20T10:15:02.642Z"
           },
           {
             "title": "An invented file format ships a release nobody asked for",
@@ -1510,7 +1580,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-20T09:31:21.274Z"
+            "published_at": "2026-09-20T09:54:02.642Z"
           },
           {
             "title": "An invented equipment dealer opens a third branch on a hunch",
@@ -1520,7 +1590,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-20T09:09:21.274Z"
+            "published_at": "2026-09-20T09:32:02.642Z"
           },
           {
             "title": "A fictional commodity gives back a month in an afternoon",
@@ -1530,7 +1600,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-20T08:45:21.274Z"
+            "published_at": "2026-09-20T09:08:02.642Z"
           },
           {
             "title": "The invented cup holders is decided by a goal in the ninth minute of added time",
@@ -1540,7 +1610,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-20T08:20:21.274Z"
+            "published_at": "2026-09-20T08:43:02.642Z"
           },
           {
             "title": "A made-up replication attempt holds up on the third try",
@@ -1550,7 +1620,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-09-20T07:54:21.274Z"
+            "published_at": "2026-09-20T08:17:02.642Z"
           },
           {
             "title": "A fictional lander phones home a day late",
@@ -1560,7 +1630,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-09-20T07:27:21.274Z"
+            "published_at": "2026-09-20T07:50:02.642Z"
           },
           {
             "title": "A made-up remaster runs better on the old hardware",
@@ -1570,7 +1640,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-09-20T06:58:21.274Z"
+            "published_at": "2026-09-20T07:21:02.642Z"
           },
           {
             "title": "A made-up translation is better than the original and says so",
@@ -1580,7 +1650,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-09-20T06:28:21.274Z"
+            "published_at": "2026-09-20T06:51:02.642Z"
           },
           {
             "title": "A made-up hobbyist catalogues nine thousand bottle caps",
@@ -1590,7 +1660,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-09-20T05:56:21.274Z"
+            "published_at": "2026-09-20T06:19:02.642Z"
           },
           {
             "title": "The fictional water utility signs off on a roundabout nobody wanted",
@@ -1600,7 +1670,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-20T05:24:21.274Z"
+            "published_at": "2026-09-20T05:47:02.642Z"
           },
           {
             "title": "Cedar Valley Drays name a first-year head coach",
@@ -1610,7 +1680,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-20T04:50:21.274Z"
+            "published_at": "2026-09-20T05:13:02.642Z"
           },
           {
             "title": "An imaginary caucus gets a markup date at last",
@@ -1620,7 +1690,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-20T04:15:21.274Z"
+            "published_at": "2026-09-20T04:38:02.642Z"
           },
           {
             "title": "A made-up scheduling library drops support for a decade-old runtime",
@@ -1630,7 +1700,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-20T03:39:21.274Z"
+            "published_at": "2026-09-20T04:02:02.642Z"
           },
           {
             "title": "The made-up parts distributor loses its largest account to a rival",
@@ -1640,7 +1710,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-20T03:01:21.274Z"
+            "published_at": "2026-09-20T03:24:02.642Z"
           },
           {
             "title": "The pretend bond desk finds a floor nobody trusts",
@@ -1650,7 +1720,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-20T02:22:21.274Z"
+            "published_at": "2026-09-20T02:45:02.642Z"
           },
           {
             "title": "An imaginary promotion chase ends goalless and nobody minds",
@@ -1660,7 +1730,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-20T01:42:21.274Z"
+            "published_at": "2026-09-20T02:05:02.642Z"
           },
           {
             "title": "The fictional field station loses a decade of data to a bad tape",
@@ -1670,7 +1740,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-09-20T01:01:21.274Z"
+            "published_at": "2026-09-20T01:24:02.642Z"
           },
           {
             "title": "The made-up ground station is retired after outliving its brief by years",
@@ -1680,7 +1750,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-09-20T00:19:21.274Z"
+            "published_at": "2026-09-20T00:42:02.642Z"
           },
           {
             "title": "The fictional handheld cuts its entry fee in half",
@@ -1690,7 +1760,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-09-19T23:35:21.274Z"
+            "published_at": "2026-09-19T23:58:02.642Z"
           },
           {
             "title": "The fictional prize jury shortlists nothing anyone expected",
@@ -1710,7 +1780,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-09-19T22:05:21.274Z"
+            "published_at": "2026-09-19T22:28:02.642Z"
           },
           {
             "title": "Mock County planners delays the budget vote a third time",
@@ -1720,7 +1790,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-19T21:17:21.274Z"
+            "published_at": "2026-09-19T21:40:02.642Z"
           },
           {
             "title": "North Pike Sentinels move their home dates to the new turf",
@@ -1730,7 +1800,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-19T20:29:21.274Z"
+            "published_at": "2026-09-19T20:52:02.642Z"
           },
           {
             "title": "The made-up rules panel loses two votes it was counting on",
@@ -1740,7 +1810,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-19T19:39:21.274Z"
+            "published_at": "2026-09-19T20:02:02.642Z"
           },
           {
             "title": "The fictional standards group wins an argument it started in 2019",
@@ -1750,7 +1820,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-19T18:49:21.274Z"
+            "published_at": "2026-09-19T19:12:02.642Z"
           },
           {
             "title": "A fictional leasing arm raises prices and says so plainly",
@@ -1760,7 +1830,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-19T17:57:21.274Z"
+            "published_at": "2026-09-19T18:20:02.642Z"
           },
           {
             "title": "An imaginary sector fund is being read as the top rather than a pause",
@@ -1770,7 +1840,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-19T17:03:21.274Z"
+            "published_at": "2026-09-19T17:26:02.642Z"
           },
           {
             "title": "The made-up derby gets a replay after a floodlight failure",
@@ -1780,7 +1850,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-19T16:09:21.274Z"
+            "published_at": "2026-09-19T16:32:02.642Z"
           },
           {
             "title": "An imaginary instrument is cheaper than the thing it replaces",
@@ -1790,7 +1860,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-09-19T15:14:21.274Z"
+            "published_at": "2026-09-19T15:37:02.642Z"
           },
           {
             "title": "An imaginary constellation operator files for a hundred more slots",
@@ -1800,7 +1870,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-09-19T14:17:21.274Z"
+            "published_at": "2026-09-19T14:40:02.642Z"
           },
           {
             "title": "An imaginary tournament ships without the mode it advertised",
@@ -1810,7 +1880,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-09-19T13:19:21.274Z"
+            "published_at": "2026-09-19T13:42:02.642Z"
           },
           {
             "title": "An imaginary backlist outsells the new releases again",
@@ -1820,7 +1890,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-09-19T12:20:21.274Z"
+            "published_at": "2026-09-19T12:43:02.642Z"
           },
           {
             "title": "An imaginary estate sale goes to a single bidder in four minutes",
@@ -1830,7 +1900,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-09-19T11:20:21.274Z"
+            "published_at": "2026-09-19T11:43:02.642Z"
           },
           {
             "title": "An imaginary school district buys the old mill site for a dollar",
@@ -1840,7 +1910,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-19T10:19:21.274Z"
+            "published_at": "2026-09-19T10:42:02.642Z"
           },
           {
             "title": "Foundry Ironsides run their unbeaten streak to nine",
@@ -1850,7 +1920,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-19T09:16:21.274Z"
+            "published_at": "2026-09-19T09:39:02.642Z"
           },
           {
             "title": "A nonexistent working group is rewritten a fourth time",
@@ -1860,7 +1930,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-19T08:12:21.274Z"
+            "published_at": "2026-09-19T08:35:02.642Z"
           },
           {
             "title": "An imaginary handset maker quietly doubles its storage tier",
@@ -1870,7 +1940,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-19T07:08:21.274Z"
+            "published_at": "2026-09-19T07:31:02.642Z"
           },
           {
             "title": "Nowhere Logistics buys back a warehouse it sold in 2021",
@@ -1880,7 +1950,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-19T06:02:21.274Z"
+            "published_at": "2026-09-19T06:25:02.642Z"
           },
           {
             "title": "Made-up spot pricing ends the quarter roughly where it started",
@@ -1890,7 +1960,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-19T04:54:21.274Z"
+            "published_at": "2026-09-19T05:17:02.642Z"
           },
           {
             "title": "A pretend academy graduate signs for a fee that is also invented",
@@ -1900,7 +1970,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-19T03:46:21.274Z"
+            "published_at": "2026-09-19T04:09:02.642Z"
           },
           {
             "title": "A pretend long-run study reaches its twentieth year quietly",
@@ -1910,7 +1980,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-09-19T02:37:21.274Z"
+            "published_at": "2026-09-19T03:00:02.642Z"
           },
           {
             "title": "A pretend sample return comes back with less than hoped",
@@ -1920,7 +1990,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-09-19T01:26:21.274Z"
+            "published_at": "2026-09-19T01:49:02.642Z"
           },
           {
             "title": "A pretend early-access title quietly becomes the best-selling thing they make",
@@ -1940,7 +2010,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-09-18T23:02:21.274Z"
+            "published_at": "2026-09-18T23:25:02.642Z"
           },
           {
             "title": "A pretend collector gives the lot away rather than split it",
@@ -1950,7 +2020,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-09-18T21:48:21.274Z"
+            "published_at": "2026-09-18T22:11:02.642Z"
           },
           {
             "title": "The invented county board puts the levy question back on the ballot",
@@ -1960,7 +2030,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-18T20:33:21.274Z"
+            "published_at": "2026-09-18T20:56:02.642Z"
           },
           {
             "title": "The Lakeshore Current lose their starting keeper for the season",
@@ -1970,7 +2040,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-18T19:16:21.274Z"
+            "published_at": "2026-09-18T19:39:02.642Z"
           },
           {
             "title": "A fictional committee stalls over a single line item",
@@ -1980,7 +2050,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-18T17:59:21.274Z"
+            "published_at": "2026-09-18T18:22:02.642Z"
           },
           {
             "title": "Small-shop automation ships a release nobody asked for",
@@ -1990,7 +2060,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-18T16:40:21.274Z"
+            "published_at": "2026-09-18T17:03:02.642Z"
           },
           {
             "title": "Regional freight rates opens a third branch on a hunch",
@@ -2000,7 +2070,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-18T15:21:21.274Z"
+            "published_at": "2026-09-18T15:44:02.642Z"
           },
           {
             "title": "The invented index gives back a month in an afternoon",
@@ -2010,7 +2080,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-18T14:00:21.274Z"
+            "published_at": "2026-09-18T14:23:02.642Z"
           },
           {
             "title": "A fictional second-division side is decided by a goal in the ninth minute of added time",
@@ -2020,7 +2090,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-18T12:38:21.274Z"
+            "published_at": "2026-09-18T13:01:02.642Z"
           },
           {
             "title": "An invented survey holds up on the third try",
@@ -2030,7 +2100,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-09-18T11:15:21.274Z"
+            "published_at": "2026-09-18T11:38:02.642Z"
           },
           {
             "title": "An invented launch window phones home a day late",
@@ -2040,7 +2110,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-09-18T09:51:21.274Z"
+            "published_at": "2026-09-18T10:14:02.642Z"
           },
           {
             "title": "An invented studio runs better on the old hardware",
@@ -2050,7 +2120,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-09-18T08:25:21.274Z"
+            "published_at": "2026-09-18T08:48:02.642Z"
           },
           {
             "title": "An invented novelist is better than the original and says so",
@@ -2060,7 +2130,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-09-18T06:59:21.274Z"
+            "published_at": "2026-09-18T07:22:02.642Z"
           },
           {
             "title": "An invented auction house catalogues nine thousand bottle caps",
@@ -2070,7 +2140,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-09-18T05:32:21.274Z"
+            "published_at": "2026-09-18T05:55:02.642Z"
           },
           {
             "title": "A made-up village committee signs off on a roundabout nobody wanted",
@@ -2080,7 +2150,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-18T04:03:21.274Z"
+            "published_at": "2026-09-18T04:26:02.642Z"
           },
           {
             "title": "Granite City Foremen name a first-year head coach",
@@ -2090,7 +2160,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-18T02:33:21.274Z"
+            "published_at": "2026-09-18T02:56:02.642Z"
           },
           {
             "title": "The invented appropriations bill gets a markup date at last",
@@ -2100,7 +2170,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-18T01:02:21.274Z"
+            "published_at": "2026-09-18T01:25:02.642Z"
           },
           {
             "title": "An invented file format drops support for a decade-old runtime",
@@ -2110,7 +2180,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-17T23:30:21.274Z"
+            "published_at": "2026-09-17T23:53:02.642Z"
           },
           {
             "title": "An invented equipment dealer loses its largest account to a rival",
@@ -2120,7 +2190,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-17T21:57:21.274Z"
+            "published_at": "2026-09-17T22:20:02.642Z"
           },
           {
             "title": "A fictional commodity finds a floor nobody trusts",
@@ -2130,7 +2200,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-17T20:23:21.274Z"
+            "published_at": "2026-09-17T20:46:02.642Z"
           },
           {
             "title": "The invented cup holders ends goalless and nobody minds",
@@ -2140,7 +2210,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-17T18:48:21.274Z"
+            "published_at": "2026-09-17T19:11:02.642Z"
           },
           {
             "title": "A made-up replication attempt loses a decade of data to a bad tape",
@@ -2150,7 +2220,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-09-17T17:11:21.274Z"
+            "published_at": "2026-09-17T17:34:02.642Z"
           },
           {
             "title": "A fictional lander is retired after outliving its brief by years",
@@ -2170,7 +2240,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-09-17T13:55:21.274Z"
+            "published_at": "2026-09-17T14:18:02.642Z"
           },
           {
             "title": "A made-up translation shortlists nothing anyone expected",
@@ -2180,7 +2250,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-09-17T12:15:21.274Z"
+            "published_at": "2026-09-17T12:38:02.642Z"
           },
           {
             "title": "The fictional water utility delays the budget vote a third time",
@@ -2190,7 +2260,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-17T10:35:21.274Z"
+            "published_at": "2026-09-17T10:58:02.642Z"
           },
           {
             "title": "Cedar Valley Drays move their home dates to the new turf",
@@ -2200,7 +2270,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-17T08:53:21.274Z"
+            "published_at": "2026-09-17T09:16:02.642Z"
           },
           {
             "title": "An imaginary caucus loses two votes it was counting on",
@@ -2210,7 +2280,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-17T07:10:21.274Z"
+            "published_at": "2026-09-17T07:33:02.642Z"
           },
           {
             "title": "A made-up scheduling library wins an argument it started in 2019",
@@ -2220,7 +2290,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-17T05:26:21.274Z"
+            "published_at": "2026-09-17T05:49:02.642Z"
           },
           {
             "title": "The made-up parts distributor raises prices and says so plainly",
@@ -2230,7 +2300,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-17T03:40:21.274Z"
+            "published_at": "2026-09-17T04:03:02.642Z"
           },
           {
             "title": "The pretend bond desk is being read as the top rather than a pause",
@@ -2240,7 +2310,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-17T01:54:21.274Z"
+            "published_at": "2026-09-17T02:17:02.642Z"
           },
           {
             "title": "An imaginary promotion chase gets a replay after a floodlight failure",
@@ -2250,7 +2320,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-17T00:07:21.274Z"
+            "published_at": "2026-09-17T00:30:02.642Z"
           },
           {
             "title": "The fictional field station is cheaper than the thing it replaces",
@@ -2260,7 +2330,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-09-16T22:18:21.274Z"
+            "published_at": "2026-09-16T22:41:02.642Z"
           },
           {
             "title": "The made-up ground station files for a hundred more slots",
@@ -2270,7 +2340,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-09-16T20:29:21.274Z"
+            "published_at": "2026-09-16T20:52:02.642Z"
           },
           {
             "title": "The fictional handheld ships without the mode it advertised",
@@ -2280,7 +2350,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-09-16T18:38:21.274Z"
+            "published_at": "2026-09-16T19:01:02.642Z"
           },
           {
             "title": "Mock County planners buys the old mill site for a dollar",
@@ -2290,7 +2360,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-16T16:46:21.274Z"
+            "published_at": "2026-09-16T17:09:02.642Z"
           },
           {
             "title": "North Pike Sentinels run their unbeaten streak to nine",
@@ -2300,7 +2370,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-16T14:53:21.274Z"
+            "published_at": "2026-09-16T15:16:02.642Z"
           },
           {
             "title": "The made-up rules panel is rewritten a fourth time",
@@ -2310,7 +2380,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-16T12:59:21.274Z"
+            "published_at": "2026-09-16T13:22:02.642Z"
           },
           {
             "title": "The fictional standards group quietly doubles its storage tier",
@@ -2320,7 +2390,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-16T11:04:21.274Z"
+            "published_at": "2026-09-16T11:27:02.642Z"
           },
           {
             "title": "A fictional leasing arm buys back a warehouse it sold in 2021",
@@ -2330,7 +2400,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-16T09:08:21.274Z"
+            "published_at": "2026-09-16T09:31:02.642Z"
           },
           {
             "title": "An imaginary sector fund ends the quarter roughly where it started",
@@ -2340,7 +2410,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-16T07:11:21.274Z"
+            "published_at": "2026-09-16T07:34:02.642Z"
           },
           {
             "title": "The made-up derby signs for a fee that is also invented",
@@ -2350,7 +2420,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-16T05:13:21.274Z"
+            "published_at": "2026-09-16T05:36:02.642Z"
           },
           {
             "title": "An imaginary instrument reaches its twentieth year quietly",
@@ -2360,7 +2430,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-09-16T03:13:21.274Z"
+            "published_at": "2026-09-16T03:36:02.642Z"
           },
           {
             "title": "An imaginary tournament quietly becomes the best-selling thing they make",
@@ -2370,7 +2440,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-09-16T01:13:21.274Z"
+            "published_at": "2026-09-16T01:36:02.642Z"
           },
           {
             "title": "An imaginary school district approves the long-delayed riverfront plan",
@@ -2380,7 +2450,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-15T23:12:21.274Z"
+            "published_at": "2026-09-15T23:35:02.642Z"
           },
           {
             "title": "Foundry Ironsides take the conference opener in overtime",
@@ -2400,7 +2470,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-15T19:05:21.274Z"
+            "published_at": "2026-09-15T19:28:02.642Z"
           },
           {
             "title": "An imaginary handset maker is getting cheap faster than expected",
@@ -2410,7 +2480,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-15T17:01:21.274Z"
+            "published_at": "2026-09-15T17:24:02.642Z"
           },
           {
             "title": "Nowhere Logistics flatten after a long climb",
@@ -2420,7 +2490,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-15T14:55:21.274Z"
+            "published_at": "2026-09-15T15:18:02.642Z"
           },
           {
             "title": "Made-up spot pricing closes flat for a fourth straight week",
@@ -2430,7 +2500,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-15T12:48:21.274Z"
+            "published_at": "2026-09-15T13:11:02.642Z"
           },
           {
             "title": "A pretend academy graduate goes down to ten and wins anyway",
@@ -2440,7 +2510,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-15T10:40:21.274Z"
+            "published_at": "2026-09-15T11:03:02.642Z"
           },
           {
             "title": "A pretend early-access title delays its sequel into next autumn",
@@ -2450,7 +2520,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-09-15T08:31:21.274Z"
+            "published_at": "2026-09-15T08:54:02.642Z"
           },
           {
             "title": "The invented county board signs off on a roundabout nobody wanted",
@@ -2460,7 +2530,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-15T06:21:21.274Z"
+            "published_at": "2026-09-15T06:44:02.642Z"
           },
           {
             "title": "The Lakeshore Current name a first-year head coach",
@@ -2470,7 +2540,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-15T04:10:21.274Z"
+            "published_at": "2026-09-15T04:33:02.642Z"
           },
           {
             "title": "A fictional committee gets a markup date at last",
@@ -2480,7 +2550,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-15T01:57:21.274Z"
+            "published_at": "2026-09-15T02:20:02.642Z"
           },
           {
             "title": "Small-shop automation drops support for a decade-old runtime",
@@ -2490,7 +2560,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-14T23:44:21.274Z"
+            "published_at": "2026-09-15T00:07:02.642Z"
           },
           {
             "title": "Regional freight rates loses its largest account to a rival",
@@ -2500,7 +2570,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-14T21:30:21.274Z"
+            "published_at": "2026-09-14T21:53:02.642Z"
           },
           {
             "title": "The invented index finds a floor nobody trusts",
@@ -2510,7 +2580,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-09-14T19:14:21.274Z"
+            "published_at": "2026-09-14T19:37:02.642Z"
           },
           {
             "title": "A fictional second-division side ends goalless and nobody minds",
@@ -2520,7 +2590,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-14T16:58:21.274Z"
+            "published_at": "2026-09-14T17:21:02.642Z"
           },
           {
             "title": "A made-up village committee delays the budget vote a third time",
@@ -2530,7 +2600,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-14T14:40:21.274Z"
+            "published_at": "2026-09-14T15:03:02.642Z"
           },
           {
             "title": "Granite City Foremen move their home dates to the new turf",
@@ -2540,7 +2610,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-14T12:22:21.274Z"
+            "published_at": "2026-09-14T12:45:02.642Z"
           },
           {
             "title": "The invented appropriations bill loses two votes it was counting on",
@@ -2550,7 +2620,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-14T10:02:21.274Z"
+            "published_at": "2026-09-14T10:25:02.642Z"
           },
           {
             "title": "An invented file format wins an argument it started in 2019",
@@ -2560,7 +2630,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-14T07:41:21.274Z"
+            "published_at": "2026-09-14T08:04:02.642Z"
           },
           {
             "title": "An invented equipment dealer raises prices and says so plainly",
@@ -2570,7 +2640,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-14T05:20:21.274Z"
+            "published_at": "2026-09-14T05:43:02.642Z"
           },
           {
             "title": "The invented cup holders gets a replay after a floodlight failure",
@@ -2580,7 +2650,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-14T02:57:21.274Z"
+            "published_at": "2026-09-14T03:20:02.642Z"
           },
           {
             "title": "The fictional water utility buys the old mill site for a dollar",
@@ -2590,7 +2660,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-14T00:33:21.274Z"
+            "published_at": "2026-09-14T00:56:02.642Z"
           },
           {
             "title": "Cedar Valley Drays run their unbeaten streak to nine",
@@ -2600,7 +2670,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-13T22:08:21.274Z"
+            "published_at": "2026-09-13T22:31:02.642Z"
           },
           {
             "title": "An imaginary caucus is rewritten a fourth time",
@@ -2610,7 +2680,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-13T19:42:21.274Z"
+            "published_at": "2026-09-13T20:05:02.642Z"
           },
           {
             "title": "A made-up scheduling library quietly doubles its storage tier",
@@ -2630,7 +2700,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-09-13T14:47:21.274Z"
+            "published_at": "2026-09-13T15:10:02.642Z"
           },
           {
             "title": "An imaginary promotion chase signs for a fee that is also invented",
@@ -2640,7 +2710,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-13T12:17:21.274Z"
+            "published_at": "2026-09-13T12:40:02.642Z"
           },
           {
             "title": "Mock County planners approves the long-delayed riverfront plan",
@@ -2650,7 +2720,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-13T09:47:21.274Z"
+            "published_at": "2026-09-13T10:10:02.642Z"
           },
           {
             "title": "North Pike Sentinels take the conference opener in overtime",
@@ -2660,7 +2730,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-09-13T07:16:21.274Z"
+            "published_at": "2026-09-13T07:39:02.642Z"
           },
           {
             "title": "The made-up rules panel clears its first procedural hurdle",
@@ -2670,7 +2740,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-13T04:44:21.274Z"
+            "published_at": "2026-09-13T05:07:02.642Z"
           },
           {
             "title": "The fictional standards group is getting cheap faster than expected",
@@ -2680,7 +2750,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-13T02:10:21.274Z"
+            "published_at": "2026-09-13T02:33:02.642Z"
           },
           {
             "title": "The made-up derby goes down to ten and wins anyway",
@@ -2690,7 +2760,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-12T23:36:21.274Z"
+            "published_at": "2026-09-12T23:59:02.642Z"
           },
           {
             "title": "An imaginary school district puts the levy question back on the ballot",
@@ -2700,7 +2770,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-12T21:00:21.274Z"
+            "published_at": "2026-09-12T21:23:02.642Z"
           },
           {
             "title": "A nonexistent working group stalls over a single line item",
@@ -2710,7 +2780,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-12T18:24:21.274Z"
+            "published_at": "2026-09-12T18:47:02.642Z"
           },
           {
             "title": "An imaginary handset maker ships a release nobody asked for",
@@ -2720,7 +2790,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-12T15:46:21.274Z"
+            "published_at": "2026-09-12T16:09:02.642Z"
           },
           {
             "title": "A pretend academy graduate is decided by a goal in the ninth minute of added time",
@@ -2730,7 +2800,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-09-12T13:08:21.274Z"
+            "published_at": "2026-09-12T13:31:02.642Z"
           },
           {
             "title": "The invented county board delays the budget vote a third time",
@@ -2740,7 +2810,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-12T10:28:21.274Z"
+            "published_at": "2026-09-12T10:51:02.642Z"
           },
           {
             "title": "A fictional committee loses two votes it was counting on",
@@ -2750,7 +2820,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-09-12T07:47:21.274Z"
+            "published_at": "2026-09-12T08:10:02.642Z"
           },
           {
             "title": "Small-shop automation wins an argument it started in 2019",
@@ -2760,7 +2830,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-12T05:05:21.274Z"
+            "published_at": "2026-09-12T05:28:02.642Z"
           },
           {
             "title": "A made-up village committee buys the old mill site for a dollar",
@@ -2770,7 +2840,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-12T02:23:21.274Z"
+            "published_at": "2026-09-12T02:46:02.642Z"
           },
           {
             "title": "An invented file format quietly doubles its storage tier",
@@ -2780,7 +2850,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-11T23:39:21.274Z"
+            "published_at": "2026-09-12T00:02:02.642Z"
           },
           {
             "title": "The fictional water utility approves the long-delayed riverfront plan",
@@ -2790,7 +2860,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-11T20:54:21.274Z"
+            "published_at": "2026-09-11T21:17:02.642Z"
           },
           {
             "title": "A made-up scheduling library is getting cheap faster than expected",
@@ -2800,7 +2870,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-11T18:08:21.274Z"
+            "published_at": "2026-09-11T18:31:02.642Z"
           },
           {
             "title": "Mock County planners puts the levy question back on the ballot",
@@ -2810,7 +2880,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-11T15:21:21.274Z"
+            "published_at": "2026-09-11T15:44:02.642Z"
           },
           {
             "title": "The fictional standards group ships a release nobody asked for",
@@ -2820,7 +2890,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-09-11T12:33:21.274Z"
+            "published_at": "2026-09-11T12:56:02.642Z"
           },
           {
             "title": "An imaginary school district signs off on a roundabout nobody wanted",
@@ -2830,7 +2900,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-11T09:44:21.274Z"
+            "published_at": "2026-09-11T10:07:02.642Z"
           },
           {
             "title": "The invented county board buys the old mill site for a dollar",
@@ -2840,7 +2910,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-09-11T06:54:21.274Z"
+            "published_at": "2026-09-11T07:17:02.642Z"
           },
           {
             "title": "A made-up village committee approves the long-delayed riverfront plan",
@@ -2853,7 +2923,7 @@
             "published_at": null
           }
         ],
-        "as_of": "2026-09-20T12:05:21.274Z",
+        "as_of": "2026-09-20T12:28:02.642Z",
         "count": 151,
         "by_category": [
           {
@@ -2928,12 +2998,12 @@
     },
     "entertainment": {
       "band": "DAILY",
-      "updated_at": "2026-09-20T12:28:21.274Z",
+      "updated_at": "2026-09-20T12:51:02.642Z",
       "status": "ok",
       "error": null,
       "data": {
         "watching": {
-          "updated_at": "2026-09-20T10:53:21.274Z",
+          "updated_at": "2026-09-20T11:16:02.642Z",
           "items": [
             {
               "title": "The Quiet Ledger",
@@ -3010,13 +3080,13 @@
           "errors": null
         },
         "podcasts": {
-          "updated_at": "2026-09-20T11:48:21.274Z",
+          "updated_at": "2026-09-20T12:11:02.642Z",
           "items": [
             {
               "show": "Mock Fork",
               "title": "The chatbot that filed its own taxes",
               "published": "2026-09-20",
-              "published_at": "2026-09-20T09:28:21.274Z",
+              "published_at": "2026-09-20T09:51:02.642Z",
               "duration_min": 58,
               "url": "https://example.com/mock/pod/fork-1",
               "artwork": null
@@ -3025,7 +3095,7 @@
               "show": "The Long Docket",
               "title": "Case 114: the disappearing deposition",
               "published": "2026-09-19",
-              "published_at": "2026-09-19T10:28:21.274Z",
+              "published_at": "2026-09-19T10:51:02.642Z",
               "duration_min": 71,
               "url": "https://example.com/mock/pod/docket-1",
               "artwork": null
@@ -3034,7 +3104,7 @@
               "show": "Ledger & Lamp",
               "title": "A very small bank in a very large hurry",
               "published": "2026-09-18",
-              "published_at": "2026-09-18T09:28:21.274Z",
+              "published_at": "2026-09-18T09:51:02.642Z",
               "duration_min": 44,
               "url": "https://example.com/mock/pod/ledger-1",
               "artwork": null
@@ -3043,7 +3113,7 @@
               "show": "Mock Fork",
               "title": "Everyone is building the same agent",
               "published": "2026-09-17",
-              "published_at": "2026-09-17T10:58:21.274Z",
+              "published_at": "2026-09-17T11:21:02.642Z",
               "duration_min": 63,
               "url": "https://example.com/mock/pod/fork-2",
               "artwork": null
@@ -3052,7 +3122,7 @@
               "show": "Ledger & Lamp",
               "title": "The audit nobody asked for",
               "published": "2026-09-11",
-              "published_at": "2026-09-11T12:28:21.274Z",
+              "published_at": "2026-09-11T12:51:02.642Z",
               "duration_min": null,
               "url": "https://example.com/mock/pod/ledger-2",
               "artwork": null
@@ -3061,7 +3131,7 @@
               "show": "Cold Open Radio",
               "title": "Twelve minutes of dead air, explained",
               "published": "2026-09-08",
-              "published_at": "2026-09-08T12:28:21.274Z",
+              "published_at": "2026-09-08T12:51:02.642Z",
               "duration_min": 12,
               "url": "https://example.com/mock/pod/cold-1",
               "artwork": null
@@ -3070,7 +3140,7 @@
           "errors": null
         },
         "top5": {
-          "updated_at": "2026-09-20T01:28:21.274Z",
+          "updated_at": "2026-09-20T01:51:02.642Z",
           "week_of": "2026-09-14",
           "items": [
             {
@@ -3132,7 +3202,7 @@
           "errors": null
         },
         "listening": {
-          "updated_at": "2026-09-19T23:28:21.274Z",
+          "updated_at": "2026-09-19T23:51:02.642Z",
           "week_of": "2026-09-14",
           "status": "ok",
           "series_checked": 17,
@@ -3199,18 +3269,18 @@
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-09-20T12:28:21.274Z",
+      "updated_at": "2026-09-20T12:51:02.642Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-09-19T06:28:21.274Z",
+        "drift_audit_updated": "2026-09-19T06:51:02.642Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-09-20T12:20:21.274Z",
+        "worker_published_at": "2026-09-20T12:43:02.642Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -3232,7 +3302,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-09-20T10:58:21.274Z",
+      "updated_at": "2026-09-20T11:21:02.642Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

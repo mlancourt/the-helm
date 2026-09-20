@@ -2712,7 +2712,11 @@ async function main() {
     });
     check('a shop face that arrives stops saying "soon"', countOf(grown, 'cards-btn-soon') === 1 && cardBtns(grown).length === 3);
     withNow(NOW_UTC, () => cardsTap(cardBtns(grown)[1]));
-    check('and opens as a generic card rather than nothing', /queue/.test(textOf(panel.last.body)) && /shipped/.test(textOf(panel.last.body)));
+    // A shop face carrying fields this page has never heard of, and none of
+    // the ones it looks for: the sheet opens, says what it honestly knows,
+    // and neither throws nor invents a storefront out of `queue` and `note`.
+    check('and opens its own sheet rather than nothing', /Nothing listed right now/.test(textOf(panel.last.body)));
+    check('without choking on fields it does not know', !/undefined|NaN/.test(textOf(panel.last.body)));
     const noWatch = new El('div');
     cards.render(noWatch, cardsTile({ shop: null }), { id: 'cards', actions: {} });
     check('a payload with no watch face greys that button too', countOf(noWatch, 'cards-btn-soon') === 3);
@@ -3314,7 +3318,7 @@ async function main() {
     // code. If `listingRow` ever appears in there, someone has reached for
     // the Watch row because both sheets have rows in them — which is exactly
     // the mistake the ruling names.
-    const PC_REGION = CARDS_SRC.slice(CARDS_SRC.indexOf('function planFind('), CARDS_SRC.indexOf('function genericFaceBody('));
+    const PC_REGION = CARDS_SRC.slice(CARDS_SRC.indexOf('function planFind('), CARDS_SRC.indexOf('function planShopItem('));
     check('and never borrows the Watch row', PC_REGION.length > 500 && !/listingRow/.test(PC_REGION), String(PC_REGION.length));
     check('nor its gate chip', !/fmvChip|cards-fmv|cards-chip-max/.test(PC_REGION));
 
@@ -3325,6 +3329,346 @@ async function main() {
     check('the 1/1 badge has a colour token of its own', !!pcOneToken, String(pcOneToken));
     check('and it is not the auction amber', !!warnToken && warnToken.trim() !== (pcOneToken || '').trim(), `${warnToken} vs ${pcOneToken}`);
     check('the badge never reaches for --warn', !/\.pc-one\b[^{]*\{[^}]*var\(--warn\)/.test(CARDS_CSS));
+
+    // -- the shop: Matt's own storefront, and the ruling about age ----------
+    //
+    // Shop is neither a gate nor a collection. Most of what is below is about
+    // what must NOT be on the screen: no FMV, no ✓, no MAX, no serial, no
+    // grade — and above all NO COLOUR ON THE AGE. Matt owns this board and
+    // has ruled that it does not narrate his own shop back at him, so
+    // `days_listed` is a plain grey number at three days and at three
+    // hundred. A red 45 would be an opinion the page has no standing to hold.
+    console.log('\ncards — the shop');
+
+    const shopItem = (over = {}) => ({
+      item_id: 's1',
+      title: '2024 Cosmic Chrome Jackson Chourio Planetary Pursuit',
+      price: 179,
+      type: 'BIN',
+      offers: false,
+      listed: '2026-08-06',
+      days_listed: 45,
+      url: 'https://example.com/mock/shop/1',
+      image: 'https://example.com/mock/shop/1.jpg',
+      ...over,
+    });
+
+    const LISTINGS = [
+      // Titles carry no format words on purpose: the chip assertions below
+      // read the sheet's text, and a row called "SHOP-BIN" would answer them
+      // for the wrong reason.
+      shopItem({ item_id: 'l1', title: 'OFFERS-ONE', type: 'OBO', offers: true }),
+      shopItem({ item_id: 'l2', title: 'LOT-AUCTION', type: 'AUCTION', price: 61.5, days_listed: 2 }),
+      // No age at all, and no photo: two different fields the engine is
+      // allowed not to have, on two different rows.
+      shopItem({ item_id: 'l3', title: 'NO-DAYS', type: 'OBO', offers: true, listed: null, days_listed: null }),
+      shopItem({ item_id: 'l4', title: 'PLAIN-ONE', price: 22, days_listed: 365, image: null }),
+    ];
+    const GONE = [
+      { item_id: 'g1', title: 'GONE-ONE', price: 410, listed: '2026-07-24', gone_since: '2026-09-18' },
+      { item_id: 'g2', title: 'GONE-TWO', price: 96, listed: '2026-05-23', gone_since: '2026-09-14' },
+    ];
+
+    const shopData = (over = {}, rest = {}) => ({
+      watch: null,
+      pc: null,
+      shop: {
+        updated_at: '2026-09-20T12:04:00.000Z',
+        seller: 'mock_storefront',
+        active: 4,
+        calls: 1,
+        listings: LISTINGS,
+        gone: GONE,
+        errors: [],
+        note: 'active listings + sold-detection',
+        ...over,
+      },
+      shop_footer:
+        'Active listings and sold-detection. Watchers and pending offers live in the eBay app — see C6.',
+      ...rest,
+    });
+
+    const shopOpened = [];
+    function openShop(over = {}, rest = {}) {
+      for (const v of shopOpened) v.panel.close();
+      const pnl = fakePanel();
+      const board = new El('div');
+      cards.render(board, cardsTile(shopData(over, rest)), { id: 'cards', actions: pnl.actions });
+      cardsTap(cardBtns(board)[1]);
+      const view = { board, panel: pnl, sheet: pnl.last.body };
+      shopOpened.push(view);
+      return view;
+    }
+
+    let shopView = null;
+    try {
+      shopView = openShop();
+      const shopBoard = shopView.board;
+      const shopSheet = shopView.sheet;
+
+      // -- the board ---------------------------------------------------------
+      check('the shop face is the second button', labelsOf(shopBoard).join('|') === 'Watch|Shop|PC', labelsOf(shopBoard).join('|'));
+      check('it is live, not greyed', !cardBtns(shopBoard)[1].className.includes('cards-btn-soon'));
+      check('and it opens its own sheet', shopView.panel.last.title === '🏷️ Shop');
+      check('the chip is the engine\'s active count', shopBoard.querySelector('.cards-count').textContent === '4', shopBoard.querySelector('.cards-count').textContent);
+      check('the faint line says what is listed', /4 listed/.test(textOf(shopBoard)), textOf(shopBoard));
+      check('and what has dropped off', /2 dropped off/.test(textOf(shopBoard)), textOf(shopBoard));
+      // A storefront has nothing ending in two hours. The dot means exactly
+      // one thing on this tile and it is not this face's to raise.
+      check('no amber dot on this face', countOf(shopBoard, 'cards-dot') === 0);
+
+      const noneGone = openShop({ gone: [] });
+      check('nothing dropped off says nothing, rather than "0 dropped off"', !/dropped off/.test(textOf(noneGone.board)), textOf(noneGone.board));
+      check('but still says what is listed', /4 listed/.test(textOf(noneGone.board)));
+      noneGone.panel.close();
+
+      // -- shop: null --------------------------------------------------------
+      let shopNullThrew = null;
+      let noShop = null;
+      try {
+        noShop = new El('div');
+        cards.render(noShop, cardsTile({ watch: null, shop: null, pc: null }), { id: 'cards', actions: {} });
+      } catch (e) { shopNullThrew = e; }
+      check('shop: null never throws', !shopNullThrew, shopNullThrew && shopNullThrew.message);
+      check('it keeps today\'s greyed "soon" button', countOf(noShop, 'cards-btn-soon') === 3 && /soon/.test(cardBtns(noShop)[1].textContent));
+      check('and that button is inert', cardBtns(noShop)[1].getAttribute('disabled') === 'disabled');
+      check('with no shop line under the menu', !/listed/.test(textOf(noShop)));
+
+      // -- the Listed section ------------------------------------------------
+      const shopHeads = shopSheet.querySelectorAll('.cards-head').map((h) => h.textContent);
+      check('two sections, listed then gone', shopHeads.join('|') === 'Listed (4)|No longer active', shopHeads.join('|'));
+      const shopTitles = shopSheet.querySelectorAll('.shop-row').map((r) => r.querySelector('.cards-title').textContent);
+      check('every listing is a row, in the order delivered', shopTitles.join('|') === 'OFFERS-ONE|LOT-AUCTION|NO-DAYS|PLAIN-ONE', shopTitles.join('|'));
+      const shopLines = shopSheet.querySelectorAll('.shop-line').map((n) => n.textContent);
+      check('a row leads with its asking price', /\$179\.00/.test(shopLines[0]), shopLines[0]);
+
+      // -- the chips ---------------------------------------------------------
+      check('a listing that takes offers says OBO', countOf(shopSheet, 'cards-chip-obo') === 2, String(countOf(shopSheet, 'cards-chip-obo')));
+      check('and an auction says AUCTION instead', /AUCTION/.test(shopLines[1]) && !/OBO/.test(shopLines[1]), shopLines[1]);
+      check('the format chip is the neutral tone, never a ranked one', shopSheet.querySelectorAll('.cards-chip').every((c) => !/max|band/.test(c.className)));
+      check('a plain BIN says neither', !/OBO|AUCTION/.test(shopLines[3]), shopLines[3]);
+      check('and never spells out "BIN"', !/\bBIN\b/.test(textOf(shopSheet)));
+      // `offers` is the field that decides the OBO chip, not `type`.
+      const noOffers = openShop({ listings: [shopItem({ type: 'OBO', offers: false })] });
+      check('offers: false wears no OBO chip, whatever the type says', countOf(noOffers.sheet, 'cards-chip-obo') === 0);
+      noOffers.panel.close();
+      const auctionOffers = openShop({ listings: [shopItem({ type: 'AUCTION', offers: true })] });
+      check('an auction that also takes offers still reads AUCTION', /AUCTION/.test(textOf(auctionOffers.sheet)) && countOf(auctionOffers.sheet, 'cards-chip-obo') === 0);
+      auctionOffers.panel.close();
+
+      // -- the age: a number, never a verdict --------------------------------
+      check('a listing says how long it has been up', /45 days/.test(shopLines[0]), shopLines[0]);
+      const oneDay = openShop({ listings: [shopItem({ days_listed: 1 })] });
+      check('and one day up is not "1 days"', /\b1 day(?!s)/.test(oneDay.sheet.querySelector('.shop-line').textContent), oneDay.sheet.querySelector('.shop-line').textContent);
+      oneDay.panel.close();
+      const noDays = shopLines[2];
+      check('a listing with no age drops the clause entirely', !/day/.test(noDays), noDays);
+      check('printing no "null", "NaN" or "undefined" in its place', !/null|NaN|undefined/i.test(noDays), noDays);
+      // THE RULING, as an assertion. Every row in this sheet — including one
+      // that has been up for a year — must carry the same neutral classes.
+      // No warn, no danger, no stale, no "aged" anything.
+      const ageBanned = ['warn', 'cards-warn', 'danger', 'bad', 'stale', 'cards-stale', 'shop-days-warn', 'shop-days-old', 'cards-ends-soon'];
+      for (const cls of ageBanned) {
+        check(`no .${cls} on any shop row, at any age`, countOf(shopSheet, cls) === 0);
+      }
+      const ancient = openShop({ listings: [shopItem({ item_id: 'old', title: 'ANCIENT', days_listed: 365 })] });
+      check('a listing 365 days old still renders', /365 days/.test(textOf(ancient.sheet)));
+      check('with the same class as a fresh one', ancient.sheet.querySelector('.shop-days').className === 'shop-days', ancient.sheet.querySelector('.shop-days').className);
+      check('and no warning class anywhere on its row', ageBanned.every((c) => countOf(ancient.sheet, c) === 0));
+      check('nor any word editorialising about it', !/\bstale\b|\bold\b|no offers|sitting/i.test(textOf(ancient.sheet)), textOf(ancient.sheet).slice(0, 200));
+      ancient.panel.close();
+
+      // -- photos and links ---------------------------------------------------
+      const shopImgs = shopSheet.querySelectorAll('IMG');
+      check('a photo is a photo', shopImgs.length === 3 && shopImgs[0].getAttribute('src') === 'https://example.com/mock/shop/1.jpg');
+      check('and leaks no referrer', shopImgs.every((i) => i.getAttribute('referrerpolicy') === 'no-referrer'));
+      check('a listing with no photo holds the space instead', countOf(shopSheet, 'cards-thumb-none') === 1);
+      check('no broken img is emitted for it', shopImgs.every((i) => !!i.getAttribute('src')));
+      const shopLinks = shopSheet.querySelectorAll('.shop-row');
+      check('every live listing is tappable', shopLinks.length === 4 && shopLinks.every((r) => r.tagName === 'A'));
+      check('opening a new tab, with no handle on this page', shopLinks.every((a) => a.getAttribute('target') === '_blank' && /noopener/.test(a.getAttribute('rel') || '')));
+      const junkShop = openShop({ listings: [shopItem({ title: 'JUNK-URL', url: 'javascript:alert(1)' })] });
+      check('a javascript: url is inert, and the row survives', junkShop.sheet.querySelectorAll('A').length === 0 && /JUNK-URL/.test(textOf(junkShop.sheet)));
+      junkShop.panel.close();
+
+      // -- No longer active ---------------------------------------------------
+      //
+      // NOT "Sold". eBay's public data cannot tell a sale from an expiry, and
+      // a header that claimed otherwise would be the page asserting a fact it
+      // does not have.
+      check('the dropped-off section is headed "No longer active"', shopHeads.includes('No longer active'));
+      check('and the word "Sold" is on no section header', !shopSheet.querySelectorAll('.cards-head').some((h) => /Sold/.test(h.textContent)), shopHeads.join('|'));
+      check('the ambiguity is said out loud, once', countOf(shopSheet, 'shop-note') === 1 && /can't tell them apart/.test(textOf(shopSheet)));
+      const goneRows = shopSheet.querySelectorAll('.shop-gone-row');
+      check('every gone listing is a row', goneRows.length === 2);
+      check('carrying its title', /GONE-ONE/.test(goneRows[0].textContent) && /GONE-TWO/.test(goneRows[1].textContent));
+      check('its last asking price', /\$410\.00/.test(goneRows[0].textContent), goneRows[0].textContent);
+      // A Central business date, printed exactly as delivered — rule 7.
+      check('and how long it has been gone, verbatim', /since 2026-09-18/.test(goneRows[0].textContent), goneRows[0].textContent);
+      // The listing is gone and its URL 404s, so a link would be a promise
+      // the page cannot keep.
+      check('a gone row is not a link', goneRows.every((r) => r.tagName === 'DIV'));
+      check('and carries no click handler either', goneRows.every((r) => !r.listeners || !r.listeners.click));
+      const goneLess = openShop({ gone: [] });
+      check('nothing gone means no section at all', !/No longer active/.test(textOf(goneLess.sheet)));
+      check('nor the muted line under it', countOf(goneLess.sheet, 'shop-note') === 0);
+      check('nor an empty state pretending something is missing', countOf(goneLess.sheet, 'shop-gone-row') === 0);
+      goneLess.panel.close();
+
+      // -- NOTHING here may read as a Watch flag or a PC find -----------------
+      for (const banned of [
+        'cards-fmv', 'cards-fmv-good', 'cards-fmv-muted', 'cards-check', 'cards-chip-max',
+        'cards-chip-band', 'cards-bookage', 'cards-row', 'cards-money', 'cards-allin',
+        'cards-nb-row', 'cards-fold', 'cards-ends', 'cards-countdown',
+        'pc-row', 'pc-list', 'pc-serial', 'pc-grade', 'pc-one', 'pc-line', 'pc-marks', 'pc-showing',
+      ]) {
+        check(`no .${banned} anywhere in the shop sheet`, countOf(shopSheet, banned) === 0);
+      }
+      const shopRowsText = shopSheet.querySelectorAll('.shop-list, .shop-gone, .cards-head').map((n) => n.textContent).join(' ');
+      check('no ✓ on the rows', !/✓/.test(shopRowsText));
+      check('no percentage of anything', !/%/.test(shopRowsText) && !/of FMV/i.test(shopRowsText));
+      check('no MAX bid', !/\bMAX\b/.test(shopRowsText));
+      check('no gate language', !/\bgate\b/i.test(textOf(shopSheet)));
+      check('no serial and no grade', !/\bPSA \d|\bBGS \d|\bSGC \d/.test(shopRowsText) && !/⬥|◆|★/.test(shopRowsText));
+      // Out of scope by ruling: both need OAuth and the legacy Trading API,
+      // and eBay's own app already pushes them. No stub promising them later.
+      // The footer is excluded deliberately: it is the vault's own line, and
+      // it names watchers and offers to say they live in the eBay app — the
+      // opposite of the affordance this scan is looking for.
+      check('no watchers on the rows', !/watcher/i.test(shopRowsText));
+      check('no pending offers on the rows', !/pending offer/i.test(shopRowsText));
+      check('and nothing promising either "soon"', !/soon|coming/i.test(shopRowsText));
+
+      // -- the footer ---------------------------------------------------------
+      check('one footer, at the bottom', countOf(shopSheet, 'cards-foot') === 1);
+      check(
+        'the vault\'s words plus eBay\'s credit',
+        shopSheet.querySelector('.cards-foot').textContent ===
+          "Active listings and sold-detection. Watchers and pending offers live in the eBay app — see C6. · eBay data via Browse API",
+        shopSheet.querySelector('.cards-foot').textContent
+      );
+      const noFooter = openShop({}, { shop_footer: null });
+      check('a payload with no footer still credits eBay', noFooter.sheet.querySelector('.cards-foot').textContent === 'eBay data via Browse API');
+      noFooter.panel.close();
+
+      // -- empty, ragged, half-broken -----------------------------------------
+      const emptyShop = openShop({ listings: [], gone: [], active: 0 });
+      check('an empty shop says so rather than going blank', /Nothing listed right now/.test(textOf(emptyShop.sheet)));
+      check('the section is still headed, at zero', /Listed \(0\)/.test(textOf(emptyShop.sheet)));
+      check('with no gone section over nothing', !/No longer active/.test(textOf(emptyShop.sheet)));
+      check('and the footer still appears once', countOf(emptyShop.sheet, 'cards-foot') === 1);
+      check('the board still shows the chip', emptyShop.board.querySelector('.cards-count').textContent === '0');
+      check('and the faint line', /0 listed/.test(textOf(emptyShop.board)));
+      emptyShop.panel.close();
+
+      const shopErrors = openShop({ errors: ['eBay Browse API: the storefront sweep timed out'] });
+      check('what the sweep could not reach is said at the top', /feed trouble: eBay Browse API: the storefront sweep timed out/.test(textOf(shopErrors.sheet)));
+      check('and the listings it DID get still render', countOf(shopErrors.sheet, 'shop-row') === 4);
+      shopErrors.panel.close();
+
+      let raggedShopThrew = null;
+      let raggedShop = null;
+      try {
+        raggedShop = openShop({
+          listings: [{ item_id: 'r' }, { title: 'HALF', price: 10 }, null, 'nope'],
+          gone: [{ item_id: 'g' }, null],
+          active: null,
+        });
+      } catch (e) { raggedShopThrew = e; }
+      check('a half-missing payload never throws', !raggedShopThrew, raggedShopThrew && raggedShopThrew.message);
+      check('every entry still lays out as a row', raggedShop && countOf(raggedShop.sheet, 'shop-row') === 4);
+      check('a listing with no title says so', /\(untitled listing\)/.test(textOf(raggedShop.sheet)));
+      check('a gone entry with nothing in it still lays out', countOf(raggedShop.sheet, 'shop-gone-row') === 2);
+      check('no "undefined" survives it', !/undefined/.test(textOf(raggedShop.sheet)));
+      check('no "NaN" either', !/NaN/.test(textOf(raggedShop.sheet)));
+      check('and no "null" printed as a word', !/\bnull\b/.test(textOf(raggedShop.sheet)));
+      check('an active count that never arrived raises no chip', countOf(raggedShop.board, 'cards-count') === 0);
+      raggedShop.panel.close();
+
+      // -- nothing ticks in here ----------------------------------------------
+      //
+      // A storefront moves slowly and has no hammer coming. A countdown here
+      // would be the tile inventing urgency it has no evidence for.
+      check('the shop sheet starts no clock', timers.live.size === 0, String(timers.live.size));
+      check('and registers no visibility listener', docListenerCount('visibilitychange') === 0);
+
+      // -- all three faces at once, and none of them bleeds -------------------
+      //
+      // The regression that matters: turning Shop on must not change a pixel
+      // of Watch or PC. Every fixture in the two blocks above is shop-free on
+      // purpose; this is the one board that carries all three.
+      const allPanel = fakePanel();
+      const allThree = withNow(NOW_UTC, () => {
+        const r = new El('div');
+        const d = deskData();
+        d.shop = shopData().shop;
+        d.shop_footer = shopData().shop_footer;
+        d.pc = pcData().pc;
+        d.pc_footer = pcData().pc_footer;
+        cards.render(r, cardsTile(d), { id: 'cards', actions: allPanel.actions });
+        return r;
+      });
+      check('three live buttons', labelsOf(allThree).join('|') === 'Watch|Shop|PC' && countOf(allThree, 'cards-btn-soon') === 0);
+      check('three faint lines, one per face', countOf(allThree, 'tile-foot') === 3, String(countOf(allThree, 'tile-foot')));
+      check('in the menu\'s order', /14 targets[\s\S]*4 listed[\s\S]*79 bookends/.test(textOf(allThree)), textOf(allThree));
+      check('the Watch dot still rises from the Watch face', countOf(allThree, 'cards-dot') === 1);
+
+      withNow(NOW_UTC, () => cardsTap(cardBtns(allThree)[0]));
+      const watchAgain = allPanel.last.body;
+      check('the Watch sheet is untouched by the new face', countOf(watchAgain, 'cards-row') === 5 && countOf(watchAgain, 'cards-fmv-good') === 1);
+      check('and carries no shop row', countOf(watchAgain, 'shop-row') === 0 && countOf(watchAgain, 'shop-gone-row') === 0);
+      withNow(NOW_UTC, () => cardsTap(cardBtns(allThree)[2]));
+      const pcAgain = allPanel.last.body;
+      check('the PC sheet is untouched too', countOf(pcAgain, 'pc-row') === 5 && countOf(pcAgain, 'pc-serial') === 5);
+      check('and carries no shop row', countOf(pcAgain, 'shop-row') === 0 && countOf(pcAgain, 'shop-gone-row') === 0);
+      allPanel.close();
+
+      // -- a tap with no panel action -----------------------------------------
+      let shopTapThrew = null;
+      try {
+        const inertShop = new El('div');
+        cards.render(inertShop, cardsTile(shopData()), { id: 'cards', actions: {} });
+        cardsTap(cardBtns(inertShop)[1]);
+      } catch (e) { shopTapThrew = e; }
+      check('a shop tap with no panel action never reaches the page', !shopTapThrew, shopTapThrew && shopTapThrew.message);
+
+      // -- nothing anywhere reads as a bug ------------------------------------
+      const shopText = `${textOf(shopSheet)} ${textOf(shopBoard)}`;
+      check('no "undefined", "NaN" or "Invalid Date" on the shop face', !/undefined|NaN|Invalid Date/.test(shopText), shopText.slice(0, 160));
+    } finally {
+      for (const v of shopOpened) v.panel.close();
+    }
+    check('no shop sheet is left ticking', timers.live.size === 0, String(timers.live.size));
+    check('and none is left listening', docListenerCount('visibilitychange') === 0);
+
+    // -- the ruling, as a source scan ----------------------------------------
+    //
+    // The class scans above catch a shop row that LOOKS like a flag or a
+    // find. This catches the likelier mistake a year from now: someone
+    // reaching for `listingRow` or `pcRow` because all three sheets have rows
+    // in them — and someone reaching for a colour on the age.
+    check('the shop sheet builds its own rows', /function shopRow\(/.test(CARDS_SRC));
+    const SHOP_REGION = CARDS_SRC.slice(CARDS_SRC.indexOf('function planShopItem('), CARDS_SRC.indexOf('function soonButton('));
+    check('and never borrows the Watch row', SHOP_REGION.length > 500 && !/listingRow/.test(SHOP_REGION), String(SHOP_REGION.length));
+    check('nor the PC one', !/pcRow|serialBadge|gradeChip/.test(SHOP_REGION));
+    check('nor the gate chip', !/fmvChip|cards-fmv|cards-chip-max|cards-chip-band/.test(SHOP_REGION));
+    check('nor a countdown', !/msUntil|countdown|endsLine|startClock/.test(SHOP_REGION));
+    // The age ruling, held at the source: there is no branch on `days` that
+    // picks a class, and no warn token within reach of one.
+    check('the age is never branched on for a class', !/days\s*[<>]=?|days_listed\s*[<>]=?/.test(SHOP_REGION), SHOP_REGION.slice(0, 80));
+    // Every class this region emits is a bare string literal — no template,
+    // no ternary — so there is no branch anywhere that could pick a tone from
+    // an age. That is the age ruling held at the source rather than at the
+    // DOM. (The one `warn` in here is `staleMark`'s tile-level rule-8 mark,
+    // which is about the FEED, not about any row.)
+    const SHOP_CLASSES = [...SHOP_REGION.matchAll(/cls:\s*([^,}\n]+)/g)].map((m) => m[1].trim());
+    check('every class it emits is a bare literal', SHOP_CLASSES.length > 5 && SHOP_CLASSES.every((c) => /^'[a-z0-9 -]+'$/.test(c)), SHOP_CLASSES.join(' | '));
+    check('so no branch can pick a tone from an age', !/cards-warn|--warn|-danger|-stale|shop-days-/.test(SHOP_REGION));
+    check('the shop stylesheet colours no age either', !/\.shop-days[^{]*\{[^}]*var\(--(warn|bad)\)/.test(CARDS_CSS));
+    check('and defines exactly one rule for it', (CARDS_CSS.match(/\.shop-days\b/g) || []).length === 1, String((CARDS_CSS.match(/\.shop-days\b/g) || []).length));
+    // Out of scope by ruling — not "later", not a stub.
+    check('the module names no watcher affordance', !/watcher/i.test(CARDS_SRC));
+    check('nor a pending-offer one', !/pending_offer|pendingOffer/i.test(CARDS_SRC));
   });
 
   console.log(`\n${pass} passed, ${failures.length} failed`);
