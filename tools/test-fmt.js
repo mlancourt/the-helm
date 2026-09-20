@@ -115,6 +115,28 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('ctTime on junk is empty', fmt.ctTime('not a time'), '');
   eq('ago on junk is empty', fmt.ago('not a time'), '');
 
+  // ctTime is the cards tile's auction end time, so the zone pin is load
+  // bearing: the board is Matt's CENTRAL board, and opening it on a laptop in
+  // Denver or a phone still set to Tokyo must not shift an auction by an
+  // hour. `timeZone: 'America/Chicago'` is hard-coded in the formatter and
+  // the locale is hard-coded 'en-US' — neither is read off the device. This
+  // whole file is re-run under four timezones and the transcripts are diffed,
+  // so if any of that ever started leaking the machine's zone (or its 24-hour
+  // clock preference), these lines are where it would show.
+  eq('ctTime pins Central, whatever the device thinks', fmt.ctTime('2026-09-21T00:48:00.000Z'), '7:48 PM');
+  eq('and the zone, not the device, decides the date it lands on', fmt.ctTime('2026-09-21T04:30:00.000Z'), '11:30 PM');
+  eq('an instant with a non-Z offset formats the same', fmt.ctTime('2026-09-20T19:48:00-05:00'), '7:48 PM');
+  eq('the same moment written three ways agrees', new Set([
+    fmt.ctTime('2026-09-21T00:48:00.000Z'),
+    fmt.ctTime('2026-09-20T19:48:00-05:00'),
+    fmt.ctTime('2026-09-21T02:48:00+02:00'),
+  ]).size, 1);
+  eq('midnight Central reads 12 AM, never 24:00', fmt.ctTime('2026-09-21T05:00:00.000Z'), '12:00 AM');
+  eq('noon Central reads 12 PM', fmt.ctTime('2026-09-20T17:00:00.000Z'), '12:00 PM');
+  // Standard time, not daylight — the pin has to follow Central's own rules
+  // rather than a fixed -5 offset.
+  eq('and it follows Central across the DST boundary', fmt.ctTime('2027-01-15T01:48:00.000Z'), '7:48 PM');
+
   console.log('\nnumbers');
   eq('units integer', fmt.units(2), '2u');
   eq('units fractional', fmt.units(1.5), '1.5u');

@@ -586,10 +586,14 @@ gate means **no chip at all**, not a zero.
 **Auction rows count down live (v1.6.0).** Each auction row reads
 
 ```
-⏱ 1h 42m     ends 2026-09-20T19:48
+⏱ 1h 42m     ends 7:48 PM
 ```
 
-— the countdown in front, the wall stamp muted behind it. The ladder is
+— the countdown in front, the clock time muted behind it. **Both halves come
+from `ends_utc`**, and the clock time is formatted by `ctTime()`, which pins
+`America/Chicago` in the formatter rather than reading the device. That pin is
+load bearing: this is Matt's Central board, and opening it from a hotel in
+Tokyo must not shift every auction by fourteen hours. The ladder is
 `2d 4h` over a day, `3h 07m` inside one, `42m` inside the hour, `12m 30s`
 inside the last quarter-hour, and `ended` at zero. The seconds appear in
 exactly one window, and that is the point: a ticking second on a lot that
@@ -601,8 +605,8 @@ they do different jobs:
 
 | field | example | what it is | what the page does |
 |---|---|---|---|
-| `ends_ct` | `2026-09-20T19:48` | Central **wall-clock text**, no offset | printed character for character, **never parsed** |
-| `ends_utc` | `2026-09-21T00:48:00.000Z` | a real **instant** | all countdown arithmetic |
+| `ends_utc` | `2026-09-21T00:48:00.000Z` | a real **instant** | the source of truth: the countdown **and** the displayed time, via Central-pinned `ctTime()` |
+| `ends_ct` | `2026-09-20T19:48` | Central **wall-clock text**, no offset | **not a display field** — printed raw on a pre-v1.6 row and nowhere else, **never parsed** |
 
 The reason rule 7 forbids `new Date(ends_ct)` is that a string with no offset
 makes the browser guess a zone, and it guesses the phone's — wrong by five
@@ -611,12 +615,15 @@ there is nothing left to guess. The arithmetic lives in `msUntil()` and
 `countdown()` in `lib/fmt.js`, so `new Date` does not appear in `cards.js` at
 all, and `msUntil()` **refuses any string without an offset** — hand it
 `ends_ct` by mistake and you get no countdown, which is the correct answer,
-never a confidently wrong one. The tests prove both: a source scan, and a Date
-spy that asserts no `ends_ct` value ever reached a constructor.
+never a confidently wrong one. That refusal is the enforcement point. The
+tests prove it three ways: a source scan, a Date spy asserting no `ends_ct`
+value ever reached a constructor, and an assertion that a row with an instant
+renders no machine-readable timestamp at all.
 
 A row whose `ends_utc` is missing or unreadable — an older snapshot still in
-the service worker's cache — falls back to the pre-v1.6.0 line: `ends` plus
-the wall stamp, no countdown, no amber, no error.
+the service worker's cache — falls back to the pre-v1.6 line: `ends` plus the
+raw wall stamp, no countdown, no amber, no error. That is the only place
+`ends_ct` reaches the DOM.
 
 **One interval for the whole sheet**, never one per row: 1000 ms while
 anything is inside the hour, 30000 ms otherwise, re-armed only when the

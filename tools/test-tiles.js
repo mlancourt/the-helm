@@ -2592,9 +2592,14 @@ async function main() {
     check('a new listing wears a new mark', countOf(sheet, 'cards-new-mark') === 2);
     check('the seller and its feedback are shown', /mock_seller/.test(textOf(sheet)) && /1,204 fb/.test(textOf(sheet)));
 
-    // -- ends_ct: verbatim, amber inside two hours ---------------------------
+    // -- the end time: Central, formatted off the instant --------------------
+    //
+    // 00:29Z and 00:31Z on the 19th are 7:29 PM and 7:31 PM Central on the
+    // 18th. The wall stamp the payload also carries is NOT what is printed —
+    // it is the pre-v1.6 fallback and nothing else.
+    check('the row prints Central clock time', /ends 7:29 PM/.test(textOf(sheet)) && /ends 7:31 PM/.test(textOf(sheet)), textOf(sheet).slice(0, 200));
     for (const a of AUCTIONS) {
-      check(`ends_ct ${a.ends_ct} appears exactly as given`, textOf(sheet).includes(`ends ${a.ends_ct}`));
+      check(`the raw ends_ct ${a.ends_ct} is not on the page`, !textOf(sheet).includes(a.ends_ct));
     }
     const ends = sheet.querySelectorAll('.cards-ends');
     check('the auction inside two hours is amber', ends[0].className.includes('cards-ends-soon'));
@@ -2732,6 +2737,12 @@ async function main() {
     check('it never adds price and ship into an all-in', !/(price|ship)\s*\+\s*[a-z]*\.?(ship|price)/i.test(CARDS_SRC));
     check('nor multiplies an FMV by the gate', !/(fmv\s*\*|\*\s*[a-z]*\.?gate)/i.test(CARDS_SRC));
     check('and never reformats ends_ct', !/ends_ct[\s\S]{0,60}(ctKick|ctClock|prettyDate)/.test(CARDS_SRC));
+    // The invariant, stated as a scan as well as proven by the spy below:
+    // the wall stamp is never handed to anything that reads a date. It is
+    // printed raw on the one row that has nothing else, and that is all.
+    check('nor hands endsCt to a date reader', !/(msUntil|ctTime|Date\.parse|new Date)\s*\(\s*[a-z]*\.?endsCt/i.test(CARDS_SRC));
+    check('the end time is formatted off the instant', /ctTime\(\s*item\.endsUtc\s*\)/.test(CARDS_SRC));
+    check('and the countdown counted off it too', /msUntil\(\s*item\.endsUtc\s*\)/.test(CARDS_SRC));
     check('it holds no state between renders', !/localStorage/.test(CARDS_SRC));
 
     // -- v1.6.0: the live countdown ------------------------------------------
@@ -2833,17 +2844,61 @@ async function main() {
       check('greyed rather than amber', countOf(done.sheet, 'cards-ends-done') === 1 && countOf(done.sheet, 'cards-ends-soon') === 0);
       check('the whole row greys, not just its clock', countOf(done.sheet, 'cards-row-ended') === 1);
 
-      // -- ends_ct: in the DOM exactly as delivered, on every row ------------
+      // -- the displayed time comes off the instant, in Central --------------
+      //
+      // The invariant used to be "ends_ct reaches the DOM character for
+      // character". That was the wrong invariant: `ends_ct` is not a display
+      // field at all now, it is the pre-v1.6 fallback. The invariant that
+      // matters is the one below and in the Date spy further down — `ends_ct`
+      // is never handed to Date, Date.parse or msUntil.
       const stamps = openWatch([
         auction('S1', 90 * MIN),
         auction('S2', 3 * 24 * HOUR),
         auction('S3', -MIN),
         listing({ item_id: 'S4', title: 'S4', type: 'AUCTION', ends_ct: '2026-09-20T19:48', ends_utc: null }),
       ]);
-      for (const want of ['2026-09-20T13:00 (S1)', '2026-09-20T13:00 (S2)', '2026-09-20T13:00 (S3)', '2026-09-20T19:48']) {
-        check(`ends_ct "${want}" reaches the page character for character`, textOf(stamps.sheet).includes(`ends ${want}`));
+      check('every auction row keeps an end-time line', countOf(stamps.sheet, 'cards-ends') === 4);
+      // CLOCK is 18:00Z, which is 1:00 PM Central; S1 is 90 minutes past it.
+      check('a row with an instant prints Central clock time', /ends 2:30 PM/.test(textOf(stamps.sheet)), textOf(stamps.sheet).slice(0, 240));
+      check('the fixtures\' raw wall stamps stay off the page', !textOf(stamps.sheet).includes('2026-09-20T13:00'));
+      // No row with an instant may leak a machine-readable timestamp: not the
+      // wall stamp, not the ISO instant it is formatted from.
+      const withInstant = stamps.sheet.querySelectorAll('.cards-ends').slice(0, 3);
+      for (const [i, line] of withInstant.entries()) {
+        check(
+          `row S${i + 1} renders no raw ISO string`,
+          !/\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(line.textContent),
+          line.textContent
+        );
       }
-      check('every auction row keeps its stamp', countOf(stamps.sheet, 'cards-ends') === 4);
+      check('and each of them reads as a clock time', withInstant.every((l) => /ends \d{1,2}:\d{2} (AM|PM)/.test(l.textContent)), withInstant.map((l) => l.textContent).join(' | '));
+      // The one row that has no instant is the one place ends_ct still shows,
+      // raw and unparsed — a pre-v1.6 payload must not lose its end time.
+      check('the legacy row alone prints the raw wall stamp', textOf(stamps.sheet).includes('ends 2026-09-20T19:48'));
+
+      // -- and the device's own timezone does not get a vote -----------------
+      //
+      // This is a CENTRAL board. Matt opening it from a hotel in Tokyo, or on
+      // a laptop whose clock is still set to last week's trip, must read the
+      // same auction end time he would read at his desk. `ctTime` pins
+      // America/Chicago in the formatter rather than taking the device's
+      // zone, so flipping TZ underneath a render must change nothing at all.
+      const zoned = (tz) => {
+        const had = process.env.TZ;
+        process.env.TZ = tz;
+        try {
+          const v = openWatch([auction('TZ', 90 * MIN)]);
+          return v.sheet.querySelector('.cards-ends-at').textContent;
+        } finally {
+          if (had === undefined) delete process.env.TZ; else process.env.TZ = had;
+        }
+      };
+      const central = zoned('America/Chicago');
+      check('the end time reads Central at Matt\'s desk', central === 'ends 2:30 PM', central);
+      for (const tz of ['Asia/Tokyo', 'UTC', 'Europe/Berlin', 'Pacific/Kiritimati']) {
+        const seenTz = zoned(tz);
+        check(`and identically with the device set to ${tz}`, seenTz === central, seenTz);
+      }
 
       // -- a pre-v1.6 payload: the old line, and no breakage -----------------
       const legacy = openWatch([listing({ item_id: 'OLD', title: 'OLD', type: 'AUCTION', ends_ct: '2026-09-20T19:48', ends_utc: null })]);

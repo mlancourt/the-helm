@@ -26,25 +26,31 @@
  * loses the green tick and the badge. Auctions never count toward the badge
  * either: a current bid is not a price, and it has hours left to move.
  *
- * RULE 7, SATISFIED RATHER THAN BENT (v1.6.0). An auction now arrives with
- * two end times and they do different jobs:
+ * RULE 7, SATISFIED RATHER THAN BENT. An auction arrives with two end times
+ * and they do very different jobs:
  *
+ *   - `ends_utc` — '2026-09-21T00:48:00.000Z', a real instant. THE SOURCE OF
+ *     TRUTH for both the countdown and the clock time on the screen (Matt,
+ *     2026-09-20). Parsing it is exact in every timezone because it carries
+ *     its offset; there is nothing left to guess. It is displayed through
+ *     `ctTime`, which pins America/Chicago explicitly — this is a Central
+ *     board, and a device in another zone must not shift it.
  *   - `ends_ct` — '2026-09-20T19:48', Central WALL-CLOCK text with no offset.
- *     Printed exactly as it arrived and never parsed, because a browser
- *     handed that string has to guess a zone and guesses the phone's. That
- *     guess is the disqualifying bug rule 7 exists to forbid.
- *   - `ends_utc` — '2026-09-21T00:48:00.000Z', a real instant. ALL countdown
- *     arithmetic uses this one, and parsing it is exact in every timezone,
- *     because there is nothing left to guess. This is why the engine started
- *     publishing it.
+ *     NOT a display field. It is the pre-v1.6 fallback and nothing else: the
+ *     only row that prints it is one whose `ends_utc` is missing, and it is
+ *     printed raw. It is never handed to Date, Date.parse or msUntil, because
+ *     a browser given a string with no offset has to guess a zone and guesses
+ *     the device's — the disqualifying bug rule 7 exists to forbid.
  *
  * The maths lives in `msUntil`/`countdown` in lib/fmt.js, so no date is
  * parsed in this file at all — `new Date` does not appear below, which keeps
- * the source scan in the tests a straight yes/no.
+ * the source scan in the tests a straight yes/no. `msUntil` is the
+ * enforcement point: it refuses any string without an offset, so `ends_ct`
+ * arriving there by mistake yields no countdown rather than a wrong one.
  *
  * A row whose `ends_utc` is missing or unreadable — an older snapshot still
- * in the service worker's cache — falls back to the pre-v1.6.0 line: `ends`
- * plus the wall stamp, no countdown, no amber, no error.
+ * in the service worker's cache — falls back to the pre-v1.6 line: `ends`
+ * plus the raw wall stamp, no countdown, no amber, no error.
  *
  * RULE 4, and the one thing worth flagging: the thumbnails are `<img>` tags
  * pointing at the listing host's own CDN, which is a third external origin
@@ -275,13 +281,19 @@ function sellerLine(item) {
 }
 
 /**
- * The end-time line: a live countdown, with the wall stamp behind it.
+ * The end-time line: a live countdown, with the wall-clock time behind it.
  *
- *     ⏱ 1h 42m        ends 2026-09-20T19:48
+ *     ⏱ 1h 42m        ends 7:48 PM
  *
- * The countdown is the number Matt reads; the stamp is the one he can trust
- * without arithmetic, and it is `ends_ct` printed character for character
- * (rule 7 — it is never reformatted, not even to drop the date).
+ * BOTH halves come from `ends_utc` (Matt, 2026-09-20, overturning v1.6.0's
+ * first cut). The countdown is the number he reads at a glance; the clock
+ * time is the one he can trust without arithmetic, and it is formatted by
+ * `ctTime`, which pins America/Chicago explicitly. That pin is the whole
+ * point: this is a Central-time board, and opening it on a laptop in Denver
+ * must not quietly shift every auction by an hour.
+ *
+ * `ends_ct` is NOT a display field. It is the pre-v1.6 fallback below and
+ * nothing else — the one place it reaches the DOM, printed raw and unparsed.
  *
  * Pushes a clock entry onto `clocks` when there is a real instant to count
  * from, so the sheet's single interval can repaint it. Returns null when the
@@ -291,19 +303,21 @@ function endsLine(item, clocks) {
   const ms = msUntil(item.endsUtc);
 
   // No instant, or one this browser cannot read: the pre-v1.6.0 line, intact.
-  // A legacy payload must lose the countdown, not the row.
+  // A legacy payload must lose the countdown, not the row. The raw stamp is
+  // all there is to show, so it is shown — as text, never parsed.
   if (ms === null) {
     if (!item.endsCt) return null;
     return { node: el('div', { cls: 'cards-ends' }, [el('span', { text: `ends ${item.endsCt}` })]), entry: null };
   }
 
   const value = el('span', { cls: 'cards-countdown-value', text: countdown(ms) });
+  const clock = ctTime(item.endsUtc);
   const node = el('div', { cls: 'cards-ends' }, [
     el('span', { cls: 'cards-countdown' }, [
       el('span', { cls: 'cards-clock-glyph', attrs: { 'aria-hidden': 'true' }, text: '⏱' }),
       value,
     ]),
-    item.endsCt ? el('span', { cls: 'cards-ends-at', text: `ends ${item.endsCt}` }) : null,
+    clock ? el('span', { cls: 'cards-ends-at', text: `ends ${clock}` }) : null,
   ]);
 
   // `ms` is kept so the row can be greyed at build time without a second
