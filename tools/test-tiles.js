@@ -2739,6 +2739,34 @@ async function main() {
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/^\s*\/\/.*$/gm, '');
     const CARDS_CSS = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+
+    /**
+     * One face's slice of the module, by the function that opens it and the
+     * function that opens the next one.
+     *
+     * The scans below are "this face never reaches for that face's row", and
+     * they are only worth anything if the slice is really that face. A raw
+     * `indexOf` pair cannot promise it: a missing END anchor returns -1,
+     * `slice(start, -1)` runs to the end of the file, and a scan for
+     * `listingRow` over the whole module still passes — vacuously, and
+     * silently, exactly when a refactor has just moved the thing it was
+     * guarding. (A `length > 500` guard does not catch it either: the
+     * over-wide region is longer, not shorter.)
+     *
+     * So both anchors are checked by name first, and the slice is only taken
+     * once both exist and are the right way round. A rename that breaks the
+     * boundary now fails the run and says which anchor went missing, rather
+     * than quietly widening the net.
+     */
+    function faceRegion(label, from, to) {
+      const a = CARDS_SRC.indexOf(from);
+      const b = CARDS_SRC.indexOf(to);
+      check(`the ${label} region's opening anchor still exists (${from})`, a !== -1);
+      check(`and its closing anchor does too (${to})`, b !== -1);
+      check(`and they bound a region, in that order`, a !== -1 && b !== -1 && b > a, `${a} -> ${b}`);
+      return a !== -1 && b !== -1 && b > a ? CARDS_SRC.slice(a, b) : '';
+    }
+
     check('the module never parses a date string', !/new Date|Date\.parse/.test(CARDS_SRC));
     // The engine's arithmetic is the engine's. A number computed here would
     // be indistinguishable from a real one on the screen, and wrong.
@@ -3318,7 +3346,10 @@ async function main() {
     // code. If `listingRow` ever appears in there, someone has reached for
     // the Watch row because both sheets have rows in them — which is exactly
     // the mistake the ruling names.
-    const PC_REGION = CARDS_SRC.slice(CARDS_SRC.indexOf('function planFind('), CARDS_SRC.indexOf('function planShopItem('));
+    // planFind opens the PC net; planShopItem opens the Shop face that follows
+    // it. (It used to close on genericFaceBody, which v1.13.0 deleted.)
+    const PC_REGION = faceRegion('PC', 'function planFind(', 'function planShopItem(');
+    check('the PC region is the PC net and nothing else', /function pcBody\(/.test(PC_REGION) && !/function shopRow\(/.test(PC_REGION) && !/function watchBody\(/.test(PC_REGION));
     check('and never borrows the Watch row', PC_REGION.length > 500 && !/listingRow/.test(PC_REGION), String(PC_REGION.length));
     check('nor its gate chip', !/fmvChip|cards-fmv|cards-chip-max/.test(PC_REGION));
 
@@ -3648,7 +3679,8 @@ async function main() {
     // reaching for `listingRow` or `pcRow` because all three sheets have rows
     // in them — and someone reaching for a colour on the age.
     check('the shop sheet builds its own rows', /function shopRow\(/.test(CARDS_SRC));
-    const SHOP_REGION = CARDS_SRC.slice(CARDS_SRC.indexOf('function planShopItem('), CARDS_SRC.indexOf('function soonButton('));
+    const SHOP_REGION = faceRegion('shop', 'function planShopItem(', 'function soonButton(');
+    check('the shop region is the shop face and nothing else', /function shopBody\(/.test(SHOP_REGION) && !/function pcRow\(/.test(SHOP_REGION) && !/function render\(/.test(SHOP_REGION));
     check('and never borrows the Watch row', SHOP_REGION.length > 500 && !/listingRow/.test(SHOP_REGION), String(SHOP_REGION.length));
     check('nor the PC one', !/pcRow|serialBadge|gradeChip/.test(SHOP_REGION));
     check('nor the gate chip', !/fmvChip|cards-fmv|cards-chip-max|cards-chip-band/.test(SHOP_REGION));
