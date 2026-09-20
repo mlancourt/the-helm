@@ -47,6 +47,13 @@
   --bad: #e2564d;
   --info: #5aa9d6;
 
+  /* The PC net's two badges. Separate tokens on purpose: --warn already
+     means "ending inside two hours" on the cards sheet, and on the PC sheet
+     gold means "one of one". Two meanings for one colour on one screen is
+     how somebody buys the wrong card, so they are never the same value. */
+  --pc-serial: #a98cf0;
+  --pc-one: #f0cb5e;
+
   --radius: 14px;
   --gap: 12px;
 
@@ -1841,6 +1848,7 @@ body {
 
 .cards-btn-hunt { background: #2a2413; color: var(--brass); border-color: #4a4020; }
 .cards-btn-shop { background: #12232c; color: var(--info);  border-color: #1d4152; }
+.cards-btn-pc   { background: #1d1830; color: var(--pc-serial); border-color: #3a2f5c; }
 
 /* A face the engine has not built yet: visible, so it reads as coming. */
 .cards-btn-soon {
@@ -2021,6 +2029,90 @@ body {
 .cards-ends-done .cards-countdown { color: var(--text-faint); font-weight: 600; }
 .cards-row-ended { opacity: 0.55; }
 .cards-row-ended .cards-title { color: var(--text-dim); }
+
+/* -- the PC sheet ------------------------------------------------------
+   Deliberately its own block. The PC net answers "does this exist", not
+   "is this cheap", so nothing in here borrows the Watch sheet's green,
+   its tick or its percentage chip — see the header of tiles/cards.js. */
+
+.pc-showing {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.pc-list { display: flex; flex-direction: column; }
+
+.pc-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.pc-list .pc-row:last-child { border-bottom: 0; }
+
+/* Badges lead, money follows — and on a phone the money wraps under them
+   rather than squeezing the serial, which is the anchor of the row. */
+.pc-line {
+  margin-top: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.pc-marks { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.pc-line .cards-money { margin-top: 0; }
+
+.pc-serial,
+.pc-grade {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+  font-size: 11px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The anchor. Violet: this is a collection, not a deal. */
+.pc-serial {
+  background: #201a33;
+  color: var(--pc-serial);
+  border-color: #3d3168;
+  font-weight: 700;
+}
+
+/* One of one. Gold, its own token, and the only thing on this sheet that
+   wears it — the auction countdown here never goes amber. */
+.pc-serial.pc-one {
+  background: #2e2611;
+  color: var(--pc-one);
+  border-color: #5c4c1c;
+}
+
+/* Secondary to the serial, and it should look it. */
+.pc-grade {
+  background: var(--bg-sink);
+  color: var(--text-dim);
+  border-color: var(--line);
+  font-weight: 600;
+}
+.pc-badge-glyph { font-size: 9.5px; opacity: 0.85; }
+
+.pc-foot-line {
+  margin-top: 3px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.pc-who-line { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .cards-seller { margin-top: 3px; font-size: 11px; color: var(--text-faint); }
 .cards-sep { margin: 0 4px; color: var(--text-faint); }

@@ -1017,8 +1017,176 @@ function cardsWatch() {
       errors: [],
     },
     shop: null,
+    pc: cardsPc(),
+    pc_footer: 'No book, no gate — a bookend is one of one by definition. Price is yours to judge.',
     sources: { listings: 'eBay Browse API', fmv: 'mock comp engine', shop: 'pending' },
     footer: 'lean, not an appraisal — every figure is the engine\'s',
+  };
+}
+
+/**
+ * The PC net's payload — the personal-collection bookend face.
+ *
+ * INVENTED throughout: the players, the products, the sellers. Real service
+ * name (eBay) and real eBay-ish shapes, because those are what the module
+ * parses; nothing here is a card anyone owns.
+ *
+ * The fixture exists to exercise every branch the tile has, so it carries on
+ * purpose: three bookends (a 1/N, an N/N and one with unknown shipping), two
+ * one-of-ones (a BIN and an auction closing in about forty minutes), one
+ * arrival, one OBO, one with no photo — and a `counts.shown` deliberately
+ * below `total_found`, so the "Showing X of Y" line has something to say.
+ */
+function cardsPc({ errors = [] } = {}) {
+  return {
+    updated_at: agoIso(18),
+    players: 26,
+    calls: 121,
+    // UNCLIPPED totals: the caps are per class and per seller, so what the
+    // net found and what it lists are two different numbers on purpose.
+    total_found: 108,
+    counts: { one_of_one: 29, bookend: 79, shown: 6 },
+    finds: [
+      // -- bookends: the target ------------------------------------------
+      {
+        item_id: '7731-0001',
+        title: '2023 Prism Foundry #334 Kestrel Vance GOLD Wave BOOKEND',
+        player: 'Kestrel Vance',
+        serial: '10/10',
+        num: 10,
+        den: 10,
+        one_of_one: false,
+        grade: 'PSA 10',
+        type: 'BIN',
+        price: 650,
+        ship: 4.99,
+        all_in: 654.99,
+        ends_ct: null,
+        ends_utc: null,
+        seller: 'cardvault_mn',
+        seller_fb: 2410,
+        listed: addDays(TODAY, -1),
+        url: 'https://example.com/mock/pc/7731-0001',
+        image: 'https://example.com/mock/pc/7731-0001.jpg',
+        new: true,
+      },
+      {
+        item_id: '7731-0002',
+        title: 'Marisol Quint Ironsides Emerald Parallel — first card of the run',
+        player: 'Marisol Quint',
+        serial: '1/25',
+        num: 1,
+        den: 25,
+        one_of_one: false,
+        grade: 'BGS 9.5',
+        type: 'OBO',
+        price: 288,
+        ship: 6.5,
+        all_in: 294.5,
+        ends_ct: null,
+        ends_utc: null,
+        seller: 'lakeside_slabs',
+        seller_fb: 88,
+        listed: addDays(TODAY, -4),
+        url: 'https://example.com/mock/pc/7731-0002',
+        image: 'https://example.com/mock/pc/7731-0002.jpg',
+        new: false,
+      },
+      {
+        item_id: '7731-0003',
+        // Shipping the listing never stated: the row must say `+ ship?` and
+        // stop, with no arrow pointing at a total nobody computed.
+        title: 'Dov Ferreira Prism Foundry Sapphire /50 — last serial',
+        player: 'Dov Ferreira',
+        serial: '50/50',
+        num: 50,
+        den: 50,
+        one_of_one: false,
+        grade: 'SGC 9',
+        type: 'BIN',
+        price: 175,
+        ship: null,
+        all_in: null,
+        ends_ct: null,
+        ends_utc: null,
+        seller: 'attic_finds_wi',
+        seller_fb: 41,
+        listed: addDays(TODAY, -11),
+        url: 'https://example.com/mock/pc/7731-0003',
+        image: null,
+        new: false,
+      },
+      // -- one of ones: the bonus class ----------------------------------
+      {
+        item_id: '7731-0101',
+        title: 'Ines Okafor Ironsides Black Shield 1/1 — the only one printed',
+        player: 'Ines Okafor',
+        serial: '1/1',
+        num: 1,
+        den: 1,
+        one_of_one: true,
+        grade: 'PSA 9',
+        type: 'BIN',
+        price: 1450,
+        ship: 12,
+        all_in: 1462,
+        ends_ct: null,
+        ends_utc: null,
+        seller: 'northport_cardworks',
+        seller_fb: 1204,
+        listed: addDays(TODAY, -2),
+        url: 'https://example.com/mock/pc/7731-0101',
+        image: 'https://example.com/mock/pc/7731-0101.jpg',
+        new: false,
+      },
+      {
+        item_id: '7731-0102',
+        title: 'Teo Brandt Prism Foundry Superfractor 1/1 — no reserve',
+        player: 'Teo Brandt',
+        serial: '1/1',
+        num: 1,
+        den: 1,
+        one_of_one: true,
+        grade: 'BGS 9',
+        type: 'AUCTION',
+        price: 920,
+        ship: 15,
+        all_in: 935,
+        // Inside forty minutes. On the Watch sheet that would be amber; here
+        // it must NOT be, because amber on this sheet means one of one.
+        ends_ct: ctStampIn(40),
+        ends_utc: utcStampIn(40),
+        seller: 'bayfield_auctions',
+        seller_fb: 5310,
+        listed: addDays(TODAY, -6),
+        url: 'https://example.com/mock/pc/7731-0102',
+        image: 'https://example.com/mock/pc/7731-0102.jpg',
+        new: false,
+      },
+      {
+        item_id: '7731-0103',
+        title: 'Sable Nkemdi Ironsides Printing Plate Cyan 1/1',
+        player: 'Sable Nkemdi',
+        serial: '1/1',
+        num: 1,
+        den: 1,
+        one_of_one: true,
+        grade: 'PSA 8',
+        type: 'BIN',
+        price: 410,
+        ship: 5,
+        all_in: 415,
+        ends_ct: null,
+        ends_utc: null,
+        seller: 'cardvault_mn',
+        seller_fb: 2410,
+        listed: addDays(TODAY, -8),
+        url: 'https://example.com/mock/pc/7731-0103',
+        image: 'https://example.com/mock/pc/7731-0103.jpg',
+        new: false,
+      },
+    ],
+    errors,
   };
 }
 
@@ -1476,11 +1644,33 @@ function cardsStaleSnapshot() {
   return snap;
 }
 
+/** `pc: null` — the face greyed to "soon", exactly as `shop` is today. */
+function cardsNoPcSnapshot() {
+  const snap = snapshot();
+  const data = cardsWatch();
+  data.pc = null;
+  snap.tiles.cards = { band: 'HOURLY', updated_at: agoIso(18), status: 'ok', error: null, data };
+  return snap;
+}
+
+/** The net half-answered: the finds it DID get, and the reason for the rest. */
+function cardsPcErrorsSnapshot() {
+  const snap = snapshot();
+  const data = cardsWatch();
+  data.pc = cardsPc({
+    errors: ['eBay Browse API: 6 of 121 player searches rate-limited (429)', 'grading lookup timed out for 2 listings'],
+  });
+  snap.tiles.cards = { band: 'HOURLY', updated_at: agoIso(18), status: 'stale', error: 'the 06:00 PC sweep did not finish', data };
+  return snap;
+}
+
 const MODES = [
   ['--events', () => mockEvents()],
   ['--pending', () => mockPending()],
   ['--espn', () => slate(TODAY)],
   ['--cards-stale', () => cardsStaleSnapshot()],
+  ['--cards-no-pc', () => cardsNoPcSnapshot()],
+  ['--cards-pc-errors', () => cardsPcErrorsSnapshot()],
   ['--newsstand-stale', () => newsstandStaleSnapshot()],
   // The weather tile's four faces (W6). The default snapshot carries the
   // Watch; these are the other three.

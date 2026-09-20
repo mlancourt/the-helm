@@ -559,11 +559,24 @@ attribution string verbatim, from `data.attribution`.
 
 ### Cards — the desk, and who does the arithmetic
 
-`cards` is a two-button menu in Entertainment's mould — 🎯 **Watch** · 🏷️
-**Shop** — because a shopping list is never urgent enough to earn board height.
-`shop` is `null` until that face ships, which the payload says out loud: a null
-face is still a button, greyed and wearing *soon*, so a face that is coming is
-visible as coming rather than silently absent.
+`cards` is a three-button menu in Entertainment's mould — 🎯 **Watch** · 🏷️
+**Shop** · 🎖️ **PC** — because a shopping list is never urgent enough to earn
+board height. `shop` is `null` until that face ships, which the payload says
+out loud: a null face is still a button, greyed and wearing *soon*, so a face
+that is coming is visible as coming rather than silently absent. `pc` is
+null-safe the same way.
+
+**Watch and PC ask different questions, and must not look alike.** Watch asks
+*is this under 65% of book* — a gate, with an answer the engine computed: a
+percentage, a MAX bid, a green tick when it clears. PC asks *does this exist*
+— the personal-collection bookend net. A bookend is one of one by definition,
+so there is no matched-grade tape behind it, no FMV, no percentage and no
+gate; price is Matt's to judge. The PC sheet therefore carries **no green, no
+✓, no `% of FMV`, no `MAX $` and no gate language**, and its badges are the
+**serial** and the **grade**. The parts the two sheets genuinely share are the
+thumbnail, the title clamp, the price line, the seller line and the countdown
+— reusing `listingRow` there would be the bug, not the shortcut, and a source
+scan in the tests says so.
 
 **The engine does every piece of judgement.** It sets the FMV, picks the gate,
 computes the all-in, decides the MAX bid, ages the comp book, marks a listing
@@ -652,6 +665,44 @@ never reaches the host, `loading="lazy"` so nothing is fetched until the sheet
 is open, a grey box of the same size whenever there is no usable image, and the
 service worker never caches them. If that trade ever stops being worth it,
 deleting `thumb()` is a five-line change.
+
+#### The PC face
+
+`pc.finds` arrives ordered — bookends, then one-of-ones — and the page
+partitions on `one_of_one` rather than trusting the boundary to be where it
+looks, re-sorting neither half. Two sections, `Bookends (n)` then
+`One of ones (n)`, and a `Showing 6 of 108` line above them whenever the caps
+(per class and per seller) held something back. The chip on the button counts
+**arrivals**, not finds: there is no gate here to have cleared, so a count of
+finds would be a number with no decision in it.
+
+A row reads serial → grade → money, the reverse emphasis of a Watch row:
+
+```
+[thumb]  2023 Prism Foundry #334 Kestrel Vance GOLD Wave BOOKEND
+         Kestrel Vance
+         ⬥ 10/10   ◆ PSA 10        $650.00 + $4.99 ship → $654.99
+         cardvault_mn · 2,410 fb · listed 2026-09-19            [new]
+```
+
+The serial badge is violet — a collection, not a deal. A one-of-one wears the
+same badge in **gold**, which is the one place on this tile amber-ish means
+something other than *ending soon*. **It is a separate token** (`--pc-one`,
+never `--warn`), and the PC sheet's auction rows consequently **never go
+amber at all**: two meanings for one colour on one screen is how somebody buys
+the wrong card. Auctions otherwise reuse the v1.6.0 countdown machinery
+exactly — same `msUntil`/`ctTime` off `ends_utc`, same ladder, same one shared
+interval, same grey `ended` at zero.
+
+`ship: null` is eBay not stating postage. The line reads `+ ship?` and
+**stops** — no arrow pointing at nothing, no total this page invented out of a
+missing number. `grade` is treated as possibly-null defensively (the row
+renders, the chip goes), but there is deliberately no "raw card" affordance:
+raw is out of scope by ruling.
+
+`?mock=cards-no-pc` is the face greyed to *soon*; `?mock=cards-pc-errors` is
+the net half-answering, with its reasons at the top of the sheet and the finds
+it did get still rendered.
 
 `?mock=cards-stale` is the tile half-broken — `status: stale` with the engine's
 reason and a `watch.errors` entry. The rows Matt does have are still real, so

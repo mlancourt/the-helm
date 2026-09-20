@@ -2481,9 +2481,12 @@ async function main() {
       return r;
     });
 
-    check('two buttons, in the spec\'s order', labelsOf(root).join('|') === 'Watch|Shop', labelsOf(root).join('|'));
+    check('three buttons, in the spec\'s order', labelsOf(root).join('|') === 'Watch|Shop|PC', labelsOf(root).join('|'));
     check('the board carries no listings of its own', countOf(root, 'cards-row') === 0);
-    check('one faint line under the menu', countOf(root, 'tile-foot') === 1);
+    // This fixture carries no `pc`, deliberately: everything in this block is
+    // the Watch regression, and it must read exactly as it did before the
+    // third face existed. The PC line is asserted in its own block below.
+    check('one faint line for the one live face', countOf(root, 'tile-foot') === 1);
     check(
       'and it counts targets, fresh books and the feed time',
       /14 targets/.test(textOf(root)) && /9 fresh books/.test(textOf(root)) && /feed \d/.test(textOf(root)),
@@ -2684,7 +2687,7 @@ async function main() {
       cards.render(r, cardsTile(deskData({ errors: ['eBay Browse API: 3 of 14 searches rate-limited (429)'] }), 'stale', 'the 06:00 pull did not finish'), { id: 'cards', actions: panel.actions });
       return r;
     });
-    check('a stale desk still renders its menu', cardBtns(staleRoot).length === 2 && !!staleRoot.querySelector('.cards-count'));
+    check('a stale desk still renders its menu', cardBtns(staleRoot).length === 3 && !!staleRoot.querySelector('.cards-count'));
     check('with a small warning mark', countOf(staleRoot, 'cards-warn') === 1);
     check('whose tooltip is the reason', staleRoot.querySelector('.cards-warn').getAttribute('title') === 'the 06:00 pull did not finish');
     withNow(NOW_UTC, () => cardsTap(cardBtns(staleRoot)[0]));
@@ -2707,12 +2710,12 @@ async function main() {
       cards.render(r, cardsTile({ watch: { flags: [listing({ grade_note: 'PSA pop 12' })], targets: 3 }, shop: { queue: 2, note: 'shipped' }, footer: 'x' }), { id: 'cards', actions: panel.actions });
       return r;
     });
-    check('a shop face that arrives stops saying "soon"', countOf(grown, 'cards-btn-soon') === 0 && cardBtns(grown).length === 2);
+    check('a shop face that arrives stops saying "soon"', countOf(grown, 'cards-btn-soon') === 1 && cardBtns(grown).length === 3);
     withNow(NOW_UTC, () => cardsTap(cardBtns(grown)[1]));
     check('and opens as a generic card rather than nothing', /queue/.test(textOf(panel.last.body)) && /shipped/.test(textOf(panel.last.body)));
     const noWatch = new El('div');
     cards.render(noWatch, cardsTile({ shop: null }), { id: 'cards', actions: {} });
-    check('a payload with no watch face greys that button too', countOf(noWatch, 'cards-btn-soon') === 2);
+    check('a payload with no watch face greys that button too', countOf(noWatch, 'cards-btn-soon') === 3);
 
     // -- no sheet to open ----------------------------------------------------
     let cardsThrew = null;
@@ -2731,6 +2734,7 @@ async function main() {
       .readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'cards.js'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/^\s*\/\/.*$/gm, '');
+    const CARDS_CSS = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
     check('the module never parses a date string', !/new Date|Date\.parse/.test(CARDS_SRC));
     // The engine's arithmetic is the engine's. A number computed here would
     // be indistinguishable from a real one on the screen, and wrong.
@@ -3036,6 +3040,291 @@ async function main() {
     raggedPanel.close();
     check('no interval survives this file', timers.live.size === 0, String(timers.live.size));
     check('and no document listener does either', docListenerCount('visibilitychange') === 0);
+
+    // -- the PC net: a third face that must not look like the first ---------
+    //
+    // Watch asks "is this under 65% of book". PC asks "does this exist". A
+    // bookend has no matched-grade tape behind it, so it has no FMV, no
+    // percentage and no gate — and the single most likely way to get this
+    // tile wrong is to make a PC row read like a cleared flag. Most of what
+    // is below is that: assertions about what must NOT be on the screen.
+    console.log('\ncards — the PC bookend net');
+
+    const find = (over = {}) => ({
+      item_id: 'p1',
+      title: 'PC-ONE',
+      player: 'Invented Player',
+      serial: '10/10',
+      num: 10,
+      den: 10,
+      one_of_one: false,
+      grade: 'PSA 10',
+      type: 'BIN',
+      price: 650,
+      ship: 4.99,
+      all_in: 654.99,
+      ends_ct: null,
+      ends_utc: null,
+      seller: 'cardvault',
+      seller_fb: 2410,
+      listed: '2026-09-19',
+      url: 'https://example.com/mock/pc/1',
+      image: 'https://example.com/mock/pc/1.jpg',
+      new: false,
+      ...over,
+    });
+
+    const FINDS = [
+      find({ item_id: 'b1', title: 'BOOK-ONE', serial: '1/25', num: 1, den: 25, new: true }),
+      find({ item_id: 'b2', title: 'BOOK-TWO', serial: '5/5', num: 5, den: 5, type: 'OBO', grade: 'BGS 9.5' }),
+      find({ item_id: 'b3', title: 'BOOK-THREE', serial: '50/50', num: 50, den: 50, ship: null, all_in: null, image: null }),
+      find({ item_id: 'o1', title: 'ONE-ONE', serial: '1/1', num: 1, den: 1, one_of_one: true, grade: 'PSA 9' }),
+      find({
+        item_id: 'o2',
+        title: 'ONE-TWO',
+        serial: '1/1',
+        num: 1,
+        den: 1,
+        one_of_one: true,
+        type: 'AUCTION',
+        price: 920,
+        ship: 15,
+        all_in: 935,
+        ends_ct: '2026-09-20T13:40',
+        ends_utc: '2026-09-20T18:40:00.000Z',
+      }),
+    ];
+
+    const pcData = (over = {}, rest = {}) => ({
+      watch: null,
+      shop: null,
+      pc: {
+        updated_at: '2026-09-20T12:13:05Z',
+        players: 26,
+        calls: 121,
+        total_found: 108,
+        counts: { one_of_one: 29, bookend: 79, shown: 5 },
+        finds: FINDS,
+        errors: [],
+        ...over,
+      },
+      pc_footer: 'No book, no gate — a bookend is one of one by definition. Price is yours to judge.',
+      ...rest,
+    });
+
+    /**
+     * Board + PC sheet, on the same wound clock the countdown tests use.
+     *
+     * Shuts every sheet opened before it, because the shell only ever has
+     * one panel up — and because a test that let two sheets tick at once
+     * could not tell "one interval per sheet" from "two".
+     */
+    const pcOpened = [];
+    function openPc(over = {}, rest = {}) {
+      for (const v of pcOpened) v.panel.close();
+      const pnl = fakePanel();
+      const board = new El('div');
+      cards.render(board, cardsTile(pcData(over, rest)), { id: 'cards', actions: pnl.actions });
+      cardsTap(cardBtns(board)[2]);
+      const view = { board, panel: pnl, sheet: pnl.last.body };
+      pcOpened.push(view);
+      return view;
+    }
+
+    const pcClock = windClock('2026-09-20T18:00:00.000Z');
+    let pcView = null;
+    try {
+      pcView = openPc();
+      const pcBoard = pcView.board;
+      const pcSheet = pcView.sheet;
+
+      // -- the board -------------------------------------------------------
+      check('the PC face is the third button', labelsOf(pcBoard).join('|') === 'Watch|Shop|PC', labelsOf(pcBoard).join('|'));
+      check('and it opens its own sheet', pcView.panel.last.title === '🎖️ PC');
+      check('the chip counts arrivals, not finds', pcBoard.querySelector('.cards-count').textContent.startsWith('1'), pcBoard.querySelector('.cards-count').textContent);
+      check('the faint line counts the two classes', /79 bookends/.test(textOf(pcBoard)) && /29 1\/1s/.test(textOf(pcBoard)), textOf(pcBoard));
+      const quietPc = new El('div');
+      cards.render(quietPc, cardsTile(pcData({ finds: FINDS.map((f) => ({ ...f, new: false })) })), { id: 'cards', actions: {} });
+      check('nothing new means no chip at all, not a zero', countOf(quietPc, 'cards-count') === 0);
+      check('but the button is still tappable', !cardBtns(quietPc)[2].getAttribute('disabled'));
+      const noFinds = new El('div');
+      cards.render(noFinds, cardsTile(pcData({ finds: [] })), { id: 'cards', actions: {} });
+      check('zero finds is the same: no chip, live button', countOf(noFinds, 'cards-count') === 0 && !cardBtns(noFinds)[2].getAttribute('disabled'));
+
+      // -- pc: null ---------------------------------------------------------
+      let nullThrew = null;
+      let noPc = null;
+      try {
+        noPc = new El('div');
+        cards.render(noPc, cardsTile({ watch: null, shop: null, pc: null }), { id: 'cards', actions: {} });
+      } catch (e) { nullThrew = e; }
+      check('pc: null never throws', !nullThrew, nullThrew && nullThrew.message);
+      check('it greys the button, exactly as shop does', countOf(noPc, 'cards-btn-soon') === 3 && /soon/.test(cardBtns(noPc)[2].textContent));
+      check('and that button is inert', cardBtns(noPc)[2].getAttribute('disabled') === 'disabled');
+      check('with no PC line under the menu', !/bookends/.test(textOf(noPc)));
+
+      // -- two sections, bookends first --------------------------------------
+      const heads = pcSheet.querySelectorAll('.cards-head').map((h) => h.textContent);
+      check('two sections, bookends before one-of-ones', heads.join('|') === 'Bookends (3)|One of ones (2)', heads.join('|'));
+      const pcTitles = pcSheet.querySelectorAll('.cards-title').map((t) => t.textContent);
+      check('and the rows land in the right ones', pcTitles.join('|') === 'BOOK-ONE|BOOK-TWO|BOOK-THREE|ONE-ONE|ONE-TWO', pcTitles.join('|'));
+      const lists = pcSheet.querySelectorAll('.pc-list');
+      check('a 5/5 is a bookend, not a one-of-one', /BOOK-TWO/.test(lists[0].textContent) && !/BOOK-TWO/.test(lists[1].textContent));
+      check('a 1/1 is a one-of-one, not a bookend', /ONE-ONE/.test(lists[1].textContent) && !/ONE-ONE/.test(lists[0].textContent));
+      check('every find is a row', countOf(pcSheet, 'pc-row') === 5);
+
+      // -- the badges: serial anchors, grade second --------------------------
+      const serials = pcSheet.querySelectorAll('.pc-serial').map((n) => n.textContent);
+      for (const f of FINDS) {
+        check(`serial "${f.serial}" appears exactly as delivered`, serials.some((t) => t.includes(f.serial)), serials.join(' | '));
+      }
+      const grades = pcSheet.querySelectorAll('.pc-grade').map((n) => n.textContent);
+      for (const f of FINDS) {
+        check(`grade "${f.grade}" appears exactly as delivered`, grades.some((t) => t.includes(f.grade)), grades.join(' | '));
+      }
+      check('every row carries both badges', serials.length === 5 && grades.length === 5);
+      check('a one-of-one wears the 1/1 badge', countOf(pcSheet, 'pc-one') === 2);
+      check('and a 5/5 does not', !lists[0].querySelectorAll('.pc-serial').some((n) => n.classList.contains('pc-one')));
+      check('an OBO listing says so', countOf(pcSheet, 'cards-chip-obo') === 1);
+      check('a BIN listing says nothing', countOf(pcSheet, 'cards-chip') === 1);
+      const noGrade = openPc({ finds: [find({ item_id: 'ng', title: 'NO-GRADE', grade: null })] });
+      check('a row with no grade still renders', /NO-GRADE/.test(textOf(noGrade.sheet)) && countOf(noGrade.sheet, 'pc-row') === 1);
+      check('it just loses the chip', countOf(noGrade.sheet, 'pc-grade') === 0);
+      check('and nothing invents a "raw" affordance', !/\braw\b/i.test(textOf(noGrade.sheet)));
+      noGrade.panel.close();
+
+      // -- NOTHING here may read as a Watch flag -----------------------------
+      //
+      // This is the ruling, stated as a scan. A PC row that looked like a
+      // cleared gate would be telling Matt the engine had an opinion about a
+      // price it has never seen a comp for.
+      for (const banned of ['cards-fmv', 'cards-fmv-good', 'cards-check', 'cards-chip-max', 'cards-chip-band', 'cards-bookage']) {
+        check(`no .${banned} anywhere in the PC sheet`, countOf(pcSheet, banned) === 0);
+      }
+      // The rows and the section headers — everything the footer does not
+      // say. The footer is excluded deliberately: it is the vault's own line
+      // and it uses the word "gate" to tell Matt there ISN'T one, which is
+      // the opposite of the failure this scan is looking for.
+      const pcRowsText = pcSheet.querySelectorAll('.pc-list, .cards-head').map((n) => n.textContent).join(' ');
+      check('no ✓ on the rows', !/✓/.test(pcRowsText));
+      check('no percentage of anything', !/%/.test(pcRowsText) && !/of FMV/i.test(pcRowsText));
+      check('no MAX bid', !/\bMAX\b/.test(pcRowsText));
+      check('and no gate language on the rows', !/\bgate\b/i.test(pcRowsText));
+      check('nor anywhere but the vault\'s own footer line', !/\bgate\b/i.test(textOf(pcSheet).replace(pcSheet.querySelector('.cards-foot').textContent, '')));
+      // The footer says the same thing in Matt's words, once.
+      check('the footer is the vault\'s line plus eBay\'s credit', pcSheet.querySelector('.cards-foot').textContent === 'No book, no gate — a bookend is one of one by definition. Price is yours to judge. · eBay data via Browse API', pcSheet.querySelector('.cards-foot').textContent);
+      check('said exactly once', countOf(pcSheet, 'cards-foot') === 1);
+
+      // -- amber means one of one here, and only that ------------------------
+      check('the auction row never goes amber', countOf(pcSheet, 'cards-ends-soon') === 0);
+      check('even though it is forty minutes out', /40m/.test(textOf(pcSheet)), textOf(pcSheet).slice(0, 400));
+      check('and the board raises no auction dot from this face', countOf(pcBoard, 'cards-dot') === 0);
+
+      // -- money, and the shipping nobody stated -----------------------------
+      const monies = pcSheet.querySelectorAll('.cards-money').map((n) => n.textContent);
+      check('a known shipping cost reaches an all-in', /\$654\.99/.test(monies[0]), monies[0]);
+      check('an unknown one says so', /\+ ship\?/.test(monies[2]), monies[2]);
+      check('and stops there — no arrow, no invented total', !/→/.test(monies[2]) && !/—/.test(monies[2]), monies[2]);
+      check('never printing null or NaN for it', !/null|NaN|undefined/i.test(monies[2]), monies[2]);
+      check('an auction leads with the bid, not a price', /bid \$920\.00/.test(monies[4]), monies[4]);
+      check('the seller line carries the listed date verbatim', /listed 2026-09-19/.test(textOf(pcSheet)));
+      check('and an arrival wears the new mark', countOf(pcSheet, 'cards-new-mark') === 1);
+
+      // -- photos, links -----------------------------------------------------
+      const pcImgs = pcSheet.querySelectorAll('IMG');
+      check('a photo is a photo', pcImgs.length === 4 && pcImgs[0].getAttribute('src') === 'https://example.com/mock/pc/1.jpg');
+      check('and leaks no referrer', pcImgs.every((i) => i.getAttribute('referrerpolicy') === 'no-referrer'));
+      check('a find with no photo holds the space instead', countOf(pcSheet, 'cards-thumb-none') === 1);
+      check('no broken img is emitted for it', pcImgs.every((i) => !!i.getAttribute('src')));
+      const pcLinks = pcSheet.querySelectorAll('A');
+      check('every row is a link', pcLinks.length === 5);
+      check('opening a new tab, with no handle on this page', pcLinks.every((a) => a.getAttribute('target') === '_blank' && /noopener/.test(a.getAttribute('rel') || '')));
+      const junkUrl = openPc({ finds: [find({ item_id: 'j', title: 'JUNK-URL', url: 'javascript:alert(1)' })] });
+      check('a javascript: url is inert, and the row survives', junkUrl.sheet.querySelectorAll('A').length === 0 && /JUNK-URL/.test(textOf(junkUrl.sheet)));
+      junkUrl.panel.close();
+
+      // -- "Showing X of Y" ---------------------------------------------------
+      check('the sheet says what the caps held back', /Showing 5 of 108/.test(textOf(pcSheet)), textOf(pcSheet).slice(0, 200));
+      const allShown = openPc({ total_found: 5, counts: { one_of_one: 2, bookend: 3, shown: 5 } });
+      check('and says nothing when it is showing everything', !/Showing/.test(textOf(allShown.sheet)));
+      allShown.panel.close();
+      const overShown = openPc({ total_found: 3, counts: { one_of_one: 2, bookend: 3, shown: 5 } });
+      check('nor when the counts disagree the other way', !/Showing/.test(textOf(overShown.sheet)));
+      overShown.panel.close();
+
+      // -- empty, ragged, half-broken -----------------------------------------
+      const emptyPc = openPc({ finds: [] });
+      check('an empty net says so rather than going blank', /Nothing graded and numbered 1\/N or N\/N/.test(textOf(emptyPc.sheet)));
+      check('with no section headers over nothing', countOf(emptyPc.sheet, 'cards-head') === 0);
+      check('and the footer still appears once', countOf(emptyPc.sheet, 'cards-foot') === 1);
+      emptyPc.panel.close();
+
+      const erroring = openPc({ errors: ['eBay Browse API: 6 of 121 searches rate-limited (429)'] });
+      check('what the net could not reach is said at the top', /feed trouble: eBay Browse API: 6 of 121/.test(textOf(erroring.sheet)));
+      check('and the finds it DID get still render', countOf(erroring.sheet, 'pc-row') === 5);
+      erroring.panel.close();
+
+      let raggedThrew = null;
+      let raggedPc = null;
+      try {
+        raggedPc = openPc({ finds: [{ item_id: 'r' }, { title: 'HALF', price: 10 }, null, 'nope'], counts: null, total_found: null });
+      } catch (e) { raggedThrew = e; }
+      check('a half-missing payload never throws', !raggedThrew, raggedThrew && raggedThrew.message);
+      check('every entry still lays out as a row', raggedPc && countOf(raggedPc.sheet, 'pc-row') === 4);
+      check('a find with no title says so', /\(untitled listing\)/.test(textOf(raggedPc.sheet)));
+      check('no "undefined" survives it', !/undefined/.test(textOf(raggedPc.sheet)));
+      check('no "NaN" either', !/NaN/.test(textOf(raggedPc.sheet)));
+      check('and no "null" printed as a word', !/\bnull\b/.test(textOf(raggedPc.sheet)));
+      raggedPc.panel.close();
+
+      // -- the countdown, same machinery minus the amber -----------------------
+      const ticking = openPc({ finds: [find({ item_id: 't', title: 'TICK', type: 'AUCTION', ends_ct: '2026-09-20T13:40', ends_utc: '2026-09-20T18:40:00.000Z', one_of_one: true, serial: '1/1', num: 1, den: 1 })] });
+      const tickValue = () => ticking.sheet.querySelector('.cards-countdown-value').textContent;
+      check('an auction here counts down', tickValue() === '40m', tickValue());
+      check('and prints Central clock time beside it', /ends 1:40 PM/.test(textOf(ticking.sheet)), textOf(ticking.sheet).slice(0, 300));
+      check('on one shared interval, like the Watch sheet', timers.live.size === 1);
+      pcClock.advance(26 * MIN);
+      timers.beat();
+      check('inside the last quarter-hour the seconds appear', tickValue() === '14m 00s', tickValue());
+      check('still without a hint of amber', countOf(ticking.sheet, 'cards-ends-soon') === 0);
+      pcClock.advance(15 * MIN);
+      timers.beat();
+      check('past the hammer it reads ended', tickValue() === 'ended', tickValue());
+      check('greyed, and still on the page', countOf(ticking.sheet, 'cards-ends-done') === 1 && /TICK/.test(textOf(ticking.sheet)));
+      ticking.panel.close();
+      check('and the sheet lets its clock go', timers.live.size === 0);
+
+      // -- nothing anywhere reads as a bug -------------------------------------
+      const pcText = `${textOf(pcSheet)} ${textOf(pcBoard)}`;
+      check('no "undefined", "NaN" or "Invalid Date" on the PC face', !/undefined|NaN|Invalid Date/.test(pcText), pcText.slice(0, 160));
+    } finally {
+      for (const v of pcOpened) v.panel.close();
+      pcClock.restore();
+    }
+    check('no PC sheet is left ticking', timers.live.size === 0, String(timers.live.size));
+    check('and none is left listening', docListenerCount('visibilitychange') === 0);
+
+    // -- the ruling, as a source scan ----------------------------------------
+    //
+    // The class scans above catch a PC row that LOOKS like a flag. This
+    // catches the likelier mistake a year from now: someone reaching for
+    // `listingRow` because the two sheets have rows in them.
+    check('the PC sheet builds its own rows', /function pcRow\(/.test(CARDS_SRC));
+    // Everything from planFind to the generic face body is the PC net's own
+    // code. If `listingRow` ever appears in there, someone has reached for
+    // the Watch row because both sheets have rows in them — which is exactly
+    // the mistake the ruling names.
+    const PC_REGION = CARDS_SRC.slice(CARDS_SRC.indexOf('function planFind('), CARDS_SRC.indexOf('function genericFaceBody('));
+    check('and never borrows the Watch row', PC_REGION.length > 500 && !/listingRow/.test(PC_REGION), String(PC_REGION.length));
+    check('nor its gate chip', !/fmvChip|cards-fmv|cards-chip-max/.test(PC_REGION));
+
+    // The 1/1 badge's gold and the auction amber are two different tokens
+    // holding two different values, and this is what keeps them that way.
+    const warnToken = (CARDS_CSS.match(/--warn:\s*([^;]+);/) || [])[1];
+    const pcOneToken = (CARDS_CSS.match(/--pc-one:\s*([^;]+);/) || [])[1];
+    check('the 1/1 badge has a colour token of its own', !!pcOneToken, String(pcOneToken));
+    check('and it is not the auction amber', !!warnToken && warnToken.trim() !== (pcOneToken || '').trim(), `${warnToken} vs ${pcOneToken}`);
+    check('the badge never reaches for --warn', !/\.pc-one\b[^{]*\{[^}]*var\(--warn\)/.test(CARDS_CSS));
   });
 
   console.log(`\n${pass} passed, ${failures.length} failed`);

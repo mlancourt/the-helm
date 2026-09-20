@@ -1,10 +1,32 @@
 /**
- * cards — the trading-card desk. Two faces: 🎯 Watch · 🏷️ Shop.
+ * cards — the trading-card desk. Three faces: 🎯 Watch · 🏷️ Shop · 🎖️ PC.
  *
- * A menu tile in the `entertainment` mould: the board carries two buttons and
- * one faint line, and everything with a price on it lives in the sheet. A
+ * A menu tile in the `entertainment` mould: the board carries the buttons and
+ * two faint lines, and everything with a price on it lives in the sheet. A
  * shopping list is never urgent enough to earn board height, and a card that
  * listed every flag would be the tallest thing on the page within a week.
+ *
+ * WATCH AND PC ASK DIFFERENT QUESTIONS, AND MUST NOT LOOK ALIKE.
+ *
+ *   Watch asks "is this under 65% of book?" — a gate, with an answer the
+ *   engine computed: a percentage, a MAX bid, and a green tick when it
+ *   clears. Everything in that sheet is about a number being low enough.
+ *
+ *   PC asks "does this exist?" — the personal-collection bookend net. A
+ *   bookend is one of one by definition, so there is no matched-grade tape
+ *   behind it, no FMV, no percentage and no gate. Price is Matt's to judge.
+ *
+ * So the PC sheet carries NO green, no ✓, no `% of FMV`, no `MAX $` and no
+ * gate language anywhere. Its badges are the SERIAL and the GRADE. The parts
+ * the two sheets genuinely share are the thumbnail, the title clamp, the
+ * price line, the seller line and the countdown — and nothing else. Reusing
+ * `listingRow` here would be the bug, not the shortcut.
+ *
+ * Amber means ONE thing per screen. On Watch it means "ending inside two
+ * hours". On PC it means "one of one" — so the PC sheet's auction rows never
+ * go amber at all, and the 1/1 badge has its own token rather than borrowing
+ * the warn colour. Two meanings for one colour on one screen is how somebody
+ * buys the wrong card.
  *
  * THE DIVISION OF LABOUR. The engine does all of the judgement. It sets the
  * fair-market value, picks the gate, works out the all-in price, decides the
@@ -239,12 +261,23 @@ function thumb(item) {
  * The all-in is the only number that decides anything, so it is the only one
  * with weight on it. An auction leads with `bid`, because a current bid is not
  * a price and should not read like one.
+ *
+ * `unknownShip` is the PC net's case: eBay does not always say what postage
+ * costs, and when it does not there is no all-in to print. The line says
+ * `+ ship?` and STOPS — no arrow pointing at nothing, and certainly no total
+ * this page invented out of a missing number. Watch never passes it, because
+ * every flag the comp engine clears has a shipping figure behind it.
  */
-function priceLine(item, { auction = false } = {}) {
+function priceLine(item, { auction = false, unknownShip = false } = {}) {
   const parts = [];
   const price = usd(item.price);
   parts.push(el('span', { cls: 'cards-price', text: auction ? `bid ${price}` : price }));
-  if (item.ship !== null) parts.push(el('span', { cls: 'cards-ship', text: `+ ${usd(item.ship)} ship` }));
+  if (item.ship !== null) {
+    parts.push(el('span', { cls: 'cards-ship', text: `+ ${usd(item.ship)} ship` }));
+  } else if (unknownShip) {
+    parts.push(el('span', { cls: 'cards-ship', text: '+ ship?' }));
+    return el('div', { cls: 'cards-money' }, parts);
+  }
   parts.push(el('span', { cls: 'cards-arrow', attrs: { 'aria-hidden': 'true' }, text: '→' }));
   parts.push(el('span', { cls: 'cards-allin', text: usd(item.allIn) }));
   return el('div', { cls: 'cards-money' }, parts);
@@ -298,8 +331,11 @@ function sellerLine(item) {
  * Pushes a clock entry onto `clocks` when there is a real instant to count
  * from, so the sheet's single interval can repaint it. Returns null when the
  * listing carries no end time at all.
+ *
+ * `amber: false` keeps the last two hours from turning warn-coloured. The PC
+ * sheet passes it, because amber is spoken for there — see the header.
  */
-function endsLine(item, clocks) {
+function endsLine(item, clocks, { amber = true } = {}) {
   const ms = msUntil(item.endsUtc);
 
   // No instant, or one this browser cannot read: the pre-v1.6.0 line, intact.
@@ -323,7 +359,7 @@ function endsLine(item, clocks) {
   // `ms` is kept so the row can be greyed at build time without a second
   // subtraction — two reads of the clock a microsecond apart could in
   // principle disagree about whether a lot has closed.
-  const entry = { endsUtc: item.endsUtc, value, node, row: null, ms };
+  const entry = { endsUtc: item.endsUtc, value, node, row: null, ms, amber };
   if (clocks) clocks.push(entry);
   return { node, entry };
 }
@@ -343,7 +379,8 @@ function paintClock(c, ms) {
   // being amber and goes grey — it has not gone wrong, it is over — and it
   // stays exactly where it is until the engine's next pass removes it. A row
   // vanishing under Matt's thumb mid-scroll would be the worse bug.
-  setClass(c.node, 'cards-ends-soon', !ended && ms <= SOON_MS);
+  // `amber` is off on the PC sheet, where amber already means "one of one".
+  setClass(c.node, 'cards-ends-soon', c.amber !== false && !ended && ms <= SOON_MS);
   setClass(c.node, 'cards-ends-done', ended);
   if (c.row) setClass(c.row, 'cards-row-ended', ended);
   return ms;
@@ -586,6 +623,188 @@ function watchBody(watch, data, tile) {
   };
 }
 
+// ------------------------------------------------------------------- the PC net
+
+/**
+ * One PC find. A listing, plus the two things that make it a bookend.
+ *
+ * `serial` is the engine's own display string and is printed verbatim — the
+ * page does not build "10/10" out of `num` and `den`, it is handed it. The
+ * ints ride along for anyone who needs to count, and nothing here does.
+ *
+ * `grade` is always a string from the engine, which only emits graded cards.
+ * It is treated as possibly-null anyway: a row with no grade still renders,
+ * it just loses the chip. Raw cards are out of scope by ruling, so there is
+ * deliberately no "ungraded" affordance to fall into.
+ */
+function planFind(raw) {
+  const f = obj(raw);
+  const item = planItem(f);
+  item.serial = str(f.serial).trim();
+  item.num = num(f.num);
+  item.den = num(f.den);
+  item.oneOfOne = f.one_of_one === true;
+  item.grade = str(f.grade).trim();
+  return item;
+}
+
+/**
+ * The serial badge — the visual anchor of a PC row, and deliberately nothing
+ * like anything in the Watch sheet.
+ *
+ * Violet, because this is a collection and not a deal: green in the Watch
+ * sheet means "the engine's gate cleared", and a bookend has no gate to
+ * clear. A one-of-one wears the same badge in gold, reading its own serial,
+ * which for a 1/1 is "1/1" — one badge, not two saying the same thing. The
+ * gold is its own token and NOT the auction amber: on this sheet amber means
+ * one of one, and nothing else is allowed to say it.
+ */
+function serialBadge(find) {
+  const text = find.serial || (find.num !== null && find.den !== null ? `${find.num}/${find.den}` : '');
+  if (!text) return null;
+  return el('span', { cls: `pc-serial${find.oneOfOne ? ' pc-one' : ''}` }, [
+    el('span', { cls: 'pc-badge-glyph', attrs: { 'aria-hidden': 'true' }, text: find.oneOfOne ? '★' : '⬥' }),
+    el('span', { text }),
+  ]);
+}
+
+/** `◆ PSA 10`, secondary to the serial. Verbatim, and absent when absent. */
+function gradeChip(find) {
+  if (!find.grade) return null;
+  return el('span', { cls: 'pc-grade' }, [
+    el('span', { cls: 'pc-badge-glyph', attrs: { 'aria-hidden': 'true' }, text: '◆' }),
+    el('span', { text: find.grade }),
+  ]);
+}
+
+/** `cardvault · 2,410 fb · listed 2026-09-19`, with the new mark at the end. */
+function pcFootLine(find) {
+  const bits = [];
+  if (find.seller) bits.push(el('span', { text: find.seller }));
+  const fb = count(find.sellerFb);
+  if (fb) {
+    if (bits.length) bits.push(sep());
+    bits.push(el('span', { text: `${fb} fb` }));
+  }
+  // A business date, printed as text — rule 7. It is never parsed, here or
+  // anywhere: `listed` is a Central YYYY-MM-DD and that is what it stays.
+  if (find.listed) {
+    if (bits.length) bits.push(sep());
+    bits.push(el('span', { text: `listed ${find.listed}` }));
+  }
+  if (!bits.length && !find.isNew) return null;
+  return el('div', { cls: 'pc-foot-line' }, [
+    el('span', { cls: 'pc-who-line' }, bits),
+    find.isNew ? newMark() : null,
+  ]);
+}
+
+/**
+ * One PC find, laid out. NOT `listingRow` with a flag set — see the header.
+ *
+ * The shape is serial-and-grade first, money second, because the question
+ * this sheet answers is "does it exist, and in what grade". On Watch the
+ * money leads, because there the question is whether the number is low
+ * enough. Same components, opposite emphasis, and that is the point.
+ */
+function pcRow(find, clocks) {
+  const auction = find.type === 'AUCTION';
+  const ends = auction ? endsLine(find, clocks, { amber: false }) : null;
+
+  const marks = [serialBadge(find), gradeChip(find)].filter(Boolean);
+  if (find.type === 'OBO') marks.push(chip('OBO', 'obo'));
+
+  const kids = [
+    thumb(find),
+    el('div', { cls: 'cards-main' }, [
+      el('div', { cls: 'cards-title-line' }, [
+        el('span', { cls: 'cards-title', text: find.title || '(untitled listing)' }),
+      ]),
+      find.player ? el('div', { cls: 'cards-who', text: find.player }) : null,
+      // Badges and money share a line where there is room for both, and wrap
+      // to two on a phone. The serial is the anchor, so it leads.
+      el('div', { cls: 'pc-line' }, [
+        marks.length ? el('div', { cls: 'pc-marks' }, marks) : null,
+        priceLine(find, { auction, unknownShip: true }),
+      ]),
+      ends ? ends.node : null,
+      pcFootLine(find),
+    ]),
+  ];
+
+  const safe = safeUrl(find.url);
+  const row = safe
+    ? el(
+        'a',
+        { cls: 'pc-row cards-row-link', attrs: { href: safe, target: '_blank', rel: 'noopener noreferrer' } },
+        kids
+      )
+    : el('div', { cls: 'pc-row' }, kids);
+
+  if (ends && ends.entry) {
+    ends.entry.row = row;
+    paintClock(ends.entry, ends.entry.ms);
+  }
+  return row;
+}
+
+/**
+ * The PC sheet: what the net caught, bookends first.
+ *
+ * `finds` arrives ordered — bookends, then one-of-ones — and the order INSIDE
+ * each class is the engine's. This partitions on `one_of_one` rather than
+ * trusting the boundary to be where it looks, and re-sorts neither half.
+ *
+ * Returns the clock's teardown, exactly as the Watch sheet does: an auction
+ * in here counts down on the same machinery, minus the amber.
+ */
+function pcBody(pc, data, tile) {
+  const finds = arr(pc.finds).map(planFind);
+  const bookends = finds.filter((f) => !f.oneOfOne);
+  const ones = finds.filter((f) => f.oneOfOne);
+  const errors = arr(pc.errors).filter(Boolean).map(String);
+  const counts = obj(pc.counts);
+  const shown = num(counts.shown);
+  const found = num(pc.total_found);
+
+  return (body) => {
+    const clocks = [];
+
+    if (errors.length) {
+      body.appendChild(el('p', { cls: 'cards-errors', text: `feed trouble: ${errors.join(' · ')}` }));
+    }
+    const warn = staleMark(tile, pc);
+    if (warn) body.appendChild(warn);
+
+    // The caps are deliberate — per class and per seller — so the gap between
+    // what was found and what is listed is said out loud rather than left to
+    // look like a short night. When they match there is nothing to say.
+    if (shown !== null && found !== null && found > shown) {
+      body.appendChild(el('p', { cls: 'pc-showing', text: `Showing ${shown} of ${found}` }));
+    }
+
+    if (!finds.length) {
+      body.appendChild(empty('Nothing graded and numbered 1/N or N/N on the board right now.'));
+    } else {
+      // Bookends are the target; one-of-ones are the bonus class. That order
+      // is the engine's and it is the order they are read in.
+      if (bookends.length) {
+        body.appendChild(sectionHead(`Bookends (${bookends.length})`));
+        body.appendChild(el('div', { cls: 'pc-list' }, bookends.map((f) => pcRow(f, clocks))));
+      }
+      if (ones.length) {
+        body.appendChild(sectionHead(`One of ones (${ones.length})`));
+        body.appendChild(el('div', { cls: 'pc-list' }, ones.map((f) => pcRow(f, clocks))));
+      }
+    }
+
+    const foot = [str(data.pc_footer).trim(), 'eBay data via Browse API'].filter(Boolean).join(' · ');
+    body.appendChild(el('p', { cls: 'cards-foot', text: foot }));
+
+    return startClock(clocks);
+  };
+}
+
 /**
  * A face the engine lights up later — `shop` the day it arrives.
  *
@@ -650,6 +869,10 @@ function liveButton(face, { chipNode = null, dot = false, open = null }) {
 
 const WATCH_FACE = { key: 'watch', emoji: '🎯', label: 'Watch', tone: 'hunt' };
 const SHOP_FACE = { key: 'shop', emoji: '🏷️', label: 'Shop', tone: 'shop' };
+const PC_FACE = { key: 'pc', emoji: '🎖️', label: 'PC', tone: 'pc' };
+
+/** Is this payload a face the engine has actually lit up? */
+const isFace = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
 
 export function render(root, tile, ctx) {
   const data = obj(tile && tile.data);
@@ -698,7 +921,7 @@ export function render(root, tile, ctx) {
 
   // `shop: null` is the payload saying the face is coming, not that it is
   // empty — so it is a button either way, greyed until the day it answers.
-  const hasShop = data.shop && typeof data.shop === 'object' && !Array.isArray(data.shop);
+  const hasShop = isFace(data.shop);
   buttons.push(
     hasShop
       ? liveButton(SHOP_FACE, {
@@ -706,6 +929,29 @@ export function render(root, tile, ctx) {
         })
       : soonButton(SHOP_FACE)
   );
+
+  // 🎖️ PC — the bookend net. Its chip counts arrivals and nothing else:
+  // there is no gate here to have cleared, so a count of finds would be a
+  // number with no decision in it. Zero new means no chip; the button stays
+  // tappable, because "nothing new tonight" is worth being able to confirm.
+  const hasPc = isFace(data.pc);
+  const pc = obj(data.pc);
+  if (!hasPc) {
+    buttons.push(soonButton(PC_FACE));
+  } else {
+    const fresh = arr(pc.finds).filter((f) => obj(f).new === true).length;
+    buttons.push(
+      liveButton(PC_FACE, {
+        chipNode: fresh
+          ? el('span', { cls: 'cards-count cards-count-pc' }, [
+              el('span', { text: String(fresh) }),
+              el('span', { cls: 'cards-count-new', text: 'new' }),
+            ])
+          : null,
+        open: openPanel ? () => openPanel('🎖️ PC', pcBody(pc, data, tile)) : null,
+      })
+    );
+  }
 
   root.appendChild(el('div', { cls: 'cards-menu', attrs: { role: 'group', 'aria-label': 'Cards' } }, buttons));
 
@@ -720,6 +966,18 @@ export function render(root, tile, ctx) {
   const feed = ctTime(watch.updated_at);
   if (feed) bits.push(`feed ${feed}`);
   if (bits.length) root.appendChild(el('p', { cls: 'tile-foot', text: bits.join(' · ') }));
+
+  // The PC net's own line, under Watch's. The two faces count different
+  // things and neither number belongs in the other's sentence.
+  if (hasPc) {
+    const c = obj(pc.counts);
+    const pcBits = [];
+    const bookends = num(c.bookend);
+    if (bookends !== null) pcBits.push(`${bookends} bookends`);
+    const oneOfOnes = num(c.one_of_one);
+    if (oneOfOnes !== null) pcBits.push(`${oneOfOnes} 1/1s`);
+    if (pcBits.length) root.appendChild(el('p', { cls: 'tile-foot', text: pcBits.join(' · ') }));
+  }
 
   const warn = staleMark(tile, watch);
   if (warn) root.appendChild(warn);
