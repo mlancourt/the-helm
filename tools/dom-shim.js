@@ -43,7 +43,15 @@ class El {
   removeChild(n) { this.childNodes = this.childNodes.filter((c) => c !== n); return n; }
   get firstChild() { return this.childNodes[0] || null; }
   get previousSibling() { return null; }
-  setAttribute(k, v) { this.attrs[k] = String(v); }
+  // `class` is an attribute like any other in a real DOM, and setting it
+  // moves classList with it. The Ledger's sparkline needs that: an SVG
+  // element's className is a read-only SVGAnimatedString, so svgEl() sets
+  // the class through here — and every `.ledger-spark` assertion would miss
+  // if the shim filed it away as a plain string.
+  setAttribute(k, v) {
+    this.attrs[k] = String(v);
+    if (k === 'class') this.classList.set = new Set(String(v).split(/\s+/).filter(Boolean));
+  }
   getAttribute(k) { return this.attrs[k]; }
   addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
   querySelectorAll(sel) { return all(this).filter((n) => matches(n, sel)); }
@@ -56,7 +64,7 @@ function all(node, out = []) {
 }
 function matches(node, sel) {
   return sel.split(',').map((s) => s.trim()).some((s) =>
-    s.startsWith('.') ? node.classList.contains(s.slice(1)) : node.tagName === s.toUpperCase()
+    s.startsWith('.') ? node.classList.contains(s.slice(1)) : node.tagName.toUpperCase() === s.toUpperCase()
   );
 }
 
@@ -79,6 +87,17 @@ const docListeners = new Map();
 
 global.document = {
   createElement: (t) => new El(t),
+  /**
+   * The SVG half. The tag keeps its case, the way a real SVG element's
+   * tagName does ('path', not 'PATH'), and `matches()` above compares
+   * case-insensitively so a selector written either way still finds it.
+   */
+  createElementNS: (ns, t) => {
+    const n = new El(t);
+    n.tagName = String(t);
+    n.namespaceURI = String(ns);
+    return n;
+  },
   createTextNode: (t) => new TextNode(t),
   hidden: false,
   addEventListener(type, fn) {

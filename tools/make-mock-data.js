@@ -280,6 +280,15 @@ function snapshot() {
         source: 'mock generator — invented tickets and an invented settled log',
       }),
 
+      // The Ledger: the look-back, DAILY. Every figure here is the engine's —
+      // records, nets, ROI, the curve, the streak, the reconcile gap. The page
+      // lays them out and computes none of them, so the mock's job is to put
+      // one of every SHAPE on the board: a curve that crosses 100 in both
+      // directions, a class under the floor so `class_other` has something to
+      // sum, all three price buckets, all six receipts, and a non-zero gap so
+      // the sheet's reconcile line renders.
+      bets_ledger: tile('DAILY', betsLedger()),
+
       // Today's Games: the engine publishes only the league list, the watch
       // map and the Central date. Every game comes from ESPN in the browser —
       // from docs/mock/espn-today.json under `?mock=1`. The two are generated
@@ -1789,6 +1798,162 @@ function cardsPcErrorsSnapshot() {
   return snap;
 }
 
+
+/**
+ * A settled-history payload, invented end to end (hard rule 1).
+ *
+ * LEDGER_CURVE crosses 100 twice on purpose: the sparkline's stroke colour is
+ * the sign of net-since-slate, and a curve that only ever sat above the line
+ * would never exercise the other half of that decision.
+ */
+const LEDGER_CURVE = [
+  101.72, 102.21, 100.64, 99.18, 98.05, 99.42, 101.1, 103.36,
+  102.48, 104.9, 106.11, 107.35, 105.02, 103.77, 104.58, 104.34,
+];
+
+function ledgerRec(record, net, staked, roi, winPct) {
+  const [wins, losses] = record.split('-').map(Number);
+  return {
+    n: wins + losses,
+    wins,
+    losses,
+    record,
+    net_u: net,
+    staked_u: staked,
+    roi_pct: roi,
+    win_pct: winPct,
+  };
+}
+
+function betsLedger() {
+  const slate = addDays(TODAY, -31);
+  // One point per settled day, oldest first, ending yesterday.
+  const curve = LEDGER_CURVE.map((u, i) => ({ d: addDays(TODAY, -(LEDGER_CURVE.length - i)), u }));
+  return {
+    as_of: TODAY,
+    slate_day: slate,
+    // The Bookie's ledger line, which is NOT the curve's last point — the two
+    // disagree by the gap below, and L10 says the Bookie wins.
+    bankroll_u: 105.24,
+    streak: 'L4',
+    windows: {
+      '7d': { ...ledgerRec('17-19', 0.96, 27.0, 3.6, 47), since: addDays(TODAY, -6) },
+      '30d': { ...ledgerRec('32-33', 2.62, 45.25, 5.8, 49), since: addDays(TODAY, -29) },
+      slate: { ...ledgerRec('33-33', 4.34, 46.25, 9.4, 50), since: slate },
+    },
+    curve,
+    hwm: { d: curve[11].d, u: 107.35 },
+    lwm: { d: curve[4].d, u: 98.05 },
+    by_sport: [
+      { s: '🏈', ...ledgerRec('8-4', 3.21, 9.0, 35.7, 67) },
+      { s: '⚾', ...ledgerRec('4-3', 2.01, 5.5, 36.5, 57) },
+      { s: '⚽', ...ledgerRec('21-26', -0.88, 31.75, -2.8, 45) },
+    ],
+    by_class: [
+      { tag: 'user-independent-read', ...ledgerRec('4-0', 2.63, 2.75, 95.6, 100) },
+      { tag: 'road-dog-rest-edge', ...ledgerRec('5-2', 1.44, 4.5, 32.0, 71) },
+      { tag: 'first-half-under', ...ledgerRec('3-3', 0.21, 3.0, 7.0, 50) },
+      { tag: 'total-fade-public', ...ledgerRec('4-6', -0.62, 5.0, -12.4, 40) },
+      { tag: 'key-number-hook', ...ledgerRec('1-4', -2.18, 3.25, -67.1, 20) },
+    ],
+    class_min_n: 3,
+    // A class at 2-0 is hiding in here until its third ticket — the floor
+    // doing its job, and the reason this line exists at all.
+    class_other: { classes: 24, ...ledgerRec('10-17', -1.84, 12.75, -14.4, 37) },
+    price: {
+      dog: ledgerRec('13-21', -1.24, 19.5, -6.4, 38),
+      fav: ledgerRec('18-11', 4.33, 25.25, 17.1, 62),
+      even: ledgerRec('2-0', 1.5, 1.5, 100.0, 100),
+    },
+    receipts: {
+      best_ticket: {
+        d: addDays(TODAY, -4),
+        s: '⚽',
+        label: 'UNDER 2.5 goals (reg. time)',
+        game: 'Cross Harbor SC at Riverbend FC',
+        u: 1.99,
+      },
+      worst_ticket: {
+        d: addDays(TODAY, -2),
+        s: '🏈',
+        label: 'Sentinels -3.5 (1H)',
+        game: 'Cedar Valley Drays at North Pike Sentinels',
+        u: -1.5,
+      },
+      best_day: { d: addDays(TODAY, -4), net_u: 4.87, record: '4-0', n: 4 },
+      worst_day: { d: addDays(TODAY, -2), net_u: -1.81, record: '3-6', n: 9 },
+      longest_w: { n: 6, from: addDays(TODAY, -12), to: addDays(TODAY, -8) },
+      // A skid that started and ended the same day — the row collapses to one
+      // date rather than printing it twice.
+      longest_l: { n: 5, from: addDays(TODAY, -3), to: addDays(TODAY, -3) },
+      biggest_stake: { d: addDays(TODAY, -9), s: '🏀', label: 'Foremen ML', game: 'Lakeshore Current at Granite City Foremen', u: 1.03 },
+    },
+    passes: { '7d': 14, '30d': 20, slate: 23 },
+    reconcile: {
+      rows_net_u: 4.34,
+      rows_record: '33-33',
+      ledger_net_u: 5.24,
+      ledger_record: '35-33',
+      gap_u: 0.9,
+    },
+    voids: 3,
+    rows: 66,
+    source: 'mock generator — an invented settled log',
+  };
+}
+
+/**
+ * The thin log: a Ledger with barely anything in it.
+ *
+ * Two curve points (the fewest that can be a line), no class above the floor,
+ * no receipts at all and a reconcile that agrees. Every optional block on this
+ * tile is optional, and this is the fixture that proves the sections hide
+ * rather than render empty frames (rule 9).
+ */
+function betsLedgerThin() {
+  const slate = addDays(TODAY, -3);
+  return {
+    as_of: TODAY,
+    slate_day: slate,
+    bankroll_u: 100.4,
+    streak: null,
+    windows: {
+      '7d': { ...ledgerRec('1-1', 0.4, 1.0, null, 50), since: slate },
+      slate: { ...ledgerRec('1-1', 0.4, 1.0, null, 50), since: slate },
+    },
+    curve: [
+      { d: addDays(TODAY, -2), u: 99.5 },
+      { d: addDays(TODAY, -1), u: 100.4 },
+    ],
+    hwm: null,
+    lwm: null,
+    by_sport: [],
+    by_class: [],
+    class_min_n: 3,
+    class_other: null,
+    price: { dog: null, fav: null, even: { n: 0, record: '0-0', net_u: 0 } },
+    receipts: {
+      best_ticket: null,
+      worst_ticket: null,
+      best_day: null,
+      worst_day: null,
+      longest_w: null,
+      longest_l: null,
+    },
+    passes: { '7d': 0, '30d': 0, slate: 0 },
+    reconcile: { rows_net_u: 0.4, rows_record: '1-1', ledger_net_u: 0.4, ledger_record: '1-1', gap_u: 0 },
+    voids: 0,
+    rows: 2,
+    source: 'mock generator — a thin invented log',
+  };
+}
+
+function ledgerThinSnapshot() {
+  const snap = snapshot();
+  snap.tiles.bets_ledger = tile('DAILY', betsLedgerThin());
+  return snap;
+}
+
 const MODES = [
   ['--events', () => mockEvents()],
   ['--pending', () => mockPending()],
@@ -1799,6 +1964,8 @@ const MODES = [
   ['--cards-shop-empty', () => cardsShopEmptySnapshot()],
   ['--cards-pc-errors', () => cardsPcErrorsSnapshot()],
   ['--newsstand-stale', () => newsstandStaleSnapshot()],
+  // The Ledger with almost nothing settled: every optional block absent.
+  ['--ledger-thin', () => ledgerThinSnapshot()],
   // The weather tile's four faces (W6). The default snapshot carries the
   // Watch; these are the other three.
   ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],

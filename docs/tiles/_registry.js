@@ -13,6 +13,9 @@
 
 export const REGISTRY = {
   bets_live: { band: 'LIVE', position: 10, module: './tiles/bets_live.js', title: 'Open Bets' },
+  // The look-back to `bets_live`'s sweat — DAILY, because retrospective KPIs
+  // are settle-time facts, and first in that band so the two sit together.
+  bets_ledger: { band: 'DAILY', position: 11, module: './tiles/bets_ledger.js', title: '📒 The Ledger' },
   weather: { band: 'LIVE', position: 14, module: './tiles/weather.js', title: 'Weather' },
   today_games: { band: 'LIVE', position: 20, module: './tiles/today_games.js', title: "Today's Games" },
   cards: { band: 'HOURLY', position: 21, module: './tiles/cards.js', title: 'Cards' },

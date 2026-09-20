@@ -47,6 +47,8 @@
  */
 
 import { el, pill, empty } from '../lib/dom.js';
+// The streak chip is shared with `bets_ledger` — see lib/bets.js.
+import { streakChip } from '../lib/bets.js';
 import {
   units,
   exactUnits,
@@ -207,21 +209,6 @@ function headerStats(data, grades, games) {
     signedStat('lean now', leanUnits(tickets, grades)),
     signedStat('closed', closedUnits(tickets, grades, games)),
     stat('record', str(data.record) || '—'),
-  ]);
-}
-
-/** `🔥 W5` / `🧊 L3`, or nothing at all when there is no streak to name. */
-function streakChip(streak) {
-  const s = str(streak).trim();
-  if (!s) return null;
-  const hot = /^W/i.test(s);
-  const cold = /^L/i.test(s);
-  // A spelling this file does not recognise gets no chip rather than a
-  // confident colour: green is a claim, and "S3" is not one we can make.
-  if (!hot && !cold) return null;
-  return el('span', { cls: `form-streak form-streak-${hot ? 'hot' : 'cold'}` }, [
-    el('span', { cls: 'form-streak-emoji', attrs: { 'aria-hidden': 'true' }, text: hot ? '🔥' : '🧊' }),
-    el('span', { text: s }),
   ]);
 }
 

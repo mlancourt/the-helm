@@ -123,3 +123,36 @@ export function genericCard(body, tile) {
   body.appendChild(list);
   body.appendChild(el('p', { cls: 'tile-foot', text: 'No render module for this tile yet.' }));
 }
+
+/**
+ * The same constructor, in the SVG namespace.
+ *
+ * `document.createElement('svg')` makes an HTMLUnknownElement — it lands in
+ * the DOM, takes no attributes seriously and draws nothing at all. Anything
+ * inside an <svg> has to be created with createElementNS or the browser
+ * quietly renders an empty box, which is the sort of bug that only shows up
+ * on the phone. So the Ledger's sparkline is built through here.
+ *
+ * `class` goes through setAttribute rather than `.className`: on an SVG
+ * element className is a read-only SVGAnimatedString and assigning to it
+ * throws in strict mode. Same guarantee as `el()` otherwise — `text` is
+ * textContent, never markup (rule 10).
+ */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+export function svgEl(tag, opts = {}, kids = []) {
+  const node = document.createElementNS(SVG_NS, tag);
+  if (opts.cls) node.setAttribute('class', opts.cls);
+  if (opts.text !== undefined && opts.text !== null) node.textContent = String(opts.text);
+  if (opts.attrs) {
+    for (const [k, v] of Object.entries(opts.attrs)) {
+      if (v === null || v === undefined || v === false) continue;
+      node.setAttribute(k, String(v));
+    }
+  }
+  for (const kid of kids) {
+    if (kid === null || kid === undefined || kid === false) continue;
+    node.appendChild(kid);
+  }
+  return node;
+}

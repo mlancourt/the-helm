@@ -3703,6 +3703,421 @@ async function main() {
     check('nor a pending-offer one', !/pending_offer|pendingOffer/i.test(CARDS_SRC));
   });
 
+  // -- bets_ledger: The Ledger ------------------------------------------------
+  //
+  // The look-back tile (vault spec `Bets-Ledger-Tile-Spec.md`, L1–L10). Three
+  // things are worth more than all the layout assertions put together, and
+  // they are the three this block spends most of its length on:
+  //
+  //   L2  the last sparkline label is the BOOKIE'S bankroll, not the curve's
+  //       last point. The curve is the sum of the settled rows; when the two
+  //       disagree the Bookie wins, and the label is the one place on the face
+  //       where that choice is visible.
+  //   L9  colour is the sign of the number being printed and nothing else. No
+  //       drawdown shading, no pace, no threshold, no amber. Held three ways:
+  //       a class scan at the DOM, a source scan over every `cls:` in the
+  //       module, and a scan of the tile's own stylesheet block.
+  //   L8  passes are a count. No units, no "would have won", anywhere.
+  console.log('\nbets_ledger — The Ledger');
+  const ledger = mods.get('bets_ledger');
+  if (ledger) {
+    const LEDGER_SRC = fs
+      .readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'bets_ledger.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    const CSS_ALL = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+
+    const thinSnap = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'ledger-thin.json'), 'utf8')
+    );
+    const FULL = snapshot.tiles?.bets_ledger?.data;
+    const THIN = thinSnap.tiles?.bets_ledger?.data;
+
+    const ledgerTile = (data) => ({ band: 'DAILY', status: 'ok', data });
+    /** Render the tile and, if it offered one, open its sheet. */
+    function openLedger(data) {
+      const panel = fakePanel();
+      const root = new El('div');
+      ledger.render(root, ledgerTile(data), { id: 'bets_ledger', actions: panel.actions });
+      const face = root.querySelector('.ledger-face');
+      if (face && face.listeners.click) face.listeners.click[0]();
+      return { root, panel, sheet: panel.last ? panel.last.body : null };
+    }
+    const textsOf = (node, cls) => node.querySelectorAll('.' + cls).map((n) => n.textContent);
+    /** Every class anywhere under a node — the L9 scan's raw material. */
+    function classSet(node) {
+      const out = new Set();
+      for (const n of node.querySelectorAll('div, span, p, h3, svg, path, line, circle, text')) {
+        for (const c of n.className.split(/\s+/)) if (c) out.add(c);
+      }
+      return out;
+    }
+
+    check('the mock snapshot carries a ledger to render', !!FULL);
+    check('and the thin fixture carries one too', !!THIN);
+
+    const full = openLedger(FULL);
+
+    // -- the face: bankroll and streak ---------------------------------------
+    check('the bankroll is printed to one decimal', textsOf(full.root, 'ledger-bankroll')[0] === '105.2u', textsOf(full.root, 'ledger-bankroll')[0]);
+    check('and carries no colour of its own (B9)', full.root.querySelector('.ledger-bankroll').className === 'ledger-bankroll');
+    check('the streak wears the shared chip', countOf(full.root, 'form-streak') === 1);
+    check('cold, because the payload says L4', countOf(full.root, 'form-streak-cold') === 1 && /🧊L4/.test(full.root.querySelector('.form-streak').textContent));
+    const hot = openLedger({ ...FULL, streak: 'W5' });
+    check('and hot when it says W5', countOf(hot.root, 'form-streak-hot') === 1);
+    const noStreak = openLedger({ ...FULL, streak: null });
+    check('no streak means no chip at all, not an empty one', countOf(noStreak.root, 'form-streak') === 0);
+    const oddStreak = openLedger({ ...FULL, streak: 'S3' });
+    check('a spelling the chip cannot read gets no colour either', countOf(oddStreak.root, 'form-streak') === 0);
+
+    // -- the sparkline (L2) ---------------------------------------------------
+    check('a sparkline is drawn', countOf(full.root, 'ledger-spark') === 1);
+    const svg = full.root.querySelector('.ledger-spark');
+    check('as an SVG, not a div', svg.tagName.toLowerCase() === 'svg');
+    check('with a line and a fill under it', countOf(svg, 'ledger-spark-line') === 1 && countOf(svg, 'ledger-spark-fill') === 1);
+    check('and a dotted 100u baseline', countOf(svg, 'ledger-spark-base') === 1 && /dash/.test(CSS_ALL.match(/\.ledger-spark-base\s*\{[^}]*\}/)[0]));
+    check('the baseline is drawn at 100u, not at the curve floor', (() => {
+      const base = svg.querySelector('.ledger-spark-base');
+      const y = Number(base.getAttribute('y1'));
+      const pts = FULL.curve.map((p) => p.u);
+      // 100 sits inside this curve's range, so the rule must sit inside the box.
+      return Number.isFinite(y) && y > 0 && y < 56 && Math.min(...pts) < 100 && Math.max(...pts) > 100;
+    })());
+    check('the title says what window it covers', /^since 2/.test(svg.querySelector('title').textContent) && /33-33/.test(svg.querySelector('title').textContent), svg.querySelector('title').textContent);
+    check('and prints the slate day verbatim', svg.querySelector('title').textContent.includes(FULL.slate_day));
+
+    // THE L2 ASSERTION. The curve ends at 104.34; the Bookie says 105.24. The
+    // dot sits where the rows put it and the label says what the Bookie says.
+    const sparkLabels = textsOf(svg, 'ledger-spark-label');
+    check('the last point is labelled', sparkLabels.length === 3, sparkLabels.join('|'));
+    check('with the BOOKIE’s bankroll', sparkLabels[sparkLabels.length - 1] === '105.2', sparkLabels[sparkLabels.length - 1]);
+    check('and not with the curve’s last point', sparkLabels[sparkLabels.length - 1] !== (104.34).toFixed(1));
+    check('the high-water mark is marked and labelled', /⬆/.test(sparkLabels[0]), sparkLabels[0]);
+    check('the low-water mark too', /⬇/.test(sparkLabels[1]), sparkLabels[1]);
+    check('both wear a dot', countOf(svg, 'ledger-spark-mark') === 2);
+    check('and the last point wears its own', countOf(svg, 'ledger-spark-now') === 1);
+    const noMarks = openLedger({ ...FULL, hwm: null, lwm: null });
+    check('no marks published means no marks drawn', countOf(noMarks.root, 'ledger-spark-mark') === 0);
+    check('but the bankroll label survives', textsOf(noMarks.root, 'ledger-spark-label').length === 1);
+
+    check('a curve above the line strokes green', svg.className.includes('ledger-spark-good'), svg.className);
+    const under = openLedger({ ...FULL, curve: FULL.curve.map((p) => ({ ...p, u: p.u - 12 })), bankroll_u: 93.1, hwm: null, lwm: null });
+    check('and one below it strokes red', under.root.querySelector('.ledger-spark').className.includes('ledger-spark-bad'));
+    const one = openLedger({ ...FULL, curve: [FULL.curve[0]] });
+    check('one point is not a line, so nothing is drawn', countOf(one.root, 'ledger-spark') === 0);
+    const none = openLedger({ ...FULL, curve: [] });
+    check('nor is an empty curve', countOf(none.root, 'ledger-spark') === 0);
+    check('and the rest of the face renders anyway (rule 9)', countOf(none.root, 'ledger-win') === 3);
+    const junkCurve = openLedger({ ...FULL, curve: [{ d: 'x' }, { u: null }, 'nope', null] });
+    check('a curve of unusable points draws nothing rather than NaN', countOf(junkCurve.root, 'ledger-spark') === 0);
+
+    // -- the windows strip (L3) -----------------------------------------------
+    check('three window cells', countOf(full.root, 'ledger-win') === 3);
+    check('labelled 7d, 30d and slate in that order', textsOf(full.root, 'ledger-win-label').join() === '7d,30d,slate');
+    check('each showing its record', textsOf(full.root, 'ledger-win-record').join() === '17-19,32-33,33-33');
+    check('and its net', textsOf(full.root, 'ledger-win-net').join() === '+0.96u,+2.62u,+4.34u');
+    check('with ROI in the small line', textsOf(full.root, 'ledger-win-roi').join() === 'ROI +3.6%,ROI +5.8%,ROI +9.4%');
+    check('a null ROI drops the line entirely', (() => {
+      const r = openLedger({ ...FULL, windows: { '7d': { ...FULL.windows['7d'], roi_pct: null } } });
+      return countOf(r.root, 'ledger-win') === 1 && countOf(r.root, 'ledger-win-roi') === 0;
+    })());
+    check('printing no "null" in its place', !/null|NaN|undefined/i.test(textOf(full.root)), textOf(full.root).slice(0, 120));
+    check('a window the engine did not send is simply absent', (() => {
+      const r = openLedger({ ...FULL, windows: { slate: FULL.windows.slate } });
+      return countOf(r.root, 'ledger-win') === 1 && textsOf(r.root, 'ledger-win-label')[0] === 'slate';
+    })());
+    check('the cells are not tappable in v1', full.root.querySelectorAll('.ledger-win').every((c) => !c.listeners.click));
+    const negWin = openLedger({ ...FULL, windows: { '7d': { ...FULL.windows['7d'], net_u: -3.2, roi_pct: -11.4 } } });
+    check('a losing window’s net goes red', negWin.root.querySelector('.ledger-win-net').className.includes('ledger-bad'));
+    check('and its ROI carries the sign', textsOf(negWin.root, 'ledger-win-roi')[0] === 'ROI −11.4%', textsOf(negWin.root, 'ledger-win-roi')[0]);
+    const flatWin = openLedger({ ...FULL, windows: { '7d': { ...FULL.windows['7d'], net_u: 0 } } });
+    check('a dead-level window is neither', flatWin.root.querySelector('.ledger-win-net').className.includes('ledger-flat'));
+
+    // -- the footer chips (L8) ------------------------------------------------
+    const chips = textsOf(full.root, 'ledger-chip');
+    check('two footer chips', chips.length === 2, chips.join(' | '));
+    // L8, as an exact string. A count and nothing else.
+    check('the passes chip is a count and nothing more', chips[0] === '🤚 14 passes this week', chips[0]);
+    check('carrying no units', !/u\b/.test(chips[0]));
+    check('and no hypothetical', !/would|could|missed|left/i.test(chips[0]));
+    check('one pass is not "1 passes"', (() => {
+      const r = openLedger({ ...FULL, passes: { '7d': 1 } });
+      return textsOf(r.root, 'ledger-chip')[0] === '🤚 1 pass this week';
+    })());
+    check('zero passes still says so', (() => {
+      const r = openLedger({ ...FULL, passes: { '7d': 0 } });
+      return textsOf(r.root, 'ledger-chip')[0] === '🤚 0 passes this week';
+    })());
+    check('no passes block means no chip, not a zero', (() => {
+      const r = openLedger({ ...FULL, passes: null });
+      return textsOf(r.root, 'ledger-chip').length === 1;
+    })());
+    check('the ticket chip counts rows since the slate', chips[1] === `66 tickets since ${FULL.slate_day}`, chips[1]);
+    check('printing the slate day verbatim (rule 7)', chips[1].includes(FULL.slate_day));
+
+    // -- the sheet: by sport (L4) ---------------------------------------------
+    check('tapping the face opens a sheet', full.panel.calls.length === 1);
+    check('titled with the nameplate', full.panel.last.title === '📒 The Ledger');
+    const sheet = full.sheet;
+    check('one row per sport', countOf(sheet, 'ledger-sport') === 3);
+    check('each led by its own emoji', textsOf(sheet, 'ledger-sport-emoji').join() === '🏈,⚾,⚽');
+    check('with the record and the net beside it', textsOf(sheet, 'ledger-sport-rec').join() === '8-4,4-3,21-26' && textsOf(sheet, 'ledger-sport-net').join() === '+3.21u,+2.01u,−0.88u');
+    const bars = sheet.querySelectorAll('.ledger-bar-fill');
+    check('and a bar under each', bars.length === 3);
+    check('the biggest net fills its whole half', bars[0].getAttribute('style') === 'width:50.0%', bars[0].getAttribute('style'));
+    check('the others in proportion to it', (() => {
+      const w = (i) => Number(bars[i].getAttribute('style').match(/([\d.]+)%/)[1]);
+      return Math.abs(w(1) - (2.01 / 3.21) * 50) < 0.2 && Math.abs(w(2) - (0.88 / 3.21) * 50) < 0.2;
+    })(), bars.map((b) => b.getAttribute('style')).join(' '));
+    check('a winning sport grows right of the rule', bars[0].className.includes('ledger-fill-good'));
+    check('a losing one grows left', bars[2].className.includes('ledger-fill-bad'));
+    check('every bar has a centre rule to grow from', countOf(sheet, 'ledger-bar-rule') === 3);
+    check('a sport at exactly zero draws a flat bar, not a red one', (() => {
+      const r = openLedger({ ...FULL, by_sport: [{ s: '🏒', record: '2-2', net_u: 0 }] });
+      return r.sheet.querySelector('.ledger-bar-fill').className.includes('ledger-fill-flat');
+    })());
+
+    // -- the sheet: angles (L5) -----------------------------------------------
+    check('one row per published class', countOf(sheet, 'ledger-class') === 6);
+    check('tags render in the monospace face', /monospace/.test(CSS_ALL.match(/\.ledger-tag\s*\{[^}]*\}/)[0]));
+    check('the first row is crowned', textsOf(sheet, 'ledger-class-mark')[0] === '🏆');
+    check('the last published class is buried', textsOf(sheet, 'ledger-class-mark')[4] === '💀');
+    check('and nothing between them is marked', textsOf(sheet, 'ledger-class-mark').slice(1, 4).join('') === '');
+    check('the tag is the engine’s, verbatim', textsOf(sheet, 'ledger-tag')[0] === 'user-independent-read');
+    check('the under-floor classes are summed into one muted row', countOf(sheet, 'ledger-class-other') === 1 && /other \(24 classes\)/.test(textOf(sheet)));
+    check('and that row carries no trophy or skull', textsOf(sheet, 'ledger-class-mark')[5] === '');
+    check('one class alone is neither best nor worst', (() => {
+      const r = openLedger({ ...FULL, by_class: [FULL.by_class[0]], class_other: null });
+      return textsOf(r.sheet, 'ledger-class-mark').join('') === '';
+    })());
+    check('an empty leaderboard hides the whole section', (() => {
+      const r = openLedger({ ...FULL, by_class: [] });
+      return countOf(r.sheet, 'ledger-class') === 0 && !/Angles/.test(textOf(r.sheet));
+    })());
+    check('even when class_other still has something in it', (() => {
+      const r = openLedger({ ...FULL, by_class: [] });
+      return !/other \(/.test(textOf(r.sheet));
+    })());
+
+    // -- the sheet: dogs vs favorites (L6) ------------------------------------
+    check('two price cells, plus the even footnote', countOf(sheet, 'ledger-price-cell') === 3);
+    check('the dog first', /🐕/.test(sheet.querySelectorAll('.ledger-price-cell')[0].textContent));
+    check('the favorite second', /🏦/.test(sheet.querySelectorAll('.ledger-price-cell')[1].textContent));
+    check('each with record, net and win rate', textsOf(sheet, 'ledger-price-rec').slice(0, 2).join() === '13-21,18-11' && textsOf(sheet, 'ledger-price-pct').slice(0, 2).join() === '38%,62%');
+    check('the dog’s losing net is red', sheet.querySelectorAll('.ledger-price-net')[0].className.includes('ledger-bad'));
+    check('the favorite’s winning net is green', sheet.querySelectorAll('.ledger-price-net')[1].className.includes('ledger-good'));
+    check('the even cell is the small one', countOf(sheet, 'ledger-price-even') === 1);
+    check('and appears only when there were any', (() => {
+      const r = openLedger({ ...FULL, price: { ...FULL.price, even: { n: 0, record: '0-0', net_u: 0 } } });
+      return countOf(r.sheet, 'ledger-price-even') === 0 && countOf(r.sheet, 'ledger-price-cell') === 2;
+    })());
+    check('a missing even block is simply absent', (() => {
+      const r = openLedger({ ...FULL, price: { dog: FULL.price.dog, fav: FULL.price.fav } });
+      return countOf(r.sheet, 'ledger-price-cell') === 2;
+    })());
+    check('no price block hides the section', (() => {
+      const r = openLedger({ ...FULL, price: null });
+      return countOf(r.sheet, 'ledger-price-cell') === 0 && !/Dogs vs/.test(textOf(r.sheet));
+    })());
+
+    // -- the sheet: receipts (L7) ---------------------------------------------
+    const receipts = sheet.querySelectorAll('.ledger-receipt');
+    check('six receipts', receipts.length === 6);
+    check('in the ruled order', textsOf(sheet, 'ledger-receipt-emoji').join('') === '💰🩸📈📉🔥🧊');
+    check('the biggest cash names its ticket and its game', /UNDER 2.5 goals/.test(receipts[0].textContent) && /Cross Harbor SC at Riverbend FC/.test(receipts[0].textContent));
+    check('and its date, verbatim', receipts[0].textContent.includes(FULL.receipts.best_ticket.d));
+    check('with the units in green', receipts[0].querySelector('.ledger-receipt-net').className.includes('ledger-good') && receipts[0].querySelector('.ledger-receipt-net').textContent === '+1.99u');
+    check('the worst beat in red', receipts[1].querySelector('.ledger-receipt-net').className.includes('ledger-bad') && receipts[1].querySelector('.ledger-receipt-net').textContent === '−1.50u');
+    check('the best day carries its record and count', /4-0/.test(receipts[2].textContent) && /4 tickets/.test(receipts[2].textContent));
+    check('a streak row reads length then span', /W6\s*·\s*\d{4}-\d{2}-\d{2} → \d{4}-\d{2}-\d{2}/.test(receipts[4].textContent.replace(/\s+/g, ' ')), receipts[4].textContent);
+    check('a one-day skid prints one date, not the same one twice', (() => {
+      const t = receipts[5].textContent;
+      return /L5/.test(t) && !/→/.test(t) && (t.match(/\d{4}-\d{2}-\d{2}/g) || []).length === 1;
+    })(), receipts[5].textContent);
+    check('a streak row carries no invented units', !receipts[4].querySelector('.ledger-receipt-net') && !receipts[5].querySelector('.ledger-receipt-net'));
+    check('a null receipt is skipped, not printed empty', (() => {
+      const r = openLedger({ ...FULL, receipts: { ...FULL.receipts, best_ticket: null, longest_l: null } });
+      return r.sheet.querySelectorAll('.ledger-receipt').length === 4;
+    })());
+    check('no receipts at all hides the section', (() => {
+      const r = openLedger({ ...FULL, receipts: null });
+      return countOf(r.sheet, 'ledger-receipt') === 0 && !/Receipts/.test(textOf(r.sheet));
+    })());
+
+    // -- the sheet footer (L10) -----------------------------------------------
+    const foot = sheet.querySelectorAll('.tile-foot')[0].textContent;
+    check('the footer says settled rows only', /^settled rows only/.test(foot), foot);
+    check('and counts the voids', /voids 3/.test(foot));
+    check('the reconcile line appears when the gap is open', /rows 33-33 \+4\.34u/.test(foot) && /Bookie ledger 35-33 \+5\.24u/.test(foot), foot);
+    check('and vanishes when it is closed', (() => {
+      const r = openLedger({ ...FULL, reconcile: { ...FULL.reconcile, gap_u: 0 } });
+      const f = r.sheet.querySelectorAll('.tile-foot')[0].textContent;
+      return /settled rows only/.test(f) && !/Bookie ledger/.test(f);
+    })());
+    check('a missing reconcile block is not a gap', (() => {
+      const r = openLedger({ ...FULL, reconcile: null });
+      return !/Bookie ledger/.test(r.sheet.querySelectorAll('.tile-foot')[0].textContent);
+    })());
+    // The wording rule, in reverse. `bets_live` must say "lean, not
+    // settlement" under every board; this tile must NOT, because nothing on
+    // it is a lean — everything here has already been settled by the Bookie.
+    check('the tile never calls any of this a lean', !/lean/i.test(`${textOf(full.root)} ${textOf(sheet)}`));
+    check('nor does the module source', !/\blean\b/i.test(LEDGER_SRC));
+
+    // -- the thin log: every optional block absent (rule 9) --------------------
+    console.log('\nbets_ledger — a thin log');
+    const thin = openLedger(THIN);
+    check('a two-point curve still draws a line', countOf(thin.root, 'ledger-spark') === 1);
+    check('with no marks it was not given', countOf(thin.root, 'ledger-spark-mark') === 0);
+    check('and the bankroll label alone', textsOf(thin.root, 'ledger-spark-label').join() === '100.4');
+    check('two windows render as two cells', countOf(thin.root, 'ledger-win') === 2);
+    check('with no ROI, since nothing was staked to have one', countOf(thin.root, 'ledger-win-roi') === 0);
+    check('no streak, no chip', countOf(thin.root, 'form-streak') === 0);
+    check('the sheet hides by-sport', !/By sport/.test(textOf(thin.sheet)));
+    check('hides the leaderboard', !/Angles/.test(textOf(thin.sheet)));
+    check('hides dogs vs favorites', !/Dogs vs/.test(textOf(thin.sheet)));
+    check('hides the receipts', !/Receipts/.test(textOf(thin.sheet)));
+    check('and says so once rather than showing four empty frames', /Nothing settled yet/.test(textOf(thin.sheet)));
+    check('its footer keeps the voids and drops the reconcile', /voids 0/.test(textOf(thin.sheet)) && !/Bookie ledger/.test(textOf(thin.sheet)));
+    check('nothing on the thin face reads as a bug', !/undefined|NaN|Invalid Date/.test(`${textOf(thin.root)} ${textOf(thin.sheet)}`));
+
+    // -- degradation ----------------------------------------------------------
+    const bare = openLedger({});
+    check('an empty payload renders a card, not a throw', countOf(bare.root, 'ledger-face') === 1);
+    check('and says there is nothing settled', /Nothing settled/.test(textOf(bare.root)));
+    let inertThrew = null;
+    try {
+      const inert = new El('div');
+      ledger.render(inert, ledgerTile(FULL), { id: 'bets_ledger', actions: {} });
+      check('with no panel action the face is inert', !inert.querySelector('.ledger-face').listeners.click);
+      check('and advertises no affordance it does not have', inert.querySelector('.ledger-face').getAttribute('role') === undefined);
+    } catch (e) { inertThrew = e; }
+    check('an older shell never takes the card down', !inertThrew, inertThrew && inertThrew.message);
+
+    // -- RULE 7 ---------------------------------------------------------------
+    check('the module never parses a date', !/new Date|Date\.parse/.test(LEDGER_SRC));
+    check('nor reaches for a date formatter', !/ctKick|ctClock|prettyDate|dayLabel|ctToday|msUntil/.test(LEDGER_SRC));
+    check('every date it prints is the engine’s string, character for character', (() => {
+      const all = `${textOf(full.root)} ${textOf(sheet)}`;
+      const wanted = [FULL.slate_day, FULL.receipts.best_ticket.d, FULL.receipts.worst_day.d, FULL.receipts.longest_w.from, FULL.receipts.longest_w.to];
+      return wanted.every((d) => all.includes(d));
+    })());
+    check('and no date is reformatted on the way out', !/[A-Z][a-z]{2} [A-Z][a-z]{2} \d/.test(`${textOf(full.root)} ${textOf(sheet)}`));
+
+    // -- RULE 10 / L1: the page computes nothing -------------------------------
+    check('it holds no state between renders', !/localStorage|sessionStorage/.test(LEDGER_SRC));
+    check('and starts no clocks', !/setInterval|setTimeout/.test(LEDGER_SRC));
+    check('no record is assembled from wins and losses here', !/wins[\s\S]{0,20}[-+][\s\S]{0,20}losses/.test(LEDGER_SRC));
+    check('no ROI is divided out here', !/net_u\s*\/|staked_u\s*\)?\s*\*/.test(LEDGER_SRC));
+
+    // -- L9: colour is the sign of the printed number, and nothing else --------
+    //
+    // Same shape as the cards `days_listed` neutrality test. Three scans,
+    // because the mistake this guards against is a year away and will look
+    // reasonable: someone adds an amber for "down more than 5u" and every
+    // layout assertion above still passes.
+    console.log('\nbets_ledger — colour is a sign, never a threshold (L9)');
+
+    // (1) at the DOM. A tile deep in drawdown must carry the SAME classes as
+    //     one in profit, tone aside. Nothing new appears as the number worsens.
+    const deep = openLedger({
+      ...FULL,
+      bankroll_u: 61.2,
+      streak: 'L11',
+      curve: FULL.curve.map((p) => ({ ...p, u: p.u - 40 })),
+      hwm: { d: FULL.hwm.d, u: 67.4 },
+      lwm: { d: FULL.lwm.d, u: 58.1 },
+      windows: Object.fromEntries(
+        Object.entries(FULL.windows).map(([k, w]) => [k, { ...w, net_u: -Math.abs(w.net_u) - 9, roi_pct: -41.2 }])
+      ),
+      by_sport: FULL.by_sport.map((s) => ({ ...s, net_u: -Math.abs(s.net_u) })),
+      by_class: FULL.by_class.map((c) => ({ ...c, net_u: -Math.abs(c.net_u) })),
+      price: {
+        dog: { ...FULL.price.dog, net_u: -9.9 },
+        fav: { ...FULL.price.fav, net_u: -12.4 },
+        even: FULL.price.even,
+      },
+    });
+    const TONES = /^(ledger-(good|bad|flat)|ledger-spark-(good|bad|flat)|ledger-fill-(good|bad|flat)|form-streak-(hot|cold))$/;
+    const strip = (set) => [...set].filter((c) => !TONES.test(c)).sort().join(',');
+    check(
+      'a bankroll 40u under water carries exactly the classes a winning one does',
+      strip(classSet(deep.root)) === strip(classSet(full.root)),
+      `${strip(classSet(deep.root))}\n    vs ${strip(classSet(full.root))}`
+    );
+    check(
+      'and so does its sheet',
+      strip(classSet(deep.sheet)) === strip(classSet(full.sheet))
+    );
+    const BANNED = ['warn', 'ledger-warn', 'ledger-danger', 'danger', 'bad', 'stale', 'ledger-stale', 'ledger-drawdown', 'ledger-tilt', 'ledger-pace', 'ledger-alert', 'cards-warn'];
+    for (const cls of BANNED) {
+      check(`no .${cls} anywhere on the tile, at any bankroll`, countOf(deep.root, cls) === 0 && countOf(deep.sheet, cls) === 0 && countOf(full.root, cls) === 0);
+    }
+    check('and nothing editorialises about being down', !/drawdown|tilt|slow down|discipline|careful|cold streak|on pace|chasing/i.test(`${textOf(deep.root)} ${textOf(deep.sheet)}`));
+    check('the bankroll is still a plain number down there', deep.root.querySelector('.ledger-bankroll').className === 'ledger-bankroll' && deep.root.querySelector('.ledger-bankroll').textContent === '61.2u');
+
+    // (2) at the source. Every class this module emits is either a bare
+    //     literal or a template whose ONLY interpolation is `tone(…)` — so
+    //     there is no branch anywhere that could pick a colour from anything
+    //     but a sign.
+    // The whole literal or template, braces and all — a lazier capture stops
+    // at the first `}` and truncates the very interpolation under test.
+    const LEDGER_CLASSES = [...LEDGER_SRC.matchAll(/cls:\s*(`[^`]*`|'[^']*'|[A-Za-z_$][\w$]*)/g)].map((m) => m[1].trim());
+    check('the module emits classes at all', LEDGER_CLASSES.length > 20, String(LEDGER_CLASSES.length));
+    check(
+      'every one is a bare literal or a tone() template',
+      LEDGER_CLASSES.every((c) => /^'[a-z0-9 -]+'$/.test(c) || /^`[a-z0-9 -]*\$\{tone\([^`]*\)\}`$/.test(c)),
+      LEDGER_CLASSES.filter((c) => !/^'[a-z0-9 -]+'$/.test(c) && !/^`[a-z0-9 -]*\$\{tone\([^`]*\)\}`$/.test(c)).join(' | ')
+    );
+    check('there is exactly one tone function', (LEDGER_SRC.match(/function tone\(/g) || []).length === 1);
+    const TONE_FN = LEDGER_SRC.slice(LEDGER_SRC.indexOf('function tone('), LEDGER_SRC.indexOf('function fixed1('));
+    check('and it is bounded by the next function', TONE_FN.length > 40 && TONE_FN.length < 400, String(TONE_FN.length));
+    check(
+      'it compares against zero and nothing else',
+      (TONE_FN.match(/[<>]=?\s*-?[\d.]+/g) || []).length === 2 && (TONE_FN.match(/[<>]=?\s*-?[\d.]+/g) || []).every((c) => /0$/.test(c)),
+      (TONE_FN.match(/[<>]=?\s*-?[\d.]+/g) || []).join(' ')
+    );
+    check('no amber token is within reach of this tile', !/--warn|-warn|danger|drawdown|tilt/.test(LEDGER_SRC));
+
+    // (3) at the stylesheet. The tile's own block must not name the amber
+    //     token at all — `var(--warn)` means "a threshold was crossed"
+    //     everywhere else on this board, and here no threshold exists.
+    const cssFrom = CSS_ALL.indexOf('/* ------------------------------------------------------------ bets_ledger');
+    const cssTo = CSS_ALL.indexOf('/* ------------------------------------------------------------- today_games */');
+    check('the ledger stylesheet block is where it says it is', cssFrom !== -1 && cssTo !== -1 && cssTo > cssFrom, `${cssFrom} -> ${cssTo}`);
+    // Comments stripped: the block's own prose explains WHY it never reaches
+    // for `var(--warn)`, and a scan that counted that sentence as a rule
+    // would fail on the documentation of the thing it is checking.
+    const LEDGER_CSS =
+      cssFrom !== -1 && cssTo > cssFrom ? CSS_ALL.slice(cssFrom, cssTo).replace(/\/\*[\s\S]*?\*\//g, '') : '';
+    check('it is the ledger block and nothing else', /\.ledger-face/.test(LEDGER_CSS) && !/\.news-|\.cards-/.test(LEDGER_CSS));
+    check('and it never names the amber token', !/var\(--warn\)/.test(LEDGER_CSS));
+    check('nor any other tile’s warning colour', !/--pc-one|--info\)/.test(LEDGER_CSS));
+    check('the only coloured tones it defines are good, bad and flat', (() => {
+      const rules = [...LEDGER_CSS.matchAll(/\.ledger-[a-z-]*(good|bad|flat)\b/g)].map((m) => m[1]);
+      return rules.length >= 6 && rules.every((r) => ['good', 'bad', 'flat'].includes(r));
+    })());
+
+    // -- L8: passes, at the source --------------------------------------------
+    const passFrom = LEDGER_SRC.indexOf('function passesChip(');
+    const passTo = LEDGER_SRC.indexOf('function rowsChip(');
+    check('the passes chip has its own function', passFrom !== -1);
+    check('bounded by the next one', passTo !== -1 && passTo > passFrom, `${passFrom} -> ${passTo}`);
+    const PASS_REGION = passFrom !== -1 && passTo > passFrom ? LEDGER_SRC.slice(passFrom, passTo) : '';
+    check('and it reaches for no units formatter', PASS_REGION.length > 100 && !/signedUnits|exactUnits|units\(|\bu\b/.test(PASS_REGION), PASS_REGION.slice(0, 120));
+    check('the module never says "would have" anywhere', !/would have|would've|hypothetical|missed out/i.test(LEDGER_SRC));
+    check('and never puts units beside a pass count', !/passes[\s\S]{0,200}signedUnits/.test(LEDGER_SRC));
+
+    // -- the registry ---------------------------------------------------------
+    check('the tile is registered under bets_live', /bets_live:[\s\S]{0,400}bets_ledger:/.test(REGISTRY_SRC));
+    check('on the DAILY band, where a settle-time fact belongs', /bets_ledger:\s*\{\s*band:\s*'DAILY'/.test(REGISTRY_SRC));
+    check('wearing its nameplate', /bets_ledger:[^}]*title:\s*'📒 The Ledger'/.test(REGISTRY_SRC));
+    check('the streak chip is shared, not copied', (() => {
+      const live = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'bets_live.js'), 'utf8');
+      return /from '\.\.\/lib\/bets\.js'/.test(live) && /from '\.\.\/lib\/bets\.js'/.test(LEDGER_SRC) && !/function streakChip/.test(live) && !/function streakChip/.test(LEDGER_SRC);
+    })());
+  }
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));
