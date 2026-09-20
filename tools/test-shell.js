@@ -367,6 +367,138 @@ console.log('\nsubhead never contains me.name');
   // the subhead entirely.
   check('sw.js precaches lib/header.js', SW.includes("'./lib/header.js'"));
 
+  // -- 5. the board is ONE flat grid, in Matt's order -----------------------
+  //
+  // Ruling, 2026-09-20: no band headers, no grouping. `band` stays in the
+  // registry — it still gates the ask tile off the board and out of module
+  // preloading, and it still describes refresh cadence — but `position` is the
+  // whole of the layout now.
+  //
+  // The order is the point, so it is asserted twice: once against the registry
+  // (the source of truth) and once against the cards the SHIPPED renderAll
+  // actually appends, run here with stubs. A registry whose numbers are right
+  // and a render pass that sorts by something else is exactly the bug this
+  // change could introduce, and only the second assertion would see it.
+  console.log('\nthe board is one grid, in the registry order');
+  {
+    const { El } = require('./dom-shim.js'); // installs global.document
+    const { REGISTRY, ...rest } = await import('../docs/tiles/_registry.js');
+    const dom = await import('../docs/lib/dom.js');
+    const fmt = await import('../docs/lib/fmt.js');
+    const REG = read('docs', 'tiles', '_registry.js');
+
+    const ORDER = [
+      'calendar', 'reminders', 'dinner', 'weather', 'newsstand', 'entertainment',
+      'local_events', 'today_games', 'bets_live', 'bets_ledger', 'cards',
+      'purser_due', 'wss_tape', 'ship_status',
+    ];
+
+    // -- the registry ------------------------------------------------------
+    const onBoard = Object.entries(REGISTRY)
+      .filter(([, e]) => e.band !== 'ASK')
+      .sort((a, b) => a[1].position - b[1].position)
+      .map(([id]) => id);
+
+    check(`the registry carries ${ORDER.length} board tiles`, onBoard.length === ORDER.length, String(onBoard.length));
+    check('and their positions put them in Matt’s order', onBoard.join(' ') === ORDER.join(' '), onBoard.join(' '));
+    check(
+      'the numbers step by 10, so an insert needs no renumber',
+      ORDER.every((id, i) => REGISTRY[id].position === (i + 1) * 10),
+      ORDER.map((id) => REGISTRY[id]?.position).join(' ')
+    );
+    check('ask is band ASK, off-board at 999', REGISTRY.ask.band === 'ASK' && REGISTRY.ask.position === 999);
+    check('every board tile still declares a band', onBoard.every((id) => !!REGISTRY[id].band));
+
+    // The dead exports. Nothing imports them after this change, and a dead
+    // export rots — the next person to read one would believe it.
+    check('BAND_ORDER and BAND_LABEL are gone from the registry', !/BAND_ORDER|BAND_LABEL/.test(REG));
+    check('and nothing is left exported but REGISTRY', Object.keys(rest).length === 0, Object.keys(rest).join(', '));
+    check('app.js imports REGISTRY alone', /import\s*\{\s*REGISTRY\s*\}\s*from '\.\/tiles\/_registry\.js'/.test(APP));
+    check('bandRank() is gone from the shell', !/bandRank/.test(CODE));
+    check('the stylesheet has no .band-label rule', baseRules('.band-label').length === 0);
+    check('the board still has exactly one .grid rule', baseRules('.grid').length === 1, String(baseRules('.grid').length));
+
+    // -- the shipped renderAll ---------------------------------------------
+    //
+    // Both halves are the real source, pulled out and RUN: renderAll for the
+    // order, tileCard for what each card actually is.
+    const ownsSrc = (CODE.match(/function ownsErrorLine\(id\)\s*\{[\s\S]*?\n\}/) || [''])[0];
+    const cardSrc = (CODE.match(/function tileCard\(id, entry, tile\)\s*\{[\s\S]*?\n\}/) || [''])[0];
+    const allSrc = (CODE.match(/function renderAll\(\)\s*\{[\s\S]*?\n\}/) || [''])[0];
+    check('renderAll was found', allSrc.length > 0);
+    check('tileCard was found', cardSrc.length > 0);
+
+    const noop = () => {};
+    const shellState = { snapshot: null, pending: [], live: null, weather: null, error: null };
+    const tileCard = new Function(
+      'el', 'pill', 'empty', 'clear', 'genericCard', 'ago', 'ctTime',
+      'actions', 'modules', 'moduleNs', 'attachExplain', 'state',
+      `${ownsSrc}\n${cardSrc}\nreturn tileCard;`
+    )(
+      dom.el, dom.pill, dom.empty, dom.clear, dom.genericCard, fmt.ago, fmt.ctTime,
+      { openAsk: noop }, new Map(), new Map(), noop, shellState
+    );
+
+    const boardEl = new El('main');
+    const renderAll = new Function(
+      'renderBanner', 'renderBoardBanner', 'renderHeader',
+      'document', 'clear', 'el', 'empty', 'REGISTRY', 'tileCard', 'state',
+      `${allSrc}\nreturn renderAll;`
+    )(noop, noop, noop, { getElementById: () => boardEl }, dom.clear, dom.el, dom.empty, REGISTRY, tileCard, shellState);
+
+    const tile = (band) => ({ band, updated_at: '2026-09-20T12:00:00.000Z', status: 'ok', error: null, data: { n: 1 } });
+    const fullSnapshot = () => {
+      const tiles = {};
+      for (const [id, e] of Object.entries(REGISTRY)) tiles[id] = tile(e.band);
+      return { schema: 1, generated_at: '2026-09-20T12:00:00.000Z', tiles };
+    };
+
+    const titles = () => boardEl.querySelectorAll('.card-title').map((n) => n.textContent);
+
+    shellState.snapshot = fullSnapshot();
+    renderAll();
+
+    const grids = boardEl.querySelectorAll('.grid');
+    check('the board holds exactly one grid', grids.length === 1, `${grids.length} grids`);
+    check('and the grid is the only thing in it', boardEl.childNodes.length === 1, String(boardEl.childNodes.length));
+    check('no band header survives anywhere on the board', boardEl.querySelectorAll('.band-label').length === 0);
+    check(`the grid holds all ${ORDER.length} cards`, grids[0].childNodes.length === ORDER.length, String(grids[0].childNodes.length));
+    check(
+      'in exactly Matt’s order',
+      titles().join(' | ') === ORDER.map((id) => REGISTRY[id].title).join(' | '),
+      titles().join(' | ')
+    );
+    check('ask is in the snapshot and NOT on the board', !!shellState.snapshot.tiles.ask && !titles().includes('Ask'));
+
+    // -- rule 9, still true in one grid -------------------------------------
+    const drifted = fullSnapshot();
+    drifted.tiles.frobnicator = { band: 'HOURLY', updated_at: '2026-09-20T12:00:00.000Z', status: 'ok', error: null, data: { widgets: 3 } };
+    shellState.snapshot = drifted;
+    renderAll();
+
+    const grid = boardEl.querySelectorAll('.grid')[0];
+    check('an unregistered snapshot tile is rendered', grid.childNodes.length === ORDER.length + 1, String(grid.childNodes.length));
+    check('and it sorts to the end at 500', titles()[ORDER.length] === 'frobnicator', titles().slice(-2).join(' | '));
+    check('the registered order is untouched by it', titles().slice(0, ORDER.length).join(' | ') === ORDER.map((id) => REGISTRY[id].title).join(' | '));
+
+    const last = grid.childNodes[ORDER.length];
+    check('it renders as the generic key/value card', last.querySelectorAll('.generic').length === 1);
+    check('with a row per key', last.querySelectorAll('.row-label').map((n) => n.textContent).join(',') === 'widgets');
+    check('and says why it looks like that', /No render module for this tile yet\./.test(last.textContent));
+
+    // A registered tile the snapshot has dropped is the other direction, and
+    // it must keep its slot rather than falling to the bottom.
+    const thin = { schema: 1, generated_at: '2026-09-20T12:00:00.000Z', tiles: { dinner: tile('DAILY') } };
+    shellState.snapshot = thin;
+    renderAll();
+    check('a snapshot with one tile still renders the whole board', titles().length === ORDER.length, String(titles().length));
+    check('and the missing ones keep their slots, greyed', titles().join(' | ') === ORDER.map((id) => REGISTRY[id].title).join(' | '));
+    check(
+      'a missing tile says so',
+      /Not in this snapshot\./.test(boardEl.querySelectorAll('.grid')[0].childNodes[0].textContent)
+    );
+  }
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));

@@ -681,7 +681,14 @@ const liveState = (over = {}) => ({
   // -- the registry and the retirement -------------------------------------
   console.log('\nthe registry (W1)');
   const REG = read('docs', 'tiles', '_registry.js');
-  check('weather is registered at position 14, LIVE', /weather:\s*\{\s*band:\s*'LIVE',\s*position:\s*14/.test(REG));
+  // Band, not position. The board is one flat grid in Matt's order now
+  // (ruling 2026-09-20) and the order itself is asserted whole, in
+  // tools/test-shell.js — freezing this tile's number here as well would
+  // mean a reshuffle failed in two places and taught the next person to
+  // edit a test rather than read it. What matters HERE is that weather is
+  // on the board and declares LIVE, because LIVE is the cadence its band
+  // controller runs on.
+  check('weather is registered, band LIVE', /weather:\s*\{\s*band:\s*'LIVE',\s*position:\s*\d+/.test(REG));
   check('radar is retired from the registry', !/\bradar:/.test(REG));
   check('and its module is gone from the tree', !fs.existsSync(path.join(__dirname, '..', 'docs', 'tiles', 'radar.js')));
   check('the service worker no longer precaches it', !/tiles\/radar\.js/.test(read('docs', 'sw.js')));

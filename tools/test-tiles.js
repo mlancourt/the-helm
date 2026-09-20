@@ -1301,7 +1301,11 @@ async function main() {
   const tg = mods.get('today_games');
   if (tg) {
     check('mke_board is gone from the registry', !/mke_board/.test(REGISTRY_SRC));
-    check("today_games sits at position 20, titled Today's Games", /today_games:[^\n]*position: 20[^\n]*title: "Today's Games"/.test(REGISTRY_SRC));
+    // The title, not the number: the board is one flat grid in Matt's order
+    // now (ruling 2026-09-20) and that order is asserted whole in
+    // tools/test-shell.js. Two places freezing the same position is how a
+    // reshuffle turns into three test edits and no thinking.
+    check("today_games is registered as Today's Games", /today_games:[^\n]*title: "Today's Games"/.test(REGISTRY_SRC));
     check('and its module file is gone', !fs.existsSync(path.join(__dirname, '..', 'docs', 'tiles', 'mke_board.js')));
 
     const { normalizeEvent } = await import('../docs/live/espn.js');

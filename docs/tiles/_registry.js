@@ -1,9 +1,17 @@
 /**
  * Tile registry: id -> {band, position, module, title}.
  *
- * This is the layout authority. A snapshot tile also carries its own `band`,
- * but that describes how often the engine refreshes it; where it lands on the
- * page is decided here.
+ * This is the layout authority, and `position` is the whole of it: the board
+ * is ONE flat grid in Matt's order (ruling, 2026-09-20). There are no band
+ * headers and no grouping — `position` alone decides where a card lands.
+ * Numbers step by 10 so a tile can be slotted in between two without a
+ * renumber.
+ *
+ * `band` survives that ruling because it never described layout in the first
+ * place: it says how often the engine refreshes a tile, and it is what keeps
+ * the ASK tile off the board and out of module preloading. The LIVE fetch
+ * clocks in live/band.js key off the snapshot payloads (tiles.bets_live,
+ * tiles.today_games, tiles.weather), never off this field.
  *
  * Rule 9 — the page tolerates schema growth in both directions:
  *   - a snapshot tile with no entry here renders as a generic key/value card
@@ -12,32 +20,21 @@
  */
 
 export const REGISTRY = {
-  bets_live: { band: 'LIVE', position: 10, module: './tiles/bets_live.js', title: 'Open Bets' },
-  // The look-back to `bets_live`'s sweat — DAILY, because retrospective KPIs
-  // are settle-time facts, and first in that band so the two sit together.
-  bets_ledger: { band: 'DAILY', position: 11, module: './tiles/bets_ledger.js', title: '📒 The Ledger' },
-  weather: { band: 'LIVE', position: 14, module: './tiles/weather.js', title: 'Weather' },
-  today_games: { band: 'LIVE', position: 20, module: './tiles/today_games.js', title: "Today's Games" },
-  cards: { band: 'HOURLY', position: 21, module: './tiles/cards.js', title: 'Cards' },
-  newsstand: { band: 'HOURLY', position: 30, module: './tiles/newsstand.js', title: 'Newsstand' },
-  entertainment: { band: 'DAILY', position: 35, module: './tiles/entertainment.js', title: 'Entertainment' },
-  calendar: { band: 'DAILY', position: 50, module: './tiles/calendar.js', title: 'Calendar' },
-  local_events: { band: 'DAILY', position: 52, module: './tiles/local_events.js', title: 'Lake Country' },
-  reminders: { band: 'DAILY', position: 55, module: './tiles/reminders.js', title: 'Reminders' },
-  dinner: { band: 'DAILY', position: 60, module: './tiles/dinner.js', title: 'Dinner' },
-  purser_due: { band: 'DAILY', position: 70, module: './tiles/purser_due.js', title: 'Purser — Due' },
-  wss_tape: { band: 'DAILY', position: 75, module: './tiles/wss_tape.js', title: 'Crew Tape' },
-  ship_status: { band: 'DAILY', position: 80, module: './tiles/ship_status.js', title: 'Ship Status' },
-  ask: { band: 'ASK', position: 99, module: './tiles/ask.js', title: 'Ask' },
-};
-
-/** Render order. Unknown bands sort after these, alphabetically. */
-export const BAND_ORDER = ['LIVE', 'HOURLY', 'DAILY', 'WEEKLY', 'ASK'];
-
-export const BAND_LABEL = {
-  LIVE: 'Live',
-  HOURLY: 'Hourly',
-  DAILY: 'Today',
-  WEEKLY: 'This week',
-  ASK: 'Ask',
+  calendar: { band: 'DAILY', position: 10, module: './tiles/calendar.js', title: 'Calendar' },
+  reminders: { band: 'DAILY', position: 20, module: './tiles/reminders.js', title: 'Reminders' },
+  dinner: { band: 'DAILY', position: 30, module: './tiles/dinner.js', title: 'Dinner' },
+  weather: { band: 'LIVE', position: 40, module: './tiles/weather.js', title: 'Weather' },
+  newsstand: { band: 'HOURLY', position: 50, module: './tiles/newsstand.js', title: 'Newsstand' },
+  entertainment: { band: 'DAILY', position: 60, module: './tiles/entertainment.js', title: 'Entertainment' },
+  local_events: { band: 'DAILY', position: 70, module: './tiles/local_events.js', title: 'Lake Country' },
+  today_games: { band: 'LIVE', position: 80, module: './tiles/today_games.js', title: "Today's Games" },
+  bets_live: { band: 'LIVE', position: 90, module: './tiles/bets_live.js', title: 'Open Bets' },
+  // The look-back to `bets_live`'s sweat, and directly under it.
+  bets_ledger: { band: 'DAILY', position: 100, module: './tiles/bets_ledger.js', title: '📒 The Ledger' },
+  cards: { band: 'HOURLY', position: 110, module: './tiles/cards.js', title: 'Cards' },
+  purser_due: { band: 'DAILY', position: 120, module: './tiles/purser_due.js', title: 'Purser — Due' },
+  wss_tape: { band: 'DAILY', position: 130, module: './tiles/wss_tape.js', title: 'Crew Tape' },
+  ship_status: { band: 'DAILY', position: 140, module: './tiles/ship_status.js', title: 'Ship Status' },
+  // Off-board: band ASK is what skips it, not the position.
+  ask: { band: 'ASK', position: 999, module: './tiles/ask.js', title: 'Ask' },
 };

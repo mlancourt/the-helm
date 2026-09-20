@@ -13,7 +13,7 @@
  */
 
 import { apiBase, STALE_AFTER_MS, DATA_REFRESH_MS, APP_VERSION_LABEL } from './config.js';
-import { REGISTRY, BAND_ORDER, BAND_LABEL } from './tiles/_registry.js';
+import { REGISTRY } from './tiles/_registry.js';
 import { createLiveBand, createWeatherBand } from './live/band.js';
 import { normalizeEvent } from './live/espn.js';
 import { el, clear, empty, genericCard, pill } from './lib/dom.js';
@@ -451,11 +451,6 @@ function tileCard(id, entry, tile) {
   return card;
 }
 
-function bandRank(band) {
-  const i = BAND_ORDER.indexOf(band);
-  return i === -1 ? BAND_ORDER.length : i;
-}
-
 function renderBanner() {
   const bar = document.getElementById('banner');
   clear(bar);
@@ -595,29 +590,25 @@ function renderAll() {
   // both directions of drift render something (rule 9).
   const ids = new Set([...Object.keys(REGISTRY), ...Object.keys(tiles)]);
 
-  const grouped = new Map();
+  // One flat grid in the registry's order (ruling, 2026-09-20). `band` no
+  // longer groups anything; the only thing it still does here is keep the ask
+  // tile off the board, because that panel lives in the sheet.
+  const items = [];
   for (const id of ids) {
     const entry = REGISTRY[id];
-    const tile = tiles[id] || null;
-    if (entry?.band === 'ASK') continue; // the ask panel lives in the sheet
-
-    // Registry band wins for layout; an unknown tile falls back to whatever
-    // band it declares, and then to DAILY.
-    const band = entry?.band || tile?.band || 'DAILY';
-    if (!grouped.has(band)) grouped.set(band, []);
-    grouped.get(band).push({ id, entry, tile });
+    if (entry?.band === 'ASK') continue;
+    items.push({ id, entry, tile: tiles[id] || null });
   }
 
-  const bands = [...grouped.keys()].sort((a, b) => bandRank(a) - bandRank(b) || a.localeCompare(b));
-  for (const band of bands) {
-    const items = grouped.get(band).sort(
-      (a, b) => (a.entry?.position ?? 500) - (b.entry?.position ?? 500) || a.id.localeCompare(b.id)
-    );
-    main.appendChild(el('h3', { cls: 'band-label', text: BAND_LABEL[band] || band }));
-    const grid = el('div', { cls: 'grid' });
-    for (const { id, entry, tile } of items) grid.appendChild(tileCard(id, entry, tile));
-    main.appendChild(grid);
-  }
+  // An unregistered snapshot tile has no position, so it sorts to the end at
+  // 500 and renders its generic card there rather than anywhere surprising.
+  items.sort(
+    (a, b) => (a.entry?.position ?? 500) - (b.entry?.position ?? 500) || a.id.localeCompare(b.id)
+  );
+
+  const grid = el('div', { cls: 'grid' });
+  for (const { id, entry, tile } of items) grid.appendChild(tileCard(id, entry, tile));
+  main.appendChild(grid);
 }
 
 // ------------------------------------------------------------- module load

@@ -214,16 +214,12 @@ body {
 
 /* ------------------------------------------------------------------ board */
 
-.band-label {
-  margin: 20px 2px 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.grid { display: grid; gap: var(--gap); grid-template-columns: 1fr; }
+/*
+ * The board is ONE grid (ruling, 2026-09-20) — no band headers, no groups.
+ * The top margin was the .band-label's before it; the grid carries it now, or
+ * the first card sits flush against the header.
+ */
+.grid { display: grid; gap: var(--gap); grid-template-columns: 1fr; margin-top: 20px; }
 
 /* One column on a phone; widen only when there is genuinely room. */
 @media (min-width: 640px)  { .grid { grid-template-columns: repeat(2, 1fr); } }
