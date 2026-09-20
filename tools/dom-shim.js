@@ -65,9 +65,39 @@ class TextNode {
   get textContent() { return this._text; }
 }
 
+/**
+ * The document's own listeners.
+ *
+ * The cards sheet's auction clock repaints the moment a slept phone comes
+ * back, which it learns from a `visibilitychange` on `document` — so the shim
+ * has to be able to both register one and, just as importantly, forget it: a
+ * teardown that failed to remove its listener is exactly the leak the test
+ * is there to catch, and a shim with no `removeEventListener` could not tell
+ * the difference.
+ */
+const docListeners = new Map();
+
 global.document = {
   createElement: (t) => new El(t),
   createTextNode: (t) => new TextNode(t),
+  hidden: false,
+  addEventListener(type, fn) {
+    if (!docListeners.has(type)) docListeners.set(type, []);
+    docListeners.get(type).push(fn);
+  },
+  removeEventListener(type, fn) {
+    docListeners.set(type, (docListeners.get(type) || []).filter((f) => f !== fn));
+  },
 };
 
-module.exports = { ClassList, El, TextNode, all, matches };
+/** How many listeners the document is holding for `type`. */
+function docListenerCount(type) {
+  return (docListeners.get(type) || []).length;
+}
+
+/** Fire one, the way the browser would. */
+function fireDocEvent(type) {
+  for (const fn of [...(docListeners.get(type) || [])]) fn();
+}
+
+module.exports = { ClassList, El, TextNode, all, matches, docListenerCount, fireDocEvent };

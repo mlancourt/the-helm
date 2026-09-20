@@ -718,7 +718,26 @@ function syncScrim() {
   document.getElementById('scrim').classList.toggle('open', open);
 }
 
+/**
+ * A panel body that started something — the cards sheet's auction clock — hands
+ * back a teardown, and the shell owns calling it. Without this the interval
+ * would go on beating against nodes nobody can see, and a second open would
+ * leave two of them running.
+ *
+ * A teardown that throws is swallowed: a sheet failing to close cleanly must
+ * never take the board down with it (rule 8).
+ */
+let panelTeardown = null;
+
+function tearDownPanel() {
+  const fn = panelTeardown;
+  panelTeardown = null;
+  if (typeof fn !== 'function') return;
+  try { fn(); } catch { /* a closing sheet is not worth a blank page */ }
+}
+
 function openSheet() {
+  tearDownPanel();
   document.getElementById('panel').classList.remove('open');
   document.getElementById('sheet').classList.add('open');
   syncScrim();
@@ -730,11 +749,13 @@ function closeSheet() {
 }
 
 function closePanel() {
+  tearDownPanel();
   document.getElementById('panel').classList.remove('open');
   syncScrim();
 }
 
 function closeAll() {
+  tearDownPanel();
   document.getElementById('sheet').classList.remove('open');
   document.getElementById('panel').classList.remove('open');
   syncScrim();
@@ -742,14 +763,17 @@ function closeAll() {
 
 /**
  * The detail panel. `build` fills the body; a builder that throws greys the
- * panel rather than the board (rule 8).
+ * panel rather than the board (rule 8). A builder may return a teardown —
+ * see `tearDownPanel` — and the one already in flight is always run first, so
+ * opening a second sheet can never leave the first one's clock behind.
  */
 function openPanel(title, build) {
+  tearDownPanel();
   const body = document.getElementById('panel-body');
   clear(body);
   document.getElementById('panel-title').textContent = String(title || '');
   try {
-    build(body);
+    panelTeardown = build(body) || null;
   } catch (e) {
     clear(body);
     body.appendChild(el('p', { cls: 'card-error', text: `This panel failed to render: ${e.message}` }));

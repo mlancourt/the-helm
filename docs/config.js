@@ -47,7 +47,7 @@ export const DATA_REFRESH_MS = 5 * 60 * 1000;
  *
  * Bump this with each ruling batch, alongside CACHE_VERSION in sw.js.
  */
-export const APP_VERSION = '1.10.1';
+export const APP_VERSION = '1.11.0';
 
 /** `v1.0` — what the header chip shows. */
 export const APP_VERSION_LABEL = `v${APP_VERSION.split('.').slice(0, 2).join('.')}`;

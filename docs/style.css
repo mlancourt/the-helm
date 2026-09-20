@@ -1989,13 +1989,38 @@ body {
 .cards-chip-obo  { color: var(--info);  background: #12232c; border-color: #1d4152; }
 .cards-chip-band { color: var(--bad);   background: #331a18; border-color: #522a26; }
 
+/* The end-time line: a live countdown, with the wall stamp muted behind it.
+   Baseline-aligned and tabular so the seconds ticking in the last quarter of
+   an hour do not shuffle the row sideways under Matt's thumb. */
 .cards-ends {
   margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
   font-size: 11.5px;
   color: var(--text-faint);
   font-variant-numeric: tabular-nums;
 }
-.cards-ends-soon { color: var(--warn); font-weight: 650; }
+.cards-countdown {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--text-dim);
+  font-weight: 650;
+}
+.cards-clock-glyph { font-size: 10.5px; opacity: 0.75; }
+.cards-ends-at { color: var(--text-faint); }
+
+/* Inside two hours: the countdown carries the amber, the stamp stays quiet —
+   one alarm per row, not two. */
+.cards-ends-soon .cards-countdown { color: var(--warn); }
+
+/* Run out. Grey, not amber: there is nothing left to do about it, and the row
+   waits here until the engine's next pass takes it away. */
+.cards-ends-done .cards-countdown { color: var(--text-faint); font-weight: 600; }
+.cards-row-ended { opacity: 0.55; }
+.cards-row-ended .cards-title { color: var(--text-dim); }
 
 .cards-seller { margin-top: 3px; font-size: 11px; color: var(--text-faint); }
 .cards-sep { margin: 0 4px; color: var(--text-faint); }

@@ -303,65 +303,74 @@ export function line(n) {
 }
 
 /**
- * Central WALL-CLOCK now, as 'YYYY-MM-DDTHH:MM'.
+ * Milliseconds from now until a UTC ISO *instant*. Negative = already past,
+ * null = it is not an instant this page can read.
  *
- * The counterpart to `ctToday()` for payloads that carry a Central wall time
- * the engine has already converted — `ends_ct` on an auction. Those strings
- * must be rendered verbatim and must never be parsed (rule 7), so the only
- * honest way to ask "is that inside two hours" is to bring NOW down to the
- * same kind of string and compare the two as calendar text.
+ * RULE 7, SATISFIED RATHER THAN BENT. The rule forbids parsing a date-only or
+ * wall-clock string because such a string carries no offset, so the browser
+ * has to guess a zone and guesses the phone's. `ends_utc` carries the offset,
+ * so there is nothing left to guess: `Date.parse` on it is exact in every
+ * timezone, which is precisely why the engine started publishing it. The
+ * wall-clock twin (`ends_ct`) is still text and is still printed verbatim —
+ * it must never reach this function.
  *
- * `new Date()` is an instant and carries no timezone of its own, so formatting
- * it through Intl with an explicit America/Chicago is safe — it is the same
- * move `ctDate()` makes. h23 so midnight is '00:00' and never '24:00'.
+ * `now` is injectable so a countdown can be tested against a fixed clock.
  */
-const CT_STAMP = new Intl.DateTimeFormat('en-CA', {
-  timeZone: CT,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-  hourCycle: 'h23',
-});
+const INSTANT_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/i;
 
-export function ctNowStamp(now = new Date()) {
-  const p = {};
-  for (const part of CT_STAMP.formatToParts(now)) p[part.type] = part.value;
-  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+export function msUntil(iso, now = Date.now()) {
+  // The guard, and the whole reason this is safe. `Date.parse` is perfectly
+  // happy to read '2026-09-20T19:48' — it reads it as LOCAL time, silently,
+  // and is wrong by five hours on Matt's phone and by fourteen on a plane.
+  // So a string that carries no offset never gets parsed here at all: it
+  // comes back null, and the caller falls back to printing the wall stamp.
+  // Hand this function `ends_ct` by mistake and you get no countdown, which
+  // is the correct answer — never a confidently wrong one.
+  if (!INSTANT_RE.test(String(iso ?? ''))) return null;
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return null;
+  return t - Number(now);
 }
 
-const WALL_RE = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/;
-
-/** A Central wall-clock stamp -> minutes on a flat calendar, or null. */
-function wallMinutes(stamp) {
-  const m = WALL_RE.exec(String(stamp ?? ''));
-  if (!m) return null;
-  const [y, mo, d, h, mi] = m.slice(1).map(Number);
-  if (mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59) return null;
-  return Date.UTC(y, mo - 1, d, h, mi) / 60000;
-}
+const MINUTE_MS = 60000;
+const HOUR_MS = 3600000;
+const DAY_MS = 86400000;
 
 /**
- * Minutes from `now` until a Central wall-clock stamp. Negative = already past,
- * null = one of them is not a stamp.
+ * Milliseconds remaining -> the countdown an auction row wears.
  *
- * Both sides are Central wall time, so this is pure calendar arithmetic on the
- * parts — Date.UTC is used as a counting frame and no timezone is ever applied
- * to either string. That is what keeps rule 7 intact: `ends_ct` is never
- * handed to `new Date()`, here or anywhere downstream.
+ *   > 24h     '2d 4h'
+ *   1h–24h    '3h 07m'
+ *   15m–1h    '42m'
+ *   < 15m     '12m 30s'
+ *   <= 0      'ended'
  *
- * The one place it can be wrong is the hour a year that Central wall time
- * repeats or skips, where a count that straddles the change is off by 60
- * minutes. An auction alarm an hour early on the second Sunday in March is a
- * fair price for never parsing a wall-clock string as an instant.
+ * The seconds appear in exactly one window, and that is the whole design: a
+ * ticking second on a lot that closes on Thursday is noise, and a lot closing
+ * in nine minutes is the only moment on this page where a second is a fact
+ * Matt can act on. Everything above it floors — a countdown that rounded up
+ * would say '1h 00m' with fifty-nine minutes left.
+ *
+ * `ended` rather than a negative number, and never a blank: a row that has
+ * run out has not gone missing, it has finished, and it stays on the board
+ * until the engine's next pass takes it away.
  */
-export function minutesUntilCt(stamp, now = ctNowStamp()) {
-  const then = wallMinutes(stamp);
-  const here = wallMinutes(now);
-  if (then === null || here === null) return null;
-  return then - here;
+export function countdown(ms) {
+  const v = Number(ms);
+  if (!Number.isFinite(v) || v <= 0) return 'ended';
+  if (v > DAY_MS) {
+    const d = Math.floor(v / DAY_MS);
+    return `${d}d ${Math.floor((v - d * DAY_MS) / HOUR_MS)}h`;
+  }
+  if (v >= HOUR_MS) {
+    const h = Math.floor(v / HOUR_MS);
+    const m = Math.floor((v - h * HOUR_MS) / MINUTE_MS);
+    return `${h}h ${String(m).padStart(2, '0')}m`;
+  }
+  const m = Math.floor(v / MINUTE_MS);
+  if (v >= 15 * MINUTE_MS) return `${m}m`;
+  const s = Math.floor((v - m * MINUTE_MS) / 1000);
+  return `${m}m ${String(s).padStart(2, '0')}s`;
 }
 
 /**

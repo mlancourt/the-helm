@@ -93,6 +93,20 @@ function ctStampIn(minutes) {
   return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
 }
 
+/**
+ * The same moment as a real UTC instant — an auction's `ends_utc` (v1.6.0).
+ *
+ * The countdown is counted from this and the wall stamp above is printed, so
+ * the two MUST describe the same moment or the mock would teach the tile a
+ * lie. Both are minted from one `Date.now() + minutes`, and the seconds are
+ * flattened to :00 so the instant lands on the same minute the wall stamp
+ * names rather than up to 59 seconds past it.
+ */
+function utcStampIn(minutes) {
+  const t = Date.now() + minutes * 60000;
+  return new Date(t - (t % 60000)).toISOString();
+}
+
 const nowIso = () => new Date().toISOString();
 const agoIso = (mins) => new Date(Date.now() - mins * 60000).toISOString();
 
@@ -810,6 +824,7 @@ function cardsWatch() {
           book_age_days: 3,
           book_state: 'fresh',
           ends_ct: null,
+          ends_utc: null,
           seller: 'northport_cardworks',
           seller_fb: 1204,
           listed: addDays(TODAY, -2),
@@ -836,6 +851,7 @@ function cardsWatch() {
           book_age_days: 1,
           book_state: 'fresh',
           ends_ct: null,
+          ends_utc: null,
           seller: 'lakeside_slabs',
           seller_fb: 88,
           listed: TODAY,
@@ -862,6 +878,7 @@ function cardsWatch() {
           book_age_days: 30,
           book_state: 'aging',
           ends_ct: null,
+          ends_utc: null,
           seller: 'attic_finds_wi',
           seller_fb: 41,
           listed: addDays(TODAY, -9),
@@ -889,8 +906,10 @@ function cardsWatch() {
           gate: 0.65,
           book_age_days: 3,
           book_state: 'fresh',
-          // Inside the two-hour window: this is the one that raises the dot.
-          ends_ct: ctStampIn(74),
+          // Inside the two-hour window, outside the last quarter-hour: amber,
+          // and the countdown reads in hours and minutes ('1h 30m').
+          ends_ct: ctStampIn(90),
+          ends_utc: utcStampIn(90),
           seller: 'bayfield_auctions',
           seller_fb: 5310,
           listed: addDays(TODAY, -6),
@@ -898,6 +917,35 @@ function cardsWatch() {
           image: 'https://example.com/mock/cards/2864-0101.jpg',
           band: null,
           new: false,
+        },
+        {
+          item_id: '2864-0103',
+          title: 'Sable Nkemdi Ironsides Holo /25 — bidding closes shortly',
+          player: 'Sable Nkemdi',
+          rung: 'holo /25',
+          fmv: 520,
+          tag: 'SOLID',
+          lane: 'H',
+          type: 'AUCTION',
+          price: 246,
+          ship: 8.5,
+          all_in: 254.5,
+          pct_fmv: 0.49,
+          max: 338,
+          gate: 0.65,
+          book_age_days: 1,
+          book_state: 'fresh',
+          // The last quarter of an hour — the one window where the seconds
+          // are a fact Matt can act on, so the countdown shows them.
+          ends_ct: ctStampIn(8),
+          ends_utc: utcStampIn(8),
+          seller: 'bayfield_auctions',
+          seller_fb: 5310,
+          listed: addDays(TODAY, -4),
+          url: 'https://example.com/mock/cards/2864-0103',
+          image: 'https://example.com/mock/cards/2864-0103.jpg',
+          band: null,
+          new: true,
         },
         {
           item_id: '2864-0102',
@@ -916,7 +964,12 @@ function cardsWatch() {
           gate: 0.65,
           book_age_days: 4,
           book_state: 'fresh',
-          ends_ct: ctStampIn(2 * 1440 + 30),
+          // Three days out: the days form ('3d 0h'), no amber, and the sheet
+          // stays on its thirty-second beat because of it. The two extra
+          // minutes are so a freshly generated mock still reads '3d 0h'
+          // rather than flipping to '2d 23h' the moment it is opened.
+          ends_ct: ctStampIn(3 * 1440 + 2),
+          ends_utc: utcStampIn(3 * 1440 + 2),
           seller: 'attic_finds_wi',
           seller_fb: 41,
           listed: addDays(TODAY, -1),
@@ -924,6 +977,37 @@ function cardsWatch() {
           image: null,
           band: null,
           new: true,
+        },
+        {
+          item_id: '2864-0104',
+          title: 'Ines Okafor Prism Foundry Refractor — older cached listing',
+          player: 'Ines Okafor',
+          rung: 'refractor',
+          fmv: 240,
+          tag: 'THIN',
+          lane: 'FLIP',
+          type: 'AUCTION',
+          price: 96,
+          ship: 4.5,
+          all_in: 100.5,
+          pct_fmv: 0.42,
+          max: 156,
+          gate: 0.65,
+          book_age_days: 6,
+          book_state: 'fresh',
+          // A pre-v1.6.0 row: wall stamp, no instant. The tile must print
+          // 'ends …' exactly as it always did and raise no countdown, no
+          // amber and no error — a snapshot still in the service worker's
+          // cache is not a broken snapshot.
+          ends_ct: ctStampIn(5 * 60),
+          ends_utc: null,
+          seller: 'attic_finds_wi',
+          seller_fb: 41,
+          listed: addDays(TODAY, -3),
+          url: 'https://example.com/mock/cards/2864-0104',
+          image: 'https://example.com/mock/cards/2864-0104.jpg',
+          band: null,
+          new: false,
         },
       ],
       unbooked: [

@@ -583,14 +583,58 @@ beside the chip. Auctions never count either — a current bid is not a price an
 has hours left to move, so an auction's chip is never green. Nothing under the
 gate means **no chip at all**, not a zero.
 
+**Auction rows count down live (v1.6.0).** Each auction row reads
+
+```
+⏱ 1h 42m     ends 2026-09-20T19:48
+```
+
+— the countdown in front, the wall stamp muted behind it. The ladder is
+`2d 4h` over a day, `3h 07m` inside one, `42m` inside the hour, `12m 30s`
+inside the last quarter-hour, and `ended` at zero. The seconds appear in
+exactly one window, and that is the point: a ticking second on a lot that
+closes on Thursday is noise; a lot closing in nine minutes is the only moment
+on this page where a second is a fact Matt can act on.
+
+**Rule 7 is satisfied here, not bent.** An auction carries two end times and
+they do different jobs:
+
+| field | example | what it is | what the page does |
+|---|---|---|---|
+| `ends_ct` | `2026-09-20T19:48` | Central **wall-clock text**, no offset | printed character for character, **never parsed** |
+| `ends_utc` | `2026-09-21T00:48:00.000Z` | a real **instant** | all countdown arithmetic |
+
+The reason rule 7 forbids `new Date(ends_ct)` is that a string with no offset
+makes the browser guess a zone, and it guesses the phone's — wrong by five
+hours in Central and by fourteen on a plane. `ends_utc` carries the offset, so
+there is nothing left to guess. The arithmetic lives in `msUntil()` and
+`countdown()` in `lib/fmt.js`, so `new Date` does not appear in `cards.js` at
+all, and `msUntil()` **refuses any string without an offset** — hand it
+`ends_ct` by mistake and you get no countdown, which is the correct answer,
+never a confidently wrong one. The tests prove both: a source scan, and a Date
+spy that asserts no `ends_ct` value ever reached a constructor.
+
+A row whose `ends_utc` is missing or unreadable — an older snapshot still in
+the service worker's cache — falls back to the pre-v1.6.0 line: `ends` plus
+the wall stamp, no countdown, no amber, no error.
+
+**One interval for the whole sheet**, never one per row: 1000 ms while
+anything is inside the hour, 30000 ms otherwise, re-armed only when the
+cadence itself has to change, so at every instant exactly one timer exists.
+The builder hands a teardown back to the shell, which runs it when the sheet
+closes or another opens — a countdown left beating against detached nodes is
+the classic version of this bug. A phone that slept comes back to a repaint on
+`visibilitychange` rather than up to thirty seconds of a visibly wrong figure.
+
 **The amber dot means one thing: an auction inside two hours.** That is the
 last window in which Matt can actually get to a desk and decide, which is all a
-dot on a homepage is good for. `ends_ct` is a Central **wall-clock** string the
-engine already converted, so rule 7 forbids parsing it — the comparison brings
-NOW down to the same kind of string with `ctNowStamp()` and counts on the parts
-via `minutesUntilCt()`. The stamp itself is printed exactly as it arrived. A
-stamp already past still raises the dot: a snapshot published ten minutes late
-must not drop the alarm at the moment it matters most.
+dot on a homepage is good for. Amber is *you can still do something about
+this*, so at zero the row stops being amber and goes grey, reading `ended` —
+and it stays exactly where it is until the engine's next pass removes it,
+because a row vanishing under Matt's thumb mid-scroll is the worse bug. The
+dot on the board stays up while such a row is still listed: a snapshot
+published ten minutes late must not drop the alarm at the moment it matters
+most.
 
 One deliberate exception to rule 4 is worth knowing about: the 40px thumbnails
 are `<img>` tags pointing at the listing host's own CDN, which is a **third

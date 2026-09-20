@@ -194,32 +194,55 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('an impossible hour is blank', fmt.ctClock('25:00'), '');
   eq('null is blank', fmt.ctClock(null), '');
 
-  console.log('\nCentral wall-clock now, and the two-hour window');
-  // `ends_ct` is Central wall time the engine already converted. The page may
-  // never parse it (rule 7), so "is that inside two hours" is decided by
-  // bringing NOW down to the same kind of string and counting on the parts.
-  // The harness runs this file in four timezones and diffs the transcripts:
-  // if any of this leaked the machine's zone, these would disagree.
-  eq('ctNowStamp is a Central wall stamp', /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(fmt.ctNowStamp()), true);
-  eq('and its date half is the Central business date', fmt.ctNowStamp().slice(0, 10), fmt.ctToday());
-  eq('midnight is 00:00, never 24:00', fmt.ctNowStamp(new Date('2026-09-18T05:00:00Z')).slice(11), '00:00');
-  eq('a fixed instant lands on Central wall time', fmt.ctNowStamp(new Date('2026-09-18T21:30:00Z')), '2026-09-18T16:30');
+  console.log('\nthe auction countdown — counted from the INSTANT, never the wall stamp');
+  // v1.6.0. `ends_ct` has no offset, so a browser handed it guesses a zone and
+  // guesses the phone's — that is rule 7's disqualifying bug, and it is why
+  // nothing here ever touches it. `ends_utc` carries the offset, so parsing it
+  // is exact. The harness runs this file in four timezones and diffs the
+  // transcripts: if any of this leaked the machine's zone, these would differ.
+  const AT = Date.parse('2026-09-21T00:48:00.000Z');
+  const inMs = (ms) => fmt.msUntil('2026-09-21T00:48:00.000Z', AT - ms);
 
-  eq('1h59 out is inside two hours', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T17:31'), 119);
-  eq('2h01 out is not', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T17:29'), 121);
-  eq('exactly two hours is still two hours', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T17:30'), 120);
-  eq('already past counts negative', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T20:00'), -30);
-  eq('the same minute is zero', fmt.minutesUntilCt('2026-09-18T19:30', '2026-09-18T19:30'), 0);
-  eq('across midnight', fmt.minutesUntilCt('2026-09-19T00:15', '2026-09-18T23:45'), 30);
-  eq('across a month end', fmt.minutesUntilCt('2026-10-01T00:30', '2026-09-30T23:30'), 60);
-  eq('across a year end', fmt.minutesUntilCt('2027-01-01T00:10', '2026-12-31T23:50'), 20);
-  eq('a space instead of a T is still a stamp', fmt.minutesUntilCt('2026-09-18 19:30', '2026-09-18T18:30'), 60);
-  eq('a date-only stamp is not a wall time', fmt.minutesUntilCt('2026-09-18', '2026-09-18T18:30'), null);
-  eq('junk is null', fmt.minutesUntilCt('tonight', '2026-09-18T18:30'), null);
-  eq('an impossible hour is null', fmt.minutesUntilCt('2026-09-18T25:00', '2026-09-18T18:30'), null);
-  eq('null is null', fmt.minutesUntilCt(null, '2026-09-18T18:30'), null);
-  eq('junk on the now side is null too', fmt.minutesUntilCt('2026-09-18T19:30', 'now'), null);
-  eq('now against itself is zero', fmt.minutesUntilCt(fmt.ctNowStamp()), 0);
+  eq('an instant reads the same in every timezone', inMs(90 * 60000), 90 * 60000);
+  eq('a moment already gone counts negative', inMs(-30 * 60000), -30 * 60000);
+  eq('the moment itself is zero', inMs(0), 0);
+  eq('an offset other than Z is still an instant', fmt.msUntil('2026-09-20T19:48:00-05:00', AT), 0);
+  eq('a wall-clock string with no offset is refused', fmt.msUntil('2026-09-20T19:48', AT), null);
+  eq('a date-only string is refused too', fmt.msUntil('2026-09-20', AT), null);
+  eq('junk is null', fmt.msUntil('tonight', AT), null);
+  eq('null is null', fmt.msUntil(null, AT), null);
+
+  // Every rung of the ladder, and both sides of every boundary.
+  const HOUR = 3600000;
+  eq('over a day counts days and hours', fmt.countdown(25 * HOUR), '1d 1h');
+  eq('and drops the minutes entirely', fmt.countdown(2 * 24 * HOUR + 4 * HOUR + 59 * 60000), '2d 4h');
+  eq('exactly a day is still hours and minutes', fmt.countdown(24 * HOUR), '24h 00m');
+  eq('a second over a day tips into days', fmt.countdown(24 * HOUR + 1000), '1d 0h');
+  eq('inside a day reads h and mm', fmt.countdown(3 * HOUR + 7 * 60000), '3h 07m');
+  eq('the minutes are padded', fmt.countdown(3 * HOUR + 60000), '3h 01m');
+  eq('exactly an hour is the hour form', fmt.countdown(HOUR), '1h 00m');
+  eq('a second under an hour is minutes alone', fmt.countdown(HOUR - 1000), '59m');
+  eq('59 minutes is minutes alone', fmt.countdown(59 * 60000), '59m');
+  eq('it never rounds up into the next unit', fmt.countdown(59 * 60000 + 59000), '59m');
+  eq('exactly fifteen minutes shows no seconds', fmt.countdown(15 * 60000), '15m');
+  eq('a second under fifteen brings the seconds out', fmt.countdown(14 * 60000 + 59000), '14m 59s');
+  eq('the last window counts them down', fmt.countdown(12 * 60000 + 30000), '12m 30s');
+  eq('and pads them', fmt.countdown(8 * 60000), '8m 00s');
+  eq('one second left still says so', fmt.countdown(1000), '0m 01s');
+  eq('zero has ended', fmt.countdown(0), 'ended');
+  eq('and so has anything past it', fmt.countdown(-1), 'ended');
+  eq('a long way past it too', fmt.countdown(-3 * 24 * HOUR), 'ended');
+  // A row with no instant must fall back to the wall stamp, not print a bug.
+  eq('nothing to count is ended, never NaN', fmt.countdown(null), 'ended');
+  eq('junk is ended too', fmt.countdown('soon'), 'ended');
+
+  eq('no rung ever renders NaN', [25 * HOUR, 3 * HOUR, 59 * 60000, 1000, 0, -1].every((v) => !/NaN|undefined/.test(fmt.countdown(v))), true);
+
+  // The pair that used to do this job is gone: it compared Central wall text
+  // against a Central wall "now" because there was no instant to count from.
+  // There is one now, so the workaround would only be a second, worse answer.
+  eq('the wall-clock workaround is gone', typeof fmt.minutesUntilCt, 'undefined');
+  eq('and so is the stamp it needed', typeof fmt.ctNowStamp, 'undefined');
 
   console.log('\nunits, to two decimals — the Bookie\'s own precision');
   // `units()` rounds to one decimal — right for a bankroll, wrong for a

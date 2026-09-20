@@ -26,12 +26,25 @@
  * loses the green tick and the badge. Auctions never count toward the badge
  * either: a current bid is not a price, and it has hours left to move.
  *
- * RULE 7: `ends_ct` is a Central WALL-CLOCK string the engine already
- * converted, and it is printed exactly as it arrived — the auction row is the
- * one place on this tile where a date appears at all. The "inside two hours"
- * test is text against text via `minutesUntilCt`, which brings NOW down to a
- * Central wall stamp rather than lifting `ends_ct` up into an instant. Nothing
- * in this file is handed to `new Date()`.
+ * RULE 7, SATISFIED RATHER THAN BENT (v1.6.0). An auction now arrives with
+ * two end times and they do different jobs:
+ *
+ *   - `ends_ct` — '2026-09-20T19:48', Central WALL-CLOCK text with no offset.
+ *     Printed exactly as it arrived and never parsed, because a browser
+ *     handed that string has to guess a zone and guesses the phone's. That
+ *     guess is the disqualifying bug rule 7 exists to forbid.
+ *   - `ends_utc` — '2026-09-21T00:48:00.000Z', a real instant. ALL countdown
+ *     arithmetic uses this one, and parsing it is exact in every timezone,
+ *     because there is nothing left to guess. This is why the engine started
+ *     publishing it.
+ *
+ * The maths lives in `msUntil`/`countdown` in lib/fmt.js, so no date is
+ * parsed in this file at all — `new Date` does not appear below, which keeps
+ * the source scan in the tests a straight yes/no.
+ *
+ * A row whose `ends_utc` is missing or unreadable — an older snapshot still
+ * in the service worker's cache — falls back to the pre-v1.6.0 line: `ends`
+ * plus the wall stamp, no countdown, no amber, no error.
  *
  * RULE 4, and the one thing worth flagging: the thumbnails are `<img>` tags
  * pointing at the listing host's own CDN, which is a third external origin
@@ -49,16 +62,29 @@
  */
 
 import { el, empty, genericCard, safeUrl } from '../lib/dom.js';
-import { ctTime, usd, ctNowStamp, minutesUntilCt } from '../lib/fmt.js';
+import { ctTime, usd, msUntil, countdown } from '../lib/fmt.js';
 
 /**
- * How close to the hammer an auction has to be to raise the amber dot.
+ * How close to the hammer an auction has to be to turn amber.
  *
  * Two hours is the last window in which Matt can actually do something about
  * it — get to a desk, decide, and bid — which is the only thing a dot on a
  * homepage is good for.
  */
-const SOON_MINUTES = 120;
+const SOON_MS = 2 * 3600000;
+
+/**
+ * The two cadences, and the line between them.
+ *
+ * Inside an hour the minutes are the story and a stale figure is a wrong one,
+ * so the sheet beats every second. Outside it, a lot closing on Thursday
+ * gains nothing from 3,600 repaints an hour on a phone — it beats every
+ * thirty. One interval serves the whole sheet either way; it is re-armed only
+ * when the cadence itself has to change, so there is never more than one.
+ */
+const HOUR_MS = 3600000;
+const FAST_MS = 1000;
+const SLOW_MS = 30000;
 
 /** A plain object, or {} — the payload is untrusted in shape as well as text. */
 function obj(v) {
@@ -115,6 +141,8 @@ function planItem(raw) {
     bookAge: num(i.book_age_days),
     bookState: str(i.book_state).trim().toLowerCase(),
     endsCt: str(i.ends_ct).trim(),
+    // The instant. `ends_ct` is its wall-clock twin and stays text forever.
+    endsUtc: str(i.ends_utc).trim(),
     seller: str(i.seller).trim(),
     sellerFb: num(i.seller_fb),
     listed: str(i.listed).trim(),
@@ -142,13 +170,25 @@ function planUnbooked(raw) {
   };
 }
 
-/** Is this auction inside the alarm window? */
-function endingSoon(endsCt, now) {
-  const mins = minutesUntilCt(endsCt, now);
-  // A stamp already past counts as soon, not as quiet: a snapshot published
-  // ten minutes late must not silently drop the alarm at the exact moment it
-  // matters most. A row the engine has not yet removed is still a row.
-  return mins !== null && mins <= SOON_MINUTES;
+/**
+ * Is this auction inside the alarm window? Counted from `ends_utc` only.
+ *
+ * A lot already past counts as soon, not as quiet: the engine drops a closed
+ * row on its next pass, and going silent in the gap would drop the alarm at
+ * the exact moment it mattered most. The ROW itself greys out at zero — that
+ * is the row telling the truth about itself — but the dot on the board stays
+ * up until the row is gone. A pre-v1.6 payload with no instant raises
+ * nothing: there is no honest way to count from a string with no offset.
+ */
+function endingSoon(item) {
+  const ms = msUntil(item.endsUtc);
+  return ms !== null && ms <= SOON_MS;
+}
+
+/** classList.toggle with a force flag, which not every shim implements. */
+function setClass(node, cls, on) {
+  if (on) node.classList.add(cls);
+  else node.classList.remove(cls);
 }
 
 // ---------------------------------------------------------------------- bits
@@ -235,16 +275,132 @@ function sellerLine(item) {
 }
 
 /**
+ * The end-time line: a live countdown, with the wall stamp behind it.
+ *
+ *     ⏱ 1h 42m        ends 2026-09-20T19:48
+ *
+ * The countdown is the number Matt reads; the stamp is the one he can trust
+ * without arithmetic, and it is `ends_ct` printed character for character
+ * (rule 7 — it is never reformatted, not even to drop the date).
+ *
+ * Pushes a clock entry onto `clocks` when there is a real instant to count
+ * from, so the sheet's single interval can repaint it. Returns null when the
+ * listing carries no end time at all.
+ */
+function endsLine(item, clocks) {
+  const ms = msUntil(item.endsUtc);
+
+  // No instant, or one this browser cannot read: the pre-v1.6.0 line, intact.
+  // A legacy payload must lose the countdown, not the row.
+  if (ms === null) {
+    if (!item.endsCt) return null;
+    return { node: el('div', { cls: 'cards-ends' }, [el('span', { text: `ends ${item.endsCt}` })]), entry: null };
+  }
+
+  const value = el('span', { cls: 'cards-countdown-value', text: countdown(ms) });
+  const node = el('div', { cls: 'cards-ends' }, [
+    el('span', { cls: 'cards-countdown' }, [
+      el('span', { cls: 'cards-clock-glyph', attrs: { 'aria-hidden': 'true' }, text: '⏱' }),
+      value,
+    ]),
+    item.endsCt ? el('span', { cls: 'cards-ends-at', text: `ends ${item.endsCt}` }) : null,
+  ]);
+
+  // `ms` is kept so the row can be greyed at build time without a second
+  // subtraction — two reads of the clock a microsecond apart could in
+  // principle disagree about whether a lot has closed.
+  const entry = { endsUtc: item.endsUtc, value, node, row: null, ms };
+  if (clocks) clocks.push(entry);
+  return { node, entry };
+}
+
+/**
+ * Repaint one row from a remaining-milliseconds figure the caller worked out.
+ *
+ * The subtraction is the caller's so that every row in a beat is painted
+ * against ONE reading of the clock — twenty rows each calling `Date.now()`
+ * could straddle a second boundary and disagree with each other.
+ */
+function paintClock(c, ms) {
+  if (ms === null) return null;
+  c.value.textContent = countdown(ms);
+  const ended = ms <= 0;
+  // Amber is "you can still do something about this". At zero the row stops
+  // being amber and goes grey — it has not gone wrong, it is over — and it
+  // stays exactly where it is until the engine's next pass removes it. A row
+  // vanishing under Matt's thumb mid-scroll would be the worse bug.
+  setClass(c.node, 'cards-ends-soon', !ended && ms <= SOON_MS);
+  setClass(c.node, 'cards-ends-done', ended);
+  if (c.row) setClass(c.row, 'cards-row-ended', ended);
+  return ms;
+}
+
+/**
+ * Start the sheet's clock. Returns a teardown, or null if nothing ticks.
+ *
+ * ONE interval for the whole sheet, never one per row: twenty auctions must
+ * not mean twenty timers, and every row wants the same `Date.now()` anyway —
+ * two rows drawn a millisecond apart must not disagree about what now is.
+ *
+ * The cadence is chosen from the soonest live row and re-armed only when it
+ * actually changes, so a sheet whose lots are all days out beats twice a
+ * minute and quietly speeds up as the first one comes inside the hour. At
+ * every instant exactly one timer exists.
+ *
+ * A phone that slept through the afternoon comes back with a countdown an
+ * hour stale, and up to thirty seconds would pass before the next beat fixed
+ * it — so the return to visibility repaints immediately rather than waiting.
+ */
+function startClock(clocks) {
+  if (!clocks.length) return null;
+
+  let timer = null;
+  let every = 0;
+
+  const beat = () => {
+    const now = Date.now();
+    let fast = false;
+    for (const c of clocks) {
+      const ms = paintClock(c, msUntil(c.endsUtc, now));
+      if (ms !== null && ms > 0 && ms <= HOUR_MS) fast = true;
+    }
+    const want = fast ? FAST_MS : SLOW_MS;
+    if (want !== every) {
+      if (timer !== null) clearInterval(timer);
+      every = want;
+      timer = setInterval(beat, every);
+    }
+  };
+
+  beat();
+
+  const listens = typeof document.addEventListener === 'function';
+  const wake = () => {
+    if (!document.hidden) beat();
+  };
+  if (listens) document.addEventListener('visibilitychange', wake);
+
+  return () => {
+    if (timer !== null) clearInterval(timer);
+    timer = null;
+    every = 0;
+    if (listens && typeof document.removeEventListener === 'function') {
+      document.removeEventListener('visibilitychange', wake);
+    }
+  };
+}
+
+/**
  * One listing. The whole row is the link — or is not a link at all, if the
  * URL is junk (rule 10).
  */
-function listingRow(item, { auction = false, now = '' } = {}) {
+function listingRow(item, { auction = false, clocks = null } = {}) {
   const chips = [];
   if (item.type === 'OBO') chips.push(chip('OBO', 'obo'));
   if (item.band) chips.push(chip(item.band, 'band'));
   if (item.max !== null) chips.push(chip(`MAX ${usd(item.max)}`, 'max'));
 
-  const soon = auction && endingSoon(item.endsCt, now);
+  const ends = auction ? endsLine(item, clocks) : null;
 
   const kids = [
     thumb(item),
@@ -270,24 +426,28 @@ function listingRow(item, { auction = false, now = '' } = {}) {
           : null,
         ...chips,
       ]),
-      // Verbatim, per rule 7 — the stamp is Central wall time and is never
-      // reformatted, only marked amber when it is close.
-      auction && item.endsCt
-        ? el('div', { cls: `cards-ends${soon ? ' cards-ends-soon' : ''}` }, [
-            el('span', { text: `ends ${item.endsCt}` }),
-          ])
-        : null,
+      ends ? ends.node : null,
       sellerLine(item),
     ]),
   ];
 
   const safe = safeUrl(item.url);
-  if (!safe) return el('div', { cls: 'cards-row' }, kids);
-  return el(
-    'a',
-    { cls: 'cards-row cards-row-link', attrs: { href: safe, target: '_blank', rel: 'noopener noreferrer' } },
-    kids
-  );
+  const row = safe
+    ? el(
+        'a',
+        { cls: 'cards-row cards-row-link', attrs: { href: safe, target: '_blank', rel: 'noopener noreferrer' } },
+        kids
+      )
+    : el('div', { cls: 'cards-row' }, kids);
+
+  // The clock greys the whole row at zero, not just its own line, so it needs
+  // a handle on the row — which only exists once the kids are built. The
+  // first paint happens here, for the same reason.
+  if (ends && ends.entry) {
+    ends.entry.row = row;
+    paintClock(ends.entry, ends.entry.ms);
+  }
+  return row;
 }
 
 /** `Kestrel Vance · rung 2 — book 41d old · cheapest $118`, muted. */
@@ -361,14 +521,21 @@ function unbookedSection(unbooked) {
   return [toggle, rows];
 }
 
-/** The Watch sheet: errors, flags, auctions, no-book, one footer. */
-function watchBody(watch, data, tile, now) {
+/**
+ * The Watch sheet: errors, flags, auctions, no-book, one footer.
+ *
+ * The builder returns the clock's teardown. The shell holds it and calls it
+ * when the sheet closes or another one opens — a countdown left running
+ * behind a closed sheet would tick against detached nodes forever.
+ */
+function watchBody(watch, data, tile) {
   const flags = arr(watch.flags).map(planItem);
   const auctions = arr(watch.auctions).map(planItem);
   const unbooked = arr(watch.unbooked).map(planUnbooked).filter(Boolean);
   const errors = arr(watch.errors).filter(Boolean).map(String);
 
   return (body) => {
+    const clocks = [];
     // What the engine could not reach, said once and quietly, at the top —
     // because everything below it may be an incomplete picture.
     if (errors.length) {
@@ -390,7 +557,7 @@ function watchBody(watch, data, tile, now) {
     if (auctions.length) {
       body.appendChild(sectionHead('Auctions'));
       body.appendChild(
-        el('div', { cls: 'cards-list' }, auctions.map((a) => listingRow(a, { auction: true, now })))
+        el('div', { cls: 'cards-list' }, auctions.map((a) => listingRow(a, { auction: true, clocks })))
       );
     }
 
@@ -400,6 +567,8 @@ function watchBody(watch, data, tile, now) {
     // credit. Both are printed verbatim.
     const foot = [str(data.footer).trim(), 'eBay data via Browse API'].filter(Boolean).join(' · ');
     body.appendChild(el('p', { cls: 'cards-foot', text: foot }));
+
+    return startClock(clocks);
   };
 }
 
@@ -495,10 +664,7 @@ export function render(root, tile, ctx) {
     const fresh = flags.filter((f) => f.bookState === 'fresh');
     const anyNew = fresh.some((f) => f.isNew);
 
-    // One Central wall stamp for the whole render, so two rows drawn a
-    // millisecond apart cannot disagree about what "now" is.
-    const now = ctNowStamp();
-    const soon = arr(watch.auctions).map(planItem).some((a) => endingSoon(a.endsCt, now));
+    const soon = arr(watch.auctions).map(planItem).some(endingSoon);
 
     const chipNode = fresh.length
       ? el('span', { cls: 'cards-count' }, [
@@ -511,7 +677,7 @@ export function render(root, tile, ctx) {
       liveButton(WATCH_FACE, {
         chipNode,
         dot: soon,
-        open: openPanel ? () => openPanel('🎯 Watch', watchBody(watch, data, tile, now)) : null,
+        open: openPanel ? () => openPanel('🎯 Watch', watchBody(watch, data, tile)) : null,
       })
     );
   }

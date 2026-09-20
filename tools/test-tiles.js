@@ -39,7 +39,7 @@ function check(name, cond, detail) {
 // Shared with tools/test-weather.js — see tools/dom-shim.js. Requiring it
 // installs `global.document`.
 
-const { El } = require('./dom-shim.js');
+const { El, docListenerCount, fireDocEvent } = require('./dom-shim.js');
 
 /**
  * A localStorage shim, because the entertainment tile's "new" counts are a
@@ -77,17 +77,58 @@ function withStorage(storage, fn) {
  */
 function fakePanel() {
   const calls = [];
+  // The shell's half of the bargain (v1.6.0): a builder may hand back a
+  // teardown, the previous one is always run before another sheet opens, and
+  // closing runs it too. The cards sheet's auction clock depends on all
+  // three, so the fake has to honour all three or the test would pass on a
+  // shell that leaks intervals.
+  let teardown = null;
+  const down = () => {
+    const fn = teardown;
+    teardown = null;
+    if (typeof fn === 'function') fn();
+  };
   return {
     calls,
     get last() { return calls[calls.length - 1] || null; },
+    close: down,
     actions: {
       openPanel(title, build) {
+        down();
         const body = new El('div');
-        build(body);
-        calls.push({ title, body });
+        teardown = build(body) || null;
+        calls.push({ title, body, teardown });
       },
     },
   };
+}
+
+/**
+ * A stand-in for setInterval that counts what is actually LIVE.
+ *
+ * The invariant the cards sheet promises is not "setInterval was called once"
+ * — the cadence legitimately changes from 30s to 1s as the first lot comes
+ * inside the hour, and that is a clear and a set. It is "at no moment does
+ * more than one timer exist, and none survives the close". So the spy tracks
+ * handles rather than calls, and exposes both numbers.
+ */
+function withTimers(fn) {
+  const realSet = globalThis.setInterval;
+  const realClear = globalThis.clearInterval;
+  const live = new Set();
+  const spy = { live, created: 0, peak: 0, beat() { for (const h of [...live]) h.fn(); } };
+  globalThis.setInterval = (cb, ms) => {
+    const h = { fn: cb, ms };
+    live.add(h);
+    spy.created++;
+    spy.peak = Math.max(spy.peak, live.size);
+    return h;
+  };
+  globalThis.clearInterval = (h) => { live.delete(h); };
+  try { return fn(spy); } finally {
+    globalThis.setInterval = realSet;
+    globalThis.clearInterval = realClear;
+  }
 }
 
 /** Every node's text, flattened — used only to assert that data ARRIVED. */
@@ -2320,10 +2361,35 @@ async function main() {
     global.Date = Frozen;
     try { return fn(); } finally { global.Date = Real; }
   }
+  /**
+   * A clock that can be wound forward, and STAYS installed until it is put
+   * back. `withNow` freezes an instant for the length of one call, which is
+   * right for a render; a countdown has to be watched moving across several,
+   * so this one is installed, advanced, and restored by hand.
+   */
+  function windClock(startIso) {
+    const Real = Date;
+    let t = Real.parse(startIso);
+    class Wound extends Real {
+      constructor(...a) { super(...(a.length ? a : [t])); }
+      static now() { return t; }
+    }
+    global.Date = Wound;
+    return {
+      advance: (ms) => { t += ms; },
+      restore: () => { global.Date = Real; },
+    };
+  }
+
   // 22:30Z is 17:30 Central — so 19:29 is 1h59 out and 19:31 is 2h01 out.
+  // Each auction carries BOTH end times, as the engine now publishes them:
+  // the wall stamp is printed, the instant is counted from, and the two
+  // describe the same moment (19:29 CDT is 00:29Z the next day).
   const NOW_UTC = '2026-09-18T22:30:00.000Z';
   const ENDS_SOON = '2026-09-18T19:29';
+  const ENDS_SOON_UTC = '2026-09-19T00:29:00.000Z';
   const ENDS_LATER = '2026-09-18T19:31';
+  const ENDS_LATER_UTC = '2026-09-19T00:31:00.000Z';
 
   /** One invented listing. Everything the engine decides is passed in. */
   const listing = (over = {}) => ({
@@ -2344,6 +2410,7 @@ async function main() {
     book_age_days: 3,
     book_state: 'fresh',
     ends_ct: null,
+    ends_utc: null,
     seller: 'mock_seller',
     seller_fb: 1204,
     listed: '2026-09-16',
@@ -2376,8 +2443,8 @@ async function main() {
     }),
   ];
   const AUCTIONS = [
-    listing({ item_id: 'a1', title: 'AUCTION-ONE', type: 'AUCTION', price: 410, ends_ct: ENDS_SOON, book_state: 'fresh', pct_fmv: 0.47 }),
-    listing({ item_id: 'a2', title: 'AUCTION-TWO', type: 'AUCTION', price: 31, ends_ct: ENDS_LATER, new: true }),
+    listing({ item_id: 'a1', title: 'AUCTION-ONE', type: 'AUCTION', price: 410, ends_ct: ENDS_SOON, ends_utc: ENDS_SOON_UTC, book_state: 'fresh', pct_fmv: 0.47 }),
+    listing({ item_id: 'a2', title: 'AUCTION-TWO', type: 'AUCTION', price: 31, ends_ct: ENDS_LATER, ends_utc: ENDS_LATER_UTC, new: true }),
   ];
   const UNBOOKED = [
     { player: 'Unbooked One', rung: 'rookie auto', book_age_days: 61, cheapest_all_in: 88.25, url: 'https://example.com/mock/cards/search-1' },
@@ -2406,7 +2473,7 @@ async function main() {
   const cardBtns = (root) => root.querySelectorAll('.cards-btn');
   const labelsOf = (root) => cardBtns(root).map((b) => b.querySelector('.cards-btn-label').textContent);
 
-  if (cards) {
+  if (cards) withTimers((timers) => {
     const panel = fakePanel();
     const root = withNow(NOW_UTC, () => {
       const r = new El('div');
@@ -2473,7 +2540,7 @@ async function main() {
     // two hours away — it must not go quiet at the moment it matters most.
     const past = withNow(NOW_UTC, () => {
       const r = new El('div');
-      cards.render(r, cardsTile(deskData({ auctions: [listing({ type: 'AUCTION', ends_ct: '2026-09-18T16:00' })] })), { id: 'cards', actions: {} });
+      cards.render(r, cardsTile(deskData({ auctions: [listing({ type: 'AUCTION', ends_ct: '2026-09-18T16:00', ends_utc: '2026-09-18T21:00:00.000Z' })] })), { id: 'cards', actions: {} });
       return r;
     });
     check('an auction already past still shows the dot', countOf(past, 'cards-dot') === 1);
@@ -2666,7 +2733,255 @@ async function main() {
     check('nor multiplies an FMV by the gate', !/(fmv\s*\*|\*\s*[a-z]*\.?gate)/i.test(CARDS_SRC));
     check('and never reformats ends_ct', !/ends_ct[\s\S]{0,60}(ctKick|ctClock|prettyDate)/.test(CARDS_SRC));
     check('it holds no state between renders', !/localStorage/.test(CARDS_SRC));
-  }
+
+    // -- v1.6.0: the live countdown ------------------------------------------
+    //
+    // The countdown is counted from `ends_utc`, a real instant with an offset
+    // on it. `ends_ct` is the same moment written as Central wall text with NO
+    // offset, and it stays text forever: a browser handed it would guess a
+    // zone and guess the phone's, which is rule 7's disqualifying bug. So the
+    // two are tested as two different things — one is arithmetic, the other is
+    // a string that has to survive to the screen untouched.
+    console.log('\ncards — live auction countdowns');
+
+    const MIN = 60000;
+    const HOUR = 3600000;
+    const CLOCK = '2026-09-20T18:00:00.000Z';
+    // Relative to the wound clock as it stands, so a fixture written as
+    // "90 minutes out" is still 90 minutes out after the clock has moved on.
+    const at = (ms) => new Date(Date.now() + ms).toISOString();
+
+    // One wound clock for the whole section. Everything below reads it, so a
+    // row built at 18:00 and repainted at 19:00 disagrees by exactly an hour
+    // and not by however long the test suite happened to take.
+    const clock = windClock(CLOCK);
+    const opened = [];
+
+    const auction = (label, ms, over = {}) =>
+      listing({
+        item_id: label,
+        title: label,
+        type: 'AUCTION',
+        // Deliberately not a clean stamp: the page prints this string, it
+        // does not understand it, and the test should prove that.
+        ends_ct: `2026-09-20T13:00 (${label})`,
+        ends_utc: at(ms),
+        ...over,
+      });
+
+    /**
+     * Render the board, tap Watch, and hand back both halves.
+     *
+     * Every sheet opened before this one is shut first, because the shell
+     * only ever has one panel up — and because a test that let three sheets
+     * tick at once could not tell "one interval per sheet" from "three".
+     */
+    function openWatch(auctions) {
+      for (const v of opened) v.panel.close();
+      const pnl = fakePanel();
+      const board = new El('div');
+      cards.render(board, cardsTile(deskData({ flags: [], auctions, unbooked: [] })), {
+        id: 'cards',
+        actions: pnl.actions,
+      });
+      cardsTap(cardBtns(board)[0]);
+      const view = { board, panel: pnl, get sheet() { return pnl.last.body; } };
+      opened.push(view);
+      return view;
+    }
+
+    const valuesOf = (sheet) => sheet.querySelectorAll('.cards-countdown-value').map((n) => n.textContent);
+    const only = (view) => valuesOf(view.sheet)[0];
+
+    try {
+      // -- every rung of the ladder, and both sides of every boundary --------
+      const LADDER = [
+        ['25h', 25 * HOUR, '1d 1h'],
+        ['24h', 24 * HOUR, '24h 00m'],
+        ['3h07m', 3 * HOUR + 7 * MIN, '3h 07m'],
+        ['59m', 59 * MIN, '59m'],
+        ['15m', 15 * MIN, '15m'],
+        ['14m59s', 14 * MIN + 59000, '14m 59s'],
+        ['1s', 1000, '0m 01s'],
+        ['zero', 0, 'ended'],
+        ['negative', -90 * MIN, 'ended'],
+      ];
+      const ladder = openWatch(LADDER.map(([label, ms]) => auction(label, ms)));
+      const rungs = valuesOf(ladder.sheet);
+      check('every auction row carries a countdown', rungs.length === LADDER.length, String(rungs.length));
+      LADDER.forEach(([label, , want], i) => {
+        check(`${label} out reads "${want}"`, rungs[i] === want, rungs[i]);
+      });
+
+      // -- amber: on at 1h59, off at 2h01, on the row AND the board dot ------
+      const inside = openWatch([auction('INSIDE', HOUR + 59 * MIN)]);
+      check('1h59 out turns the row amber', countOf(inside.sheet, 'cards-ends-soon') === 1);
+      check('and raises the dot on the board', countOf(inside.board, 'cards-dot') === 1);
+      const outside = openWatch([auction('OUTSIDE', 2 * HOUR + MIN)]);
+      check('2h01 out leaves the row plain', countOf(outside.sheet, 'cards-ends-soon') === 0);
+      check('and the board quiet', countOf(outside.board, 'cards-dot') === 0);
+      const exact = openWatch([auction('EXACT', 2 * HOUR)]);
+      check('exactly two hours is still inside the window', countOf(exact.sheet, 'cards-ends-soon') === 1);
+
+      // -- zero: grey, "ended", and still on the page ------------------------
+      //
+      // The row leaves the board on the engine's next pass, never mid-scroll
+      // under Matt's thumb.
+      const done = openWatch([auction('DONE', -5 * MIN)]);
+      check('a lot that has run out says "ended"', only(done) === 'ended', only(done));
+      check('and is still in the DOM', countOf(done.sheet, 'cards-row') === 1 && /DONE/.test(textOf(done.sheet)));
+      check('greyed rather than amber', countOf(done.sheet, 'cards-ends-done') === 1 && countOf(done.sheet, 'cards-ends-soon') === 0);
+      check('the whole row greys, not just its clock', countOf(done.sheet, 'cards-row-ended') === 1);
+
+      // -- ends_ct: in the DOM exactly as delivered, on every row ------------
+      const stamps = openWatch([
+        auction('S1', 90 * MIN),
+        auction('S2', 3 * 24 * HOUR),
+        auction('S3', -MIN),
+        listing({ item_id: 'S4', title: 'S4', type: 'AUCTION', ends_ct: '2026-09-20T19:48', ends_utc: null }),
+      ]);
+      for (const want of ['2026-09-20T13:00 (S1)', '2026-09-20T13:00 (S2)', '2026-09-20T13:00 (S3)', '2026-09-20T19:48']) {
+        check(`ends_ct "${want}" reaches the page character for character`, textOf(stamps.sheet).includes(`ends ${want}`));
+      }
+      check('every auction row keeps its stamp', countOf(stamps.sheet, 'cards-ends') === 4);
+
+      // -- a pre-v1.6 payload: the old line, and no breakage -----------------
+      const legacy = openWatch([listing({ item_id: 'OLD', title: 'OLD', type: 'AUCTION', ends_ct: '2026-09-20T19:48', ends_utc: null })]);
+      check('a row with no instant renders the legacy ends line', /ends 2026-09-20T19:48/.test(textOf(legacy.sheet)));
+      check('and no countdown at all', countOf(legacy.sheet, 'cards-countdown') === 0);
+      check('nor amber, which it could not honestly claim', countOf(legacy.sheet, 'cards-ends-soon') === 0);
+      check('nor a dot on the board', countOf(legacy.board, 'cards-dot') === 0);
+      // A field the engine sent as junk is the same case: no guess, no throw.
+      let junkThrew = null;
+      let junk = null;
+      try {
+        junk = openWatch([listing({ item_id: 'JUNK', title: 'JUNK', type: 'AUCTION', ends_ct: '2026-09-20T19:48', ends_utc: 'tomorrow evening' })]);
+      } catch (e) { junkThrew = e; }
+      check('an unreadable ends_utc falls back rather than throwing', !junkThrew, junkThrew && junkThrew.message);
+      check('and prints no countdown off it', !!junk && countOf(junk.sheet, 'cards-countdown') === 0);
+      // The wall stamp is not an instant and must never be treated as one,
+      // even by accident: a row given ONLY ends_ct counts from nothing.
+      const wallOnly = openWatch([listing({ item_id: 'WALL', title: 'WALL', type: 'AUCTION', ends_ct: '2026-09-20T13:30', ends_utc: '2026-09-20T13:30' })]);
+      check('an offsetless ends_utc is refused like the wall stamp it is', countOf(wallOnly.sheet, 'cards-countdown') === 0);
+      check('and the row falls back to printing it', /ends 2026-09-20T13:30/.test(textOf(wallOnly.sheet)));
+
+      // -- one interval per sheet, and none after it closes ------------------
+      const before = timers.created;
+      const ticking = openWatch([auction('T1', 3 * 24 * HOUR), auction('T2', 4 * 24 * HOUR), auction('T3', 5 * 24 * HOUR)]);
+      check('three rows share one interval', timers.created - before === 1, String(timers.created - before));
+      check('and only one is live', timers.live.size === 1);
+      check('it beats every 30s while everything is days out', [...timers.live][0].ms === 30000);
+      check('the sheet listens for the tab coming back', docListenerCount('visibilitychange') === 1);
+      ticking.panel.close();
+      check('closing the sheet clears the interval', timers.live.size === 0);
+      check('and lets go of the visibility listener', docListenerCount('visibilitychange') === 0);
+
+      // A sheet with nothing to count starts no timer at all.
+      const quietSheet = openWatch([listing({ item_id: 'NOEND', title: 'NOEND', type: 'AUCTION' })]);
+      check('a sheet with no live lot runs no clock', timers.live.size === 0);
+      check('and registers no listener', docListenerCount('visibilitychange') === 0);
+      quietSheet.panel.close();
+
+      // Opening a second sheet must not leave the first one's clock behind.
+      const first = openWatch([auction('X1', 3 * 24 * HOUR)]);
+      check('an open sheet holds one timer', timers.live.size === 1);
+      first.panel.actions.openPanel('again', (body) => { body.appendChild(new El('div')); });
+      check('opening another sheet tears the first one down', timers.live.size === 0);
+      check('and takes its listener with it', docListenerCount('visibilitychange') === 0);
+
+      // -- the cadence: 1s inside the hour, 30s outside ----------------------
+      const cadence = openWatch([auction('C1', 61 * MIN)]);
+      check('an hour and one minute out beats every 30s', [...timers.live][0].ms === 30000);
+      clock.advance(2 * MIN);
+      timers.beat();
+      check('crossing into the hour speeds it to 1s', [...timers.live][0].ms === 1000);
+      check('still exactly one timer, never two', timers.live.size === 1);
+      check('and the figure moved with the clock', only(cadence) === '59m', only(cadence));
+      clock.advance(44 * MIN + 30000);
+      timers.beat();
+      check('inside the last quarter-hour the seconds appear', only(cadence) === '14m 30s', only(cadence));
+      check('and the row has gone amber on the way', countOf(cadence.sheet, 'cards-ends-soon') === 1);
+      clock.advance(15 * MIN);
+      timers.beat();
+      check('past the hammer it reads ended', only(cadence) === 'ended', only(cadence));
+      check('grey, not amber', countOf(cadence.sheet, 'cards-ends-done') === 1 && countOf(cadence.sheet, 'cards-ends-soon') === 0);
+      check('and the row is still on the page', countOf(cadence.sheet, 'cards-row') === 1 && /C1/.test(textOf(cadence.sheet)));
+      check('greyed whole', countOf(cadence.sheet, 'cards-row-ended') === 1);
+      cadence.panel.close();
+
+      // -- a phone that slept --------------------------------------------------
+      //
+      // Up to thirty seconds of a visibly wrong countdown on wake is thirty
+      // seconds too many, so the return to the foreground repaints at once.
+      const woken = openWatch([auction('W1', 4 * 24 * HOUR + 3 * HOUR)]);
+      check('it starts where it should', only(woken) === '4d 3h', only(woken));
+      clock.advance(24 * HOUR);
+      check('a slept day leaves the figure stale until something fires', only(woken) === '4d 3h');
+      fireDocEvent('visibilitychange');
+      check('coming back repaints without waiting for the next beat', only(woken) === '3d 3h', only(woken));
+      woken.panel.close();
+      check('and the woken sheet leaves nothing behind', timers.live.size === 0 && docListenerCount('visibilitychange') === 0);
+
+      // -- nothing anywhere reads as a bug -----------------------------------
+      for (const [label, view] of [['the ladder', ladder], ['the stamps', stamps], ['the legacy row', legacy], ['a finished row', done]]) {
+        const t = `${textOf(view.sheet)} ${textOf(view.board)}`;
+        check(`no "undefined", "NaN" or "Invalid Date" in ${label}`, !/undefined|NaN|Invalid Date/.test(t), t.slice(0, 160));
+      }
+    } finally {
+      for (const v of opened) v.panel.close();
+      clock.restore();
+    }
+
+    check('every sheet opened in the countdown tests has been shut', timers.live.size === 0, String(timers.live.size));
+    check('and no document listener outlives them', docListenerCount('visibilitychange') === 0);
+
+    // -- rule 7, proven at runtime as well as by the source scan -------------
+    //
+    // The scan above says this module never writes `new Date`. This says
+    // something stronger: across a full render and sheet build, no Date
+    // anywhere underneath it — lib/fmt.js included — was ever handed a value
+    // that came out of `ends_ct`.
+    const CT_STAMPS = ['2026-09-20T19:48', '2026-09-20 19:48'];
+    // Minted once, off the real clock, so the fixture and the assertion below
+    // are the same string down to the millisecond.
+    const SPY_END = at(90 * MIN);
+    const seen = [];
+    const spyPanel = fakePanel();
+    (() => {
+      const Real = Date;
+      const fixed = Real.parse(CLOCK);
+      class Spy extends Real {
+        constructor(...a) { if (a.length) seen.push(a[0]); super(...(a.length ? a : [fixed])); }
+        static now() { return fixed; }
+        static parse(v) { seen.push(v); return Real.parse(v); }
+      }
+      global.Date = Spy;
+      try {
+        const r = new El('div');
+        cards.render(r, cardsTile(deskData({
+          auctions: [
+            listing({ item_id: 'P1', title: 'P1', type: 'AUCTION', ends_ct: CT_STAMPS[0], ends_utc: SPY_END }),
+            listing({ item_id: 'P2', title: 'P2', type: 'AUCTION', ends_ct: CT_STAMPS[1], ends_utc: null }),
+          ],
+        })), { id: 'cards', actions: spyPanel.actions });
+        cardsTap(cardBtns(r)[0]);
+      } finally { global.Date = Real; }
+    })();
+    check(
+      'no Date was ever constructed or parsed from an ends_ct value',
+      !seen.some((v) => CT_STAMPS.includes(v)),
+      JSON.stringify(seen.filter((v) => typeof v === 'string'))
+    );
+    check('the instant, on the other hand, was read', seen.includes(SPY_END), JSON.stringify(seen.filter((v) => typeof v === 'string')));
+    spyPanel.close();
+
+    // -- and the section leaves the page as it found it ----------------------
+    panel.close();
+    emptyPanel.close();
+    raggedPanel.close();
+    check('no interval survives this file', timers.live.size === 0, String(timers.live.size));
+    check('and no document listener does either', docListenerCount('visibilitychange') === 0);
+  });
 
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
