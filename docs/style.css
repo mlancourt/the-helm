@@ -1207,8 +1207,11 @@ body {
 .clog-face-stale .clog-headline { color: var(--text-dim); }
 
 .clog-sec { display: flex; flex-direction: column; gap: 6px; }
+/* Wraps: a decision menu is a phrase, not a word, and on a narrow phone it
+   must be allowed to drop under the title rather than squeeze it. */
 .clog-sec-head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 4px 10px;
+  flex-wrap: wrap;
 }
 .clog-sec-title {
   margin: 0;
@@ -1218,17 +1221,24 @@ body {
   text-transform: uppercase;
   color: var(--text-faint);
 }
-.clog-sec-marks { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.clog-sec-marks { display: flex; align-items: center; gap: 6px; flex: 0 1 auto; flex-wrap: wrap; }
 .clog-count { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
-.clog-act {
-  padding: 1px 6px;
+
+/* The decision menu, on the face and in the sheet, and it is the SAME chip in
+   both places because it is the same string: whatever options the brief said
+   it was offering. Deliberately NOT uppercased and NOT letter-spaced — the
+   engine hands over the Captain's Log's own words and the page prints them,
+   so a display transform on them would be the one liberty this tile does not
+   take. It also keeps 'act / defer / drop' narrow enough to sit beside a
+   section title on a phone. */
+.clog-menu, .clog-tag {
+  padding: 1px 7px;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--bg-sink);
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 10.5px;
   color: var(--text-dim);
+  white-space: nowrap;
 }
 
 .clog-items { display: flex; flex-direction: column; gap: 7px; }
@@ -1266,18 +1276,8 @@ body {
 }
 .clog-entry-headline { font-size: 14px; font-weight: 650; line-height: 1.35; }
 .clog-entry-body { margin: 5px 0 0 calc(1.15em + 8px); font-size: 13px; line-height: 1.5; color: var(--text-dim); }
-.clog-tag {
-  display: inline-block;
-  margin: 7px 0 0 calc(1.15em + 8px);
-  padding: 1px 7px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--bg-sink);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
+/* Same chip, indented to sit under the body it belongs to. */
+.clog-tag { display: inline-block; margin: 7px 0 0 calc(1.15em + 8px); }
 /* Done, and still on the page: struck where it sits, in payload order. */
 .clog-entry-resolved { opacity: 0.55; }
 .clog-entry-resolved .clog-entry-headline { text-decoration: line-through; }

@@ -2037,7 +2037,7 @@ const CLOG_NOTES = [
     headline: 'The Fairhaven quote — the one you parked on Friday — needs a number today',
     body:
       'They asked twice and the second ask copied their operations lead, which is the tell that it has moved off the maybe pile. The machine list has not changed since the walkthrough, so the only open item is what you want the freight line to read. Nothing else in the inbox is waiting on you this morning.',
-    tag: 'act',
+    tag: 'act / defer / drop',
     resolved: false,
     headline_exact: true,
   },
@@ -2047,7 +2047,7 @@ const CLOG_NOTES = [
     headline: 'Three weeks of half-finished notes are all the same note',
     body:
       'The Tuesday captures keep circling the same decision and none of them ends in one. That is a signal about the decision, not about the note-taking: it has no owner and no date, so it regenerates every week. Give it either and it stops.',
-    tag: 'defer',
+    tag: 'act / defer / drop',
     resolved: false,
     headline_exact: false,
   },
@@ -2059,7 +2059,7 @@ const CLOG_RADAR = [
     emoji: '📞',
     headline: 'Kestrel Supply expects a call back before noon — they left a voicemail Friday and an email Sunday night',
     body: 'Second attempt. The voicemail names a delivery window, the email does not.',
-    tag: 'act',
+    tag: 'act / defer / drop',
     resolved: false,
     headline_exact: true,
   },
@@ -2086,7 +2086,9 @@ const CLOG_RADAR = [
     emoji: '🧾',
     headline: 'The Fairhaven invoice is thirty-one days out',
     body: 'First month past terms. No note in the thread about why.',
-    tag: 'drop',
+    // A menu with an option withheld — the brief offered no defer on this
+    // one, so the chip must not grow one.
+    tag: 'act / drop',
     resolved: false,
     headline_exact: true,
   },
@@ -2262,11 +2264,72 @@ function captainsLogUnknownSnapshot() {
               emoji: null,
               headline: 'And a second row, with no emoji at all',
               body: '',
-              tag: 'defer',
+              tag: 'act / defer / drop',
               resolved: false,
               headline_exact: true,
             },
           ],
+        },
+      ],
+    })
+  );
+  return snap;
+}
+
+/**
+ * A morning the Captain's Log withheld options.
+ *
+ * `tag` is the brief's own decision MENU, not a constant, and this is the
+ * fixture that says so: a note offering only 'act', a radar section where
+ * every row reads 'act / drop', and the word "defer" nowhere in the payload
+ * at all. The tile must print those strings exactly and must never grow the
+ * third option back — the menu is the brief's decision about what Matt gets
+ * to decide, and a page that widened it would be answering a question the
+ * Captain's Log deliberately did not ask.
+ */
+function captainsLogMenusSnapshot() {
+  const snap = snapshot();
+  snap.tiles.captains_log = tile(
+    'DAILY',
+    captainsLogPayload({
+      notes: [
+        {
+          ordinal: 'One',
+          emoji: '⚓',
+          headline: 'The Fairhaven quote needs a number today — there is no version of this week where it does not',
+          body: 'No option but to answer it. The brief says so by offering only the one.',
+          tag: 'act',
+          resolved: false,
+          headline_exact: true,
+        },
+      ],
+      radar: [
+        {
+          ordinal: null,
+          emoji: '📞',
+          headline: 'Kestrel Supply is on their second attempt',
+          body: 'Call them or let it go; the brief is not offering to park it.',
+          tag: 'act / drop',
+          resolved: false,
+          headline_exact: true,
+        },
+        {
+          ordinal: null,
+          emoji: '🧾',
+          headline: 'The Fairhaven invoice is thirty-one days out',
+          body: 'Same two options.',
+          tag: 'act / drop',
+          resolved: false,
+          headline_exact: true,
+        },
+        {
+          ordinal: null,
+          emoji: '🛠️',
+          headline: 'The shop light over bay two is still out',
+          body: 'No menu on this one at all.',
+          tag: null,
+          resolved: false,
+          headline_exact: true,
         },
       ],
     })
@@ -2292,6 +2355,8 @@ const MODES = [
   ['--clog-stale', () => captainsLogStaleSnapshot()],
   ['--clog-error', () => captainsLogErrorSnapshot()],
   ['--clog-unknown', () => captainsLogUnknownSnapshot()],
+  // A morning with an option withheld: 'act / drop', and no defer anywhere.
+  ['--clog-menus', () => captainsLogMenusSnapshot()],
   // The weather tile's four faces (W6). The default snapshot carries the
   // Watch; these are the other three.
   ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],

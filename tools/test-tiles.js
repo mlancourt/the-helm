@@ -5173,7 +5173,12 @@ async function main() {
     exactT.panel.close();
     exactF.panel.close();
 
-    // -- the act chip ---------------------------------------------------------
+    // -- the decision menu ----------------------------------------------------
+    //
+    // `tag` IS THE MENU and it is not a constant: the Captain's Log writes the
+    // options it is offering, and on a morning it withholds one it writes
+    // 'act / drop' or plain 'act'. The chip is that string, verbatim, and the
+    // tile must never display an option the brief did not offer.
     const tagless = (tag) => ({
       sections: [{
         id: 'on-your-radar', title: 'On Your Radar Today', kind: 'radar', emitted: true,
@@ -5181,11 +5186,66 @@ async function main() {
       }],
       omitted: [], live_count: 1,
     });
-    check('both sections carry the chip', countOf(board, 'clog-act') === 2, String(countOf(board, 'clog-act')));
-    check('and it reads "act"', clogTexts(board, 'clog-act').every((t) => t === 'act'), clogTexts(board, 'clog-act').join(' '));
-    check('a tagged section raises one', countOf(drawClog(tagless('defer')), 'clog-act') === 1);
-    check('an untagged one raises none', countOf(drawClog(tagless(null)), 'clog-act') === 0);
-    check('and neither does an empty tag', countOf(drawClog(tagless('')), 'clog-act') === 0);
+    check(
+      'the chips are the menus the brief wrote',
+      clogTexts(board, 'clog-menu').join(' | ') === 'act / defer / drop | act / defer / drop | act / drop',
+      clogTexts(board, 'clog-menu').join(' | ')
+    );
+    check('a section on one menu wears it once, not once per row', countOf(secs[0], 'clog-menu') === 1, String(countOf(secs[0], 'clog-menu')));
+    check(
+      'and a section whose rows disagree wears both',
+      countOf(secs[1], 'clog-menu') === 2,
+      clogTexts(secs[1], 'clog-menu').join(' | ')
+    );
+    check('a tagged section raises one', countOf(drawClog(tagless('act / defer')), 'clog-menu') === 1);
+    check('reading exactly what it was given', clogTexts(drawClog(tagless('act / defer')), 'clog-menu').join('') === 'act / defer');
+    check('an untagged one raises none', countOf(drawClog(tagless(null)), 'clog-menu') === 0);
+    check('and neither does an empty tag', countOf(drawClog(tagless('')), 'clog-menu') === 0);
+    check('nor one that is only whitespace', countOf(drawClog(tagless('   ')), 'clog-menu') === 0);
+
+    // THE RULING: the tile must never display an option the brief withheld.
+    // A morning offering 'act / drop' and, on the note, only 'act' — and the
+    // word "defer" is not in that payload at all.
+    const menuSnap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'clog-menus.json'), 'utf8'));
+    const menuData = menuSnap.tiles.captains_log.data;
+    check('the fixture withholds an option', !JSON.stringify(menuData).includes('defer'));
+    const menus = openClog(menuData);
+    const menuSecs = menus.root.querySelectorAll('.clog-sec');
+    check(
+      'a note offered one option shows exactly that one',
+      clogTexts(menuSecs[0], 'clog-menu').join(' | ') === 'act',
+      clogTexts(menuSecs[0], 'clog-menu').join(' | ')
+    );
+    check(
+      'and a section offered two shows exactly those two words',
+      clogTexts(menuSecs[1], 'clog-menu').join(' | ') === 'act / drop',
+      clogTexts(menuSecs[1], 'clog-menu').join(' | ')
+    );
+    check(
+      'the withheld option appears NOWHERE on the face',
+      !/defer/i.test(textOf(menus.root)),
+      textOf(menus.root)
+    );
+    check('nor anywhere in the sheet', !/defer/i.test(textOf(menus.sheet)));
+    check(
+      'and the sheet chips are the same strings, per row',
+      clogTexts(menus.sheet, 'clog-tag').join(' | ') === 'act | act / drop | act / drop',
+      clogTexts(menus.sheet, 'clog-tag').join(' | ')
+    );
+    check('a row the brief gave no menu wears no chip', countOf(menuSecs[1], 'clog-menu') === 1 && countOf(menuSecs[1], 'clog-item') === 3);
+    menus.panel.close();
+
+    // At the source: the module cannot compose a menu, because it does not
+    // know the words. Not one of them appears in it — the only way a chip can
+    // read 'defer' is if the brief said 'defer'.
+    for (const word of ['act', 'defer', 'drop']) {
+      check(
+        `the module contains no literal '${word}'`,
+        !new RegExp(`['\"\`][^'\"\`]*\\b${word}\\b[^'\"\`]*['\"\`]`, 'i').test(CLOG_SRC),
+        (CLOG_SRC.match(new RegExp(`.*\\b${word}\\b.*`, 'i')) || [''])[0].trim()
+      );
+    }
+    check('and it joins nothing with a slash', !/join\(\s*['\"`][^'\"`]*\/'/.test(CLOG_SRC));
 
     // -- the sheet ------------------------------------------------------------
     const full = openClog(FULL || {});
@@ -5205,9 +5265,10 @@ async function main() {
     check('an empty body draws no element', /Two calendar items overlap/.test(textOf(full.sheet)));
     check('the tags ride as chips', countOf(full.sheet, 'clog-tag') === 4, String(countOf(full.sheet, 'clog-tag')));
     check(
-      'and they are the tags themselves, not a verdict on them',
-      clogTexts(full.sheet, 'clog-tag').join(' ') === 'act defer act drop',
-      clogTexts(full.sheet, 'clog-tag').join(' ')
+      'and they are the menus themselves, not a verdict on them',
+      clogTexts(full.sheet, 'clog-tag').join(' | ') ===
+        'act / defer / drop | act / defer / drop | act / defer / drop | act / drop',
+      clogTexts(full.sheet, 'clog-tag').join(' | ')
     );
     check('the ordinals are printed where the engine set them', clogTexts(full.sheet, 'clog-ord').join(' ') === 'One Two', clogTexts(full.sheet, 'clog-ord').join(' '));
     check('the resolved row is struck', countOf(full.sheet, 'clog-entry-resolved') === 1);

@@ -89,12 +89,32 @@ function liveItems(section) {
   return arr(section && section.items).map(obj).filter((i) => i && i.resolved !== true);
 }
 
-/** Does anything in this section carry a tag? Then the section wears the chip. */
-function hasTag(section) {
-  return arr(section && section.items).some((i) => {
-    const o = obj(i);
-    return !!o && str(o.tag) !== '';
-  });
+/**
+ * The decision menus this section's LIVE items carry, in payload order, with
+ * duplicates collapsed.
+ *
+ * `tag` IS THE MENU, and it is not a constant. The Captain's Log writes the
+ * options it is offering — usually 'act / defer / drop', but 'act / drop' or
+ * plain 'act' on a morning it deliberately withholds one — and the chip is
+ * that string and nothing else. The tile must never show an option the brief
+ * did not offer, so it composes no menu, knows none of the words, and has no
+ * literal 'act', 'defer' or 'drop' anywhere in it (a source scan says so).
+ *
+ * Collapsed rather than one-per-row because a section normally runs on one
+ * menu and would otherwise wear the same chip five times; when two rows
+ * genuinely disagree, BOTH are shown, because picking one would put an option
+ * on the header that half the rows below it were never offered.
+ *
+ * Live items only, like everything else on the face: a chip about a resolved
+ * row that is not on the card is a menu for a decision already made.
+ */
+function menusOf(section) {
+  const out = [];
+  for (const item of liveItems(section)) {
+    const tag = str(item.tag).trim();
+    if (tag && !out.includes(tag)) out.push(tag);
+  }
+  return out;
 }
 
 /**
@@ -186,9 +206,8 @@ function faceSection(section) {
   const hidden = live.length - shown.length;
 
   const marks = [el('span', { cls: 'clog-count', text: String(live.length) })];
-  // Literal, per the contract: the section holds something tagged. The tag
-  // itself — act / defer / drop — is shown per item in the sheet.
-  if (hasTag(s)) marks.push(el('span', { cls: 'clog-act', text: 'act' }));
+  // The brief's own decision menu, verbatim. Never a word this file chose.
+  for (const menu of menusOf(s)) marks.push(el('span', { cls: 'clog-menu', text: menu }));
 
   return el('div', { cls: 'clog-sec' }, [
     el('div', { cls: 'clog-sec-head' }, [
