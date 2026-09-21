@@ -1664,6 +1664,27 @@ body {
 .ship-meter-spent { color: var(--text); font-weight: 650; }
 .ship-meter-cap { color: var(--text-faint); }
 
+/* The plan meters. They borrow .ship-meter-track / -fill from the cap meter
+   above, so only the label row, the note and the stale wash live here. */
+.ship-plan { display: flex; flex-direction: column; }
+.ship-plan-row + .ship-plan-row { margin-top: 9px; }
+.ship-plan-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.ship-plan-label { font-size: 12px; color: var(--text-dim); }
+.ship-plan-pct { font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.ship-plan-good { color: var(--good); }
+.ship-plan-warn { color: var(--warn); }
+.ship-plan-bad  { color: var(--bad); }
+.ship-plan-note { margin: 7px 0 0; font-size: 11px; color: var(--text-faint); }
+/* A cached reading still shows its bars — greyed, so it can never be mistaken
+   for a live one. The age rides on the note line below it. */
+.ship-plan-stale { opacity: 0.55; }
+
 .ship-kill {
   margin-top: 12px;
   padding: 8px 10px;

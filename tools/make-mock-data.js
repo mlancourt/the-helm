@@ -109,6 +109,7 @@ function utcStampIn(minutes) {
 
 const nowIso = () => new Date().toISOString();
 const agoIso = (mins) => new Date(Date.now() - mins * 60000).toISOString();
+const aheadIso = (mins) => new Date(Date.now() + mins * 60000).toISOString();
 
 const TODAY = ctToday();
 const TOMORROW = addDays(TODAY, 1);
@@ -809,6 +810,32 @@ function snapshot() {
           ask_cap_usd: 3,
           basis: 'invented figures from the mock generator — not a bill',
           ledger: 'mock/_runtime/spend-ledger.json',
+        },
+        // The subscription's weekly meters — NOT the API dollars above. Both
+        // are invented; the severities are hand-set so the mock exercises a
+        // normal bar and a warning one side by side.
+        plan: {
+          state: 'ok',
+          plan: 'max',
+          limits: [
+            {
+              kind: 'weekly_all',
+              label: 'Weekly · all models',
+              percent: 48,
+              severity: 'normal',
+              resets_at: aheadIso(4 * 24 * 60),
+            },
+            {
+              kind: 'weekly_scoped',
+              label: 'Weekly · Fable',
+              percent: 81,
+              severity: 'warning',
+              resets_at: aheadIso(4 * 24 * 60),
+            },
+          ],
+          fetched_at: agoIso(12),
+          note: null,
+          source: 'mock generator — invented percentages, not a real plan',
         },
         kill_switch: 'launchctl unload ~/Library/LaunchAgents/com.example.mock-helm.plist',
       }),

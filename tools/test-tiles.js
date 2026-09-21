@@ -39,7 +39,7 @@ function check(name, cond, detail) {
 // Shared with tools/test-weather.js — see tools/dom-shim.js. Requiring it
 // installs `global.document`.
 
-const { El, docListenerCount, fireDocEvent } = require('./dom-shim.js');
+const { El, all, docListenerCount, fireDocEvent } = require('./dom-shim.js');
 
 /**
  * A localStorage shim, because the entertainment tile's "new" counts are a
@@ -195,8 +195,13 @@ async function main() {
     if (full) {
       const root = new El('div');
       ship.render(root, full, { id: 'ship_status', actions: {} });
-      check('a spend meter is drawn', countOf(root, 'ship-meter-fill') === 1);
-      check('the meter never renders a zero-width bar', /width:\d/.test(root.querySelector('.ship-meter-fill').getAttribute('style')));
+      // The plan rows below reuse the cap meter's track and fill, so the
+      // spend meter is counted inside its own wrapper rather than across the
+      // whole card — otherwise adding a plan limit would fail this for the
+      // wrong reason.
+      check('a spend meter is drawn', countOf(root, 'ship-meter') === 1);
+      check('and exactly one fill inside it', countOf(root.querySelector('.ship-meter'), 'ship-meter-fill') === 1);
+      check('the meter never renders a zero-width bar', /width:\d/.test(root.querySelector('.ship-meter').querySelector('.ship-meter-fill').getAttribute('style')));
       check('the kill switch is printed, not run', countOf(root, 'ship-kill-cmd') === 1);
       check('the footer says display-only', /Display only/.test(textOf(root)));
     }
@@ -219,6 +224,193 @@ async function main() {
     const root4 = new El('div');
     ship.render(root4, noLog, { id: 'ship_status', actions: {} });
     check('an absent captains_log is omitted, not reported false', !/captain/i.test(textOf(root4)));
+  }
+
+  // -- ship_status: the plan meter -------------------------------------------
+  //
+  // `plan` is Matt's Claude MAX-plan weekly usage — the % meters off the
+  // Usage page. It is NOT the `spend` block above it: spend is API dollars
+  // the engine pays, plan is a subscription allowance. Both stay, one under
+  // the other, and the tests below are mostly about not letting them blur.
+  //
+  // The ruling with teeth: TONE COMES OFF `severity` AND NOTHING ELSE. The
+  // server owns its thresholds; the page re-deriving them from `percent`
+  // would be a second opinion that drifts the day the server moves its line.
+  // Same shape as purser_due.tone and cards.days_listed, and held the same
+  // way — at the DOM and at the source, because one scan is one refactor
+  // from gone.
+  console.log('\nship_status — the plan meter');
+  if (ship) {
+    const SHIP_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'ship_status.js'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    const CSS = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+
+    const planTile = (plan) => ({ band: 'DAILY', status: 'ok', data: { plan } });
+    const limit = (over = {}) => ({
+      kind: 'weekly_all',
+      label: 'Weekly · all models',
+      percent: 48,
+      severity: 'normal',
+      resets_at: '2026-09-25T14:59:59+00:00',
+      ...over,
+    });
+    const planOf = (root) => root.querySelector('.ship-plan');
+    const noteOf = (root) => (root.querySelector('.ship-plan-note') || { textContent: '' }).textContent;
+
+    // -- two limits, fresh ----------------------------------------------------
+    const fresh = new El('div');
+    ship.render(fresh, planTile({
+      state: 'ok',
+      plan: 'max',
+      limits: [limit(), limit({ kind: 'weekly_scoped', label: 'Weekly · Fable', percent: 81, severity: 'warning' })],
+      fetched_at: '2026-09-21T20:41:00Z',
+      note: null,
+      source: 'test',
+    }), { id: 'ship_status', actions: {} });
+
+    check('two limits draw two bars', countOf(fresh, 'ship-plan-row') === 2, String(countOf(fresh, 'ship-plan-row')));
+    check('and two meter fills with them', countOf(fresh, 'ship-meter-fill') === 2);
+    check('the heading names the plan', /Claude · max/.test(textOf(planOf(fresh))));
+    // Labels are the server's words. The page does not retitle them.
+    const labels = fresh.querySelectorAll('.ship-plan-label').map((n) => n.textContent);
+    check('labels are printed verbatim', labels.join(' | ') === 'Weekly · all models | Weekly · Fable', labels.join(' | '));
+    const pcts = fresh.querySelectorAll('.ship-plan-pct').map((n) => n.textContent);
+    check('each percent is printed as given', pcts.join(' ') === '48% 81%', pcts.join(' '));
+    // `percent` is already 0-100. A bar at 81 must be 81% wide, not 81/cap.
+    const widths = fresh.querySelectorAll('.ship-meter-fill').map((n) => n.getAttribute('style'));
+    check('the bar width is the percent itself, undivided', widths.join(' ') === 'width:48.00% width:81.00%', widths.join(' '));
+    check('exactly one resets line', countOf(fresh, 'ship-plan-note') === 1);
+    check('and it reads as a weekday and a clock', /^resets [A-Z][a-z]{2} \d{1,2}:\d{2} [AP]M CT$/.test(noteOf(fresh)), noteOf(fresh));
+    check('nothing is greyed while it is fresh', countOf(fresh, 'ship-plan-stale') === 0);
+
+    // -- severity, and only severity ------------------------------------------
+    check('the warning limit wears the warn tone', !!fresh.querySelectorAll('.ship-plan-warn').length);
+    check('the normal limit wears the good tone', !!fresh.querySelectorAll('.ship-plan-good').length);
+    const rowCls = fresh.querySelectorAll('.ship-plan-row').map((r) => r.querySelector('.ship-plan-pct').className);
+    check('one row each, not both the same', rowCls[0] !== rowCls[1], rowCls.join(' | '));
+
+    // The proof that percent is not the source: 96% at severity "normal" must
+    // render the identical class set to 3% at severity "normal".
+    const classSet = (plan) => {
+      const r = new El('div');
+      ship.render(r, planTile(plan), { id: 'ship_status', actions: {} });
+      return all(r).map((n) => n.className).filter(Boolean).join(' ');
+    };
+    const hot = classSet({ state: 'ok', plan: 'max', limits: [limit({ percent: 96 })] });
+    const cool = classSet({ state: 'ok', plan: 'max', limits: [limit({ percent: 3 })] });
+    check('a high percent at severity normal is styled as normal', hot === cool, `${hot}\n    vs ${cool}`);
+    // And the converse: a LOW percent the server called a warning is amber.
+    const lowWarn = new El('div');
+    ship.render(lowWarn, planTile({ state: 'ok', plan: 'max', limits: [limit({ percent: 4, severity: 'warning' })] }), { id: 'ship_status', actions: {} });
+    check('a low percent the server warned on is still amber', countOf(lowWarn, 'ship-plan-warn') === 1);
+    // An unknown severity is not quietly a good one.
+    const odd = new El('div');
+    ship.render(odd, planTile({ state: 'ok', plan: 'max', limits: [limit({ severity: 'critical' })] }), { id: 'ship_status', actions: {} });
+    check('an unrecognised severity is bad, not good', countOf(odd, 'ship-plan-bad') === 1 && countOf(odd, 'ship-plan-good') === 0);
+
+    // -- SOURCE SCAN: no class is ever chosen from percent ---------------------
+    const a = SHIP_SRC.indexOf('const PLAN_TONE');
+    const b = SHIP_SRC.indexOf('function serviceRows(');
+    const PLAN_REGION = a !== -1 && b > a ? SHIP_SRC.slice(a, b) : '';
+    check('the plan section is findable in source', PLAN_REGION.length > 200, String(PLAN_REGION.length));
+    const PLAN_CLASSES = [...PLAN_REGION.matchAll(/cls:\s*([^,}\n]+)/g)].map((m) => m[1].trim());
+    check('the section emits classes', PLAN_CLASSES.length >= 4, PLAN_CLASSES.join(' | '));
+    check('no class mentions percent', !PLAN_CLASSES.some((c) => /percent/.test(c)), PLAN_CLASSES.join(' | '));
+    check('every interpolated class interpolates the tone and nothing else', PLAN_CLASSES.filter((c) => /\$\{/.test(c)).every((c) => /\$\{tone\b/.test(c)), PLAN_CLASSES.join(' | '));
+    check('nothing compares percent to anything', !/percent\s*[<>=!]+|[<>=!]+\s*(?:limit\.)?percent/.test(PLAN_REGION), (PLAN_REGION.match(/.*percent.*/g) || []).join(' / '));
+    check('the tone function reads severity alone', /function planTone\(severity\)/.test(PLAN_REGION) && /PLAN_TONE\[severity\]/.test(PLAN_REGION));
+    check('there is exactly one tone function', (PLAN_REGION.match(/function planTone\(/g) || []).length === 1);
+    check('percent meets a number in one place only', (PLAN_REGION.match(/function barWidth\(/g) || []).length === 1 && /Math\.min\(100/.test(PLAN_REGION));
+    // Rule 7: the reset time is formatted through the fmt helpers, never
+    // parsed here.
+    check('the section never parses a date itself', !/new Date|Date\.parse/.test(PLAN_REGION));
+    check('and takes the Central helpers instead', /ctWeekday\(/.test(PLAN_REGION) && /ctTime\(/.test(PLAN_REGION));
+    // Rule 6 family: two bars, a heading, one line. Nothing to press.
+    check('the section builds no button', !/el\(\s*'button'/.test(PLAN_REGION));
+    check('and no link out', !/extLink|el\(\s*'a'/.test(PLAN_REGION));
+    check('and fetches nothing', !/fetch\(/.test(PLAN_REGION));
+    for (const phrase of ['running hot', 'on pace', 'projected', 'at this rate', 'you will']) {
+      check(`it never says "${phrase}"`, !new RegExp(phrase, 'i').test(PLAN_REGION));
+    }
+
+    // -- the stylesheet --------------------------------------------------------
+    check('the stale wash is a single modifier rule', (CSS.match(/\.ship-plan-stale\b/g) || []).length === 1);
+    check('and the three tone rules are colour only', /\.ship-plan-good \{ color: var\(--good\); \}/.test(CSS) && /\.ship-plan-warn \{ color: var\(--warn\); \}/.test(CSS));
+
+    // -- state "expired": cached bars, greyed, with their age ------------------
+    const expired = new El('div');
+    ship.render(expired, planTile({
+      state: 'expired',
+      plan: 'max',
+      limits: [limit(), limit({ label: 'Weekly · Fable', percent: 81, severity: 'warning' })],
+      fetched_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+      note: 'the session cookie expired',
+      source: 'test',
+    }), { id: 'ship_status', actions: {} });
+    check('a cached reading still draws its bars', countOf(expired, 'ship-plan-row') === 2);
+    check('the section is greyed', countOf(expired, 'ship-plan-stale') === 1);
+    check('the age is on the line', /^as of 3h ago · the session cookie expired$/.test(noteOf(expired)), noteOf(expired));
+    check('and the resets line is gone', !/resets/.test(textOf(planOf(expired))));
+
+    // A stale reading with no stamp at all says why, and nothing more.
+    const noStamp = new El('div');
+    ship.render(noStamp, planTile({ state: 'error', plan: 'max', limits: [limit()], fetched_at: null, note: 'the usage page did not answer' }), { id: 'ship_status', actions: {} });
+    check('no fetched_at means the note alone', noteOf(noStamp) === 'the usage page did not answer', noteOf(noStamp));
+
+    // -- state "missing", no limits: the note line and nothing else ------------
+    const missing = new El('div');
+    ship.render(missing, planTile({
+      state: 'missing',
+      plan: null,
+      limits: [],
+      fetched_at: null,
+      note: 'no Claude session on file',
+      source: 'test',
+    }), { id: 'ship_status', actions: {} });
+    check('an empty reading draws no bars', countOf(missing, 'ship-plan-row') === 0);
+    check('and no meter elements at all', countOf(missing, 'ship-meter-track') === 0 && countOf(missing, 'ship-meter-fill') === 0);
+    check('the note is what is left', noteOf(missing) === 'no Claude session on file', noteOf(missing));
+    check('a null plan name drops the separator', /Claude$/.test(missing.querySelector('.ship-heading').textContent));
+
+    // -- absent entirely: rule 9, in the quiet direction -----------------------
+    const absent = new El('div');
+    let threw = null;
+    try {
+      ship.render(absent, { band: 'DAILY', status: 'ok', data: { pending_count: 0 } }, { id: 'ship_status', actions: {} });
+    } catch (e) { threw = e; }
+    check('an absent plan does not throw', !threw, threw && threw.message);
+    check('and renders no section', countOf(absent, 'ship-plan') === 0);
+    check('nor a stray heading', !/Claude/.test(textOf(absent)));
+    // KNOWN must carry it, or an older snapshot's plan lands in "also reported"
+    // as a wall of JSON.
+    const known = new El('div');
+    ship.render(known, planTile({ state: 'ok', plan: 'max', limits: [limit()], fetched_at: null, note: null }), { id: 'ship_status', actions: {} });
+    check('plan never lands in the extras row', !/Also reported/.test(textOf(known)) && !/"limits"/.test(textOf(known)));
+
+    // -- hostile plans ---------------------------------------------------------
+    for (const [label, bad] of [
+      ['plan is a string', 'max'],
+      ['plan is an array', [1, 2]],
+      ['limits is null', { state: 'ok', limits: null }],
+      ['limits is a string', { state: 'ok', limits: 'two' }],
+      ['a limit is null', { state: 'ok', limits: [null, { label: 'x', percent: 5, severity: 'normal' }] }],
+      ['percent is a string', { state: 'ok', limits: [{ label: 'x', percent: '48', severity: 'normal' }] }],
+      ['resets_at is not an instant', { state: 'ok', limits: [{ label: 'x', percent: 5, severity: 'normal', resets_at: 'next Thursday' }] }],
+    ]) {
+      const r = new El('div');
+      let t = null;
+      try { ship.render(r, planTile(bad), { id: 'ship_status', actions: {} }); } catch (e) { t = e; }
+      check(`survives ${label}`, !t, t && t.message);
+    }
+    // A percent that is not a number prints no figure rather than "NaN%".
+    const nan = new El('div');
+    ship.render(nan, planTile({ state: 'ok', limits: [{ label: 'x', percent: null, severity: 'normal' }] }), { id: 'ship_status', actions: {} });
+    check('a missing percent prints no figure', countOf(nan, 'ship-plan-pct') === 0 && !/NaN/.test(textOf(nan)));
+    // An unreadable reset stamp is printed verbatim, never guessed at.
+    const rawReset = new El('div');
+    ship.render(rawReset, planTile({ state: 'ok', limits: [limit({ resets_at: 'next Thursday' })] }), { id: 'ship_status', actions: {} });
+    check('an unreadable reset stamp is printed as text', noteOf(rawReset) === 'resets next Thursday', noteOf(rawReset));
   }
 
   // -- newsstand: the category menu ------------------------------------------

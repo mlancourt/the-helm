@@ -21,7 +21,7 @@
  */
 
 import { el, empty, pill, row } from '../lib/dom.js';
-import { ago, ctTime, usdPrecise } from '../lib/fmt.js';
+import { ago, ctTime, ctWeekday, usdPrecise } from '../lib/fmt.js';
 import { APP_VERSION } from '../config.js';
 
 /** Fields this module renders itself. Anything else lands in "also reported". */
@@ -35,6 +35,7 @@ const KNOWN = new Set([
   'pending_count',
   'worker_published_at',
   'spend',
+  'plan',
   'kill_switch',
 ]);
 
@@ -88,6 +89,114 @@ function capMeter(spent, cap) {
       el('span', { cls: 'ship-meter-cap', text: ` of ${usdPrecise(cap)} today` }),
     ]),
   ]);
+}
+
+/**
+ * The plan meters — Matt's Claude subscription, not the engine's API bill.
+ *
+ * The two live one under the other on purpose and must never be added
+ * together: `spend` above is dollars the engine pays per call; `plan` here is
+ * the percentage of a weekly subscription allowance already used. Same tile,
+ * two different currencies, so they get two different headings and the plan
+ * section says whose meter it is in its own title.
+ *
+ * THE RULING: tone comes off `severity` and nothing else. The server owns the
+ * thresholds — it knows which limit is scoped, what the allowance is, and how
+ * near the edge counts as near — and the page re-deriving that from `percent`
+ * would be a second opinion that drifts the day the server moves its line.
+ * Same shape as `purser_due`'s tone and `cards`' days_listed: a number here is
+ * a fact and a colour on it would be a judgement, so the judgement is only
+ * ever the one that arrived in the payload. `percent` is printed and used for
+ * a bar width; it is never compared to anything.
+ */
+const PLAN_TONE = { normal: 'good', warning: 'warn' };
+
+/** severity -> tone. An unknown severity is `bad`: a limit the page cannot
+ * read is not quietly a good one. */
+function planTone(severity) {
+  return PLAN_TONE[severity] || 'bad';
+}
+
+/** 0-100 for a CSS width. The ONLY place percent meets a number. */
+function barWidth(percent) {
+  const v = Number(percent);
+  if (!Number.isFinite(v)) return 0;
+  return Math.max(0, Math.min(100, v));
+}
+
+/** One limit: its label, its own figure, and the bar. */
+function planRow(limit) {
+  const tone = planTone(limit.severity);
+  return el('div', { cls: 'ship-plan-row' }, [
+    el('div', { cls: 'ship-plan-head' }, [
+      el('span', { cls: 'ship-plan-label', text: String(limit.label ?? limit.kind ?? '') }),
+      isNum(limit.percent)
+        ? el('span', { cls: `ship-plan-pct ship-plan-${tone}`, text: `${limit.percent}%` })
+        : null,
+    ]),
+    // The cap meter's own track and fill, reused verbatim — one idea of what
+    // a meter looks like on this tile, not two.
+    el('div', { cls: 'ship-meter-track' }, [
+      el('div', {
+        cls: `ship-meter-fill ship-meter-${tone}`,
+        attrs: { style: `width:${barWidth(limit.percent).toFixed(2)}%` },
+      }),
+    ]),
+  ]);
+}
+
+/**
+ * The one line under the bars.
+ *
+ * Fresh, it says when the week turns over. Stale, it says how old the numbers
+ * are and why they stopped — a cached percentage without its age would be a
+ * live reading as far as the eye is concerned, and that is the one thing this
+ * section must not do.
+ */
+function planNote(plan, limits) {
+  if (plan.state === 'ok') {
+    const at = limits.length ? limits[0].resets_at : null;
+    if (!has(at)) return '';
+    const day = ctWeekday(at);
+    const clock = ctTime(at);
+    // Not an instant this page can read — printed verbatim rather than guessed
+    // at (rule 7), the same way `whenText` handles the engine's own stamp.
+    if (!day || !clock) return `resets ${at}`;
+    return `resets ${day} ${clock} CT`;
+  }
+  const note = has(plan.note) ? String(plan.note) : '';
+  const age = ago(plan.fetched_at);
+  if (!age) return note;
+  return note ? `as of ${age} · ${note}` : `as of ${age}`;
+}
+
+/**
+ * The whole section, or null when the engine has not sent one.
+ *
+ * Absent means absent: an older snapshot predates this field entirely, and
+ * rule 9 says a module renders nothing for what it was not given rather than
+ * a heading over a hole.
+ */
+function planSection(plan) {
+  if (!plan || typeof plan !== 'object' || Array.isArray(plan)) return null;
+  const limits = Array.isArray(plan.limits)
+    ? plan.limits.filter((l) => l && typeof l === 'object')
+    : [];
+  // Cached numbers still show — greyed, and with their age on the line below.
+  // A stale meter is worth more than a blank one, as long as it never passes
+  // for live.
+  const stale = plan.state !== 'ok';
+  const section = el('div', { cls: stale ? 'ship-plan ship-plan-stale' : 'ship-plan' });
+
+  const title = has(plan.plan) ? `Claude · ${plan.plan}` : 'Claude';
+  section.appendChild(el('h4', { cls: 'ship-heading', text: title }));
+
+  for (const limit of limits) section.appendChild(planRow(limit));
+
+  const note = planNote(plan, limits);
+  if (note) section.appendChild(el('p', { cls: 'ship-plan-note', text: note }));
+
+  return section;
 }
 
 function serviceRows(byService) {
@@ -202,6 +311,15 @@ export function render(el_, tile) {
     el_.appendChild(el('h4', { cls: 'ship-heading', text: 'All time by service' }));
     el_.appendChild(el('div', { cls: 'ship-block' }, byAll));
   }
+
+  // ---- the plan ---------------------------------------------------------
+  //
+  // Under the spend meter, and after the spend figures rather than between
+  // them: "month to date" and "all time" are dollars the engine paid, and
+  // sliding a "Claude · max" heading above them would make two of the most
+  // readable numbers on the tile look like they belonged to the subscription.
+  const plan = planSection(d.plan);
+  if (plan) el_.appendChild(plan);
 
   // ---- anything the engine added since this module was written ---------
   const extras = Object.keys(d).filter((k) => !KNOWN.has(k));

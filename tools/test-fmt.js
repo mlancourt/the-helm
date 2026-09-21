@@ -137,6 +137,15 @@ if (!process.env.HELM_TZ_CHILD) {
   // rather than a fixed -5 offset.
   eq('and it follows Central across the DST boundary', fmt.ctTime('2027-01-15T01:48:00.000Z'), '7:48 PM');
 
+  // ctWeekday — the other half of the plan meter's reset line. The instant is
+  // converted to a CENTRAL calendar date first, so an instant that is
+  // Thursday in UTC and still Wednesday in Chicago answers Wed.
+  eq('ctWeekday names the Central weekday', fmt.ctWeekday('2026-09-25T14:59:59+00:00'), 'Fri');
+  eq('and it reads the Central day, not the UTC one', fmt.ctWeekday('2026-09-25T02:30:00.000Z'), 'Thu');
+  eq('ctWeekday on a date-only string refuses', fmt.ctWeekday('2026-09-25'), '');
+  eq('ctWeekday on junk is empty', fmt.ctWeekday('next Thursday'), '');
+  eq('ctWeekday on nothing is empty', fmt.ctWeekday(null), '');
+
   console.log('\nnumbers');
   eq('units integer', fmt.units(2), '2u');
   eq('units fractional', fmt.units(1.5), '1.5u');

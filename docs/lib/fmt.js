@@ -207,6 +207,27 @@ export function ctTime(iso) {
   return CT_CLOCK.format(new Date(t));
 }
 
+/**
+ * A UTC ISO *instant* -> the Central weekday it fell on, e.g. 'Thu'.
+ *
+ * `ctTime` answers "what time", this answers "which day" — together they make
+ * the one line a weekly meter needs: "resets Thu 9:59 AM CT". A reset five
+ * days out is a weekday, not a clock time, and printing only the clock would
+ * read as though it happened this morning.
+ *
+ * Rule 7 holds the same way `ageChip` holds it: the instant goes through
+ * `ctDate()`, which converts it to a Central business date STRING, and the
+ * weekday comes off calendar arithmetic on those parts. No date-only value is
+ * ever handed to `new Date()`. Anything unparseable returns '' and the caller
+ * prints no weekday rather than a wrong one.
+ */
+export function ctWeekday(iso) {
+  const ymd = ctDate(iso);
+  if (!ymd) return '';
+  const [y, m, d] = ymd.split('-').map(Number);
+  return WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+}
+
 /** A UTC ISO *instant* -> 'just now' / '4m ago' / '3h ago' / '2d ago'. */
 export function ago(iso) {
   const t = Date.parse(iso);
