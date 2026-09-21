@@ -104,10 +104,17 @@ const WATCH_MAP = {
 /** The one team whose Home/Away feed is his. Invented abbreviation. */
 const LOCAL_TEAMS = { 'baseball/mlb': ['CCN'] };
 
-function todayGamesPayload(todayCt) {
+/**
+ * `nextCt` is the engine's `date_next_ct` (published as of 2026-09-21) — the
+ * Central day after `todayCt`. The ENGINE computes it, in Central; this file
+ * is handed both and does no arithmetic of its own, which is also why the
+ * page can do none.
+ */
+function todayGamesPayload(todayCt, nextCt) {
   return {
     title: "Today's Games",
     date_ct: todayCt,
+    date_next_ct: nextCt,
     leagues: LEAGUES,
     services: SERVICES,
     watch_map: WATCH_MAP,
@@ -178,13 +185,19 @@ const stream = (name, market) => ({ type: { shortName: 'STREAMING' }, market: { 
  * Deliberately NOT in kick order: sorting by `start` is the tile's job and the
  * mock should be able to catch it not doing it.
  */
-function slate(todayCt) {
+function slate(todayCt, nextCt, afterCt) {
   const at = (hhmm) => ctInstant(todayCt, hhmm);
+  const tmr = (hhmm) => ctInstant(nextCt, hhmm);
+  // The day AFTER tomorrow. ESPN's `dates=` is a hint, so a thin date comes
+  // back with its neighbour attached — the one event below dated here is the
+  // neighbour, and the tomorrow sheet must drop it.
+  const after = (hhmm) => ctInstant(afterCt, hhmm);
 
   return {
     _comment:
       'INVENTED ESPN SLATE for ?mock=1. Real league slugs and response shapes; every team, score, channel and event id is fake. Regenerate with: node tools/make-mock-data.js --espn > docs/mock/espn-today.json',
     date_ct: todayCt,
+    date_next_ct: nextCt,
     leagues: {
       'baseball/mlb': [
         // in progress, and his: a national channel he has plus the regional
@@ -295,6 +308,87 @@ function slate(todayCt) {
         }),
       ],
     },
+    /**
+     * TOMORROW (today_games v1.1). The same shape, the next Central day, and
+     * four cases the sheet has to get right:
+     *
+     *   baseball/mlb   two games — and a THIRD dated the day after, which
+     *                  ESPN really does attach to a thin `dates=` and which
+     *                  the sheet's Central-date filter must drop.
+     *   soccer/usa.1   one game with NO broadcasts key at all: tomorrow's
+     *                  listings mostly do not exist yet, and a row with
+     *                  nothing to say must say nothing.
+     *   soccer/eng.1   nothing on. No heading, no "no games" line.
+     *   soccer/esp.1   one game, so the grouping has a league after the empty
+     *                  one and payload order can be seen to hold.
+     */
+    leagues_next: {
+      'baseball/mlb': [
+        event({
+          id: '401998211',
+          date: tmr('18:40'),
+          state: 'pre',
+          venue: 'Cream City Yard',
+          away: { abbr: 'GCF', name: 'Granite City Foremen', short: 'Foremen', score: 0 },
+          home: { abbr: 'CCN', name: 'Cream City Nine', short: 'Nine', score: 0 },
+          broadcasts: [
+            { market: 'national', names: ['FS1'] },
+            { market: 'home', names: ['CreamCity.TV'] },
+          ],
+          geo: [tv('FS1', 'National'), stream('CreamCity.TV', 'Home')],
+        }),
+        // Listed before the 18:40 game on purpose: sorting by kick is the
+        // sheet's job on this path too.
+        event({
+          id: '401998212',
+          date: tmr('13:10'),
+          state: 'pre',
+          venue: 'Foundry Field',
+          away: { abbr: 'LKL', name: 'Lakeshore Loons', short: 'Loons', score: 0 },
+          home: { abbr: 'FIS', name: 'Foundry Ironsides', short: 'Ironsides', score: 0 },
+          broadcasts: [{ market: 'away', names: ['Loons Sports Net'] }],
+          geo: [tv('Loons Sports Net', 'Away')],
+        }),
+        // The neighbour. A day later, and it must never reach the sheet.
+        event({
+          id: '401998213',
+          date: after('19:05'),
+          state: 'pre',
+          venue: 'Drayworks Park',
+          away: { abbr: 'HRN', name: 'Harbor Herons', short: 'Herons', score: 0 },
+          home: { abbr: 'CVD', name: 'Cedar Valley Drays', short: 'Drays', score: 0 },
+          broadcasts: [{ market: 'national', names: ['Peacock'] }],
+          geo: [stream('Peacock', 'National')],
+        }),
+      ],
+
+      'soccer/usa.1': [
+        event({
+          id: '742131',
+          date: tmr('19:30'),
+          state: 'pre',
+          venue: 'Pike Street Stadium',
+          away: { abbr: 'RVB', name: 'Riverbend FC', short: 'Riverbend', score: 0 },
+          home: { abbr: 'SWU', name: 'Slack Water United', short: 'Slack Water', score: 0 },
+        }),
+      ],
+
+      'soccer/eng.1': [],
+
+      'soccer/esp.1': [
+        event({
+          id: '731461',
+          date: tmr('14:00'),
+          state: 'pre',
+          venue: 'Estadio Inventado',
+          away: { abbr: 'MNT', name: 'Montaraz', short: 'Montaraz', score: 0 },
+          home: { abbr: 'ALM', name: 'Almendro CF', short: 'Almendro', score: 0 },
+          broadcasts: [{ market: 'national', names: ['ESPN+'] }],
+          geo: [stream('ESPN+', 'National')],
+        }),
+      ],
+    },
+
     // No scoring plays in the fake slate: the mock tickets name fake players
     // and a grader that says "waiting on scoring plays" is the honest answer.
     summaries: {},

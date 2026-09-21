@@ -1311,10 +1311,14 @@ async function main() {
     const { normalizeEvent } = await import('../docs/live/espn.js');
     const { slate, todayGamesPayload } = require('./mock-espn.js');
 
-    // A FIXED date, so kick times and the sheet header are deterministic.
+    // FIXED dates, so kick times and the sheet headers are deterministic.
+    // NEXT_CT is the engine's `date_next_ct`; AFTER_CT is the day the mock
+    // hangs its out-of-range event on, which the filter must drop.
     const DATE_CT = '2026-09-17';
-    const RAW = slate(DATE_CT);
-    const payload = todayGamesPayload(DATE_CT);
+    const NEXT_CT = '2026-09-18';
+    const AFTER_CT = '2026-09-19';
+    const RAW = slate(DATE_CT, NEXT_CT, AFTER_CT);
+    const payload = todayGamesPayload(DATE_CT, NEXT_CT);
 
     const liveFor = (slugs, { ok = true, error = null } = {}) => ({
       games: new Map(),
@@ -1430,10 +1434,17 @@ async function main() {
     check('national listings come first', chipsOf(rows[2])[0] === '✓ Peacock', chipsOf(rows[2]).join());
     check('no chip anywhere reads as undefined', !/undefined/.test(textOf(sheet)));
 
-    // A game ESPN listed with no broadcast at all.
+    // A game ESPN listed with no broadcast at all. It used to wear a "no
+    // listing" chip; as of v1.1 it wears nothing. ESPN populates broadcasts
+    // close to kick, so on the tomorrow sheet that chip would have been on
+    // nearly every row, announcing that ESPN has not decided yet. Absence is
+    // not news — and it was not news on today's sheet either.
     tap(tgBtns(root)[1]); // MLS
     const mlsRows = panel.last.body.querySelectorAll('.tg-game');
-    check('a game with no listing says so rather than nothing', mlsRows[1].querySelector('.tg-chip-none').textContent === 'no listing');
+    check('a game with no broadcasts renders no chips at all', mlsRows[1].querySelectorAll('.tg-chip').length === 0);
+    check('and no chip row to hold them', mlsRows[1].querySelectorAll('.tg-watch').length === 0);
+    check('nothing anywhere still says "no listing"', !/no listing/.test(textOf(panel.last.body)));
+    check('a row WITH a listing still draws its chips', mlsRows[0].querySelectorAll('.tg-chip').length === 1);
     check('a soccer clock renders as ESPN sent it', /63'/.test(textOf(panel.last.body)));
 
     // -- an empty slate still opens (G6) -------------------------------------
@@ -1502,6 +1513,306 @@ async function main() {
     tap(tgBtns(deadRoot)[0]);
     check('a postponed game says postponed, not a kick time', /Postponed/.test(textOf(deadPanel.last.body)));
     check('and is not counted as live', countOf(deadRoot, 'tg-dot') === 0);
+
+
+    // -- tomorrow (v1.1) -----------------------------------------------------
+    //
+    // The same slate view pointed at `date_next_ct`, reached by one line under
+    // the grid. What is worth asserting is mostly what it does NOT do: no
+    // count on the line, no clock behind the sheet, no day arithmetic
+    // anywhere, and no league heading for a league with nothing on.
+    console.log('\ntoday_games — tomorrow');
+    {
+      // Comments stripped: this module's prose explains at length WHY it
+      // never constructs a Date and never touches the band, and a scan that
+      // counted those sentences would fail on the documentation of the thing
+      // it is checking. (Same treatment as the Ledger's colour scan.)
+      const TG_SRC = fs
+        .readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'today_games.js'), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '');
+      check('the source scan has something left to scan', TG_SRC.length > 3000 && /function render\(/.test(TG_SRC));
+
+      // (1) RULE 7 at the source. Tomorrow is the engine's answer, computed in
+      //     Central, and this module must not have an opinion about it.
+      check('the module never constructs a Date', !/new Date\(/.test(TG_SRC));
+      check('nor reaches for a calendar day on one', !/(get|set)(UTC)?(Date|Month|FullYear)\(/.test(TG_SRC));
+      check('no day arithmetic of any kind', !/86400|24 \* 60|addDays|\+ 1 day/.test(TG_SRC));
+      check(
+        'neither date string is ever parsed',
+        !/Date\.parse\([^)]*date_(next_)?ct/.test(TG_SRC) && !/(new Date|Date\.parse)\([^)]*(dateCt|nextCt)/.test(TG_SRC)
+      );
+      check(
+        'the only thing it parses is an ESPN instant',
+        (TG_SRC.match(/Date\.parse\(/g) || []).length === 1 && /Date\.parse\(game\?\.startDate\)/.test(TG_SRC)
+      );
+      check('and it never imports the band', !/live\/band\.js/.test(TG_SRC));
+
+      // (2) the face line.
+      const tmrRoot = new El('div');
+      const tmrPanel = fakePanel();
+      tg.render(tmrRoot, { band: 'LIVE', status: 'ok', data: payload }, {
+        id: 'today_games', actions: tmrPanel.actions, live: liveFor(ALL),
+      });
+      const line = tmrRoot.querySelector('.tg-tomorrow');
+      check('a tomorrow line renders when date_next_ct is there', !!line);
+      check('and it reads the engine’s date, spelled out', line.textContent === 'Tomorrow → Fri Sep 18', line && line.textContent);
+      check('it is a button, like a league', line.tagName === 'BUTTON' && line.getAttribute('type') === 'button');
+      check('it sits under the grid and above the feed line', (() => {
+        const kids = tmrRoot.childNodes.map((n) => n.className);
+        return kids.indexOf('tg-tomorrow') === kids.findIndex((c) => /tg-menu/.test(c)) + 1;
+      })(), tmrRoot.childNodes.map((n) => n.className).join(' | '));
+      check('it carries no count', countOf(line, 'tg-count') === 0 && !/\d+ games?/.test(line.textContent));
+      check('no badge or idle chip', countOf(line, 'tg-idle') === 0);
+      check('and no live dot', countOf(line, 'tg-dot') === 0);
+      check('the line has no children at all', line.childNodes.length === 0);
+
+      // The same, cold: the line must not grow a count once the band has run
+      // for TODAY, because tomorrow is not on that tick.
+      const coldTmr = new El('div');
+      tg.render(coldTmr, { band: 'LIVE', status: 'ok', data: payload }, { id: 'today_games', actions: {} });
+      check('the line is the same with no band at all', coldTmr.querySelector('.tg-tomorrow').textContent === 'Tomorrow → Fri Sep 18');
+      check('still no count on it', countOf(coldTmr.querySelector('.tg-tomorrow'), 'tg-count') === 0);
+
+      // (3) an old snapshot: no key, no line, and the rest of the tile intact.
+      const noNext = new El('div');
+      const { date_next_ct: _drop, ...older } = payload;
+      tg.render(noNext, { band: 'LIVE', status: 'ok', data: older }, { id: 'today_games', actions: {}, live: liveFor(ALL) });
+      check('an old snapshot grows no tomorrow line', countOf(noNext, 'tg-tomorrow') === 0);
+      check('and says nothing about tomorrow', !/Tomorrow/.test(textOf(noNext)));
+      check('while the rest of the tile renders normally', countOf(noNext, 'tg-btn') === 4);
+      check('including the feed line', countOf(noNext, 'tile-foot') === 1);
+
+      // A date this page cannot turn into a `dates=` is a dead link, so it is
+      // no link — same degrade, one rung down.
+      const badNext = new El('div');
+      tg.render(badNext, { band: 'LIVE', status: 'ok', data: { ...payload, date_next_ct: '2026-9-18' } }, {
+        id: 'today_games', actions: {}, live: liveFor(ALL),
+      });
+      check('an unfetchable date_next_ct renders no line either', countOf(badNext, 'tg-tomorrow') === 0);
+      check('and the tile still renders', countOf(badNext, 'tg-btn') === 4);
+
+      // (4) the sheet. A stub that, like ESPN, ignores `dates=` entirely and
+      //     hands back whatever it has — so the FILTER is what decides.
+      const NEXT = RAW.leagues_next;
+      const board = (buckets, fail = new Set()) => {
+        const calls = [];
+        return {
+          calls,
+          async fetchScoreboard(league, date) {
+            calls.push(`${league}|${date}`);
+            if (fail.has(league)) throw new Error('network down');
+            return (buckets[league] || []).map((e) => normalizeEvent(e, league)).filter(Boolean);
+          },
+        };
+      };
+      const settle = () => new Promise((r) => setTimeout(r, 0));
+
+      const openTomorrow = async (buckets, fail) => {
+        const b = board(buckets, fail);
+        const pn = fakePanel();
+        const rt = new El('div');
+        tg.render(rt, { band: 'LIVE', status: 'ok', data: payload }, {
+          id: 'today_games',
+          actions: { ...pn.actions, fetchScoreboard: b.fetchScoreboard },
+          live: liveFor(ALL),
+        });
+        tap(rt.querySelector('.tg-tomorrow'));
+        await settle();
+        return { root: rt, panel: pn, board: b };
+      };
+
+      {
+        const { panel: pn, board: b } = await openTomorrow(NEXT);
+        check('tapping the line opens a sheet', pn.calls.length === 1);
+        check('titled Tomorrow and the date', pn.last.title === 'Tomorrow · Fri Sep 18', pn.last.title);
+        check(
+          'one call per league, in payload order',
+          b.calls.join() === 'baseball/mlb|20260918,soccer/usa.1|20260918,soccer/eng.1|20260918,soccer/esp.1|20260918',
+          b.calls.join()
+        );
+        check('every call is dated tomorrow, dashes stripped', b.calls.every((c) => c.endsWith('|20260918')));
+
+        const body = pn.last.body;
+        const heads = body.querySelectorAll('.tg-league-head').map((n) => n.textContent);
+        check('a heading per league that has games', heads.join(' | ') === '⚾ MLB | ⚽ MLS | 🇪🇸 La Liga', heads.join(' | '));
+        check('a league with nothing on gets NO heading', !heads.some((h) => /EPL/.test(h)));
+        check('and no "no games" line of its own', !/No EPL/.test(textOf(body)));
+        check('headings are in payload order, not alphabetical', heads[0].includes('MLB') && heads[2].includes('La Liga'));
+
+        // The mock's MLB bucket carries three events: two tomorrow and one
+        // the day after, which ESPN really does attach to a thin date.
+        const mlbRows = body.querySelectorAll('.tg-list')[0].querySelectorAll('.tg-game');
+        check('the out-of-range event is dropped', mlbRows.length === 2, `${mlbRows.length} rows`);
+        check('and it is gone by name, not just by count', !/Herons @ Drays/.test(textOf(body)));
+        check(
+          'rows within a league are in kick order',
+          mlbRows.map((r) => r.querySelector('.tg-matchup').textContent).join(' | ') === 'Loons @ Ironsides | Foremen @ Nine',
+          mlbRows.map((r) => r.querySelector('.tg-matchup').textContent).join(' | ')
+        );
+        check('every row is a pre row showing its Central kick', mlbRows.map((r) => r.querySelector('.tg-status').textContent).join() === '1:10 PM,6:40 PM',
+          mlbRows.map((r) => r.querySelector('.tg-status').textContent).join());
+
+        // Watch chips: identical rules, including the regional verdict.
+        const chips = mlbRows.map((r) => r.querySelectorAll('.tg-chip').map((c) => c.textContent));
+        check('a mapped national channel still gets its tick', chips[1].includes('✓ YouTube TV'), chips[1].join());
+        check('an RSN the map claims is still his', chips[1].includes('✓ CreamCity.TV (regional, yours)'), chips[1].join());
+        check("another team's feed is still not his", chips[0].join() === 'regional — not yours', chips[0].join());
+
+        // A game ESPN has not listed yet — which tomorrow is full of.
+        const mlsRow = body.querySelectorAll('.tg-list')[1].querySelectorAll('.tg-game')[0];
+        check('a row with no broadcasts renders zero chips', mlsRow.querySelectorAll('.tg-chip').length === 0);
+        check('and no empty chip row', mlsRow.querySelectorAll('.tg-watch').length === 0);
+        check('it does not say TBD, or check back, or anything', !/TBD|check back|no listing/i.test(textOf(body)));
+      }
+
+      // (5) nobody plays tomorrow.
+      {
+        const { panel: pn } = await openTomorrow({});
+        check('an all-empty tomorrow says so once', /No games tomorrow\./.test(textOf(pn.last.body)));
+        check('and draws no headings at all', countOf(pn.last.body, 'tg-league-head') === 0);
+        check('nor any rows', countOf(pn.last.body, 'tg-game') === 0);
+        check('it is one line and nothing else', pn.last.body.childNodes.length === 1);
+      }
+
+      // Everything ESPN returned was on another day: still "no games", not a
+      // heading with nothing under it.
+      {
+        const { panel: pn } = await openTomorrow({ 'baseball/mlb': [NEXT['baseball/mlb'][2]] });
+        check('a league left empty BY THE FILTER gets no heading', countOf(pn.last.body, 'tg-league-head') === 0);
+        check('and the sheet reads as empty', /No games tomorrow\./.test(textOf(pn.last.body)));
+      }
+
+      // (6) a league whose call died is not a league with nothing on (rule 8).
+      {
+        const { panel: pn } = await openTomorrow(NEXT, new Set(['soccer/esp.1']));
+        check('a dead league says the feed is down', /La Liga feed unavailable\./.test(textOf(pn.last.body)));
+        check('it does not get a heading', !/La Liga/.test(pn.last.body.querySelectorAll('.tg-league-head').map((n) => n.textContent).join()));
+        check('the healthy leagues still render', countOf(pn.last.body, 'tg-league-head') === 2);
+        check('and nobody claims "no games tomorrow"', !/No games tomorrow/.test(textOf(pn.last.body)));
+      }
+      {
+        const { panel: pn } = await openTomorrow({}, new Set(['baseball/mlb', 'soccer/usa.1', 'soccer/eng.1', 'soccer/esp.1']));
+        check('every league down says so four times', pn.last.body.querySelectorAll('.tg-warn').length === 4);
+        check('and never invents an empty slate', !/No games tomorrow/.test(textOf(pn.last.body)));
+      }
+
+      // (7) NO CLOCK. The whole design rests on this.
+      {
+        const b = board(NEXT);
+        const before = docListenerCount('visibilitychange');
+        const spy = withTimers((t) => {
+          const pn = fakePanel();
+          const rt = new El('div');
+          tg.render(rt, { band: 'LIVE', status: 'ok', data: payload }, {
+            id: 'today_games',
+            actions: { ...pn.actions, fetchScoreboard: b.fetchScoreboard },
+            live: liveFor(ALL),
+          });
+          tap(rt.querySelector('.tg-tomorrow'));
+          return t;
+        });
+        await settle();
+        check('opening the tomorrow sheet starts no interval', spy.created === 0, `${spy.created} created`);
+        check('and leaves none alive', spy.live.size === 0);
+        check('it registers no visibilitychange listener', docListenerCount('visibilitychange') === before);
+        check('the module contains no timer call at all', !/setInterval|setTimeout|requestAnimationFrame/.test(TG_SRC));
+      }
+
+      // The today path's band state is READ, never written: the sheet must
+      // not push tomorrow's games into the map the LIVE clock is driving.
+      {
+        const lv = liveFor(ALL);
+        const b = board(NEXT);
+        const pn = fakePanel();
+        const rt = new El('div');
+        const beforeSize = lv.today.leagues.size;
+        const beforeMlb = lv.today.leagues.get('baseball/mlb').games.length;
+        tg.render(rt, { band: 'LIVE', status: 'ok', data: payload }, {
+          id: 'today_games', actions: { ...pn.actions, fetchScoreboard: b.fetchScoreboard }, live: lv,
+        });
+        tap(rt.querySelector('.tg-tomorrow'));
+        await settle();
+        check('the band’s league map is untouched', lv.today.leagues.size === beforeSize);
+        check('and today’s slate is exactly as it was', lv.today.leagues.get('baseball/mlb').games.length === beforeMlb);
+        check('the band’s own date is unchanged', lv.today.date_ct === DATE_CT);
+      }
+
+      // (8) the URL, not a helper's return value. With no fetcher in ctx the
+      //     tile falls back to live/espn.js, which is the production path —
+      //     so this asserts the real request line.
+      {
+        const urls = [];
+        const realFetch = globalThis.fetch;
+        globalThis.fetch = async (url) => {
+          urls.push(String(url));
+          return { ok: true, json: async () => ({ events: [] }) };
+        };
+        try {
+          const pn = fakePanel();
+          const rt = new El('div');
+          tg.render(rt, { band: 'LIVE', status: 'ok', data: payload }, {
+            id: 'today_games', actions: pn.actions, live: liveFor(ALL),
+          });
+          tap(rt.querySelector('.tg-tomorrow'));
+          await settle();
+        } finally {
+          globalThis.fetch = realFetch;
+        }
+        check('the real fetch path is used when ctx offers none', urls.length === 4, `${urls.length} urls`);
+        check(
+          'every requested URL carries dates=date_next_ct with the dashes stripped',
+          urls.length === 4 && urls.every((u) => /[?&]dates=20260918(&|$)/.test(u)),
+          urls.join(' ')
+        );
+        check('and none of them asks for today', !urls.some((u) => /dates=20260917/.test(u)), urls.join(' '));
+        check('nor for a shifted day', !urls.some((u) => /dates=2026091[79]/.test(u)));
+        check('they go to the leagues the payload named', urls.map((u) => /sports\/([^?]+)\/scoreboard/.exec(u)[1]).join() === 'baseball/mlb,soccer/usa.1,soccer/eng.1,soccer/esp.1');
+      }
+
+      // (9) a sheet closed mid-flight must not paint into a body the shell
+      //     has moved on from. The teardown is a flag, not a clearInterval.
+      {
+        let release;
+        const held = new Promise((r) => (release = r));
+        const pn = fakePanel();
+        const rt = new El('div');
+        tg.render(rt, { band: 'LIVE', status: 'ok', data: payload }, {
+          id: 'today_games',
+          actions: { ...pn.actions, fetchScoreboard: () => held.then(() => []) },
+          live: liveFor(ALL),
+        });
+        tap(rt.querySelector('.tg-tomorrow'));
+        const body = pn.last.body;
+        check('the sheet says something while it waits', /Fetching tomorrow/.test(textOf(body)));
+        check('a teardown is handed back', typeof pn.last.teardown === 'function');
+        pn.close();
+        release();
+        await settle();
+        check('a closed sheet is never painted into', /Fetching tomorrow/.test(textOf(body)) && !/No games tomorrow/.test(textOf(body)));
+      }
+
+      // (10) no panel to open: inert, never broken.
+      {
+        const rt = new El('div');
+        let boom = null;
+        try {
+          tg.render(rt, { band: 'LIVE', status: 'ok', data: payload }, { id: 'today_games', actions: {}, live: liveFor(ALL) });
+          tap(rt.querySelector('.tg-tomorrow'));
+        } catch (e) { boom = e; }
+        check('a tomorrow tap with no sheet never reaches the page', !boom, boom && boom.message);
+      }
+
+      // (11) the stylesheet. The line must not be able to shout.
+      {
+        const css = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+        const from = css.indexOf('.tg-tomorrow {');
+        const to = css.indexOf('/* -- the sheet -- */');
+        const TMR_CSS = from !== -1 && to > from ? css.slice(from, to) : '';
+        check('the tomorrow line has a stylesheet block', !!TMR_CSS);
+        check('it is muted, not a tone', /--text-faint/.test(TMR_CSS) && !/--good|--warn|--bad|--info/.test(TMR_CSS));
+      }
+    }
 
     // -- watchChips directly (G4), for the cases a row cannot reach ----------
     console.log('\ntoday_games — watch chips, case by case');

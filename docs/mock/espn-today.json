@@ -1,6 +1,7 @@
 {
   "_comment": "INVENTED ESPN SLATE for ?mock=1. Real league slugs and response shapes; every team, score, channel and event id is fake. Regenerate with: node tools/make-mock-data.js --espn > docs/mock/espn-today.json",
   "date_ct": "2026-09-21",
+  "date_next_ct": "2026-09-22",
   "leagues": {
     "baseball/mlb": [
       {
@@ -842,6 +843,443 @@
             "completed": true,
             "detail": "Final",
             "shortDetail": "Final"
+          }
+        }
+      }
+    ]
+  },
+  "leagues_next": {
+    "baseball/mlb": [
+      {
+        "id": "401998211",
+        "uid": "s:1~l:1~e:401998211",
+        "date": "2026-09-22T23:40:00.000Z",
+        "name": "Granite City Foremen at Cream City Nine",
+        "shortName": "GCF @ CCN",
+        "competitions": [
+          {
+            "id": "401998211",
+            "date": "2026-09-22T23:40:00.000Z",
+            "venue": {
+              "fullName": "Cream City Yard",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "401998211-home",
+                "homeAway": "home",
+                "score": "0",
+                "team": {
+                  "abbreviation": "CCN",
+                  "displayName": "Cream City Nine",
+                  "shortDisplayName": "Nine"
+                }
+              },
+              {
+                "id": "401998211-away",
+                "homeAway": "away",
+                "score": "0",
+                "team": {
+                  "abbreviation": "GCF",
+                  "displayName": "Granite City Foremen",
+                  "shortDisplayName": "Foremen"
+                }
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "pre",
+                "name": "STATUS_SCHEDULED",
+                "completed": false,
+                "detail": "Scheduled",
+                "shortDetail": "Scheduled"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "national",
+                "names": [
+                  "FS1"
+                ]
+              },
+              {
+                "market": "home",
+                "names": [
+                  "CreamCity.TV"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "TV"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "FS1"
+                }
+              },
+              {
+                "type": {
+                  "shortName": "STREAMING"
+                },
+                "market": {
+                  "type": "Home"
+                },
+                "media": {
+                  "shortName": "CreamCity.TV"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "pre",
+            "name": "STATUS_SCHEDULED",
+            "completed": false,
+            "detail": "Scheduled",
+            "shortDetail": "Scheduled"
+          }
+        }
+      },
+      {
+        "id": "401998212",
+        "uid": "s:1~l:1~e:401998212",
+        "date": "2026-09-22T18:10:00.000Z",
+        "name": "Lakeshore Loons at Foundry Ironsides",
+        "shortName": "LKL @ FIS",
+        "competitions": [
+          {
+            "id": "401998212",
+            "date": "2026-09-22T18:10:00.000Z",
+            "venue": {
+              "fullName": "Foundry Field",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "401998212-home",
+                "homeAway": "home",
+                "score": "0",
+                "team": {
+                  "abbreviation": "FIS",
+                  "displayName": "Foundry Ironsides",
+                  "shortDisplayName": "Ironsides"
+                }
+              },
+              {
+                "id": "401998212-away",
+                "homeAway": "away",
+                "score": "0",
+                "team": {
+                  "abbreviation": "LKL",
+                  "displayName": "Lakeshore Loons",
+                  "shortDisplayName": "Loons"
+                }
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "pre",
+                "name": "STATUS_SCHEDULED",
+                "completed": false,
+                "detail": "Scheduled",
+                "shortDetail": "Scheduled"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "away",
+                "names": [
+                  "Loons Sports Net"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "TV"
+                },
+                "market": {
+                  "type": "Away"
+                },
+                "media": {
+                  "shortName": "Loons Sports Net"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "pre",
+            "name": "STATUS_SCHEDULED",
+            "completed": false,
+            "detail": "Scheduled",
+            "shortDetail": "Scheduled"
+          }
+        }
+      },
+      {
+        "id": "401998213",
+        "uid": "s:1~l:1~e:401998213",
+        "date": "2026-09-24T00:05:00.000Z",
+        "name": "Harbor Herons at Cedar Valley Drays",
+        "shortName": "HRN @ CVD",
+        "competitions": [
+          {
+            "id": "401998213",
+            "date": "2026-09-24T00:05:00.000Z",
+            "venue": {
+              "fullName": "Drayworks Park",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "401998213-home",
+                "homeAway": "home",
+                "score": "0",
+                "team": {
+                  "abbreviation": "CVD",
+                  "displayName": "Cedar Valley Drays",
+                  "shortDisplayName": "Drays"
+                }
+              },
+              {
+                "id": "401998213-away",
+                "homeAway": "away",
+                "score": "0",
+                "team": {
+                  "abbreviation": "HRN",
+                  "displayName": "Harbor Herons",
+                  "shortDisplayName": "Herons"
+                }
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "pre",
+                "name": "STATUS_SCHEDULED",
+                "completed": false,
+                "detail": "Scheduled",
+                "shortDetail": "Scheduled"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "national",
+                "names": [
+                  "Peacock"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "STREAMING"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "Peacock"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "pre",
+            "name": "STATUS_SCHEDULED",
+            "completed": false,
+            "detail": "Scheduled",
+            "shortDetail": "Scheduled"
+          }
+        }
+      }
+    ],
+    "soccer/usa.1": [
+      {
+        "id": "742131",
+        "uid": "s:1~l:1~e:742131",
+        "date": "2026-09-23T00:30:00.000Z",
+        "name": "Riverbend FC at Slack Water United",
+        "shortName": "RVB @ SWU",
+        "competitions": [
+          {
+            "id": "742131",
+            "date": "2026-09-23T00:30:00.000Z",
+            "venue": {
+              "fullName": "Pike Street Stadium",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "742131-home",
+                "homeAway": "home",
+                "score": "0",
+                "team": {
+                  "abbreviation": "SWU",
+                  "displayName": "Slack Water United",
+                  "shortDisplayName": "Slack Water"
+                }
+              },
+              {
+                "id": "742131-away",
+                "homeAway": "away",
+                "score": "0",
+                "team": {
+                  "abbreviation": "RVB",
+                  "displayName": "Riverbend FC",
+                  "shortDisplayName": "Riverbend"
+                }
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "pre",
+                "name": "STATUS_SCHEDULED",
+                "completed": false,
+                "detail": "Scheduled",
+                "shortDetail": "Scheduled"
+              }
+            },
+            "broadcasts": [],
+            "geoBroadcasts": []
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "pre",
+            "name": "STATUS_SCHEDULED",
+            "completed": false,
+            "detail": "Scheduled",
+            "shortDetail": "Scheduled"
+          }
+        }
+      }
+    ],
+    "soccer/eng.1": [],
+    "soccer/esp.1": [
+      {
+        "id": "731461",
+        "uid": "s:1~l:1~e:731461",
+        "date": "2026-09-22T19:00:00.000Z",
+        "name": "Montaraz at Almendro CF",
+        "shortName": "MNT @ ALM",
+        "competitions": [
+          {
+            "id": "731461",
+            "date": "2026-09-22T19:00:00.000Z",
+            "venue": {
+              "fullName": "Estadio Inventado",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "731461-home",
+                "homeAway": "home",
+                "score": "0",
+                "team": {
+                  "abbreviation": "ALM",
+                  "displayName": "Almendro CF",
+                  "shortDisplayName": "Almendro"
+                }
+              },
+              {
+                "id": "731461-away",
+                "homeAway": "away",
+                "score": "0",
+                "team": {
+                  "abbreviation": "MNT",
+                  "displayName": "Montaraz",
+                  "shortDisplayName": "Montaraz"
+                }
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "pre",
+                "name": "STATUS_SCHEDULED",
+                "completed": false,
+                "detail": "Scheduled",
+                "shortDetail": "Scheduled"
+              }
+            },
+            "broadcasts": [
+              {
+                "market": "national",
+                "names": [
+                  "ESPN+"
+                ]
+              }
+            ],
+            "geoBroadcasts": [
+              {
+                "type": {
+                  "shortName": "STREAMING"
+                },
+                "market": {
+                  "type": "National"
+                },
+                "media": {
+                  "shortName": "ESPN+"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "pre",
+            "name": "STATUS_SCHEDULED",
+            "completed": false,
+            "detail": "Scheduled",
+            "shortDetail": "Scheduled"
           }
         }
       }

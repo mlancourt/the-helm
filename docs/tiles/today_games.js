@@ -25,19 +25,44 @@
  * particular RSN IS mine" (Brewers.TV), and that statement must outrank the
  * geography.
  *
- * RULE 7: `date_ct` is a Central calendar string. It is rendered from its
- * parts by `prettyDate` and converted to ESPN's `dates=` by string ops in
- * espn.js. It is never handed to `new Date()`. Kick times are a different kind
- * of time — `startDate` is a real UTC instant off `event.date`, so it goes
- * through `ctTime`, which parses it and formats it in Central.
+ * TOMORROW (v1.1, 2026-09-21). One muted line under the grid opens the same
+ * slate view pointed at `date_next_ct`. It is deliberately the cheapest thing
+ * that could work:
+ *   - NO count on the line. A count means fetching all eight leagues on board
+ *     load, every load, for a number nobody asked for. The line says
+ *     "tomorrow" and costs nothing until it is tapped.
+ *   - NO clock behind the sheet. Tomorrow's games do not move, so there is
+ *     nothing to poll: the sheet fetches once when it opens and stops. It is
+ *     not registered with `live/band.js` and starts no timer.
+ *   - ONE combined sheet, not a second menu. Eight taps to find out nobody
+ *     plays tomorrow is not a feature.
+ *
+ * THE ONE FETCH THIS MODULE DOES. Everywhere else on this board a tile reads
+ * and the band fetches, because the band owns a CLOCK. Tomorrow has no clock,
+ * so there is nothing for the band to own; wiring a second (league, date) plan
+ * into it to serve a sheet that may never open would be the more complicated
+ * answer, not the safer one. The call still goes through `live/espn.js` —
+ * which builds the URL, coalesces duplicates and keys by league AND date, so
+ * tomorrow can never be served today's slate — and `ctx.actions.fetchScoreboard`
+ * overrides it so `?mock=1` reaches no origin at all.
+ *
+ * RULE 7: `date_ct` and `date_next_ct` are Central calendar strings. They are
+ * rendered from their parts by `prettyDate` and converted to ESPN's `dates=`
+ * by string ops in espn.js. Neither is ever handed to `new Date()`, and
+ * tomorrow is NEVER computed here — the engine already worked it out in
+ * Central, which is the only place that knows when Central's day rolls over.
+ * Kick times are a different kind of time: `startDate` is a real UTC instant
+ * off `event.date`, so it goes through `ctTime`, which parses it and formats
+ * it in Central.
  *
  * RULE 10: every team name, status string and broadcast name is ESPN's text
  * and lands via textContent. There are no links: broadcast names are channel
  * names, not URLs, and inventing one would be guessing.
  */
 
-import { el, empty } from '../lib/dom.js';
+import { el, empty, clear } from '../lib/dom.js';
 import { ctTime, prettyDate } from '../lib/fmt.js';
+import { compactCtDate, onCtDate, fetchScoreboard as realFetchScoreboard } from '../live/espn.js';
 
 /** A plain object, or {} — the payload is untrusted in shape as well as text. */
 function obj(v) {
@@ -174,6 +199,18 @@ function statusOf(game) {
   return { text: ctTime(game.startDate) || 'time TBD', tone: 'pre' };
 }
 
+/**
+ * One game. The ONLY row shape this tile has — today's sheet and tomorrow's
+ * sheet are the same rows pointed at a different date, and a second builder
+ * would be a second set of rules to keep in step.
+ *
+ * A game with NO broadcasts renders no chips and no chip row at all. It used
+ * to say "no listing", which was wrong even for today and is actively noisy
+ * for tomorrow: ESPN populates broadcasts close to kick, so most of tomorrow's
+ * slate has none yet, and forty rows each announcing that ESPN has not decided
+ * is forty rows of nothing. Absence is not news — the same standing ruling
+ * that keeps `purser_due` silent on an empty stack.
+ */
 function gameRow(game, data, slug) {
   const status = statusOf(game);
   const chips = watchChips(game, data.watch_map, data.local_teams, slug);
@@ -187,7 +224,7 @@ function gameRow(game, data, slug) {
             { cls: 'tg-watch' },
             chips.map((c) => el('span', { cls: `tg-chip tg-chip-${c.kind}`, text: c.text }))
           )
-        : el('div', { cls: 'tg-watch' }, [el('span', { cls: 'tg-chip tg-chip-none', text: 'no listing' })]),
+        : null,
     ]),
     el('div', { cls: 'tg-side' }, [el('span', { cls: `tg-status tg-status-${status.tone}`, text: status.text })]),
   ]);
@@ -208,6 +245,77 @@ function leagueBody(league, entry, data) {
     }
     body.appendChild(el('div', { cls: 'tg-list' }, games.map((g) => gameRow(g, data, league.slug))));
   };
+}
+
+// ----------------------------------------------------------------- tomorrow
+
+/**
+ * The tomorrow sheet: every followed league's slate for `date_next_ct`, in one
+ * body, grouped by league in PAYLOAD order and sorted by kick within a league.
+ *
+ * A league with nothing on renders NOTHING — no heading, no "no games" line.
+ * Eight empty headers is the noise this design exists to avoid, and the
+ * whole-sheet answer ("No games tomorrow.") is one line, said once.
+ *
+ * A league whose call FAILED is not a league with nothing on, so it says so:
+ * rule 8 forbids reporting an empty slate the network invented. If every
+ * league answered and every league was empty, that is the one-line case; if
+ * some died, the warnings stand on their own rather than being contradicted
+ * by a cheerful "no games".
+ *
+ * The builder returns a teardown that only sets a flag. There is no timer to
+ * clear — that is the point of this sheet — but a fetch in flight when the
+ * sheet closes must not paint into a body the shell has moved on from.
+ */
+function tomorrowBody(leagues, data, dateCt, fetchBoard) {
+  const compact = compactCtDate(dateCt);
+
+  return (body) => {
+    let cancelled = false;
+    body.appendChild(el('p', { cls: 'tg-loading', text: 'Fetching tomorrow’s slate…' }));
+
+    Promise.all(
+      leagues.map((league) =>
+        Promise.resolve()
+          .then(() => fetchBoard(league.slug, compact))
+          // ESPN's `dates=` is a hint: a thin day comes back with its
+          // neighbours attached. Tomorrow is the thin day.
+          .then((events) => ({ league, games: onCtDate(events, compact), ok: true }))
+          .catch(() => ({ league, games: [], ok: false }))
+      )
+    )
+      .then((rows) => {
+        if (cancelled) return;
+        clear(body);
+        paintTomorrow(body, rows, data);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clear(body);
+        body.appendChild(el('p', { cls: 'tg-warn', text: 'feed unavailable — tomorrow’s slate did not load.' }));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  };
+}
+
+function paintTomorrow(body, rows, data) {
+  const failed = rows.filter((r) => !r.ok);
+  for (const r of failed) {
+    body.appendChild(el('p', { cls: 'tg-warn', text: `${r.league.label} feed unavailable.` }));
+  }
+
+  const playing = rows.filter((r) => r.ok && r.games.length);
+  for (const r of playing) {
+    body.appendChild(el('h3', { cls: 'tg-league-head', text: leagueTitle(r.league) }));
+    body.appendChild(
+      el('div', { cls: 'tg-list' }, sortByKick(r.games).map((g) => gameRow(g, data, r.league.slug)))
+    );
+  }
+
+  if (!playing.length && !failed.length) body.appendChild(empty('No games tomorrow.'));
 }
 
 // --------------------------------------------------------------------- tile
@@ -282,6 +390,39 @@ export function render(root, tile, ctx) {
   });
 
   root.appendChild(el('div', { cls: 'tg-menu', attrs: { role: 'group', 'aria-label': "Today's Games" } }, buttons));
+
+  // -- the tomorrow line --------------------------------------------------
+  //
+  // Rendered only when the payload carries a date this page can turn into a
+  // `dates=` parameter. An old snapshot with no `date_next_ct` gets no line at
+  // all (rule 9: the rest of the tile renders normally), and so does a
+  // malformed one — a link that cannot be fetched for is a dead end, and a
+  // dead end is worse than an absence.
+  //
+  // No count, no badge, no dot. A count would mean fetching every league on
+  // every board load to answer a question nobody asked.
+  const nextCt = str(data.date_next_ct);
+  if (compactCtDate(nextCt)) {
+    const fetchBoard =
+      typeof ctx?.actions?.fetchScoreboard === 'function' ? ctx.actions.fetchScoreboard : realFetchScoreboard;
+    const tomorrowTitle = `Tomorrow · ${prettyDate(nextCt)}`;
+    const build = tomorrowBody(leagues, data, nextCt, fetchBoard);
+
+    root.appendChild(
+      el('button', {
+        cls: 'tg-tomorrow',
+        attrs: { type: 'button' },
+        text: `Tomorrow → ${prettyDate(nextCt)}`,
+        on: {
+          click: (e) => {
+            e.stopPropagation();
+            if (!openPanel) return;
+            openPanel(tomorrowTitle, build);
+          },
+        },
+      })
+    );
+  }
 
   const bits = [];
   if (ctx?.live?.fetched_at) bits.push(`feed ${ctTime(ctx.live.fetched_at)}`);

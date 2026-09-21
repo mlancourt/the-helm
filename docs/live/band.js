@@ -43,6 +43,7 @@ import {
   fetchSummary as realFetchSummary,
   ctDateCompact,
   compactCtDate,
+  onCtDate,
 } from './espn.js';
 import { gradeTicket, NEEDS_SUMMARY } from './graders.js';
 import {
@@ -215,11 +216,18 @@ export function createLiveBand(onUpdate, deps = {}) {
     // The board, one entry per league it follows. A league whose call failed
     // keeps the games it had and says the feed is down (rule 8) — the tile
     // must not report "no games today" because the network hiccuped.
+    //
+    // `onCtDate` is the guard against ESPN's `dates=` being a hint rather
+    // than a filter: a thin slate comes back with the adjacent day attached,
+    // and the board must show the day it is dated for and no other. The
+    // TICKET path deliberately does not filter — `games` above is every event
+    // the tick saw, matched by id, because a ticket names a specific game and
+    // which calendar day it belongs to is none of the board's business.
     const byLeague = new Map();
     for (const { slug } of req.leagues) {
       const events = results.get(`${slug}|${req.boardDate}`);
       if (events) {
-        byLeague.set(slug, { games: events, ok: true });
+        byLeague.set(slug, { games: onCtDate(events, req.boardDate), ok: true });
       } else {
         const prev = live.today?.leagues?.get(slug);
         byLeague.set(slug, { games: prev?.games || [], ok: false });

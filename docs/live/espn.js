@@ -5,7 +5,7 @@
  * and needs no key. Together with the Worker this is the only external origin
  * the page ever touches (rule 4).
  *
- * Everything here was verified against real payloads on 2026-09-17. The three
+ * Everything here was verified against real payloads on 2026-09-17. The five
  * things that bite:
  *
  *   1. `score` is a STRING ("5", not 5). Concatenating two of them silently
@@ -17,6 +17,8 @@
  *      `broadcasts[].names` has the names and a lower-case market, and
  *      `geoBroadcasts[]` has the same names with a title-case market and a
  *      type. Both keys are absent for a lot of games. See broadcastsOf().
+ *   5. `dates=` is a HINT, not a filter. A thin date returns the adjacent day
+ *      as well, and an empty one can return a week. See onCtDate().
  *
  * Nothing in this file interprets a bet. It returns facts; graders.js judges.
  */
@@ -40,18 +42,61 @@ export function compactCtDate(dateCt) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.replace(/-/g, '') : '';
 }
 
+/**
+ * The one place this file measures a Central calendar day.
+ *
+ * en-CA gives YYYY-MM-DD; the zone is explicit, so the answer is right
+ * regardless of where the phone thinks it is.
+ */
+const CT_YMD = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Chicago',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
 /** Today's Central date as ESPN wants it: YYYYMMDD, no dashes. */
 export function ctDateCompact(now = new Date()) {
-  // en-CA gives YYYY-MM-DD; the Central zone is explicit, so this is correct
-  // regardless of where the phone thinks it is.
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Chicago',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
-    .format(now)
-    .replace(/-/g, '');
+  return CT_YMD.format(now).replace(/-/g, '');
+}
+
+/**
+ * A real UTC instant -> the Central calendar day it falls on, 'YYYYMMDD'.
+ * '' when the value is not a parseable instant.
+ *
+ * This is the legal direction for rule 7: `event.date` carries a Z, so there
+ * is nothing for the browser to guess. It is the INVERSE of compactCtDate(),
+ * which converts a calendar string and must never parse one.
+ */
+export function ctDayOf(instant) {
+  const t = Date.parse(instant);
+  return Number.isFinite(t) ? CT_YMD.format(new Date(t)).replace(/-/g, '') : '';
+}
+
+/**
+ * Keep only the events that actually fall on `date`, in Central.
+ *
+ * ESPN's `dates=` is a HINT, not a filter. A thin or empty date comes back
+ * with an adjacent day's games attached, and an empty one can come back with
+ * a whole week. Today has been getting away with it because a populated date
+ * groups plausibly; a date nobody has played yet does not.
+ *
+ * `date` may be 'YYYY-MM-DD' or 'YYYYMMDD' — the two forms the page already
+ * carries. A date it cannot read filters nothing, because dropping every game
+ * over an unreadable parameter is worse than showing a day too many.
+ *
+ * An event with no readable `startDate` is KEPT: we cannot prove it is on the
+ * wrong day, and a silently vanished game is the failure this guards against.
+ */
+export function onCtDate(events, date) {
+  const list = Array.isArray(events) ? events : [];
+  const raw = String(date ?? '');
+  const want = compactCtDate(raw) || (/^\d{8}$/.test(raw) ? raw : '');
+  if (!want) return [...list];
+  return list.filter((e) => {
+    const day = ctDayOf(e?.startDate);
+    return !day || day === want;
+  });
 }
 
 async function getJson(url) {

@@ -77,12 +77,66 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
 
 (async () => {
   const { createLiveBand, nextDelay, requirements, LIVE_MS, PRE_MS } = await import('../docs/live/band.js');
-  const { ctDateCompact } = await import('../docs/live/espn.js');
+  const { ctDateCompact, ctDayOf, onCtDate } = await import('../docs/live/espn.js');
+
+  // ------------------------------------------------- the Central-day filter
+  //
+  // The shared function both slate paths use. Pure, so it is tested here
+  // rather than inferred from a rendered sheet.
+  console.log('onCtDate — one Central day, exactly');
+  {
+    const ev = (startDate) => ({ id: startDate, startDate });
+    const list = [
+      ev('2026-09-16T17:15Z'), // 12:15 PM CT, the 16th
+      ev('2026-09-17T03:05Z'), // 10:05 PM CT, the 16th — next day in UTC
+      ev('2026-09-17T17:15Z'), // the 17th
+      ev('2026-09-16T04:30Z'), // 11:30 PM CT, the 15th
+    ];
+    check('a UTC instant maps to its Central day', ctDayOf('2026-09-17T03:05Z') === '20260916');
+    check('and a plain daytime one to the obvious answer', ctDayOf('2026-09-16T17:15Z') === '20260916');
+    check('junk maps to nothing rather than to 1970', ctDayOf('not-a-time') === '' && ctDayOf(null) === '');
+    // Rule 7, stated as a fact rather than a hope: an offsetless calendar
+    // string handed to this function comes back a day EARLY, because that is
+    // what the browser does with it. Which is exactly why nothing on the page
+    // hands it one — `onCtDate` takes the calendar date as its second
+    // argument and compares it as a string.
+    check('a date-only string comes back a day early, as JS insists', ctDayOf('2026-09-16') === '20260915', ctDayOf('2026-09-16'));
+
+    check('the dashed form filters', onCtDate(list, '2026-09-16').length === 2);
+    check('the compact form filters the same', onCtDate(list, '20260916').length === 2);
+    check('a late Central kick stays on its Central day', onCtDate(list, '2026-09-16').some((e) => e.id === '2026-09-17T03:05Z'));
+    check('a game 24h later is out', !onCtDate(list, '2026-09-16').some((e) => e.id === '2026-09-17T17:15Z'));
+    check('and one the evening before is out', !onCtDate(list, '2026-09-16').some((e) => e.id === '2026-09-16T04:30Z'));
+    check('an unreadable date filters nothing rather than everything', onCtDate(list, 'whenever').length === 4);
+    check('and so does no date at all', onCtDate(list, null).length === 4);
+    check('an event with no stamp is kept — we cannot prove it is wrong', onCtDate([{ id: 'x' }], '2026-09-16').length === 1);
+    check('a non-array is survived', onCtDate(null, '2026-09-16').length === 0);
+    check('the input array is never mutated', (() => { const a = [...list]; onCtDate(a, '2026-09-16'); return a.length === 4; })());
+  }
 
   // Real events, with state forced where a scenario needs it.
   const nflPost = FIX.nfl_post_raw;                       // TB 27 @ CIN 33, final
   const nflPre = FIX.nfl_pre_raw;                         // DET @ BUF, scheduled
   const mlbPost = FIX.mlb_post_raw;                       // SF 6 @ STL 5, final
+  /**
+   * A fixture clone moved to a different instant.
+   *
+   * The board path now filters its slate to the Central day it is dated for
+   * (ESPN's `dates=` is a hint, not a filter), so a fixture from a fixed day
+   * in the past only reaches the board when the snapshot is dated to match.
+   * That is the point of the filter, so the tests date their snapshots rather
+   * than the filter loosening.
+   */
+  const redate = (raw, iso) => {
+    const c = JSON.parse(JSON.stringify(raw));
+    c.date = iso;
+    if (c.competitions?.[0]) c.competitions[0].date = iso;
+    return c;
+  };
+
+  // mlb_post_raw is 2026-09-16T17:15Z — 12:15 PM Central on the 16th.
+  const MLB_DAY = '2026-09-16';
+
   const asLive = (raw) => {
     const c = JSON.parse(JSON.stringify(raw));
     c.competitions[0].status.type = { ...c.competitions[0].status.type, state: 'in', completed: false, detail: 'Q3 4:12' };
@@ -223,10 +277,13 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
     check('an unusable date_ct falls back to today rather than querying junk', req.boardDate === ctDateCompact());
   }
   {
-    stubFetch({ scoreboards: { 'baseball/mlb': [mlbPost, nflPre], 'soccer/usa.1': [] } });
+    // Both events on the SAME Central day as the snapshot, so the filter is
+    // not what is under test here.
+    const second = redate(nflPre, '2026-09-17T00:15Z'); // 7:15 PM CT on the 16th
+    stubFetch({ scoreboards: { 'baseball/mlb': [mlbPost, second], 'soccer/usa.1': [] } });
     let got = null;
     const band = createLiveBand((s) => (got = s));
-    await band.runOnce(snapshotWith([], ['baseball/mlb', 'soccer/usa.1']));
+    await band.runOnce(snapshotWith([], ['baseball/mlb', 'soccer/usa.1'], MLB_DAY));
     check('every followed league gets an entry', got.today.leagues.size === 2);
     check('the slate is the whole league, not just ticketed games', got.today.leagues.get('baseball/mlb').games.length === 2);
     check('a league with nothing on gets an empty slate, not a missing one', got.today.leagues.get('soccer/usa.1').games.length === 0);
@@ -237,13 +294,13 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
     // A board game under way drives the cadence even with no tickets at all.
     stubFetch({ scoreboards: { 'baseball/mlb': [asLive(mlbPost)] } });
     const band = createLiveBand(() => {});
-    const res = await band.runOnce(snapshotWith([], ['baseball/mlb']));
+    const res = await band.runOnce(snapshotWith([], ['baseball/mlb'], MLB_DAY));
     check('a live game on the board alone polls at 45s', nextDelay(res) === LIVE_MS);
   }
   {
     stubFetch({ scoreboards: { 'baseball/mlb': [mlbPost] } });
     const band = createLiveBand(() => {});
-    const res = await band.runOnce(snapshotWith([], ['baseball/mlb']));
+    const res = await band.runOnce(snapshotWith([], ['baseball/mlb'], MLB_DAY));
     check('an all-final board stops the loop', nextDelay(res) === 0);
   }
   {
@@ -252,14 +309,52 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
     let got = null;
     stubFetch({ scoreboards: { 'baseball/mlb': [mlbPost], 'soccer/usa.1': [] } });
     const band = createLiveBand((s) => (got = s));
-    await band.runOnce(snapshotWith([], ['baseball/mlb', 'soccer/usa.1']));
+    await band.runOnce(snapshotWith([], ['baseball/mlb', 'soccer/usa.1'], MLB_DAY));
     stubFetch({ scoreboards: { 'soccer/usa.1': [] }, fail: new Set(['baseball/mlb']) });
-    await band.runOnce(snapshotWith([], ['baseball/mlb', 'soccer/usa.1']));
+    await band.runOnce(snapshotWith([], ['baseball/mlb', 'soccer/usa.1'], MLB_DAY));
     const mlb = got.today.leagues.get('baseball/mlb');
     check('the last good slate is kept', mlb.games.length === 1);
     check('and that league is marked not-ok', mlb.ok === false);
     check('the healthy league is still ok', got.today.leagues.get('soccer/usa.1').ok === true);
     check('the pass is flagged as partial', got.error === 'some feeds unavailable');
+  }
+
+  // ------------------------------------------- the date filter (today path)
+  //
+  // ESPN's `dates=` is a HINT. A thin day comes back with its neighbour
+  // attached, which today has been getting away with because a populated day
+  // groups plausibly. The board must show the day it is DATED for.
+  console.log('\nthe board shows one Central day and no other');
+  {
+    const onDay = mlbPost;                                   // 12:15 PM CT, the 16th
+    const dayAfter = redate(nflPre, '2026-09-17T17:15Z');    // 12:15 PM CT, the 17th
+    stubFetch({ scoreboards: { 'baseball/mlb': [onDay, dayAfter] } });
+    let got = null;
+    const band = createLiveBand((s) => (got = s));
+    await band.runOnce(snapshotWith([], ['baseball/mlb'], MLB_DAY));
+    const slate = got.today.leagues.get('baseball/mlb').games;
+    check('an event 24h off the board date is dropped', slate.length === 1, `${slate.length} games`);
+    check('and it is the right one that stayed', slate[0].id === String(mlbPost.id));
+  }
+  {
+    // A game late enough in Central to be the NEXT day in UTC still belongs
+    // to the Central day — the filter measures the zone, not the Z.
+    const lateCt = redate(mlbPost, '2026-09-17T03:05Z'); // 10:05 PM CT on the 16th
+    stubFetch({ scoreboards: { 'baseball/mlb': [lateCt] } });
+    let got = null;
+    const band = createLiveBand((s) => (got = s));
+    await band.runOnce(snapshotWith([], ['baseball/mlb'], MLB_DAY));
+    check('a late Central kick is not thrown into tomorrow', got.today.leagues.get('baseball/mlb').games.length === 1);
+  }
+  {
+    // The ticket path is deliberately NOT filtered: a ticket names a game by
+    // id, and which calendar day the board is showing is none of its concern.
+    stubFetch({ scoreboards: { 'football/nfl': [nflPost] } });
+    let got = null;
+    const band = createLiveBand((s) => (got = s));
+    await band.runOnce(snapshotWith([tkt()], ['football/nfl'], MLB_DAY));
+    check('a ticket still grades off a game the board filtered out', got.grades.get('t1').state === 'win');
+    check('though the board itself does not show it', got.today.leagues.get('football/nfl').games.length === 0);
   }
 
   // ----------------------------------------------------------- failures

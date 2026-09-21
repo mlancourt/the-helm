@@ -15,7 +15,7 @@
 import { apiBase, STALE_AFTER_MS, DATA_REFRESH_MS, APP_VERSION_LABEL } from './config.js';
 import { REGISTRY } from './tiles/_registry.js';
 import { createLiveBand, createWeatherBand } from './live/band.js';
-import { normalizeEvent } from './live/espn.js';
+import { normalizeEvent, fetchScoreboard as realFetchScoreboard, compactCtDate } from './live/espn.js';
 import { el, clear, empty, genericCard, pill } from './lib/dom.js';
 import { ago, ctTime } from './lib/fmt.js';
 import { subheadText } from './lib/header.js';
@@ -95,9 +95,17 @@ async function mockSlate() {
 }
 
 const mockEspn = {
-  async fetchScoreboard(league) {
+  /**
+   * The fake slate is keyed by DATE as well as league, because `today_games`
+   * can now ask for tomorrow (v1.1). Serving `leagues` for both dates would
+   * hand the tomorrow sheet today's games and make the one bug that change
+   * exists to prevent invisible in the mock.
+   */
+  async fetchScoreboard(league, dateCompact) {
     const slate = await mockSlate();
-    const raw = Array.isArray(slate.leagues?.[league]) ? slate.leagues[league] : [];
+    const next = compactCtDate(slate.date_next_ct);
+    const bucket = next && String(dateCompact) === next ? slate.leagues_next : slate.leagues;
+    const raw = Array.isArray(bucket?.[league]) ? bucket[league] : [];
     return raw.map((e) => normalizeEvent(e, league)).filter(Boolean);
   },
   async fetchSummary(_league, eventId) {
@@ -286,6 +294,15 @@ const actions = {
   openPanel(title, build) {
     openPanel(title, build);
   },
+
+  /**
+   * One scoreboard call, on demand — `today_games`' tomorrow sheet and
+   * nothing else. The LIVE band owns every CLOCKED fetch; this is a single
+   * user-initiated call with no clock behind it, so it has no place in the
+   * band's plan. Routed through here rather than imported by the tile so that
+   * `?mock=1` still reaches no origin at all.
+   */
+  fetchScoreboard: MOCK_ESPN ? mockEspn.fetchScoreboard : realFetchScoreboard,
 
   openAsk(tileId, data) {
     openSheet();

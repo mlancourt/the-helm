@@ -829,9 +829,47 @@ body {
   white-space: nowrap;
 }
 
+/* The way to tomorrow. A link in the shape of a line, not a ninth button and
+   not a chip: it carries no count, because counting would mean fetching every
+   league on every board load. Muted, so the grid above it stays the tile. */
+.tg-tomorrow {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 2px 0;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: none;
+  color: var(--text-faint);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tg-tomorrow:hover { color: var(--text-dim); }
+.tg-tomorrow:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
 /* -- the sheet -- */
 
 .tg-list { display: flex; flex-direction: column; }
+
+/* Tomorrow's sheet stacks every league into one body, so each group needs a
+   name. Today's single-league sheet has the league in its title and never
+   draws one. */
+.tg-league-head {
+  margin: 14px 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.tg-league-head:first-child { margin-top: 0; }
+
+.tg-loading { margin: 0; font-size: 12px; color: var(--text-faint); }
 .tg-game {
   display: flex;
   gap: 10px;

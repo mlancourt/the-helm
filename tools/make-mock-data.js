@@ -293,7 +293,7 @@ function snapshot() {
       // map and the Central date. Every game comes from ESPN in the browser —
       // from docs/mock/espn-today.json under `?mock=1`. The two are generated
       // from the same file so the broadcast names hit this watch map.
-      today_games: tile('LIVE', todayGamesPayload(TODAY)),
+      today_games: tile('LIVE', todayGamesPayload(TODAY, TOMORROW)),
 
       // Weather: configuration plus ONE offline copy, exactly as the engine
       // publishes it (W2/W11). Every live number on the face comes from
@@ -1982,7 +1982,7 @@ function ledgerThinSnapshot() {
 const MODES = [
   ['--events', () => mockEvents()],
   ['--pending', () => mockPending()],
-  ['--espn', () => slate(TODAY)],
+  ['--espn', () => slate(TODAY, TOMORROW, addDays(TODAY, 2))],
   ['--cards-stale', () => cardsStaleSnapshot()],
   ['--cards-no-pc', () => cardsNoPcSnapshot()],
   ['--cards-no-shop', () => cardsNoShopSnapshot()],
