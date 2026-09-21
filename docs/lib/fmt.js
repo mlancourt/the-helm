@@ -100,10 +100,12 @@ export function dayLabel(ymd, today = ctToday()) {
  * Days-until -> the chip a due thing wears: {text, tone}, or null when there
  * is no date to count from.
  *
- * Shared by `purser_due` (which computes days from a date) and `reminders`
- * (where the engine has already counted them in Central). One definition, so
- * a card due in three days and a reminder due in three days never disagree
- * about whether that is amber.
+ * `reminders` wears this, and so does anything else whose urgency genuinely
+ * rises as the date closes. One definition, so two such tiles never disagree
+ * about whether three days out is amber.
+ *
+ * `purser_due` used to share it and no longer does — see `daysOutText` below
+ * for why a bill's days count is deliberately colourless.
  */
 export function dueLabel(days) {
   if (days === null || days === undefined || !Number.isFinite(Number(days))) return null;
@@ -113,6 +115,54 @@ export function dueLabel(days) {
   if (n === 1) return { text: 'due tomorrow', tone: 'warn' };
   if (n <= 5) return { text: `${n}d`, tone: 'warn' };
   return { text: `${n}d`, tone: 'neutral' };
+}
+
+/**
+ * 'YYYY-MM-DD' -> '9/24'. Month and day, no year, no weekday.
+ *
+ * `prettyDate` is the same string in a wider column — 'Thu Sep 24' — and it is
+ * right where a date is the row's subject. On the Purser's rows the date is a
+ * detail beside a chip and an amount, so it wants to be three characters wide
+ * and nothing more.
+ *
+ * Built from the parts like everything else here (rule 7): the string is split
+ * on '-' and the numbers are printed. Nothing is parsed, so nothing can come
+ * back a day early. Anything that is not a date-only string is returned
+ * verbatim, because rule 7 says unknown date text is rendered as-is.
+ */
+export function shortDate(ymd) {
+  if (!YMD_RE.test(ymd)) return String(ymd ?? '');
+  const [, m, d] = ymd.split('-').map(Number);
+  return `${m}/${d}`;
+}
+
+/**
+ * A days-out integer -> 'today' / 'tomorrow' / 'in 9 days'. TEXT ONLY.
+ *
+ * DELIBERATELY NOT `dueLabel`, and the difference is the whole point.
+ * `dueLabel` returns `{text, tone}` — its job is to decide that three days out
+ * is amber — and that is exactly what the Purser's tile is forbidden to do:
+ * on The Due Stack colour carries what a line asks OF MATT (manual or
+ * autopay), never how soon it asks. A days count there is information; a
+ * colour on it would be an opinion. So this returns a bare string, there is no
+ * tone to reach for, and a future edit cannot accidentally paint one.
+ *
+ * `reminders` and the card rows keep `dueLabel` unchanged — those tiles DO
+ * escalate by proximity, and they should keep saying so.
+ *
+ * The count comes from the engine, computed in Central. Nothing here counts
+ * days, parses a date, or reads a clock.
+ */
+export function daysOutText(days) {
+  if (days === null || days === undefined || days === '' || !Number.isFinite(Number(days))) return '';
+  const n = Math.trunc(Number(days));
+  if (n === 0) return 'today';
+  if (n === 1) return 'tomorrow';
+  // A date already behind us is stated, not flagged. It means the engine's
+  // window and the statement ledger disagree, which is worth reading — but it
+  // is still a fact about a date, so it gets the same plain voice.
+  if (n < 0) return `${Math.abs(n)} ${Math.abs(n) === 1 ? 'day' : 'days'} ago`;
+  return `in ${n} days`;
 }
 
 /**

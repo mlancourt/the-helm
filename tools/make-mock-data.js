@@ -484,11 +484,36 @@ function snapshot() {
         verdict: null,
       }),
 
+      // The Due Stack (producer rebuilt 2026-09-21). Every card, bill, balance
+      // and masked tail below is invented; the SHAPE is the statement-ledger
+      // producer's. It sweeps the rows the module has to get right: a manual
+      // card whose reminder has already fired, a manual card whose reminder is
+      // still ahead, two autopay cards, three fixed household bills, one row
+      // with its amount withheld, and a `due` that is the PAY date rather than
+      // a statement date. `days_out` is the count the engine made in Central —
+      // the page prints it and never recomputes it.
       purser_due: tile('DAILY', {
+        known_through: addDays(TODAY, -2),
         items: [
-          { card: 'Blue card', due: addDays(TODAY, 3), amount: 412.88, amount_display: true, autopay: false, reminder_armed: true },
-          { card: 'Shop card', due: addDays(TODAY, 9), amount: 1290.4, amount_display: false, autopay: true, reminder_armed: false },
-          { card: 'Travel card', due: addDays(TODAY, 16), amount: 76.12, amount_display: true, autopay: true, reminder_armed: false },
+          { kind: 'bill', emoji: '🏠', name: 'Mortgage', full_name: 'Invented Savings Bank — mortgage', amount: 2184.0, amount_display: true, due: TODAY, days_out: 0, tone: 'fund', pay_mode: 'autopay', reminder: null },
+          { kind: 'card', emoji: '🟦', name: 'Blue card', full_name: 'Made-Up Blue Cash (…6543)', amount: 412.88, amount_display: true, due: addDays(TODAY, 1), days_out: 1, tone: 'act', pay_mode: 'manual', reminder: addDays(TODAY, -1) },
+          { kind: 'bill', emoji: '💡', name: 'Electric', full_name: 'Nowhere Power & Light', amount: 143.62, amount_display: true, due: addDays(TODAY, 4), days_out: 4, tone: 'fund', pay_mode: 'autopay', reminder: null },
+          { kind: 'card', emoji: '🟩', name: 'Shop card', full_name: 'Pretend Rewards Visa (…2201)', amount: 1290.4, amount_display: false, due: addDays(TODAY, 9), days_out: 9, tone: 'act', pay_mode: 'manual', reminder: addDays(TODAY, 6) },
+          { kind: 'bill', emoji: '📶', name: 'Internet', full_name: 'Fictional Fiber', amount: 89.99, amount_display: true, due: addDays(TODAY, 12), days_out: 12, tone: 'fund', pay_mode: 'autopay', reminder: null },
+          { kind: 'card', emoji: '✈️', name: 'Travel card', full_name: 'Imaginary Skies Signature (…8812)', amount: 76.12, amount_display: true, due: addDays(TODAY, 23), days_out: 23, tone: 'fund', pay_mode: 'autopay', reminder: null },
+          { kind: 'card', emoji: '🟪', name: 'Store card', full_name: 'Invented Hardware Co. card (…4470)', amount: 318.05, amount_display: true, due: addDays(TODAY, 41), days_out: 41, tone: 'act', pay_mode: 'manual', reminder: null },
+        ],
+        totals: {
+          next_45d: 4514.96,
+          next_14d: 4120.79,
+          manual: 2021.33,
+          auto: 2493.63,
+        },
+        ur_available: 148200,
+        streak: { clean_statements: 31, since: '2024-02-01' },
+        unscheduled: [
+          { emoji: '🛡️', name: 'Umbrella policy', amount: 412.0, why: 'annual premium; no pay day in the config' },
+          { emoji: '🧾', name: 'Village taxes', amount: 1877.4, why: 'billed twice a year; dates vary' },
         ],
       }),
 

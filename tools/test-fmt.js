@@ -167,7 +167,29 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('usdPrecise handles a negative sub-cent', fmt.usdPrecise(-0.0048), '-$0.0048');
   eq('usdPrecise at the cent boundary', fmt.usdPrecise(0.01), '$0.01');
 
-  console.log('\ndue labels (shared by purser_due and reminders)');
+  console.log('\nshort dates (the Purser\'s rows)');
+  eq('a pay date is month and day', fmt.shortDate('2026-10-07'), '10/7');
+  eq('no leading zeroes on either half', fmt.shortDate('2026-01-04'), '1/4');
+  eq('the first of the year', fmt.shortDate('2026-01-01'), '1/1');
+  eq('the last day of the year, which UTC-midnight parsing gets wrong', fmt.shortDate('2026-12-31'), '12/31');
+  eq('unknown date text is returned verbatim', fmt.shortDate('sometime'), 'sometime');
+  eq('and null is empty, not "Invalid Date"', fmt.shortDate(null), '');
+
+  console.log('\ndays-out text (the Purser\'s rows — TEXT, never a tone)');
+  // Deliberately not dueLabel: on The Due Stack colour carries manual-vs-
+  // autopay, so a days count there must have no tone to reach for at all.
+  eq('zero is today', fmt.daysOutText(0), 'today');
+  eq('one is tomorrow', fmt.daysOutText(1), 'tomorrow');
+  eq('two counts forward', fmt.daysOutText(2), 'in 2 days');
+  eq('and so does forty-five', fmt.daysOutText(45), 'in 45 days');
+  eq('a date behind us is stated plainly', fmt.daysOutText(-1), '1 day ago');
+  eq('in the plural too', fmt.daysOutText(-4), '4 days ago');
+  eq('no count means no chip', fmt.daysOutText(null), '');
+  eq('junk means no chip', fmt.daysOutText('soon'), '');
+  eq('undefined means no chip', fmt.daysOutText(undefined), '');
+  eq('and it returns a bare string, with nothing to colour by', typeof fmt.daysOutText(3), 'string');
+
+  console.log('\ndue labels (reminders — the tone ladder purser_due does NOT wear)');
   eq('overdue counts days', fmt.dueLabel(-3).text, '3d overdue');
   eq('overdue is red', fmt.dueLabel(-3).tone, 'bad');
   eq('today is today', fmt.dueLabel(0).text, 'due today');

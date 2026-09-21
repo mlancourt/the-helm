@@ -1132,18 +1132,79 @@ body {
 .pending-chip { display: flex; align-items: center; gap: 7px; margin-top: 5px; flex-wrap: wrap; }
 .pending-text { font-size: 12px; color: var(--text-dim); }
 
-/* ------------------------------------------------------------- purser_due */
+/* --------------------------------------------- purser_due — The Due Stack */
+
+/* COLOUR HERE CARRIES ONE THING: what a line asks OF MATT.
+
+   --warn  act   manual, he has to do something
+   --good  fund  autopay, it only needs cash in the account
+
+   Those are the only two coloured rules in this block, and they are keyed off
+   `item.tone`. There is deliberately NO rule anywhere below that colours,
+   bolds or badges `.purser-days` — a days count is information, and a colour
+   on it would be an opinion. `.purser-days` gets exactly one rule, it names no
+   colour token, and the test suite counts it. */
+
+.purser-tappable { cursor: pointer; }
+.purser-tappable:focus-visible { outline: 1px solid var(--brass); outline-offset: 3px; border-radius: 6px; }
 
 .purser { display: flex; flex-direction: column; }
 .purser-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  display: flex; align-items: center; gap: 9px;
   padding: 8px 0; border-bottom: 1px solid var(--line-soft);
 }
 .purser-row:last-child { border-bottom: 0; }
-.purser-card { font-size: 13.5px; font-weight: 560; }
-.purser-meta { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+.purser-emoji { font-size: 15px; line-height: 1; flex: 0 0 auto; }
+.purser-main { flex: 1 1 auto; min-width: 0; }
+.purser-name {
+  font-size: 13.5px; font-weight: 560;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.purser-meta { font-size: 11px; margin-top: 1px; }
+.purser-days { color: var(--text-faint); font-variant-numeric: tabular-nums; }
 .purser-side { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: 0 0 auto; }
 .purser-amount { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+.purser-marks { display: flex; align-items: center; gap: 5px; }
+/* The escalation, inside the act tone — not a state of its own. */
+.purser-alarm { font-size: 10px; line-height: 1; }
+.purser-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.purser-dot-act  { background: var(--warn); }
+.purser-dot-fund { background: var(--good); }
+/* A payload carrying neither tone. Not a third state — the absence of one. */
+.purser-dot-none { background: var(--line); }
+
+/* --------------------------------------------------- the due stack sheet */
+
+.purser-totals { margin-bottom: 16px; }
+.purser-total {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 6px 0; border-bottom: 1px solid var(--line-soft);
+}
+.purser-total:last-child { border-bottom: 0; }
+.purser-total-label { font-size: 12px; color: var(--text-dim); }
+.purser-total-value { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.purser-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.purser-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-sink);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.purser-sec { margin-bottom: 18px; padding-right: 3px; }
+.purser-sec-head {
+  margin: 0 0 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.purser-uns-row { display: flex; align-items: center; gap: 9px; padding: 6px 0; }
+.purser-why { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
 
 /* -------------------------------------------------------------- newsstand */
 

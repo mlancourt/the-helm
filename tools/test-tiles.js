@@ -4122,6 +4122,381 @@ async function main() {
     })());
   }
 
+
+  // -- purser_due: The Due Stack ---------------------------------------------
+  //
+  // Everything leaving Matt's accounts in the next 45 days, one row each,
+  // soonest first, coloured by what it asks OF HIM. The producer was rebuilt
+  // 2026-09-21 and the payload shares nothing with the old
+  // `{card, autopay, reminder_armed}` shape, so these are new assertions
+  // rather than adapted ones.
+  //
+  // Three of them are rulings rather than preferences, and they are held the
+  // way the cards tile holds its own — at the DOM, at the source, and in the
+  // stylesheet, because a ruling that only one scan protects is one refactor
+  // from being gone:
+  //
+  //   the two tones   colour carries manual-vs-autopay and nothing else, and
+  //                   `act` and `fund` must resolve to two DIFFERENT colours —
+  //                   read out of style.css, not assumed from two token names.
+  //   the days count  never coloured, bolded or badged at ANY value. A class
+  //                   scan sweeps 0 → 45 and the class string must not move.
+  //   no actions,     no pay button, no mark-paid, no advice, no runway, no
+  //   no opinions     count of bills unpaid. Charter, not taste.
+  console.log('\npurser_due — The Due Stack');
+  const purser = mods.get('purser_due');
+  if (purser) {
+    const PURSER_SRC_RAW = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'purser_due.js'), 'utf8');
+    // Comments stripped for every scan below. This file's own header spells
+    // out what it must never do — "no runway", "no pay button" — and a scan
+    // that counted the documentation of a ruling as a breach of it would fail
+    // on the wrong thing.
+    const PURSER_SRC = PURSER_SRC_RAW
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    const CSS_FILE = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+
+    // The tile's own block, bounded by its opening header and the next
+    // section header that is NOT one of its own — the block carries a
+    // sub-header for the sheet, and stopping at the first `/* ---` would
+    // quietly leave half the rules unscanned, which is exactly the shape of
+    // failure these scans exist to prevent.
+    const HEADERS = [...CSS_FILE.matchAll(/\/\* -+ ([^*]+?) -*\*\//g)];
+    const pOpen = HEADERS.find((h) => /purser_due — The Due Stack/.test(h[1]));
+    const pNext = pOpen
+      ? HEADERS.find((h) => h.index > pOpen.index && !/due stack/i.test(h[1]) && !/purser/i.test(h[1]))
+      : null;
+    check('the stylesheet still has a purser section header', !!pOpen);
+    check('and a section after it to bound the scan', !!pNext, pNext && pNext[1]);
+    // Comments stripped: the block documents its own ruling by name, and a
+    // scan that counted the documentation as a rule would fail on the prose.
+    const PURSER_CSS =
+      pOpen && pNext ? CSS_FILE.slice(pOpen.index, pNext.index).replace(/\/\*[\s\S]*?\*\//g, '') : '';
+
+    const purserTile = (data) => ({ band: 'DAILY', status: 'ok', data });
+    const item = (over = {}) => ({
+      kind: 'card',
+      emoji: '🟦',
+      name: 'Blue card',
+      full_name: 'Made-Up Blue Cash (…6543)',
+      amount: 412.88,
+      amount_display: true,
+      due: '2026-09-24',
+      days_out: 3,
+      tone: 'act',
+      pay_mode: 'manual',
+      reminder: null,
+      ...over,
+    });
+
+    /** Render, and open the sheet if the tile offered one. */
+    function openPurser(data) {
+      const panel = fakePanel();
+      const root = new El('div');
+      purser.render(root, purserTile(data), { id: 'purser_due', actions: panel.actions });
+      const face = root.querySelector('.purser-face');
+      if (face && face.listeners.click) face.listeners.click[0]();
+      return { root, panel, sheet: panel.last ? panel.last.body : null };
+    }
+    const draw = (data) => {
+      const root = new El('div');
+      purser.render(root, purserTile(data), { id: 'purser_due', actions: {} });
+      return root;
+    };
+    const textsOf = (node, cls) => node.querySelectorAll('.' + cls).map((n) => n.textContent);
+    /** Every class anywhere under a node. */
+    function classSet(node) {
+      const out = new Set();
+      for (const n of node.querySelectorAll('div, span, p, h3')) {
+        for (const c of n.className.split(/\s+/)) if (c) out.add(c);
+      }
+      return out;
+    }
+
+    const FULL = snapshot.tiles?.purser_due?.data;
+    check('the mock snapshot carries a due stack to render', !!FULL && Array.isArray(FULL.items) && FULL.items.length > 3);
+
+    // -- the face -------------------------------------------------------------
+    const board = draw(FULL || {});
+    check('one row per item', countOf(board, 'purser-row') === (FULL ? FULL.items.length : 0), String(countOf(board, 'purser-row')));
+    check('each row wears its emoji', countOf(board, 'purser-emoji') === (FULL ? FULL.items.length : 0));
+    check('each row wears a tone dot', countOf(board, 'purser-dot') === (FULL ? FULL.items.length : 0));
+    check('the name is the face, not the full name', /Blue card/.test(textOf(board)) && !/6543/.test(textOf(board)), textOf(board).slice(0, 120));
+    check('the masked tail rides along as the row title', (FULL ? board.querySelectorAll('.purser-row')[1].getAttribute('title') : '') === 'Made-Up Blue Cash (…6543)');
+    check('nothing reads as a bug', !/undefined|NaN|Invalid Date/.test(textOf(board)), textOf(board).slice(0, 160));
+
+    // ORDER IS THE ENGINE'S. It sorted soonest-first, ties by amount
+    // descending, in Central — a count this page cannot make as well. So the
+    // fixture below is deliberately NOT in any order the page could have
+    // produced, and the DOM has to come back in exactly that order.
+    const scrambled = draw({
+      known_through: '2026-09-19',
+      items: [
+        item({ name: 'Third', days_out: 30, due: '2026-10-21' }),
+        item({ name: 'First', days_out: 0, due: '2026-09-21' }),
+        item({ name: 'Second', days_out: 9, due: '2026-09-30' }),
+      ],
+    });
+    check('rows render in payload order, never re-sorted', textsOf(scrambled, 'purser-name').join('|') === 'Third|First|Second', textsOf(scrambled, 'purser-name').join('|'));
+    check('the module does not sort at all', !/\.sort\(/.test(PURSER_SRC));
+
+    // -- the date and the days count -----------------------------------------
+    const dated = draw({ known_through: '2026-09-19', items: [item({ due: '2026-10-07', days_out: 16 })] });
+    check('the pay date renders as M/D', /10\/7/.test(textOf(dated)), textOf(dated));
+    check('and never as a parsed, localised date', !/Oct 7, 2026|2026-10-07/.test(textOf(dated)));
+    const dayText = (n) => textOf(draw({ known_through: '2026-09-19', items: [item({ days_out: n })] }));
+    check('day 0 reads "today"', /today/.test(dayText(0)) && !/in 0 days/.test(dayText(0)));
+    check('day 1 reads "tomorrow"', /tomorrow/.test(dayText(1)));
+    check('day 9 reads "in 9 days"', /in 9 days/.test(dayText(9)));
+
+    // -- THE RULING: the days count is never coloured -------------------------
+    //
+    // Same standing ruling as `cards.days_listed`. The number is information;
+    // a colour would be an opinion, and Matt has a standing ruling against the
+    // board narrating his own money back at him.
+    const SWEEP = [0, 1, 2, 3, 7, 30, 45];
+    const dayClasses = SWEEP.map((n) => {
+      const node = draw({ known_through: '2026-09-19', items: [item({ days_out: n })] }).querySelector('.purser-days');
+      return node ? node.className : '(missing)';
+    });
+    check('a days-out element exists at every value', dayClasses.every((c) => c === 'purser-days'), dayClasses.join(' | '));
+    check('and its class string is identical at 0, 1, 2, 3, 7, 30 and 45', new Set(dayClasses).size === 1, dayClasses.join(' | '));
+    // The row around it must not move either — a bold name at day 0 would be
+    // the same opinion wearing different clothes.
+    const rowClassesBySweep = SWEEP.map((n) => [...classSet(draw({ known_through: '2026-09-19', items: [item({ days_out: n })] }))].sort().join(' '));
+    check('nor does any other class on the row', new Set(rowClassesBySweep).size === 1, rowClassesBySweep.join('\n'));
+    check('and no urgency word creeps in at zero', !/overdue|urgent|due soon|late|act now/i.test(dayText(0)), dayText(0));
+
+    // -- THE RULING: two tones, and they are the two the payload names --------
+    const actDot = draw({ items: [item({ tone: 'act', pay_mode: 'manual' })] }).querySelector('.purser-dot');
+    const fundDot = draw({ items: [item({ tone: 'fund', pay_mode: 'autopay' })] }).querySelector('.purser-dot');
+    check('a manual row wears the act tone', actDot.className === 'purser-dot purser-dot-act', actDot.className);
+    check('an autopay row wears the fund tone', fundDot.className === 'purser-dot purser-dot-fund', fundDot.className);
+    // `tone` is the single source. A payload whose `pay_mode` disagrees with
+    // its `tone` must follow `tone`, because branching on both is how a face
+    // ends up disagreeing with itself.
+    const crossed = draw({ items: [item({ tone: 'fund', pay_mode: 'manual' })] }).querySelector('.purser-dot');
+    check('tone wins over pay_mode, because pay_mode is never read', crossed.className === 'purser-dot purser-dot-fund', crossed.className);
+    check('the module never mentions pay_mode at all', !/pay_mode/.test(PURSER_SRC));
+    const toneless = draw({ items: [item({ tone: null })] }).querySelector('.purser-dot');
+    check('a payload with no tone gets the absence of one, not a third state', toneless.className === 'purser-dot purser-dot-none', toneless.className);
+
+    /** A class's background colour, resolved one level through :root. */
+    function cssColour(cls) {
+      const rule = CSS_FILE.match(new RegExp('\\.' + cls + '\\s*\\{([^}]*)\\}'));
+      if (!rule) return null;
+      const bg = rule[1].match(/background:\s*([^;]+);/);
+      if (!bg) return null;
+      const value = bg[1].trim();
+      const token = value.match(/^var\((--[a-z0-9-]+)\)$/);
+      if (!token) return value;
+      const root = CSS_FILE.match(/:root\s*\{([\s\S]*?)\n\}/);
+      const found = root && root[1].match(new RegExp(token[1] + ':\\s*([^;]+);'));
+      return found ? found[1].trim() : null;
+    }
+    const actColour = cssColour('purser-dot-act');
+    const fundColour = cssColour('purser-dot-fund');
+    check('the act tone resolves to a real colour', !!actColour && /^#[0-9a-f]{3,8}$/i.test(actColour), String(actColour));
+    check('the fund tone does too', !!fundColour && /^#[0-9a-f]{3,8}$/i.test(fundColour), String(fundColour));
+    // Two token NAMES differing proves nothing — they could both resolve to
+    // the same hex and the face would be one colour on the phone.
+    check('and they are two different colours on the glass', actColour !== fundColour, `${actColour} vs ${fundColour}`);
+
+    // -- the reminder escalates INSIDE the act tone ---------------------------
+    const CT_YMD_T = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' });
+    const TODAY_CT = CT_YMD_T.format(new Date());
+    const shift = (ymd, n) => {
+      const [y, m, d] = ymd.split('-').map(Number);
+      const t = new Date(Date.UTC(y, m - 1, d) + n * 86400000);
+      const p = (v) => String(v).padStart(2, '0');
+      return `${t.getUTCFullYear()}-${p(t.getUTCMonth() + 1)}-${p(t.getUTCDate())}`;
+    };
+    const fired = draw({ items: [item({ tone: 'act', reminder: shift(TODAY_CT, -2) })] });
+    check('a reminder already due raises a chip', countOf(fired, 'purser-alarm') === 1);
+    check('and the row is STILL the act tone, not a new one', fired.querySelector('.purser-dot').className === 'purser-dot purser-dot-act', fired.querySelector('.purser-dot').className);
+    const today0 = draw({ items: [item({ tone: 'act', reminder: TODAY_CT })] });
+    check('a reminder due today counts as fired', countOf(today0, 'purser-alarm') === 1);
+    const ahead = draw({ items: [item({ tone: 'act', reminder: shift(TODAY_CT, 4) })] });
+    check('a reminder still ahead raises nothing', countOf(ahead, 'purser-alarm') === 0);
+    const none = draw({ items: [item({ tone: 'act', reminder: null })] });
+    check('and a row with no reminder raises nothing', countOf(none, 'purser-alarm') === 0);
+    // The escalation is within ACT. An autopay line needs cash, not a nudge.
+    const fundFired = draw({ items: [item({ tone: 'fund', reminder: shift(TODAY_CT, -2) })] });
+    check('a fund row never escalates', countOf(fundFired, 'purser-alarm') === 0);
+    check('the reminder is compared as text, never parsed', !/new Date|Date\.parse/.test(PURSER_SRC));
+
+    // -- amount_display: withheld means withheld ------------------------------
+    const shown = draw({ items: [item({ amount: 412.88, amount_display: true })] });
+    check('a shown amount is a dollar figure', textsOf(shown, 'purser-amount').join('') === '$412.88', textsOf(shown, 'purser-amount').join(''));
+    const hidden = draw({ items: [item({ amount: 1290.4, amount_display: false })] });
+    check('a withheld amount renders no element at all', countOf(hidden, 'purser-amount') === 0);
+    check('not a dash', !/\$—|—/.test(textOf(hidden)), textOf(hidden));
+    check('not a blur, not a zero', !/•••|\*\*\*|\$0\.00/.test(textOf(hidden)), textOf(hidden));
+    check('and the figure itself never reaches the page', !/1290|1,290/.test(textOf(hidden)), textOf(hidden));
+    check('the rest of the row still renders', /Blue card/.test(textOf(hidden)) && countOf(hidden, 'purser-dot') === 1);
+
+    // -- one row shape, not two -----------------------------------------------
+    //
+    // A fixed household bill and a credit card are the same thing to Matt:
+    // money leaving on a date. So they go through one builder, and `kind` is
+    // not branched on anywhere.
+    const billRow = draw({ items: [item({ kind: 'bill', emoji: '💡', name: 'Electric', full_name: 'Nowhere Power & Light', tone: 'fund' })] });
+    const cardRow = draw({ items: [item({ kind: 'card', tone: 'fund' })] });
+    check('a bill and a card render the same class set', [...classSet(billRow)].sort().join(' ') === [...classSet(cardRow)].sort().join(' '), `${[...classSet(billRow)].sort().join(' ')}\n${[...classSet(cardRow)].sort().join(' ')}`);
+    check('and the same shape of row', countOf(billRow, 'purser-row') === 1 && countOf(cardRow, 'purser-row') === 1);
+    check('the module never branches on kind', !/\bkind\b/.test(PURSER_SRC), (PURSER_SRC.match(/.*\bkind\b.*/) || [''])[0]);
+    check('there is exactly one row builder', (PURSER_SRC.match(/function itemRow\(/g) || []).length === 1);
+
+    // -- the honest line ------------------------------------------------------
+    //
+    // Not decoration. A card whose next statement the Purser has not logged is
+    // simply absent from the rows, and this is the only thing on the tile that
+    // says how far the ledger actually reaches.
+    check('the ledger line is on the face', /ledger current through 2026-09-19/.test(textOf(draw({ known_through: '2026-09-19', items: [item()] }))));
+    check('a null date says so rather than going quiet', /ledger date unknown/.test(textOf(draw({ known_through: null, items: [item()] }))));
+    check('and a missing key too', /ledger date unknown/.test(textOf(draw({ items: [item()] }))));
+    check('the date is printed verbatim', /2026-09-19/.test(textOf(draw({ known_through: '2026-09-19', items: [] }))));
+
+    // -- the empty stack is quiet ---------------------------------------------
+    const emptyStack = draw({ known_through: '2026-09-19', items: [] });
+    check('no rows', countOf(emptyStack, 'purser-row') === 0);
+    check('the ledger line and nothing else', emptyStack.querySelector('.purser-face').childNodes.length === 1, String(emptyStack.querySelector('.purser-face').childNodes.length));
+    check('no "all clear"', !/all clear|nothing due|you.re good|caught up|clear/i.test(textOf(emptyStack)), textOf(emptyStack));
+    check('no celebration', !/🎉|✅|✓|nice work|well done/.test(textOf(emptyStack)), textOf(emptyStack));
+    check('and no empty-state filler at all', countOf(emptyStack, 'empty') === 0);
+
+    // -- the sheet ------------------------------------------------------------
+    const full = openPurser(FULL || {});
+    check('tapping the face opens a sheet', !!full.sheet);
+    check('titled plainly', full.panel.last.title === 'Purser — Due', String(full.panel.last && full.panel.last.title));
+    check('the totals are labelled in words', /next 45 days/.test(textOf(full.sheet)) && /next 14 days/.test(textOf(full.sheet)));
+    check('with the manual and autopay split', /manual/.test(textOf(full.sheet)) && /autopay/.test(textOf(full.sheet)));
+    check('and the figures beside them', textsOf(full.sheet, 'purser-total-value').every((t) => /^\$[\d,]+\.\d\d$/.test(t)), textsOf(full.sheet, 'purser-total-value').join(' | '));
+    check('no commentary on any of them', !/heavy|big month|tight|comfortable|runway|cutting it/i.test(textOf(full.sheet)));
+    check('the UR chip reads as a count of points', /💎 148,200 UR available/.test(textOf(full.sheet)), textOf(full.sheet).slice(0, 200));
+    check('the streak chip carries its date verbatim', /🔥 31 statements · \$0 interest · since 2024-02-01/.test(textOf(full.sheet)));
+    check('the unscheduled bills are listed', countOf(full.sheet, 'purser-uns-row') === 2);
+    check('each with the engine’s own reason, verbatim', /annual premium; no pay day in the config/.test(textOf(full.sheet)));
+    check('and their amounts', /\$412\.00/.test(textOf(full.sheet)) && /\$1,877\.40/.test(textOf(full.sheet)));
+    check('the ledger line closes the sheet too', /ledger current through/.test(textOf(full.sheet)));
+    full.panel.close();
+
+    // A number the producer grows tomorrow must surface, not vanish (rule 9).
+    const grownTotals = openPurser({ known_through: '2026-09-19', items: [], totals: { next_45d: 100, quarterly_escrow: 42.5 } });
+    check('an unknown total is surfaced under its own key', /quarterly_escrow/.test(textOf(grownTotals.sheet)) && /\$42\.50/.test(textOf(grownTotals.sheet)));
+    grownTotals.panel.close();
+
+    // -- chips drop rather than render a zero ---------------------------------
+    const noUr = openPurser({ known_through: '2026-09-19', items: [], ur_available: null, streak: { clean_statements: 31, since: '2024-02-01' } });
+    check('ur_available null drops the chip', !/UR available/.test(textOf(noUr.sheet)) && !/💎/.test(textOf(noUr.sheet)));
+    check('rather than rendering a zero', !/0 UR/.test(textOf(noUr.sheet)));
+    check('and the streak beside it is untouched', /🔥 31 statements/.test(textOf(noUr.sheet)));
+    noUr.panel.close();
+
+    const noStreak = openPurser({ known_through: '2026-09-19', items: [], ur_available: 1000, streak: { clean_statements: 0, since: '2024-02-01' } });
+    check('a zero-statement streak drops its chip', !/🔥/.test(textOf(noStreak.sheet)) && !/statements/.test(textOf(noStreak.sheet)));
+    check('rather than announcing a run of none', !/0 statements/.test(textOf(noStreak.sheet)));
+    check('and the UR chip beside it is untouched', /💎 1,000 UR available/.test(textOf(noStreak.sheet)));
+    noStreak.panel.close();
+
+    const noSince = openPurser({ known_through: '2026-09-19', items: [], streak: { clean_statements: 12, since: null } });
+    check('a streak with no start date drops too', !/🔥/.test(textOf(noSince.sheet)), textOf(noSince.sheet));
+    check('rather than printing "since null"', !/since null|since undefined|since —/.test(textOf(noSince.sheet)));
+    noSince.panel.close();
+
+    const noUns = openPurser({ known_through: '2026-09-19', items: [], unscheduled: [] });
+    check('an empty unscheduled list raises no section', countOf(noUns.sheet, 'purser-sec') === 0 && !/No pay day set/.test(textOf(noUns.sheet)));
+    noUns.panel.close();
+
+    const bareSheet = openPurser({ known_through: '2026-09-19', items: [] });
+    check('a sheet with nothing in it is still honest', /ledger current through 2026-09-19/.test(textOf(bareSheet.sheet)));
+    check('and says nothing else', bareSheet.sheet.childNodes.length === 1, String(bareSheet.sheet.childNodes.length));
+    bareSheet.panel.close();
+
+    // -- ragged payloads ------------------------------------------------------
+    let raggedThrew = null;
+    let ragged = null;
+    try {
+      ragged = draw({
+        known_through: '2026-09-19',
+        items: [{}, null, 'nope', item({ amount: null, amount_display: true, due: null, days_out: null, name: null })],
+      });
+    } catch (e) { raggedThrew = e; }
+    check('a half-missing payload never throws', !raggedThrew, raggedThrew && raggedThrew.message);
+    check('every entry still lays out as a row', ragged && countOf(ragged, 'purser-row') === 4, ragged && String(countOf(ragged, 'purser-row')));
+    check('a nameless row says so', ragged && /—/.test(textOf(ragged)));
+    check('no "undefined", "NaN" or "Invalid Date"', ragged && !/undefined|NaN|Invalid Date/.test(textOf(ragged)), ragged && textOf(ragged));
+    check('and no "null" printed as a word', ragged && !/\bnull\b/.test(textOf(ragged)));
+
+    // -- THE CHARTER: nothing here acts ---------------------------------------
+    //
+    // Hard rule 6 and the Purser's own charter. Money never moves from the
+    // Helm, and this tile does not even pretend to be where it might.
+    const acted = openPurser(FULL || {});
+    check('the face carries no button element', countOf(board, 'purser-row') > 0 && board.querySelectorAll('button').length === 0);
+    check('nor does the sheet', acted.sheet.querySelectorAll('button').length === 0);
+    for (const word of ['pay now', 'mark paid', 'mark as paid', 'dismiss', 'undo', 'snooze', 'schedule']) {
+      check(`no "${word}" affordance anywhere`, !new RegExp(word, 'i').test(`${textOf(board)} ${textOf(acted.sheet)}`));
+    }
+    acted.panel.close();
+    check('the module posts no event', !/postEvent|fileEvent|api\/event|\bfetch\(/.test(PURSER_SRC));
+    check('and builds no button', !/el\(\s*'button'|createElement\(\s*'button'/.test(PURSER_SRC));
+    check('the only interaction it registers is the sheet', (PURSER_SRC.match(/addEventListener/g) || []).length === 2, String((PURSER_SRC.match(/addEventListener/g) || []).length));
+
+    // -- THE CHARTER: nothing here has an opinion -----------------------------
+    for (const phrase of ['runway', 'days of cash', 'big month', 'cutting it close', 'bills unpaid', 'on track', 'over budget']) {
+      check(`the module never says "${phrase}"`, !new RegExp(phrase.replace(/ /g, '[ -]?'), 'i').test(PURSER_SRC));
+    }
+    check('it counts nothing up for him', !/\.length\s*\}|\$\{[^}]*\.length/.test(PURSER_SRC));
+    check('and sums nothing', !/reduce\(/.test(PURSER_SRC));
+
+    // -- the rulings, at the source -------------------------------------------
+    //
+    // The DOM scans above catch a days count that HAS a colour today. This
+    // catches the likelier mistake a year from now: a branch that could give
+    // it one. Every class this module emits is either a bare literal or the
+    // one tone template, so there is nowhere for a colour to come from but
+    // `item.tone`.
+    const CLASSES = [...PURSER_SRC.matchAll(/cls:\s*(`[^`]*`|'[^']*')/g)].map((m) => m[1]);
+    check('every class it emits was found', CLASSES.length > 15, String(CLASSES.length));
+    const TONE_TEMPLATE = '`purser-dot purser-dot-${tone}`';
+    check(
+      'and each is a bare literal, or the one tone template',
+      CLASSES.every((c) => /^'[a-z0-9 -]+'$/.test(c) || c === TONE_TEMPLATE),
+      CLASSES.filter((c) => !/^'[a-z0-9 -]+'$/.test(c) && c !== TONE_TEMPLATE).join(' | ')
+    );
+    check('exactly one of them is the template', CLASSES.filter((c) => c === TONE_TEMPLATE).length === 1);
+    check('no class is ever picked by a ternary', !/cls:\s*[^,\n]*\?/.test(PURSER_SRC));
+    check('nothing compares days_out to anything', !/days_out\s*[<>=!]|\bdays\s*[<>]=?\s*\d/.test(PURSER_SRC), (PURSER_SRC.match(/.*days_out.*/g) || []).join(' / '));
+    check('nor amount to a threshold', !/amount\s*[<>]=?\s*\d/.test(PURSER_SRC));
+    check('the tone comes off the item and nowhere else', /function toneOf\(item\)/.test(PURSER_SRC) && (PURSER_SRC.match(/item\.tone|\.tone\)/g) || []).length > 0);
+    check('there is exactly one tone function', (PURSER_SRC.match(/function toneOf\(/g) || []).length === 1);
+    check('and it reads nothing but tone', (() => {
+      const a = PURSER_SRC.indexOf('function toneOf(');
+      const b = PURSER_SRC.indexOf('function reminderDue(');
+      const region = a !== -1 && b > a ? PURSER_SRC.slice(a, b) : '';
+      return region.length > 60 && !/days_out|amount|pay_mode|kind/.test(region);
+    })());
+    check('it never reaches for dueLabel', !/dueLabel/.test(PURSER_SRC));
+    check('and takes the colourless days formatter instead', /daysOutText/.test(PURSER_SRC));
+
+    // -- the ruling, in the stylesheet ----------------------------------------
+    check('the tile has its own stylesheet block', PURSER_CSS.length > 400 && /\.purser-row/.test(PURSER_CSS), String(PURSER_CSS.length));
+    check('and it is the purser block and nothing else', !/\.ledger-|\.cards-|\.news-/.test(PURSER_CSS));
+    check('the days count gets exactly one rule', (PURSER_CSS.match(/\.purser-days\b/g) || []).length === 1, String((PURSER_CSS.match(/\.purser-days\b/g) || []).length));
+    check('and that rule names no tone colour', !/\.purser-days[^{]*\{[^}]*var\(--(warn|bad|good|info)\)/.test(PURSER_CSS));
+    check('nor does it bold anything', !/\.purser-days[^{]*\{[^}]*font-weight/.test(PURSER_CSS));
+    // Only the two tone dots may carry a tone colour. Anything else reaching
+    // for --warn or --good in this block is a second colour story starting.
+    const tonedRules = [...PURSER_CSS.matchAll(/(\.purser-[a-z-]+)[^{]*\{[^}]*var\(--(warn|good|bad|info)\)/g)].map((m) => m[1]);
+    check('only the two dots are coloured by tone', tonedRules.slice().sort().join(' ') === '.purser-dot-act .purser-dot-fund', tonedRules.join(' | '));
+
+    // -- the registry ---------------------------------------------------------
+    check('the tile points at the new module', /purser_due:[^}]*module:\s*'\.\/tiles\/purser_due\.js'/.test(REGISTRY_SRC));
+    check('still at position 120', /purser_due:\s*\{\s*band:\s*'DAILY',\s*position:\s*120/.test(REGISTRY_SRC));
+    check('on the DAILY band', /purser_due:\s*\{\s*band:\s*'DAILY'/.test(REGISTRY_SRC));
+  }
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));
