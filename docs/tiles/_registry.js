@@ -22,6 +22,10 @@
 export const REGISTRY = {
   calendar: { band: 'DAILY', position: 10, module: './tiles/calendar.js', title: 'Calendar' },
   reminders: { band: 'DAILY', position: 20, module: './tiles/reminders.js', title: 'Reminders' },
+  // The morning brief, straight under Reminders and above Dinner. Slotted in
+  // at 25 without touching a single other number — which is what the tens
+  // were for (ruling, 2026-09-20).
+  captains_log: { band: 'DAILY', position: 25, module: './tiles/captains_log.js', title: "⚓ Captain's Log" },
   dinner: { band: 'DAILY', position: 30, module: './tiles/dinner.js', title: 'Dinner' },
   weather: { band: 'LIVE', position: 40, module: './tiles/weather.js', title: 'Weather' },
   newsstand: { band: 'HOURLY', position: 50, module: './tiles/newsstand.js', title: 'Newsstand' },

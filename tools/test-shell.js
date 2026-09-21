@@ -388,10 +388,16 @@ console.log('\nsubhead never contains me.name');
     const REG = read('docs', 'tiles', '_registry.js');
 
     const ORDER = [
-      'calendar', 'reminders', 'dinner', 'weather', 'newsstand', 'entertainment',
-      'local_events', 'today_games', 'bets_live', 'bets_ledger', 'cards',
-      'purser_due', 'wss_tape', 'ship_status',
+      'calendar', 'reminders', 'captains_log', 'dinner', 'weather', 'newsstand',
+      'entertainment', 'local_events', 'today_games', 'bets_live', 'bets_ledger',
+      'cards', 'purser_due', 'wss_tape', 'ship_status',
     ];
+
+    // The tens, and the first tile to cash them in. `captains_log` was slotted
+    // between reminders (20) and dinner (30) on 2026-09-21 and NO other number
+    // moved — which is the whole reason the grid was renumbered in tens rather
+    // than one-per-tile. Asserted as what it is: an insert, not a renumber.
+    const INSERTS = { captains_log: 25 };
 
     // -- the registry ------------------------------------------------------
     const onBoard = Object.entries(REGISTRY)
@@ -402,10 +408,25 @@ console.log('\nsubhead never contains me.name');
     check(`the registry carries ${ORDER.length} board tiles`, onBoard.length === ORDER.length, String(onBoard.length));
     check('and their positions put them in Matt’s order', onBoard.join(' ') === ORDER.join(' '), onBoard.join(' '));
     check(
-      'the numbers step by 10, so an insert needs no renumber',
-      ORDER.every((id, i) => REGISTRY[id].position === (i + 1) * 10),
+      'the positions rise, so the order is unambiguous',
+      ORDER.every((id, i) => i === 0 || REGISTRY[id].position > REGISTRY[ORDER[i - 1]].position),
       ORDER.map((id) => REGISTRY[id]?.position).join(' ')
     );
+    check(
+      'every tile that has not been inserted between two others is still on a ten',
+      ORDER.filter((id) => !(id in INSERTS)).every((id, i) => REGISTRY[id].position === (i + 1) * 10),
+      ORDER.filter((id) => !(id in INSERTS)).map((id) => REGISTRY[id]?.position).join(' ')
+    );
+    for (const [id, pos] of Object.entries(INSERTS)) {
+      const i = ORDER.indexOf(id);
+      check(
+        `${id} slotted in at ${pos} and moved nobody`,
+        REGISTRY[id].position === pos &&
+          REGISTRY[ORDER[i - 1]].position === i * 10 &&
+          REGISTRY[ORDER[i + 1]].position === (i + 1) * 10,
+        `${REGISTRY[ORDER[i - 1]]?.position} ${REGISTRY[id]?.position} ${REGISTRY[ORDER[i + 1]]?.position}`
+      );
+    }
     check('ask is band ASK, off-board at 999', REGISTRY.ask.band === 'ASK' && REGISTRY.ask.position === 999);
     check('every board tile still declares a band', onBoard.every((id) => !!REGISTRY[id].band));
 

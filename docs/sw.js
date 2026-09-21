@@ -12,7 +12,7 @@
  * Bump CACHE_VERSION to evict the old shell on deploy.
  */
 
-const CACHE_VERSION = 'helm-v35';
+const CACHE_VERSION = 'helm-v36';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -36,6 +36,7 @@ const SHELL = [
   './tiles/bets_ledger.js',
   './tiles/bets_live.js',
   './tiles/calendar.js',
+  './tiles/captains_log.js',
   './tiles/cards.js',
   './tiles/dinner.js',
   './tiles/entertainment.js',

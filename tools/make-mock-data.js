@@ -478,6 +478,11 @@ function snapshot() {
         ],
       }),
 
+      // The morning brief. The payload is built by captainsLogPayload() below
+      // — see its header for what each item in the default set is there to
+      // exercise.
+      captains_log: tile('DAILY', captainsLogPayload()),
+
       dinner: tile('DAILY', {
         date: TODAY,
         meal: 'Sheet-pan sausage and peppers',
@@ -2006,6 +2011,269 @@ function ledgerThinSnapshot() {
   return snap;
 }
 
+/* ------------------------------------------------- captains_log — the brief
+ *
+ * The morning brief, invented end to end (hard rule 1). Every headline, body,
+ * name and dollar figure below is made up; the SHAPE is the framework's.
+ *
+ * The default payload sweeps what the face has to get right in one go: two
+ * note items with ordinals, five radar items so the "+ N more →" row has
+ * something to hide, a tagged item in each section so both act chips light, a
+ * resolved item that must be struck in the sheet and absent from the face and
+ * from `live_count`, and — the trap — a headline with " — " INSIDE it. The
+ * engine splits headline from body on the bold run, not on the dash, so an em
+ * dash is a legitimate character in a headline and the tile must render it
+ * whole rather than cutting the headline in half at the first one.
+ *
+ * `headline_exact: false` rides on one item and must be invisible: it renders
+ * identically to a `true`, which is exactly what the class scan in
+ * tools/test-tiles.js checks.
+ */
+
+const CLOG_NOTES = [
+  {
+    ordinal: 'One',
+    emoji: '⚓',
+    headline: 'The Fairhaven quote — the one you parked on Friday — needs a number today',
+    body:
+      'They asked twice and the second ask copied their operations lead, which is the tell that it has moved off the maybe pile. The machine list has not changed since the walkthrough, so the only open item is what you want the freight line to read. Nothing else in the inbox is waiting on you this morning.',
+    tag: 'act',
+    resolved: false,
+    headline_exact: true,
+  },
+  {
+    ordinal: 'Two',
+    emoji: '🧭',
+    headline: 'Three weeks of half-finished notes are all the same note',
+    body:
+      'The Tuesday captures keep circling the same decision and none of them ends in one. That is a signal about the decision, not about the note-taking: it has no owner and no date, so it regenerates every week. Give it either and it stops.',
+    tag: 'defer',
+    resolved: false,
+    headline_exact: false,
+  },
+];
+
+const CLOG_RADAR = [
+  {
+    ordinal: null,
+    emoji: '📞',
+    headline: 'Kestrel Supply expects a call back before noon — they left a voicemail Friday and an email Sunday night',
+    body: 'Second attempt. The voicemail names a delivery window, the email does not.',
+    tag: 'act',
+    resolved: false,
+    headline_exact: true,
+  },
+  {
+    ordinal: null,
+    emoji: '📦',
+    headline: 'The rebuilt pump ships Tuesday, which puts it on the dock the morning you are out',
+    body: 'Nobody has been told to expect it.',
+    tag: null,
+    resolved: false,
+    headline_exact: true,
+  },
+  {
+    ordinal: null,
+    emoji: '🗓️',
+    headline: 'Two calendar items overlap at 2:00 and one of them is the one with four people on it',
+    body: '',
+    tag: null,
+    resolved: false,
+    headline_exact: true,
+  },
+  {
+    ordinal: null,
+    emoji: '🧾',
+    headline: 'The Fairhaven invoice is thirty-one days out',
+    body: 'First month past terms. No note in the thread about why.',
+    tag: 'drop',
+    resolved: false,
+    headline_exact: true,
+  },
+  {
+    ordinal: null,
+    emoji: '🛠️',
+    headline: 'The shop light over bay two is still out',
+    body: 'Third morning it has come up. It is a ladder and a bulb.',
+    tag: null,
+    resolved: false,
+    headline_exact: true,
+  },
+  // Sorted last by the engine, excluded from live_count, and struck in the
+  // sheet. The face must not show it at all.
+  {
+    ordinal: null,
+    emoji: '✅',
+    headline: 'The Monroe paperwork went out Friday afternoon',
+    body: 'Closed itself. Confirmation is in the thread.',
+    tag: null,
+    resolved: true,
+    headline_exact: true,
+  },
+];
+
+function captainsLogPayload({
+  notes = CLOG_NOTES,
+  radar = CLOG_RADAR,
+  omitted = [],
+  isToday = true,
+  date = TODAY,
+  extraSections = [],
+} = {}) {
+  const sections = [];
+  if (notes.length) {
+    sections.push({
+      id: 'architects-note',
+      title: "Architect's Note",
+      kind: 'note',
+      emitted: true,
+      items: notes,
+    });
+  }
+  if (radar.length) {
+    sections.push({
+      id: 'on-your-radar',
+      title: 'On Your Radar Today',
+      kind: 'radar',
+      emitted: true,
+      items: radar,
+    });
+  }
+  for (const s of extraSections) sections.push(s);
+
+  // The engine's own count: live items only, resolved excluded. Computed once
+  // HERE, in the generator, so the tile has a number to print and never one
+  // to derive.
+  const live = sections.reduce(
+    (n, s) => n + s.items.filter((i) => i.resolved !== true).length,
+    0
+  );
+
+  const [, m, d] = date.split('-').map(Number);
+  const weekday = WEEKDAYS_FULL[weekdayIndex(date)];
+
+  return {
+    brief_date: date,
+    is_today: isToday,
+    generated_at_ct: '06:11 CDT',
+    framework_version: 'v2.9',
+    run_mode: 'scheduled',
+    weekday,
+    live_count: live,
+    sections,
+    omitted,
+    footer: `Generated by Captain's Log — ${weekday} ${m}/${d}, 06:02 fire · framework v2.9 · 75th consecutive morning`,
+    source: `02-Personal/Daily/${date.slice(0, 7)}/${date}-Brief.md`,
+  };
+}
+
+const WEEKDAYS_FULL = [
+  'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
+];
+
+/**
+ * The weekday of a 'YYYY-MM-DD' Central business date.
+ *
+ * Rule 7 even in the generator: the parts are split out and counted on a flat
+ * UTC calendar, which is arithmetic rather than a timezone conversion. A mock
+ * that named the wrong weekday would teach the tile — and its tests — a lie.
+ */
+function weekdayIndex(ymd) {
+  const [y, m, d] = String(ymd).split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+}
+
+/** Radar only: the framework skipped the Architect's Note this morning. */
+function captainsLogOmittedSnapshot() {
+  const snap = snapshot();
+  snap.tiles.captains_log = tile(
+    'DAILY',
+    captainsLogPayload({
+      notes: [],
+      omitted: [{ id: 'architects-note', title: "Architect's Note" }],
+    })
+  );
+  return snap;
+}
+
+/**
+ * Yesterday's brief, still on the board.
+ *
+ * Both signals at once, which is how the engine sends it: `status: stale` and
+ * `is_today: false`. Its items are written in today-tense, so the face owes
+ * its date and a tone — hard point 2, and the reason this fixture exists.
+ */
+function captainsLogStaleSnapshot() {
+  const snap = snapshot();
+  const yesterday = addDays(TODAY, -1);
+  snap.tiles.captains_log = {
+    band: 'DAILY',
+    updated_at: agoIso(26 * 60),
+    status: 'stale',
+    error: 'brief for 2026-09-21 not found — showing the last one that fired',
+    data: captainsLogPayload({ isToday: false, date: yesterday }),
+  };
+  return snap;
+}
+
+/** The 06:02 fire did not happen. Rule 9's generic card, and the error line. */
+function captainsLogErrorSnapshot() {
+  const snap = snapshot();
+  snap.tiles.captains_log = {
+    band: 'DAILY',
+    updated_at: agoIso(3 * 60),
+    status: 'error',
+    error: 'vault unreachable — no brief read this morning',
+    data: {},
+  };
+  return snap;
+}
+
+/**
+ * Hard point 8: the framework self-tunes weekly and WILL grow a section.
+ *
+ * An id and a kind this module has never heard of, carrying its own title.
+ * It must render under that title, with generic rows, and must not need a
+ * deploy the morning it appears.
+ */
+function captainsLogUnknownSnapshot() {
+  const snap = snapshot();
+  snap.tiles.captains_log = tile(
+    'DAILY',
+    captainsLogPayload({
+      extraSections: [
+        {
+          id: 'weather-eye',
+          title: 'Weather Eye',
+          kind: 'forecastish',
+          emitted: true,
+          items: [
+            {
+              ordinal: null,
+              emoji: '🌬️',
+              headline: 'A section the page has never seen, published by a framework that tuned itself overnight',
+              body: 'It renders under its own title, with generic rows, and nothing throws.',
+              tag: null,
+              resolved: false,
+              headline_exact: true,
+            },
+            {
+              ordinal: null,
+              emoji: null,
+              headline: 'And a second row, with no emoji at all',
+              body: '',
+              tag: 'defer',
+              resolved: false,
+              headline_exact: true,
+            },
+          ],
+        },
+      ],
+    })
+  );
+  return snap;
+}
+
 const MODES = [
   ['--events', () => mockEvents()],
   ['--pending', () => mockPending()],
@@ -2018,6 +2286,12 @@ const MODES = [
   ['--newsstand-stale', () => newsstandStaleSnapshot()],
   // The Ledger with almost nothing settled: every optional block absent.
   ['--ledger-thin', () => ledgerThinSnapshot()],
+  // The morning brief's other five faces. The default snapshot carries the
+  // normal day — two notes, five radar items, one resolved.
+  ['--clog-omitted', () => captainsLogOmittedSnapshot()],
+  ['--clog-stale', () => captainsLogStaleSnapshot()],
+  ['--clog-error', () => captainsLogErrorSnapshot()],
+  ['--clog-unknown', () => captainsLogUnknownSnapshot()],
   // The weather tile's four faces (W6). The default snapshot carries the
   // Watch; these are the other three.
   ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],

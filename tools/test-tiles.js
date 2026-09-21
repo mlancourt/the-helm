@@ -5000,6 +5000,392 @@ async function main() {
     check('on the DAILY band', /purser_due:\s*\{\s*band:\s*'DAILY'/.test(REGISTRY_SRC));
   }
 
+  // -- captains_log: the morning brief --------------------------------------
+  //
+  // The brief another system writes at 06:02. The tile renders it and does
+  // nothing else — no summarizing, no truncating of meaning, no counters of
+  // its own. Most of what follows is the negative space: what this tile must
+  // never do to Matt's morning.
+  //
+  // The rulings held here, and how:
+  //
+  //   rule 7        `brief_date` is a Central date STRING. A source scan for
+  //                 `new Date` / `Date.parse`, and a Date spy over a full
+  //                 face-and-sheet render that must record nothing at all.
+  //   stale         a brief that is not today's carries its own date and a
+  //                 tone. Both signals — `status: stale` and `is_today:
+  //                 false` — are tested on their own, because either one
+  //                 alone is the engine saying it.
+  //   counts        resolved items are out of `live_count`, so they are out
+  //                 of the face. `live_count` itself is PRINTED, never
+  //                 recomputed — checked with a payload whose count
+  //                 deliberately disagrees with its own arrays.
+  //   headline_exact  invisible. Two renders, one true and one false, and
+  //                 their class sets and their text must be identical.
+  //   no buttons    no element, no event, no fetch, anywhere.
+  console.log('\ncaptains_log — the morning brief');
+  const clog = mods.get('captains_log');
+  if (clog) {
+    const CLOG_SRC_RAW = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'captains_log.js'), 'utf8');
+    // Comments stripped for every scan below. This file's own header spells
+    // out what it must never do — "no urgency", "headline_exact" — and a scan
+    // that counted the documentation of a ruling as a breach of it would fail
+    // on the wrong thing.
+    const CLOG_SRC = CLOG_SRC_RAW
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    const CSS_ALL = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+    // The block is bounded by its own opening line and the next tile's, which
+    // is how the multi-line section headers in this stylesheet have to be
+    // read — they do not close on the line they open.
+    const cOpen = CSS_ALL.indexOf('captains_log — the morning brief');
+    const cNext = CSS_ALL.indexOf('purser_due — The Due Stack', cOpen + 1);
+    check('the stylesheet has a captains_log block', cOpen !== -1);
+    check('and a section after it to bound the scan', cNext > cOpen);
+    const CLOG_CSS =
+      cOpen !== -1 && cNext > cOpen ? CSS_ALL.slice(cOpen, cNext).replace(/\/\*[\s\S]*?\*\//g, '') : '';
+
+    const FULL = snapshot.tiles?.captains_log?.data;
+    const clogTile = (data, over = {}) => ({ band: 'DAILY', status: 'ok', error: null, data, ...over });
+
+    const drawClog = (data, over = {}) => {
+      const root = new El('div');
+      clog.render(root, clogTile(data, over), { id: 'captains_log', actions: {} });
+      return root;
+    };
+    /** Render, then tap the face open, the way a thumb does. */
+    function openClog(data, over = {}) {
+      const panel = fakePanel();
+      const root = new El('div');
+      clog.render(root, clogTile(data, over), { id: 'captains_log', actions: panel.actions });
+      const face = root.querySelector('.clog-face');
+      if (face && face.listeners.click) face.listeners.click[0]();
+      return { root, panel, face, sheet: panel.last ? panel.last.body : null, title: panel.last ? panel.last.title : '' };
+    }
+    const clogTexts = (node, cls) => node.querySelectorAll('.' + cls).map((n) => n.textContent);
+    /** Every class anywhere under a node — the class scan's raw material. */
+    function clogClasses(node) {
+      const out = [];
+      for (const n of node.querySelectorAll('div, span, p, h3')) out.push(n.className);
+      return out;
+    }
+
+    check('the mock snapshot carries a brief to render', !!FULL && Array.isArray(FULL.sections) && FULL.sections.length === 2);
+
+    // -- the face -------------------------------------------------------------
+    const board = drawClog(FULL || {});
+    check('the face renders', !!board.querySelector('.clog-face'));
+    check(
+      'the stamp is the weekday and date the engine named, plus the clock',
+      clogTexts(board, 'clog-stamp').join('') === 'Mon 9/21 · 06:11',
+      clogTexts(board, 'clog-stamp').join('')
+    );
+    check('two sections on the face', countOf(board, 'clog-sec') === 2, String(countOf(board, 'clog-sec')));
+    check(
+      'each under the title the engine gave it',
+      clogTexts(board, 'clog-sec-title').join(' | ') === "Architect's Note | On Your Radar Today",
+      clogTexts(board, 'clog-sec-title').join(' | ')
+    );
+
+    // -- the two kinds of row -------------------------------------------------
+    //
+    // A note is one of at most two and it is the point of the brief, so its
+    // headline is never clamped. A radar item is a glance: two lines, three
+    // rows, and the rest one tap away.
+    const secs = board.querySelectorAll('.clog-sec');
+    const noteSec = secs[0];
+    const radarSec = secs[1];
+    check('both notes are on the face', countOf(noteSec, 'clog-item') === 2, String(countOf(noteSec, 'clog-item')));
+    check('and neither headline is clamped', countOf(noteSec, 'clog-clamp') === 0);
+    check('the radar shows three rows and no more', countOf(radarSec, 'clog-item') === 3, String(countOf(radarSec, 'clog-item')));
+    check('every one of them clamped to two lines', countOf(radarSec, 'clog-clamp') === 3);
+    check('and the rest are behind one more-row', clogTexts(radarSec, 'clog-more').join('') === '+ 2 more →', clogTexts(radarSec, 'clog-more').join(''));
+    check('a note section needs no more-row', countOf(noteSec, 'clog-more') === 0);
+
+    // THE EM-DASH TRAP. The engine splits headline from body on the bold run,
+    // so a headline legitimately contains " — " and must arrive whole. A tile
+    // that split on the dash would land the second half in the body, or lose
+    // it; either way the first thing Matt reads would be wrong.
+    const dashed = clogTexts(noteSec, 'clog-headline')[0];
+    check(
+      'a headline containing an em dash renders whole',
+      dashed === 'The Fairhaven quote — the one you parked on Friday — needs a number today',
+      dashed
+    );
+    check('and the tile never splits a string on one', !/split\(\s*['"`][^'"`]*—/.test(CLOG_SRC));
+
+    // -- counts: live only, and live_count is the engine's --------------------
+    check(
+      'each section counts its LIVE items',
+      clogTexts(board, 'clog-count').join(' ') === '2 5',
+      clogTexts(board, 'clog-count').join(' ')
+    );
+    check(
+      'the resolved item is nowhere on the face',
+      !/Monroe paperwork/.test(textOf(board)),
+      textOf(board).slice(0, 80)
+    );
+    // The ruling, stated as a payload that lies: the tile prints the engine's
+    // number even when it disagrees with the arrays beside it, because a
+    // disagreement the page silently papered over is a disagreement nobody
+    // ever sees.
+    const doctored = openClog({ ...FULL, live_count: 99 });
+    check('the sheet prints live_count as published', /· 99 items/.test(textOf(doctored.sheet)), textOf(doctored.sheet).slice(0, 120));
+    check('and nothing in the module adds anything up', !/reduce\(/.test(CLOG_SRC));
+    doctored.panel.close();
+    const one = openClog({ ...FULL, live_count: 1 });
+    check('one item is an item, not items', /· 1 item(?!s)/.test(textOf(one.sheet)));
+    one.panel.close();
+
+    // The other half of the ruling, at the source: exactly ONE length is ever
+    // printed by this module, and it is a section's live items. The brief's
+    // own count has to come off `live_count` or the face and the sheet could
+    // disagree about the same brief.
+    const PRINTED_LENGTHS = [...CLOG_SRC.matchAll(/text:\s*String\(([^)]*\.length[^)]*)\)/g)].map((m) => m[1].trim());
+    check('exactly one length is ever printed', PRINTED_LENGTHS.length === 1, PRINTED_LENGTHS.join(' | '));
+    check("and it is the section's live items", PRINTED_LENGTHS[0] === 'live.length', PRINTED_LENGTHS[0]);
+    check('the brief-level count is read, never counted', /Number\(data\.live_count\)/.test(CLOG_SRC));
+
+    // -- headline_exact is invisible (hard point 4) ---------------------------
+    //
+    // It is an engine-internal quality flag. Matt must never be able to see
+    // it — not as a mark, not as a tone, not as a title attribute — so the two
+    // renders have to be indistinguishable in both class and text.
+    const exactItem = (exact) => ({
+      sections: [{
+        id: 'architects-note', title: "Architect's Note", kind: 'note', emitted: true,
+        items: [{ ordinal: 'One', emoji: '⚓', headline: 'Same headline either way', body: 'Same body.', tag: 'act', resolved: false, headline_exact: exact }],
+      }],
+      omitted: [], live_count: 1,
+    });
+    const exactT = openClog(exactItem(true));
+    const exactF = openClog(exactItem(false));
+    check(
+      'a headline the engine flagged inexact wears the same classes',
+      clogClasses(exactF.root).join('|') === clogClasses(exactT.root).join('|'),
+      clogClasses(exactF.root).join('|')
+    );
+    check('and reads identically', textOf(exactF.root) === textOf(exactT.root), textOf(exactF.root));
+    check('its sheet, too', textOf(exactF.sheet) === textOf(exactT.sheet));
+    check('and the same classes in the sheet', clogClasses(exactF.sheet).join('|') === clogClasses(exactT.sheet).join('|'));
+    check('the word never appears in the rendered page', !/headline_exact/.test(`${textOf(exactF.root)} ${textOf(exactF.sheet)}`));
+    check('because the module never reads it', !/headline_exact/.test(CLOG_SRC));
+    exactT.panel.close();
+    exactF.panel.close();
+
+    // -- the act chip ---------------------------------------------------------
+    const tagless = (tag) => ({
+      sections: [{
+        id: 'on-your-radar', title: 'On Your Radar Today', kind: 'radar', emitted: true,
+        items: [{ ordinal: null, emoji: '📞', headline: 'One row', body: '', tag, resolved: false }],
+      }],
+      omitted: [], live_count: 1,
+    });
+    check('both sections carry the chip', countOf(board, 'clog-act') === 2, String(countOf(board, 'clog-act')));
+    check('and it reads "act"', clogTexts(board, 'clog-act').every((t) => t === 'act'), clogTexts(board, 'clog-act').join(' '));
+    check('a tagged section raises one', countOf(drawClog(tagless('defer')), 'clog-act') === 1);
+    check('an untagged one raises none', countOf(drawClog(tagless(null)), 'clog-act') === 0);
+    check('and neither does an empty tag', countOf(drawClog(tagless('')), 'clog-act') === 0);
+
+    // -- the sheet ------------------------------------------------------------
+    const full = openClog(FULL || {});
+    check('tapping the face opens the sheet', !!full.sheet);
+    check(
+      'headed by the weekday and the date, verbatim',
+      full.title === "Captain's Log — Monday 2026-09-21",
+      full.title
+    );
+    check(
+      'with the run line under it',
+      /06:11 CDT · v2\.9 · scheduled · 7 items/.test(textOf(full.sheet)),
+      clogTexts(full.sheet, 'clog-meta').join('')
+    );
+    check('every item is in it, resolved ones included', countOf(full.sheet, 'clog-entry') === 8, String(countOf(full.sheet, 'clog-entry')));
+    check('bodies and all', countOf(full.sheet, 'clog-entry-body') === 7, String(countOf(full.sheet, 'clog-entry-body')));
+    check('an empty body draws no element', /Two calendar items overlap/.test(textOf(full.sheet)));
+    check('the tags ride as chips', countOf(full.sheet, 'clog-tag') === 4, String(countOf(full.sheet, 'clog-tag')));
+    check(
+      'and they are the tags themselves, not a verdict on them',
+      clogTexts(full.sheet, 'clog-tag').join(' ') === 'act defer act drop',
+      clogTexts(full.sheet, 'clog-tag').join(' ')
+    );
+    check('the ordinals are printed where the engine set them', clogTexts(full.sheet, 'clog-ord').join(' ') === 'One Two', clogTexts(full.sheet, 'clog-ord').join(' '));
+    check('the resolved row is struck', countOf(full.sheet, 'clog-entry-resolved') === 1);
+    check(
+      'and it is LAST, exactly where the payload put it',
+      full.sheet.querySelectorAll('.clog-entry').slice(-1)[0].classList.contains('clog-entry-resolved')
+    );
+    check('nothing in the module re-sorts anything', !/\.sort\(/.test(CLOG_SRC));
+
+    // The footer is the brief's own bookkeeping, not an item of it.
+    check('the footer is in the sheet', countOf(full.sheet, 'clog-footer-text') === 1);
+    check('under a rule of its own', /\.clog-footer\b[^{]*\{[^}]*border-top/.test(CLOG_CSS));
+    check('it is the last block in the sheet', full.sheet.childNodes.slice(-1)[0].classList.contains('clog-footer'));
+    check('the source path is the final line', countOf(full.sheet, 'clog-source') === 1 && /2026-09-21-Brief\.md/.test(textOf(full.sheet)));
+    check('and it is set in mono', /\.clog-source\b[^{]*\{[^}]*font-family:[^;]*monospace/.test(CLOG_CSS));
+    check('the footer never reaches the face', !/75th consecutive morning/.test(textOf(board)));
+    check('nor does the source path', !/02-Personal/.test(textOf(board)));
+    check('no search box, no filter, no collapse', full.sheet.querySelectorAll('input, select, button').length === 0);
+    full.panel.close();
+
+    // -- rule 7: the date is a string, and stays one --------------------------
+    check('no new Date anywhere in the module', !/new Date\(/.test(CLOG_SRC));
+    check('and no Date.parse', !/Date\.parse/.test(CLOG_SRC));
+    check('and no clock at all', !/Date\.now|performance\.now/.test(CLOG_SRC));
+    check('it never imports one either', !/from '\.\.\/lib\/fmt\.js'[\s\S]{0,0}/.test('') && /import \{ shortDate \} from '\.\.\/lib\/fmt\.js'/.test(CLOG_SRC));
+    check('the face label is built from weekday and the date string', /data\.weekday/.test(CLOG_SRC) && /shortDate\(/.test(CLOG_SRC));
+
+    // The scan above catches the spelling. This catches the behaviour, three
+    // layers down: lib/fmt.js included, nothing underneath this tile may
+    // construct or parse a Date while it renders.
+    const dateSeen = [];
+    const spyPanel = fakePanel();
+    (() => {
+      const Real = Date;
+      class Spy extends Real {
+        constructor(...a) { dateSeen.push(a.length ? a[0] : '<now>'); super(...a); }
+        static now() { dateSeen.push('<now>'); return Real.now(); }
+        static parse(v) { dateSeen.push(v); return Real.parse(v); }
+      }
+      global.Date = Spy;
+      try {
+        const r = new El('div');
+        clog.render(r, clogTile(FULL || {}), { id: 'captains_log', actions: spyPanel.actions });
+        const f = r.querySelector('.clog-face');
+        if (f && f.listeners.click) f.listeners.click[0]();
+      } finally { global.Date = Real; }
+    })();
+    check('no Date was constructed, parsed or read while the brief rendered', dateSeen.length === 0, JSON.stringify(dateSeen).slice(0, 200));
+    spyPanel.close();
+
+    // -- stale: a brief that is not today's (hard point 2) --------------------
+    //
+    // Its items are written in today-tense. Passing yesterday's off as this
+    // morning's is worse than an empty tile, so the face owes its date and a
+    // tone — and each of the engine's two signals is enough on its own.
+    const staleSnap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'clog-stale.json'), 'utf8'));
+    const staleTile = staleSnap.tiles.captains_log;
+    const staleRoot = new El('div');
+    clog.render(staleRoot, staleTile, { id: 'captains_log', actions: {} });
+    check('a stale brief marks its whole face', !!staleRoot.querySelector('.clog-face-stale'));
+    check('and says so in a line of its own', countOf(staleRoot, 'clog-not-today') === 1);
+    check(
+      'carrying the date it is actually showing',
+      textOf(staleRoot.querySelector('.clog-not-today')).includes(staleTile.data.brief_date),
+      textOf(staleRoot.querySelector('.clog-not-today'))
+    );
+    check('and the weekday with it', /Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday/.test(textOf(staleRoot.querySelector('.clog-not-today'))));
+    check('the items still render', countOf(staleRoot, 'clog-item') > 0);
+    check('the stale line is the one amber thing in the block', /\.clog-not-today\b[^{]*\{[^}]*var\(--warn\)/.test(CLOG_CSS));
+    // The engine's own reason line is the SHELL's to print, for every tile
+    // alike — so this module must not claim it.
+    check('the module does not take the error line off the shell', !/ownsErrorLine/.test(CLOG_SRC_RAW));
+
+    // Either signal alone. `status: stale` with no `is_today`, and
+    // `is_today: false` on a tile the engine still called ok.
+    const byStatus = drawClog({ ...FULL, is_today: undefined }, { status: 'stale' });
+    check('status alone is enough', countOf(byStatus, 'clog-not-today') === 1);
+    const byFlag = drawClog({ ...FULL, is_today: false });
+    check('and is_today alone is enough', countOf(byFlag, 'clog-not-today') === 1);
+    check("today's brief says nothing about it", countOf(board, 'clog-not-today') === 0 && countOf(board, 'clog-face-stale') === 0);
+
+    // -- omitted, and error ---------------------------------------------------
+    const omitSnap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'clog-omitted.json'), 'utf8'));
+    const omitOpen = openClog(omitSnap.tiles.captains_log.data);
+    check(
+      'an omitted section is one dim line',
+      clogTexts(omitOpen.root, 'clog-omitted').join('') === "Architect's Note — omitted today",
+      clogTexts(omitOpen.root, 'clog-omitted').join('')
+    );
+    check('and no empty section frame above it', countOf(omitOpen.root, 'clog-sec') === 1);
+    check('it is named in the sheet too', /omitted today/.test(textOf(omitOpen.sheet)));
+    omitOpen.panel.close();
+
+    const errSnap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'clog-error.json'), 'utf8'));
+    const errRoot = new El('div');
+    let errThrew = null;
+    try { clog.render(errRoot, errSnap.tiles.captains_log, { id: 'captains_log', actions: {} }); } catch (e) { errThrew = e; }
+    check('a morning the brief never fired renders', !errThrew, errThrew && errThrew.message);
+    check('and says so rather than standing blank', /No brief\./.test(textOf(errRoot)));
+    check('it invents no date for a brief that does not exist', !/\d{4}-\d{2}-\d{2}/.test(textOf(errRoot)), textOf(errRoot));
+
+    // -- hard point 8: the framework grows a section --------------------------
+    //
+    // It self-tunes weekly and WILL. An id and a kind this module has never
+    // heard of must render under its own title, with generic rows, on a board
+    // that gets no deploy that morning.
+    const unkSnap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'clog-unknown.json'), 'utf8'));
+    const unk = openClog(unkSnap.tiles.captains_log.data);
+    check('an unknown section renders', countOf(unk.root, 'clog-sec') === 3, String(countOf(unk.root, 'clog-sec')));
+    check('under its own title', clogTexts(unk.root, 'clog-sec-title').includes('Weather Eye'));
+    check('with its rows', /framework that tuned itself overnight/.test(textOf(unk.root)));
+    check('and its count', clogTexts(unk.root, 'clog-count').slice(-1)[0] === '2', clogTexts(unk.root, 'clog-count').join(' '));
+    check('it is in the sheet in full', /renders under its own title/.test(textOf(unk.sheet)));
+    check('a row with no emoji still lines up', /And a second row, with no emoji at all/.test(textOf(unk.root)));
+    check('nothing in the module switches on a section id', !/architects-note|on-your-radar/.test(CLOG_SRC), (CLOG_SRC.match(/.*radar.*/gi) || []).slice(0, 2).join(' / '));
+    unk.panel.close();
+
+    // A section shape the engine has never sent and never will — every field
+    // the wrong type at once. Rule 9 says it renders or it renders nothing;
+    // either way it does not throw.
+    let ragged = null;
+    let ragThrew = null;
+    try {
+      ragged = drawClog({
+        brief_date: 12345, weekday: null, generated_at_ct: null, live_count: 'seven',
+        sections: [
+          null,
+          'a string',
+          { id: 'x', title: null, kind: 'note', items: 'not an array' },
+          { id: 'y', title: 'Y', kind: 'radar', items: [null, 7, { headline: null, body: null, emoji: null, tag: 7 }] },
+        ],
+        omitted: [null, { title: null }],
+      });
+    } catch (e) { ragThrew = e; }
+    check('a ragged payload does not throw', !ragThrew, ragThrew && ragThrew.message);
+    check('and prints no "undefined", "NaN" or "[object Object]"', ragged && !/undefined|NaN|\[object Object\]/.test(textOf(ragged)), ragged && textOf(ragged));
+    check('nor "null" as a word', ragged && !/\bnull\b/.test(textOf(ragged)));
+
+    // -- hard point 5: no buttons, no writes ----------------------------------
+    const acted = openClog(FULL || {});
+    check('the face carries no button element', board.querySelectorAll('button').length === 0);
+    check('nor does the sheet', acted.sheet.querySelectorAll('button').length === 0);
+    check('the module builds none', !/el\(\s*'button'|createElement\(\s*'button'/.test(CLOG_SRC));
+    check('it posts no event', !/postEvent|fileEvent|api\/event|\bfetch\(/.test(CLOG_SRC));
+    check('and knows nothing about the event types', !/build_request|field_note|meal_verdict|mileage/.test(CLOG_SRC));
+    for (const word of ['act on it', 'mark done', 'dismiss', 'snooze', 'defer this', 'file as']) {
+      check(`no "${word}" affordance anywhere`, !new RegExp(word, 'i').test(`${textOf(board)} ${textOf(acted.sheet)}`));
+    }
+    check('the only interaction it registers is the sheet', (CLOG_SRC.match(/addEventListener/g) || []).length === 2, String((CLOG_SRC.match(/addEventListener/g) || []).length));
+    check('the more-row is not a second tap target of its own', !/clog-more[\s\S]{0,200}on:\s*\{/.test(CLOG_SRC));
+    acted.panel.close();
+
+    // -- hard point 6: no money the tile composes -----------------------------
+    //
+    // Dollar figures inside a `body` sentence are the brief's own words and
+    // stay. What must not exist is a chip, a total or a summary this tile
+    // built out of them.
+    check('the module formats no currency', !/\busd\(|toLocaleString\([^)]*currency/.test(CLOG_SRC));
+    check('and composes no dollar string', !/\$\{[^}]*\}\s*(?:usd|dollars)|['"`]\$['"`]/.test(CLOG_SRC));
+
+    // -- hard point 9: no urgency the tile invents ----------------------------
+    for (const phrase of ['still open', 'day 3', 'days old', 'overdue', 'urgent', 'needs attention', 'stale for']) {
+      check(`the module never says "${phrase}"`, !new RegExp(phrase.replace(/ /g, '[ -]?'), 'i').test(CLOG_SRC));
+    }
+    check('it imports no age helper', !/\bago\b|ageChip|dueLabel|airLabel|daysBetween/.test(CLOG_SRC));
+    check('and the stylesheet paints nothing by age', !/\.clog-(count|more|omitted|stamp)\b[^{]*\{[^}]*var\(--(warn|bad|good)\)/.test(CLOG_CSS));
+    check('the block is the captains_log block and nothing else', !/\.purser-|\.ledger-|\.news-|\.cards-/.test(CLOG_CSS));
+
+    // -- rule 10 --------------------------------------------------------------
+    check('nothing is ever set as markup', !/innerHTML|insertAdjacentHTML|outerHTML/.test(CLOG_SRC_RAW));
+    check('every string goes through el()', /import \{ el, empty \} from '\.\.\/lib\/dom\.js'/.test(CLOG_SRC));
+
+    // -- the registry ---------------------------------------------------------
+    check('the tile points at the module', /captains_log:[^}]*module:\s*'\.\/tiles\/captains_log\.js'/.test(REGISTRY_SRC));
+    check('at position 25, between reminders and dinner', /captains_log:\s*\{\s*band:\s*'DAILY',\s*position:\s*25/.test(REGISTRY_SRC));
+    check('on the DAILY band', /captains_log:\s*\{\s*band:\s*'DAILY'/.test(REGISTRY_SRC));
+  }
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));
