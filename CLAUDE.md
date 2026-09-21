@@ -2,7 +2,7 @@
 tags: [the-helm, claude-md, site-repo, build-brief]
 created: 2026-09-17
 version: v1.0
-status: READY — copy to `~/Projects/the-helm/CLAUDE.md` at Phase 1 kickoff; the repo copy is canonical after that, this is the vault mirror
+status: CANONICAL — this repo copy is the real CLAUDE.md and wins every conflict. A read-only mirror lives in the vault at 06-AI-Stack/The-Helm/Site-Repo-CLAUDE.md; nothing syncs the two automatically. If a Code prompt claims this file is current, do not believe it — build from the contract in the prompt and rewrite the row here to match.
 related: ["[[_The-Helm-Index]]", "[[Schema-v1]]", "[[Tile-Registry]]", "[[The-Helm-Kickoff-Brief]]"]
 ---
 
