@@ -390,14 +390,14 @@ console.log('\nsubhead never contains me.name');
     const ORDER = [
       'calendar', 'reminders', 'captains_log', 'dinner', 'weather', 'newsstand',
       'entertainment', 'local_events', 'today_games', 'bets_live', 'bets_ledger',
-      'cards', 'purser_due', 'wss_tape', 'ship_status',
+      'cards', 'purser_due', 'wss_tape', 'watch_bill', 'ship_status',
     ];
 
     // The tens, and the first tile to cash them in. `captains_log` was slotted
     // between reminders (20) and dinner (30) on 2026-09-21 and NO other number
     // moved — which is the whole reason the grid was renumbered in tens rather
     // than one-per-tile. Asserted as what it is: an insert, not a renumber.
-    const INSERTS = { captains_log: 25 };
+    const INSERTS = { captains_log: 25, watch_bill: 135 };
 
     // -- the registry ------------------------------------------------------
     const onBoard = Object.entries(REGISTRY)
@@ -421,9 +421,14 @@ console.log('\nsubhead never contains me.name');
       const i = ORDER.indexOf(id);
       check(
         `${id} slotted in at ${pos} and moved nobody`,
+        // Neighbours still on their tens and the insert strictly between
+        // them. Index arithmetic would only hold for the first insert — the
+        // second (watch_bill, 2026-09-24) shifts every index after the first.
         REGISTRY[id].position === pos &&
-          REGISTRY[ORDER[i - 1]].position === i * 10 &&
-          REGISTRY[ORDER[i + 1]].position === (i + 1) * 10,
+          REGISTRY[ORDER[i - 1]].position % 10 === 0 &&
+          REGISTRY[ORDER[i + 1]].position % 10 === 0 &&
+          REGISTRY[ORDER[i - 1]].position < pos &&
+          pos < REGISTRY[ORDER[i + 1]].position,
         `${REGISTRY[ORDER[i - 1]]?.position} ${REGISTRY[id]?.position} ${REGISTRY[ORDER[i + 1]]?.position}`
       );
     }

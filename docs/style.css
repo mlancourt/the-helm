@@ -2281,6 +2281,72 @@ body {
 .tape-detail .tape-row { border-bottom: 1px solid var(--line-soft); }
 .tape-detail .tape-summary { -webkit-line-clamp: none; line-clamp: none; display: block; }
 
+/* ------------------------------------------------------------ watch_bill ("Watch Bill")
+
+   The mini's recurring tasks, one two-line row each: name and {when} on top,
+   the doc it produced and its folder underneath. One tone only — a missed
+   slot is bad. A fired task is NOT green: the time is the confirmation, and a
+   column of green checks would be noise. Display only (WB10). */
+
+.wb { display: flex; flex-direction: column; }
+.wb-counts { margin: 0 0 6px; font-size: 11.5px; color: var(--text-faint); }
+
+.wb-row { padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
+.wb .wb-row:last-child { border-bottom: 0; }
+
+.wb-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.wb-name { color: var(--text); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wb-when { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
+.wb-bad { color: var(--bad); font-weight: 600; }
+
+.wb-sub {
+  margin-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--text-faint);
+  overflow-wrap: anywhere;
+}
+.wb-doc { color: var(--text-dim); }
+a.wb-doc { color: var(--info); text-decoration: none; }
+a.wb-doc:hover { text-decoration: underline; }
+.wb-nodoc { color: var(--text-faint); font-style: italic; }
+.wb-folder {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  color: var(--text-faint);
+}
+.wb-sep { color: var(--text-faint); }
+
+/* Same control as Crew Tape's: it opens the same sheet. */
+.wb-more {
+  display: block;
+  width: 100%;
+  margin-top: 9px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #1a1f26;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.wb-more:hover { color: var(--text); border-color: #2f3d4c; }
+.wb-more:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.wb-note { margin-top: 12px; }
+/* The sheet scrolls; keep the right-aligned times clear of its scrollbar. */
+.wb-detail { padding-right: 8px; }
+
 /* ------------------------------------------------------------------- cards
 
    The trading-card desk. A two-button menu on the board, exactly like

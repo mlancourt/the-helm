@@ -797,6 +797,8 @@ function snapshot() {
         attribution: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
       }),
 
+      watch_bill: tile('DAILY', watchBillPayload()),
+
       ship_status: tile('DAILY', {
         captains_log_today: true,
         captains_log_file: 'mock-log-2026-01-01.md',
@@ -2335,6 +2337,79 @@ function captainsLogMenusSnapshot() {
     })
   );
   return snap;
+}
+
+/**
+ * Watch Bill. Ten invented tasks on an invented host, covering every state
+ * the engine emits: one missed (the only red on the tile), one inside the
+ * grace window, four fired — one of which produced no new doc — three not yet
+ * due and one paused. Already sorted, as the engine sorts it; the page must
+ * render it in this order. The vault name and every path are made up, and the
+ * obsidian:// links are built HERE, standing in for the engine — the page
+ * never builds one.
+ */
+function watchBillPayload() {
+  const vault = 'Mock-Vault';
+  const doc = (rel, name, modified) => ({
+    name,
+    rel_path: rel,
+    modified_at: modified,
+    obsidian_url: `obsidian://open?vault=${vault}&file=${encodeURIComponent(rel.replace(/\.md$/, ''))}`,
+  });
+  const task = (id, label, emoji, state, extra = {}) => ({
+    id, label, emoji, state,
+    last_run_at: null, last_scheduled_for: null, missed_slot: null, next_run_at: null,
+    folder: null, doc: null, configured: true,
+    ...extra,
+  });
+  return {
+    title: 'Watch Bill',
+    host: 'mock-mini.local',
+    scheduler_read_at: agoIso(12),
+    counts: { missed: 1, due: 1, fired: 4, not_yet: 3, paused: 1 },
+    tasks: [
+      task('mock-inbox-digest', 'Inbox Digest', '📥', 'missed', {
+        last_run_at: agoIso(60 * 26), last_scheduled_for: agoIso(60 * 3), missed_slot: agoIso(60 * 3),
+        next_run_at: aheadIso(60 * 21), folder: 'Mock/Inbox/Digests',
+      }),
+      task('mock-fleet-sweep', 'Fleet Sweep', '🧹', 'due', {
+        last_run_at: agoIso(60 * 24), last_scheduled_for: agoIso(20), next_run_at: aheadIso(60 * 24),
+        folder: 'Mock/Fleet/Sweeps',
+      }),
+      task('mock-blog-writer', 'Blog Writer', '✍️', 'fired', {
+        last_run_at: agoIso(95), last_scheduled_for: agoIso(100), next_run_at: aheadIso(60 * 24 * 13),
+        folder: 'Mock/Marketing/Blog/Reports',
+        doc: doc(`Mock/Marketing/Blog/Reports/${TODAY}-invented-floor-care-myths.md`, `${TODAY}-invented-floor-care-myths`, agoIso(90)),
+      }),
+      task('mock-morning-brief', 'Morning Brief', '⚓', 'fired', {
+        last_run_at: agoIso(60 * 5), last_scheduled_for: agoIso(60 * 5 + 2), next_run_at: aheadIso(60 * 19),
+        folder: 'Mock/Brief',
+        doc: doc(`Mock/Brief/${TODAY}.md`, TODAY, agoIso(60 * 5 - 3)),
+      }),
+      task('mock-price-watch', 'Price Watch', '🏷️', 'fired', {
+        last_run_at: agoIso(60 * 7), last_scheduled_for: agoIso(60 * 7), next_run_at: aheadIso(60 * 17),
+        folder: 'Mock/Cards/Watch',
+      }),
+      task('mock-ledger-close', 'Ledger Close', '📒', 'fired', {
+        last_run_at: agoIso(60 * 9), last_scheduled_for: agoIso(60 * 9), next_run_at: aheadIso(60 * 15),
+        folder: 'Mock/Bets/Ledger',
+        doc: doc(`Mock/Bets/Ledger/${TODAY}-close.md`, `${TODAY}-close`, agoIso(60 * 9 - 1)),
+      }),
+      task('mock-weekly-review', 'Weekly Review', '🗓️', 'not_yet', {
+        last_run_at: agoIso(60 * 24 * 5), next_run_at: aheadIso(60 * 24 * 2), folder: 'Mock/Reviews/Weekly',
+      }),
+      task('mock-meal-plan', 'Meal Plan', '🍽️', 'not_yet', {
+        last_run_at: agoIso(60 * 24 * 6), next_run_at: aheadIso(60 * 30), folder: 'Mock/Home/Meals',
+      }),
+      task('mock-drift-audit', 'Drift Audit', '🧭', 'not_yet', {
+        last_run_at: null, next_run_at: aheadIso(60 * 24 * 4), folder: null,
+      }),
+      task('mock-seo-crawl', 'SEO Crawl', '🕸️', 'paused', {
+        last_run_at: agoIso(60 * 24 * 20), folder: 'Mock/Marketing/SEO',
+      }),
+    ],
+    note: 'recurring tasks on this machine’s scheduler only — invented for the mock',
+  };
 }
 
 const MODES = [

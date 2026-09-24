@@ -2548,6 +2548,149 @@ async function main() {
     check('and never parses a date string it was handed', !/new Date/.test(TAPE_SRC));
   }
 
+  // -- watch_bill: the Watch Bill -------------------------------------------
+  //
+  // The mini's recurring tasks, one row each, in the engine's order. Display
+  // only (WB10): the doc link is the only thing on a row that does anything,
+  // its href is the engine's string untouched, and the only tone on the tile
+  // is `bad` for a missed slot — a fired task is never green.
+  console.log('\nwatch_bill — the Watch Bill');
+  const wb = mods.get('watch_bill');
+  if (wb) {
+    const fmtMod = await import('../docs/lib/fmt.js');
+    const at = (iso) => `${fmtMod.ctWeekday(iso)} ${fmtMod.ctTime(iso)}`;
+    const wbTile = (data, status = 'ok', error = null) => ({ band: 'DAILY', status, error, data });
+    const wbRows = (node) => node.querySelectorAll('.wb-row');
+    const wbName = (r) => r.querySelector('.wb-name').textContent;
+    const wbWhen = (r) => (r.querySelector('.wb-when') || { textContent: '' }).textContent;
+    const wbMore = (node) => node.querySelector('.wb-more');
+    const wbTap = (btn) => btn.listeners.click[0]({ stopPropagation() {} });
+    const anchors = (node) => node.querySelectorAll('a');
+    const classesIn = (node) => [node, ...all(node)].flatMap((n) => [...(n.classList ? n.classList.set : [])]);
+
+    // Invented tasks on an invented host (rule 1).
+    const URL0 = 'obsidian://open?vault=Mock-Vault&file=Mock%2FBlog%2F2026-09-24-invented-post';
+    const task = (id, label, state, extra = {}) => ({
+      id, label, emoji: '🧪', state,
+      last_run_at: null, last_scheduled_for: null, missed_slot: null, next_run_at: null,
+      folder: `Mock/${label}/Reports`, doc: null, configured: true, ...extra,
+    });
+    const T = [
+      task('t-missed', 'Missed One', 'missed', { missed_slot: '2026-09-24T14:00:00Z' }),
+      task('t-due', 'Due One', 'due', { last_scheduled_for: '2026-09-24T20:00:00Z' }),
+      task('t-fired-doc', 'Fired Doc', 'fired', {
+        last_run_at: '2026-09-24T09:04:47Z',
+        doc: { name: '2026-09-24-invented-post', rel_path: 'Mock/Blog/2026-09-24-invented-post.md', modified_at: '2026-09-24T09:05:00Z', obsidian_url: URL0 },
+      }),
+      task('t-fired-nodoc', 'Fired Bare', 'fired', { last_run_at: '2026-09-24T11:30:00Z' }),
+      task('t-fired-3', 'Fired Three', 'fired', { last_run_at: '2026-09-23T12:00:00Z' }),
+      task('t-fired-4', 'Fired Four', 'fired', { last_run_at: '2026-09-23T13:00:00Z' }),
+      task('t-next-1', 'Next One', 'not_yet', { next_run_at: '2026-09-26T13:15:00Z' }),
+      task('t-next-2', 'Next Two', 'not_yet', { next_run_at: '2026-09-27T13:15:00Z' }),
+      task('t-next-3', 'Next Three', 'not_yet', { next_run_at: '2026-09-28T13:15:00Z', folder: null }),
+      task('t-paused', 'Paused One', 'paused'),
+    ];
+    const NOTE = 'recurring tasks on this machine’s scheduler only — invented';
+    const bill = (tasks = T, counts = { missed: 1, due: 1, fired: 4, not_yet: 3, paused: 1 }) => ({
+      title: 'Watch Bill', host: 'mock-mini.local', scheduler_read_at: '2026-09-24T20:30:00Z', counts, tasks, note: NOTE,
+    });
+
+    const panel = fakePanel();
+    const board = new El('div');
+    wb.render(board, wbTile(bill()), { id: 'watch_bill', actions: panel.actions });
+
+    // -- the five-row budget -------------------------------------------------
+    check('five rows reach the board', wbRows(board).length === 5, String(wbRows(board).length));
+    check('the rest is behind one "+5 more" button', wbMore(board) && wbMore(board).textContent === '+5 more');
+    check('the note is not on the face', !textOf(board).includes(NOTE));
+    wbTap(wbMore(board));
+    const sheet = panel.last && panel.last.body;
+    check('the button opens the shared sheet', !!sheet && panel.last.title === 'Watch Bill');
+    check('the sheet carries all ten rows', sheet && wbRows(sheet).length === 10, sheet && String(wbRows(sheet).length));
+    check('and the note once, as its footer', sheet && sheet.querySelectorAll('.wb-note').length === 1 && textOf(sheet).split(NOTE).length === 2);
+    check('in payload order', sheet && wbRows(sheet).map(wbName).join('|') === T.map((t) => `🧪 ${t.label}`).join('|'));
+
+    // -- the header ----------------------------------------------------------
+    check('the header leads with the missed count', board.querySelector('.wb-counts').textContent === '🔴 1 missed · 1 due · 4 fired · 3 not yet · 1 paused', board.querySelector('.wb-counts').textContent);
+    const quiet = new El('div');
+    wb.render(quiet, wbTile(bill(T.slice(2, 4), { missed: 0, due: 0, fired: 5, not_yet: 5, paused: 0 })), { id: 'watch_bill', actions: {} });
+    check('zero counts are dropped: "5 fired · 5 not yet"', quiet.querySelector('.wb-counts').textContent === '5 fired · 5 not yet', quiet.querySelector('.wb-counts').textContent);
+    check('and five rows or fewer need no button', !wbMore(quiet));
+
+    // -- no client re-sort ---------------------------------------------------
+    const SHUF = [7, 2, 9, 0, 5, 3, 8, 1, 6, 4].map((i) => T[i]);
+    const shufPanel = fakePanel();
+    const shuf = new El('div');
+    wb.render(shuf, wbTile(bill(SHUF)), { id: 'watch_bill', actions: shufPanel.actions });
+    wbTap(wbMore(shuf));
+    check('a shuffled payload renders shuffled on the face', wbRows(shuf).map(wbName).join('|') === SHUF.slice(0, 5).map((t) => `🧪 ${t.label}`).join('|'), wbRows(shuf).map(wbName).join('|'));
+    check('and in the sheet', wbRows(shufPanel.last.body).map(wbName).join('|') === SHUF.map((t) => `🧪 ${t.label}`).join('|'));
+
+    // -- per state -----------------------------------------------------------
+    const rows = wbRows(sheet);
+    const [rMissed, rDue, rDoc, rBare] = rows;
+    check('fired reads "{Wkd} {h:mm AM}" of last_run_at, Central', wbWhen(rDoc) === at('2026-09-24T09:04:47Z') && /^Thu 4:04\sAM$/.test(wbWhen(rDoc)), wbWhen(rDoc));
+    check('due reads "running…" with no time', wbWhen(rDue) === 'running…');
+    check('missed reads "🔴 missed {Wkd} {h:mm}" of missed_slot', wbWhen(rMissed) === `🔴 missed ${at('2026-09-24T14:00:00Z')}`, wbWhen(rMissed));
+    check('and wears the bad tone', rMissed.querySelector('.wb-when').classList.contains('wb-bad'));
+    check('no other row wears it', rows.slice(1).every((r) => countOf(r, 'wb-bad') === 0));
+    check('not_yet reads "next …" of next_run_at', wbWhen(rows[6]) === `next ${at('2026-09-26T13:15:00Z')}`, wbWhen(rows[6]));
+    check('paused reads "paused"', wbWhen(rows[9]) === 'paused');
+
+    // -- line 2 --------------------------------------------------------------
+    const a = anchors(rDoc);
+    check('a fired row with a doc has exactly one anchor', a.length === 1);
+    check('whose href is obsidian_url exactly', a[0].getAttribute('href') === URL0, a[0].getAttribute('href'));
+    check('whose text is doc.name verbatim', a[0].textContent === '2026-09-24-invented-post');
+    check('whose title is doc.rel_path', a[0].getAttribute('title') === 'Mock/Blog/2026-09-24-invented-post.md');
+    check('with no target (iOS hands the scheme to the app)', a[0].getAttribute('target') === undefined);
+    check('and the folder follows, muted', rDoc.querySelector('.wb-folder').textContent === 'Mock/Fired Doc/Reports' && / · Mock\/Fired Doc\/Reports$/.test(rDoc.querySelector('.wb-sub').textContent));
+    check('a fired row with no doc says "no new doc"', rBare.querySelector('.wb-nodoc').textContent === 'no new doc');
+    check('then the folder', rBare.querySelector('.wb-sub').textContent === 'no new doc · Mock/Fired Bare/Reports', rBare.querySelector('.wb-sub').textContent);
+    check('and has zero anchors', anchors(rBare).length === 0);
+    check('a non-fired row with no doc shows its folder alone', rows[6].querySelector('.wb-sub').textContent === 'Mock/Next One/Reports');
+    check('and no "no new doc"', countOf(rows[6], 'wb-nodoc') === 0 && countOf(rMissed, 'wb-nodoc') === 0);
+    check('no folder and no doc is no second line at all', countOf(rows[8], 'wb-sub') === 0);
+    check('the only anchor anywhere is the doc link', anchors(sheet).length === 1);
+
+    const hostile = new El('div');
+    wb.render(hostile, wbTile(bill([task('t-x', 'Bad Link', 'fired', { last_run_at: '2026-09-24T09:04:47Z', doc: { name: 'x', rel_path: 'x.md', obsidian_url: 'javascript:alert(1)' } })])), { id: 'watch_bill', actions: {} });
+    check('a doc URL that is not obsidian:// renders as inert text', anchors(hostile).length === 0 && hostile.querySelector('.wb-doc').textContent === 'x');
+
+    // -- WB10: no green, no controls, no age ---------------------------------
+    const allClasses = [...classesIn(board), ...classesIn(sheet)];
+    check('no element carries a green/good tone class', !allClasses.some((c) => /good|green|\bok\b|pill-ok|success/.test(c)), allClasses.filter((c) => /good|green|ok/.test(c)).join());
+    check('no buttons on a row', rows.every((r) => r.querySelectorAll('button').length === 0));
+    check('no age copy', !/ago\b|days since|stale|overdue|run now|retry/i.test(`${textOf(board)} ${textOf(sheet)}`));
+
+    const WB_SRC_RAW = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'watch_bill.js'), 'utf8');
+    const WB_SRC = WB_SRC_RAW.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    check('the module never calls new Date(', !/new Date\s*\(/.test(WB_SRC));
+    check('nor Date.parse', !/Date\.parse/.test(WB_SRC));
+    check('and builds no obsidian:// URL', !/obsidian:\/\//.test(WB_SRC) && !/['"`]obsidian:/.test(WB_SRC));
+    check('it never sorts', !/\.sort\(|\.reverse\(/.test(WB_SRC));
+    check('it names no good tone', !/good|green/.test(WB_SRC));
+    check('it sets no target on the link', !/target/.test(WB_SRC));
+    check('nothing is ever set as markup', !/innerHTML|insertAdjacentHTML|outerHTML/.test(WB_SRC_RAW));
+    const WB_CSS = (fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8').match(/watch_bill \("Watch Bill"\)[\s\S]*?\.wb-note[^}]*\}/) || [''])[0];
+    check('the stylesheet block never reaches for --good', WB_CSS.length > 0 && !/var\(--good\)/.test(WB_CSS));
+
+    // -- rule 9 --------------------------------------------------------------
+    const bad = new El('div');
+    let badThrew = null;
+    try { wb.render(bad, wbTile({ host: 'mock-mini.local' }, 'error', 'scheduler file not found on this machine'), { id: 'watch_bill', actions: {} }); } catch (e) { badThrew = e; }
+    check('an error tile does not throw', !badThrew, badThrew && badThrew.message);
+    check('and falls back to the generic card', countOf(bad, 'generic') === 1 && wbRows(bad).length === 0);
+
+    const inert = new El('div');
+    let inertThrew = null;
+    try { wb.render(inert, wbTile(bill()), { id: 'watch_bill', actions: {} }); wbTap(wbMore(inert)); } catch (e) { inertThrew = e; }
+    check('a tap with no panel action never reaches the page', !inertThrew, inertThrew && inertThrew.message);
+
+    // -- the registry --------------------------------------------------------
+    check('at position 135, between Crew Tape and Ship Status', /watch_bill:\s*\{\s*band:\s*'DAILY',\s*position:\s*135,\s*module:\s*'\.\/tiles\/watch_bill\.js',\s*title:\s*'Watch Bill'/.test(REGISTRY_SRC));
+  }
+
   // -- bets_live: the marquee board -----------------------------------------
   //
   // v1.6.0's two load-bearing claims are that the header is the sum of the
@@ -5077,7 +5220,10 @@ async function main() {
     check('the face renders', !!board.querySelector('.clog-face'));
     check(
       'the stamp is the weekday and date the engine named, plus the clock',
-      clogTexts(board, 'clog-stamp').join('') === 'Mon 9/21 · 06:11',
+      // Derived from the payload, not frozen: the mock is regenerated with
+      // whatever today is, and a literal date here broke the suite the first
+      // morning after it was written.
+      clogTexts(board, 'clog-stamp').join('') === `${String(FULL && FULL.weekday).slice(0, 3)} ${Number(String(FULL && FULL.brief_date).slice(5, 7))}/${Number(String(FULL && FULL.brief_date).slice(8, 10))} · 06:11`,
       clogTexts(board, 'clog-stamp').join('')
     );
     check('two sections on the face', countOf(board, 'clog-sec') === 2, String(countOf(board, 'clog-sec')));
@@ -5252,7 +5398,7 @@ async function main() {
     check('tapping the face opens the sheet', !!full.sheet);
     check(
       'headed by the weekday and the date, verbatim',
-      full.title === "Captain's Log — Monday 2026-09-21",
+      full.title === `Captain's Log — ${FULL && FULL.weekday} ${FULL && FULL.brief_date}`,
       full.title
     );
     check(
@@ -5282,7 +5428,7 @@ async function main() {
     check('the footer is in the sheet', countOf(full.sheet, 'clog-footer-text') === 1);
     check('under a rule of its own', /\.clog-footer\b[^{]*\{[^}]*border-top/.test(CLOG_CSS));
     check('it is the last block in the sheet', full.sheet.childNodes.slice(-1)[0].classList.contains('clog-footer'));
-    check('the source path is the final line', countOf(full.sheet, 'clog-source') === 1 && /2026-09-21-Brief\.md/.test(textOf(full.sheet)));
+    check('the source path is the final line', countOf(full.sheet, 'clog-source') === 1 && textOf(full.sheet).includes(`${FULL && FULL.brief_date}-Brief.md`));
     check('and it is set in mono', /\.clog-source\b[^{]*\{[^}]*font-family:[^;]*monospace/.test(CLOG_CSS));
     check('the footer never reaches the face', !/75th consecutive morning/.test(textOf(board)));
     check('nor does the source path', !/02-Personal/.test(textOf(board)));
