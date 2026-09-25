@@ -1,19 +1,19 @@
 {
   "_comment": "INVENTED ESPN SLATE for ?mock=1. Real league slugs and response shapes; every team, score, channel and event id is fake. Regenerate with: node tools/make-mock-data.js --espn > docs/mock/espn-today.json",
-  "date_ct": "2026-09-24",
-  "date_next_ct": "2026-09-25",
+  "date_ct": "2026-09-25",
+  "date_next_ct": "2026-09-26",
   "leagues": {
     "baseball/mlb": [
       {
         "id": "401998201",
         "uid": "s:1~l:1~e:401998201",
-        "date": "2026-09-25T00:10:00.000Z",
+        "date": "2026-09-26T00:10:00.000Z",
         "name": "Lakeshore Loons at Cream City Nine",
         "shortName": "LKL @ CCN",
         "competitions": [
           {
             "id": "401998201",
-            "date": "2026-09-25T00:10:00.000Z",
+            "date": "2026-09-26T00:10:00.000Z",
             "venue": {
               "fullName": "Cream City Yard",
               "address": {
@@ -184,13 +184,13 @@
       {
         "id": "401998202",
         "uid": "s:1~l:1~e:401998202",
-        "date": "2026-09-24T18:10:00.000Z",
+        "date": "2026-09-25T18:10:00.000Z",
         "name": "Harbor Herons at Foundry Ironsides",
         "shortName": "HRN @ FIS",
         "competitions": [
           {
             "id": "401998202",
-            "date": "2026-09-24T18:10:00.000Z",
+            "date": "2026-09-25T18:10:00.000Z",
             "venue": {
               "fullName": "Foundry Field",
               "address": {
@@ -383,13 +383,13 @@
       {
         "id": "401998203",
         "uid": "s:1~l:1~e:401998203",
-        "date": "2026-09-25T02:40:00.000Z",
+        "date": "2026-09-26T02:40:00.000Z",
         "name": "Granite City Foremen at Cedar Valley Drays",
         "shortName": "GCF @ CVD",
         "competitions": [
           {
             "id": "401998203",
-            "date": "2026-09-25T02:40:00.000Z",
+            "date": "2026-09-26T02:40:00.000Z",
             "venue": {
               "fullName": "Drayworks Park",
               "address": {
@@ -488,13 +488,13 @@
       {
         "id": "742118",
         "uid": "s:1~l:1~e:742118",
-        "date": "2026-09-25T00:30:00.000Z",
+        "date": "2026-09-26T00:30:00.000Z",
         "name": "Cross Harbor SC at Riverbend FC",
         "shortName": "CHS @ RVB",
         "competitions": [
           {
             "id": "742118",
-            "date": "2026-09-25T00:30:00.000Z",
+            "date": "2026-09-26T00:30:00.000Z",
             "venue": {
               "fullName": "Riverbend Grounds",
               "address": {
@@ -574,13 +574,13 @@
       {
         "id": "742119",
         "uid": "s:1~l:1~e:742119",
-        "date": "2026-09-25T01:00:00.000Z",
+        "date": "2026-09-26T01:00:00.000Z",
         "name": "North Pike Sentinels at Slack Water United",
         "shortName": "NPS @ SWU",
         "competitions": [
           {
             "id": "742119",
-            "date": "2026-09-25T01:00:00.000Z",
+            "date": "2026-09-26T01:00:00.000Z",
             "venue": {
               "fullName": "Pike Street Stadium",
               "address": {
@@ -644,13 +644,13 @@
       {
         "id": "731447",
         "uid": "s:1~l:1~e:731447",
-        "date": "2026-09-24T19:00:00.000Z",
+        "date": "2026-09-25T19:00:00.000Z",
         "name": "Almendro CF at Val de Mar",
         "shortName": "ALM @ VDM",
         "competitions": [
           {
             "id": "731447",
-            "date": "2026-09-24T19:00:00.000Z",
+            "date": "2026-09-25T19:00:00.000Z",
             "venue": {
               "fullName": "Estadio Inventado",
               "address": {
@@ -744,13 +744,13 @@
       {
         "id": "731448",
         "uid": "s:1~l:1~e:731448",
-        "date": "2026-09-24T14:00:00.000Z",
+        "date": "2026-09-25T14:00:00.000Z",
         "name": "Puerto Faro at Montaraz",
         "shortName": "PTF @ MNT",
         "competitions": [
           {
             "id": "731448",
-            "date": "2026-09-24T14:00:00.000Z",
+            "date": "2026-09-25T14:00:00.000Z",
             "venue": {
               "fullName": "Campo del Faro",
               "address": {
@@ -853,13 +853,13 @@
       {
         "id": "401998211",
         "uid": "s:1~l:1~e:401998211",
-        "date": "2026-09-25T23:40:00.000Z",
+        "date": "2026-09-26T23:40:00.000Z",
         "name": "Granite City Foremen at Cream City Nine",
         "shortName": "GCF @ CCN",
         "competitions": [
           {
             "id": "401998211",
-            "date": "2026-09-25T23:40:00.000Z",
+            "date": "2026-09-26T23:40:00.000Z",
             "venue": {
               "fullName": "Cream City Yard",
               "address": {
@@ -956,13 +956,13 @@
       {
         "id": "401998212",
         "uid": "s:1~l:1~e:401998212",
-        "date": "2026-09-25T18:10:00.000Z",
+        "date": "2026-09-26T18:10:00.000Z",
         "name": "Lakeshore Loons at Foundry Ironsides",
         "shortName": "LKL @ FIS",
         "competitions": [
           {
             "id": "401998212",
-            "date": "2026-09-25T18:10:00.000Z",
+            "date": "2026-09-26T18:10:00.000Z",
             "venue": {
               "fullName": "Foundry Field",
               "address": {
@@ -1042,13 +1042,13 @@
       {
         "id": "401998213",
         "uid": "s:1~l:1~e:401998213",
-        "date": "2026-09-27T00:05:00.000Z",
+        "date": "2026-09-28T00:05:00.000Z",
         "name": "Harbor Herons at Cedar Valley Drays",
         "shortName": "HRN @ CVD",
         "competitions": [
           {
             "id": "401998213",
-            "date": "2026-09-27T00:05:00.000Z",
+            "date": "2026-09-28T00:05:00.000Z",
             "venue": {
               "fullName": "Drayworks Park",
               "address": {
@@ -1130,13 +1130,13 @@
       {
         "id": "742131",
         "uid": "s:1~l:1~e:742131",
-        "date": "2026-09-26T00:30:00.000Z",
+        "date": "2026-09-27T00:30:00.000Z",
         "name": "Riverbend FC at Slack Water United",
         "shortName": "RVB @ SWU",
         "competitions": [
           {
             "id": "742131",
-            "date": "2026-09-26T00:30:00.000Z",
+            "date": "2026-09-27T00:30:00.000Z",
             "venue": {
               "fullName": "Pike Street Stadium",
               "address": {
@@ -1200,13 +1200,13 @@
       {
         "id": "731461",
         "uid": "s:1~l:1~e:731461",
-        "date": "2026-09-25T19:00:00.000Z",
+        "date": "2026-09-26T19:00:00.000Z",
         "name": "Montaraz at Almendro CF",
         "shortName": "MNT @ ALM",
         "competitions": [
           {
             "id": "731461",
-            "date": "2026-09-25T19:00:00.000Z",
+            "date": "2026-09-26T19:00:00.000Z",
             "venue": {
               "fullName": "Estadio Inventado",
               "address": {

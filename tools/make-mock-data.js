@@ -277,6 +277,22 @@ function snapshot() {
             { r: 'L', u: -0.75, d: addDays(TODAY, -5), s: '🏈', label: 'Vasquez anytime TD' },
             { r: 'W', u: 1.35, d: addDays(TODAY, -6), s: '⚽', label: 'Harbor Rovers ML' },
           ],
+          /**
+           * B10 — the last settled card, every ticket on it including the
+           * ones that moved no money. The engine's record and net; the page
+           * prints them and adds nothing up.
+           */
+          last_card: {
+            date: addDays(TODAY, -1),
+            record: '2-0',
+            net_u: 1.71,
+            tickets: [
+              { s: '⚽', game: 'Cross Harbor v Millrace', final: 'CRH 2-0 MLR', label: 'Cross Harbor ML (reg. time)', stake_u: 1.0, r: 'W', u: 1.23 },
+              { s: '⚾', game: 'Drays @ Current', final: 'DRY 6-2 CUR', label: 'Drays -1.5 run line', stake_u: 0.5, r: 'W', u: 0.48 },
+              { s: '🏀', game: 'Foremen @ Sentinels', final: 'FOR 101-98 SEN', label: 'Foremen +3', stake_u: 0.5, r: 'PUSH', u: 0 },
+              { s: '🏈', game: 'Kestrels @ Ironsides', final: 'postponed', label: 'Vasquez anytime TD', stake_u: 0.25, r: 'VOID', u: 0 },
+            ],
+          },
         },
         source: 'mock generator — invented tickets and an invented settled log',
       }),

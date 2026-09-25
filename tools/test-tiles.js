@@ -2865,6 +2865,84 @@ async function main() {
     bets.render(longForm, betsTile({ tickets: [], form: { ...FORM, last: [...FORM.last, ...FORM.last] } }), { id: 'bets_live', actions: {} });
     check('never more than ten dots, whatever the engine sends', countOf(longForm, 'form-dot') === 10);
 
+    // -- B10: the last card --------------------------------------------------
+    //
+    // The morning report in one line. The record deliberately disagrees with
+    // the tickets underneath it (4-1 over three rows): the page prints the
+    // engine's numbers and adds nothing up, so a tile that recounted would
+    // print 1-1 here and fail.
+    console.log('\nbets_live — the last card (B10)');
+    const LAST_CARD = {
+      date: '2026-09-24',
+      record: '4-1',
+      net_u: 3.58,
+      tickets: [
+        { s: '🏈', game: 'Kestrels @ Ironsides', final: 'HKS 35-14 FIS', label: 'HKS +4.5', stake_u: 1.0, r: 'W', u: 1.04 },
+        { s: '⚾', game: 'Drays @ Current', final: 'DRY 2-5 CUR', label: 'Drays ML', stake_u: 0.5, r: 'L', u: -0.5 },
+        { s: '⚽', game: 'Rovers v Riverbend', final: 'postponed', label: 'Rovers ML', stake_u: 0.75, r: 'VOID', u: 0 },
+        { s: '🏀', game: 'Foremen @ Sentinels', final: 'FOR 101-98 SEN', label: 'Foremen +3', stake_u: 0.5, r: 'PUSH', u: 0 },
+        { s: '🏈', game: 'Kestrels @ Ironsides', final: '', label: 'Vasquez anytime TD', stake_u: 0.25, r: 'NO ACTION' },
+      ],
+    };
+    const lcRoot = new El('div');
+    bets.render(lcRoot, betsTile({ tickets: [], form: { ...FORM, last_card: LAST_CARD } }), { id: 'bets_live', actions: {} });
+    const lcEl = lcRoot.querySelector('.bets-lastcard');
+    check('the last card line is drawn', !!lcEl);
+    const lcToggle = lcEl && lcEl.querySelector('.lastcard-toggle');
+    check(
+      'it reads date as weekday + M/D, the engine\'s record and its signed net',
+      lcToggle && lcToggle.textContent === 'Last card  ·  Thu 9/24  ·  4-1  ·  +3.58u',
+      lcToggle && lcToggle.textContent
+    );
+    check('it sits under the form line', (() => {
+      const kids = lcRoot.childNodes.map((n) => n.className);
+      return kids.indexOf('bets-lastcard') === kids.indexOf('bets-form') + 1;
+    })());
+    check('a winning card\'s net is green', lcEl.querySelector('.lastcard-net').className.includes('lastcard-net-good'));
+    const lcList = lcEl.querySelector('.lastcard-tickets');
+    check('collapsed by default', lcList.className.includes('hidden') && lcToggle.getAttribute('aria-expanded') === 'false');
+    lcToggle.listeners.click[0]({ stopPropagation() {} });
+    check('a tap opens it in place', !lcList.className.includes('hidden') && lcToggle.getAttribute('aria-expanded') === 'true');
+    lcToggle.listeners.click[0]({ stopPropagation() {} });
+    check('a second tap folds it again', lcList.className.includes('hidden') && lcToggle.getAttribute('aria-expanded') === 'false');
+
+    const lcRows = lcList.querySelectorAll('.lastcard-row');
+    check('one row per ticket, voids and no-action included', lcRows.length === LAST_CARD.tickets.length, String(lcRows.length));
+    check(
+      'in card order as given',
+      lcRows.map((r) => r.querySelector('.lastcard-label').textContent).join('|') === LAST_CARD.tickets.map((t) => t.label).join('|')
+    );
+    const printedU = lcRows.map((r) => r.querySelector('.lastcard-units').textContent);
+    const payloadU = LAST_CARD.tickets.map((t) => (t.u === undefined ? '0.00u' : t.u === 0 ? '0.00u' : `${t.u > 0 ? '+' : '−'}${Math.abs(t.u).toFixed(2)}u`));
+    check('the units printed are the payload\'s, row for row', printedU.join('|') === payloadU.join('|'), printedU.join('|'));
+    check('a row carries sport, label and final', /🏈/.test(lcRows[0].textContent) && lcRows[0].querySelector('.lastcard-final').textContent === 'HKS 35-14 FIS');
+    check('the final is muted', lcRows[0].querySelector('.lastcard-final').className === 'lastcard-final');
+    check('a W row is green', lcRows[0].querySelector('.lastcard-units').className.includes('lastcard-units-good'));
+    check('an L row is red', lcRows[1].querySelector('.lastcard-units').className.includes('lastcard-units-bad'));
+    const voidRow = lcRows[2];
+    check('a VOID row renders muted', voidRow.className.includes('lastcard-flat') && voidRow.querySelector('.lastcard-units').className.includes('lastcard-units-flat'));
+    check('and wears no win or loss colour', !/lastcard-(units-)?(good|bad)/.test(voidRow.className + ' ' + voidRow.querySelector('.lastcard-units').className));
+    check('a VOID row reads 0.00u', voidRow.querySelector('.lastcard-units').textContent === '0.00u');
+    check('a PUSH row is muted too', lcRows[3].className.includes('lastcard-flat'));
+    check('NO ACTION with no units still reads 0.00u, muted', lcRows[4].className.includes('lastcard-flat') && lcRows[4].querySelector('.lastcard-units').textContent === '0.00u');
+    check('a row with no final prints no empty final', lcRows[4].querySelectorAll('.lastcard-final').length === 0);
+
+    const lcLosing = new El('div');
+    bets.render(lcLosing, betsTile({ tickets: [], form: { ...FORM, last_card: { ...LAST_CARD, record: '1-4', net_u: -2.75 } } }), { id: 'bets_live', actions: {} });
+    const lcLosingNet = lcLosing.querySelector('.lastcard-net');
+    check('a losing card\'s net is red and signed', lcLosingNet.className.includes('lastcard-net-bad') && /−2\.75u/.test(lcLosingNet.textContent), lcLosingNet.textContent);
+
+    for (const [label, form] of [
+      ['last_card null', { ...FORM, last_card: null }],
+      ['last_card missing (an older engine)', { ...FORM }],
+      ['last_card an array', { ...FORM, last_card: [] }],
+      ['form null', null],
+    ]) {
+      const noCard = new El('div');
+      bets.render(noCard, betsTile({ tickets: [], form }), { id: 'bets_live', actions: {} });
+      check(`${label} hides the line entirely`, countOf(noCard, 'bets-lastcard') === 0 && !/Last card/.test(textOf(noCard)));
+    }
+
     // -- B2/B7: the game cards ----------------------------------------------
     console.log('\nbets_live — sport, and live-first order (B2, B7)');
     const ORDER = [

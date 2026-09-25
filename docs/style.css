@@ -490,6 +490,40 @@ body {
 .form-dot-w { background: var(--good); }
 .form-dot-l { background: var(--bad); }
 
+/* B10 — the last settled card, one line under the form strip, folded over
+   its tickets. Every figure is the engine's; colour is the sign of the number
+   printed and nothing else, and a push, void or no-action is plainly muted. */
+.bets-lastcard { margin: -6px 0 11px; font-size: 11.5px; color: var(--text-dim); }
+.lastcard-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  text-align: left;
+}
+.lastcard-toggle::after { content: ' ▸'; color: var(--text-faint); }
+.lastcard-toggle[aria-expanded="true"]::after { content: ' ▾'; }
+.lastcard-summary { white-space: pre; }
+.lastcard-net { font-weight: 700; white-space: pre; }
+.lastcard-net-good { color: var(--good); }
+.lastcard-net-bad  { color: var(--bad); }
+.lastcard-tickets { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.lastcard-row { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.lastcard-sport { flex: 0 0 auto; font-size: 11px; line-height: 1; }
+.lastcard-label { color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lastcard-final { color: var(--text-faint); white-space: nowrap; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
+.lastcard-units { margin-left: auto; flex: 0 0 auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lastcard-units-good { color: var(--good); }
+.lastcard-units-bad  { color: var(--bad); }
+.lastcard-units-flat { color: var(--text-faint); font-weight: 600; }
+.lastcard-flat .lastcard-label { color: var(--text-faint); }
+
 /* The sport's own emoji, before the matchup (B2). */
 .game-sport { margin-right: 5px; font-size: 12px; line-height: 1; }
 

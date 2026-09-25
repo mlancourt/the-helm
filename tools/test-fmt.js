@@ -184,6 +184,13 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('unknown date text is returned verbatim', fmt.shortDate('sometime'), 'sometime');
   eq('and null is empty, not "Invalid Date"', fmt.shortDate(null), '');
 
+  console.log('\nshort days (bets_live\'s Last card line)');
+  eq('weekday and month/day', fmt.shortDay('2026-09-24'), 'Thu 9/24');
+  eq('the first of the year has its own weekday, not the eve\'s', fmt.shortDay('2026-01-01'), 'Thu 1/1');
+  eq('the last day of the year', fmt.shortDay('2026-12-31'), 'Thu 12/31');
+  eq('unknown date text is returned verbatim', fmt.shortDay('last night'), 'last night');
+  eq('and null is empty', fmt.shortDay(null), '');
+
   console.log('\ndays-out text (the Purser\'s rows — TEXT, never a tone)');
   // Deliberately not dueLabel: on The Due Stack colour carries manual-vs-
   // autopay, so a days count there must have no tone to reach for at all.

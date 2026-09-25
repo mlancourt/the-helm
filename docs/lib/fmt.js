@@ -137,6 +137,24 @@ export function shortDate(ymd) {
 }
 
 /**
+ * 'YYYY-MM-DD' -> 'Thu 9/24'. The weekday and `shortDate`, nothing more.
+ *
+ * For a date that labels a whole card of bets — `bets_live`'s Last card line
+ * — where 'Thu Sep 24' is wider than the line can spare and a bare '9/24'
+ * makes Matt count back to work out which night it was.
+ *
+ * Rule 7 the way `prettyDate` keeps it: the weekday comes off Date.UTC over
+ * the split parts, which is calendar arithmetic on a flat calendar and not a
+ * timezone conversion — the string is never handed to `new Date()`. Anything
+ * that is not a date-only string is returned verbatim.
+ */
+export function shortDay(ymd) {
+  if (!YMD_RE.test(ymd)) return String(ymd ?? '');
+  const [y, m, d] = ymd.split('-').map(Number);
+  return `${WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${m}/${d}`;
+}
+
+/**
  * A days-out integer -> 'today' / 'tomorrow' / 'in 9 days'. TEXT ONLY.
  *
  * DELIBERATELY NOT `dueLabel`, and the difference is the whole point.

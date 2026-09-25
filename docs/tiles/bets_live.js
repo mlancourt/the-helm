@@ -37,6 +37,13 @@
  * rendered and nothing else, and when it is null the line simply does not
  * exist.
  *
+ * LAST CARD (B10). `form.last_card` is the most recent settled card, off the
+ * Bookie's `State/Settled.csv` — the morning report in one line, and every
+ * ticket on it one tap away. Every figure on it is the engine's: the record,
+ * the net and each row's units are printed as given, the page adds nothing up
+ * and checks nothing against anything. It carries no staleness logic either:
+ * it is always *the last card*, and its own date says which one.
+ *
  * RULE 7: `kick_ct` is a Central wall-clock string in two spellings ('15:25'
  * from the mock, '6:05 PM' from the engine) and is printed by `ctKick()` as
  * text. Ordering needs it as a number, which `kickKey()` gets from the parts —
@@ -61,6 +68,7 @@ import {
   kickKey,
   dayLabel,
   ctToday,
+  shortDay,
 } from '../lib/fmt.js';
 
 /** grader state -> [pill label, tone]. The graders carry their own label too. */
@@ -274,6 +282,93 @@ function formLine(form) {
   ]);
 }
 
+/** A settled result -> its row tone. W and L are the only two with a sign. */
+function resultTone(r) {
+  const s = str(r).trim().toUpperCase();
+  if (s === 'W') return 'good';
+  if (s === 'L') return 'bad';
+  // PUSH, VOID, NO ACTION — and anything the Bookie adds later. None of them
+  // moved money, so none of them gets a colour that says it did.
+  return 'flat';
+}
+
+/**
+ * One ticket on the last card: sport · label · final · signed units (B10).
+ *
+ * `u` is printed exactly as the engine sent it. A push or a void with no `u`
+ * at all still reads `0.00u` — B10 asks for the figure, and a blank cell
+ * beside a settled ticket reads as a missing result rather than a null one.
+ */
+function lastCardRow(t) {
+  const tone = resultTone(t.r);
+  const u = num(t.u);
+  const text = u !== null ? signedUnits(u) : tone === 'flat' ? '0.00u' : '—';
+  const sport = str(t.s).trim();
+  const final = str(t.final).trim();
+  const result = str(t.r).trim();
+  return el(
+    'div',
+    {
+      cls: `lastcard-row lastcard-${tone}`,
+      attrs: { title: [str(t.game).trim(), result].filter(Boolean).join(' · ') || null },
+    },
+    [
+      sport ? el('span', { cls: 'lastcard-sport', attrs: { 'aria-hidden': 'true' }, text: sport }) : null,
+      el('span', { cls: 'lastcard-label', text: str(t.label) || str(t.game) || 'ticket' }),
+      final ? el('span', { cls: 'lastcard-final', text: final }) : null,
+      el('span', { cls: `lastcard-units lastcard-units-${tone}`, text }),
+    ]
+  );
+}
+
+/**
+ * `Last card · Thu 9/24 · 4-1 · +3.58u`, folded over the card's tickets (B10).
+ *
+ * A button rather than a tappable div so it is a real control to a screen
+ * reader and a keyboard; the click stops at the button, so it never reaches
+ * the card and a tap here is never mistaken for the start of a long-press.
+ * Collapsed by default, and whether it is open lives on the node alone — the
+ * next render is a fresh line, folded again, which is what a board that
+ * refreshes under the reader should do.
+ */
+function lastCardLine(card) {
+  if (!card || typeof card !== 'object' || Array.isArray(card)) return null;
+
+  const bits = ['Last card'];
+  const date = str(card.date).trim();
+  if (date) bits.push(shortDay(date));
+  const record = str(card.record).trim();
+  if (record) bits.push(record);
+  const net = num(card.net_u);
+
+  const rows = el(
+    'div',
+    { cls: 'lastcard-tickets hidden' },
+    arr(card.tickets).filter((t) => t && typeof t === 'object').map(lastCardRow)
+  );
+  const toggle = el(
+    'button',
+    {
+      cls: 'lastcard-toggle',
+      attrs: { type: 'button', 'aria-expanded': 'false' },
+      on: {
+        click: (e) => {
+          if (e && e.stopPropagation) e.stopPropagation();
+          const open = rows.classList.toggle('hidden') === false;
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        },
+      },
+    },
+    [
+      el('span', { cls: 'lastcard-summary', text: bits.join('  ·  ') }),
+      net === null
+        ? null
+        : el('span', { cls: `lastcard-net lastcard-net-${net >= 0 ? 'good' : 'bad'}`, text: `  ·  ${signedUnits(net)}` }),
+    ]
+  );
+  return el('div', { cls: 'bets-lastcard' }, [toggle, rows]);
+}
+
 // --------------------------------------------------------------------- rows
 
 /**
@@ -438,6 +533,10 @@ export function render(el_, tile, ctx) {
   el_.appendChild(headerStats(data, grades, games));
   const form = formLine(data.form);
   if (form) el_.appendChild(form);
+  // B10: under the form strip. Absent on an older engine's snapshot, and
+  // absent when there is no settled row to report.
+  const lastCard = data.form && typeof data.form === 'object' ? lastCardLine(data.form.last_card) : null;
+  if (lastCard) el_.appendChild(lastCard);
 
   if (!tickets.length) {
     el_.appendChild(empty('No open tickets.'));
