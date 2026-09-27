@@ -2123,6 +2123,72 @@ async function main() {
   }
 
 
+  // -- dinner: tonight + the week (v1.22.0, Dinner-Tile-Spec D1–D6) ----------
+  console.log('\ndinner');
+  const din = mods.get('dinner');
+  if (din) {
+    const DIN_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'dinner.js'), 'utf8');
+    const wk = (over = {}) => ({
+      label: 'This week', week_of: '2026-09-28', status: 'approved',
+      days: [
+        { date: '2026-09-28', day: 'Mon', meal: 'Rice thing', emoji: '🍚', vibe: 'Quick', vibe_emoji: '⚡', is_new: false },
+        { date: '2026-09-29', day: 'Tue', meal: 'Taco thing', emoji: '🌮', vibe: 'Quick', vibe_emoji: '⚡', is_new: false },
+        { date: '2026-09-30', day: 'Wed', meal: 'Pasta thing', emoji: '🍝', vibe: 'Quick', vibe_emoji: '⚡', is_new: false },
+        { date: '2026-10-01', day: 'Thu', meal: 'Roast thing', emoji: '🥩', vibe: 'Hearty', vibe_emoji: '🍲', is_new: true },
+        { date: '2026-10-02', day: 'Fri', meal: 'Pancake thing', emoji: '🥞', vibe: 'Standard', vibe_emoji: '🧑‍🍳', is_new: false },
+      ],
+      ...over,
+    });
+    const root = new El('div');
+    din.render(root, { band: 'DAILY', status: 'ok', data: { date: '2026-09-30', meal: 'Pasta thing', emoji: '🍝', is_new: false, vibe: 'Quick', vibe_emoji: '⚡', notes: 'n', verdict: null, week: wk() } });
+    check('the headline carries its emoji', /🍝/.test(textOf(root.querySelector('.dinner-meal'))) && /Pasta thing/.test(textOf(root.querySelector('.dinner-meal'))));
+    check('the subhead carries the vibe', /⚡ Quick/.test(textOf(root.querySelector('.tile-subhead'))));
+    const drows = root.querySelectorAll('.dinner-day');
+    check('every day of the week renders', drows.length === 5, String(drows.length));
+    check('the day names come through', drows.map((r) => textOf(r.querySelector('.dinner-dow'))).join(',') === 'Mon,Tue,Wed,Thu,Fri');
+    check('tonight is highlighted', drows[2].classList.contains('is-today') && !drows[3].classList.contains('is-today'));
+    check('earlier nights are past', drows[0].classList.contains('is-past') && drows[1].classList.contains('is-past'));
+    check('later nights are not', !drows[3].classList.contains('is-past') && !drows[4].classList.contains('is-past'));
+    check('a new recipe wears the sparkle', /✨/.test(textOf(drows[3])) && !/✨/.test(textOf(drows[1])));
+    check('each row carries its food emoji', /🌮/.test(textOf(drows[1])) && /🥞/.test(textOf(drows[4])));
+    check('the vibe emoji is labelled for screen readers', drows[3].querySelector('.dinner-vibe').getAttribute('aria-label') === 'Hearty');
+    check('the week is labelled', /📅 This week/.test(textOf(root.querySelector('.dinner-week-head'))));
+    check('an approved week wears no pill', !root.querySelector('.dinner-week-head').querySelector('.pill'));
+
+    // Weekend: no dinner tonight, next week's plan below, not yet locked in.
+    const wkend = new El('div');
+    din.render(wkend, { band: 'DAILY', status: 'ok', data: { date: '2026-09-27', meal: null, notes: 'Weekend — off the plan.', week: wk({ label: 'Next week', status: 'proposed' }) } });
+    check('a night off the plan says so', /Nothing planned tonight/.test(textOf(wkend)));
+    check('and still shows the week', wkend.querySelectorAll('.dinner-day').length === 5);
+    check('labelled as next week', /Next week/.test(textOf(wkend)));
+    check('a proposed plan says it is proposed', /proposed/.test(textOf(wkend.querySelector('.dinner-week-head'))));
+    check('nothing in next week is past or tonight', wkend.querySelectorAll('.is-past').length === 0 && wkend.querySelectorAll('.is-today').length === 0);
+
+    // An old snapshot (no week at all) renders exactly as before.
+    const old = new El('div');
+    din.render(old, { band: 'DAILY', status: 'ok', data: { date: '2026-09-30', meal: 'Chili', notes: 'n', verdict: null } });
+    check('a snapshot without a week still renders tonight', /Chili/.test(textOf(old)) && !old.querySelector('.dinner-week'));
+
+    // Hostile weeks never take the card down.
+    for (const bad of ['x', 7, [], { days: 'x' }, { days: [null, 5, 'x'] }, { days: [{}, { meal: 'only a meal' }] }]) {
+      const r = new El('div');
+      let threw = null;
+      try { din.render(r, { band: 'DAILY', status: 'ok', data: { date: '2026-09-30', meal: 'ok', week: bad } }); } catch (e) { threw = e; }
+      check(`a week of ${JSON.stringify(bad)} does not throw`, !threw, threw && threw.message);
+      check(`and prints no "null"/"undefined" (${JSON.stringify(bad)})`, !/null|undefined/.test(textOf(r)));
+    }
+    const half = new El('div');
+    din.render(half, { band: 'DAILY', status: 'ok', data: { date: '2026-09-30', meal: 'ok', week: { days: [{}, { meal: 'only a meal' }] } } });
+    check('half-built days still render as rows', half.querySelectorAll('.dinner-day').length === 2);
+    check('a mealless day is labelled, not blank', /\(no meal\)/.test(textOf(half)));
+
+    // Read-only, text-only, and the emoji are the engine's.
+    check('the module sets no markup', !/innerHTML|insertAdjacentHTML|outerHTML/.test(DIN_SRC));
+    check('the module registers no listeners', !/addEventListener|\bon:\s*\{/.test(DIN_SRC));
+    check('the module files no events', !/meal_verdict|postEvent|actions\./.test(DIN_SRC.replace(/\/\*[\s\S]*?\*\//g, '')));
+    check('the module never parses a business date', !/new Date\(/.test(DIN_SRC));
+  }
+
   // -- local_events: the Lake Country week ----------------------------------
   //
   // Everything this module decides is a boundary: which day groups reach the

@@ -499,11 +499,30 @@ function snapshot() {
       // exercise.
       captains_log: tile('DAILY', captainsLogPayload()),
 
+      // Dinner (v1.22.0): tonight plus the plan's week. TODAY sits in the
+      // middle of an invented Mon–Fri so the mock shows past, today and ahead
+      // rows at once; every emoji arrives from the engine as a plain string.
       dinner: tile('DAILY', {
         date: TODAY,
         meal: 'Sheet-pan sausage and peppers',
+        emoji: '🌭',
+        is_new: true,
+        vibe: 'Quick',
+        vibe_emoji: '⚡',
         notes: 'Start the oven at 5:15 or it slips past bedtime.',
         verdict: null,
+        week: {
+          label: 'This week',
+          week_of: addDays(TODAY, -2),
+          status: 'approved',
+          days: [
+            { date: addDays(TODAY, -2), day: 'Mon', meal: 'Invented noodle bake', emoji: '🍝', vibe: 'Quick', vibe_emoji: '⚡', is_new: false },
+            { date: addDays(TODAY, -1), day: 'Tue', meal: 'Made-up taco night', emoji: '🌮', vibe: 'Quick', vibe_emoji: '⚡', is_new: false },
+            { date: TODAY, day: 'Wed', meal: 'Sheet-pan sausage and peppers', emoji: '🌭', vibe: 'Quick', vibe_emoji: '⚡', is_new: true },
+            { date: addDays(TODAY, 1), day: 'Thu', meal: 'Pretend pot roast', emoji: '🥩', vibe: 'Hearty', vibe_emoji: '🍲', is_new: false },
+            { date: addDays(TODAY, 2), day: 'Fri', meal: 'Placeholder pancakes', emoji: '🥞', vibe: 'Standard', vibe_emoji: '🧑‍🍳', is_new: false },
+          ],
+        },
       }),
 
       // The Due Stack (producer rebuilt 2026-09-21). Every card, bill, balance
