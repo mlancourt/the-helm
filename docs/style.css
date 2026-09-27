@@ -31,30 +31,35 @@
 }
 
 :root {
-  --bg: #0f141a;
-  --bg-raise: #161d26;
-  --bg-sink: #0b1015;
-  --line: #24303d;
-  --line-soft: #1b242f;
+  --bg: #0a0a0b;
+  --bg-raise: #121213;
+  --bg-sink: #050506;
+  --line: #2a2a2e;
+  /* raised chip/button surface — was seven near-identical hexes */
+  --bg-chip: #1a1a1c;
+  --line-soft: #1d1d20;
 
-  --text: #e6ebf0;
-  --text-dim: #9aabbd;
-  --text-faint: #6b7d91;
+  --text: #dcd6c8;
+  --text-dim: #9d978b;
+  --text-faint: #69645b;
 
-  --brass: #c9a227;
-  --good: #3fb984;
-  --warn: #e0a13a;
-  --bad: #e2564d;
-  --info: #5aa9d6;
+  --brass: #ff8c1a;
+  --good: #7dc98f;
+  --warn: #e6c25a;
+  --bad: #ef5a4e;
+  --info: #9bb4c4;
 
   /* The PC net's two badges. Separate tokens on purpose: --warn already
      means "ending inside two hours" on the cards sheet, and on the PC sheet
      gold means "one of one". Two meanings for one colour on one screen is
      how somebody buys the wrong card, so they are never the same value. */
-  --pc-serial: #a98cf0;
-  --pc-one: #f0cb5e;
+  --pc-serial: #b39ddb;
+  --pc-one: #ffd27a;
+  /* wss_tape actor slots 4 and 5 — the two accents the tone set does not cover */
+  --tape-a4: #e09a78;
+  --tape-a5: #7cc7c0;
 
-  --radius: 14px;
+  --radius: 6px;
   --gap: 12px;
 
   /* iPhone standalone: keep content off the notch and home indicator */
@@ -103,7 +108,7 @@ body {
      topbar the same height whether or not the face loaded. */
   line-height: 1.05;
   letter-spacing: 0.005em;
-  color: var(--brass);
+  color: var(--text);
   /* Brass on near-black at this weight thickens under subpixel rendering; the
      face is drawn for signage and wants the lighter stem. */
   -webkit-font-smoothing: antialiased;
@@ -126,8 +131,8 @@ body {
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.02em;
-  color: var(--text-faint);
-  border: 1px solid var(--line);
+  color: var(--brass);
+  border: 1px solid color-mix(in srgb, var(--brass) 50%, var(--bg));
   border-radius: 5px;
   padding: 3px 5px;
   /* baseline-aligned in a flex row of much larger text; nudge it off the
@@ -162,8 +167,8 @@ body {
   border: 1px solid var(--line);
 }
 
-.banner-warn { background: #2a1f10; border-color: #4a361a; color: #f0cd8e; }
-.banner-info { background: #10202a; border-color: #1d3949; color: #9fd0e8; }
+.banner-warn { background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); color: var(--warn); }
+.banner-info { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); color: var(--info); }
 .banner-detail { font-size: 12px; opacity: 0.75; }
 
 /* The weather tile's Warning strip (Weather spec, W6). Red, above the grid,
@@ -181,9 +186,9 @@ body {
   border-radius: 10px;
   font-size: 13.5px;
   font-weight: 600;
-  background: #331a18;
-  border: 1px solid #6d332d;
-  color: #f2a9a2;
+  background: color-mix(in srgb, var(--bad) 14%, var(--bg-raise));
+  border: 1px solid color-mix(in srgb, var(--bad) 45%, var(--bg-raise));
+  color: var(--bad);
 }
 
 .board-banner-text { flex: 1; min-width: 0; }
@@ -194,8 +199,8 @@ body {
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 999px;
-  border: 1px solid #6d332d;
-  color: #e2564d;
+  border: 1px solid color-mix(in srgb, var(--bad) 45%, var(--bg-raise));
+  color: var(--bad);
 }
 
 .board-banner-x {
@@ -203,9 +208,9 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 1px solid #6d332d;
+  border: 1px solid color-mix(in srgb, var(--bad) 45%, var(--bg-raise));
   background: transparent;
-  color: #f2a9a2;
+  color: var(--bad);
   font-size: 16px;
   line-height: 1;
   padding: 0;
@@ -255,39 +260,38 @@ body {
   -webkit-user-select: none;
 }
 
-/* brass rule, fading left→right — the wordmark's colour carried onto every card */
+/* hairline under the head — Night Watch (9/27): the title is the one warm thing, the rule stays quiet */
 .card-head::after {
   content: "";
   position: absolute;
   left: 0; right: 0; bottom: 0;
   height: 1px;
-  background: linear-gradient(90deg, var(--brass) 0, rgba(201, 162, 39, 0.35) 45%, transparent 100%);
+  background: var(--line);
 }
 
 .card-title {
   margin: 0;
   /* the wordmark's fallback stack — NOT 'Helm Display' (19-glyph subset, wordmark only; rule 4) */
   font-family: 'Avenir Next Condensed', 'Helvetica Neue Condensed', 'Roboto Condensed', 'Segoe UI Semibold', -apple-system, sans-serif;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1.1;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--brass);
   -webkit-font-smoothing: antialiased;
 }
 
 .card-title::before {
+  /* leading mark: a short dash (Night Watch, 9/27 — was a rotated 6px diamond) */
   content: "";
   display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 1px;
+  width: 10px;
+  height: 2px;
   background: var(--brass);
   margin-right: 8px;
-  transform: rotate(45deg);
   position: relative;
-  top: -2px;
+  top: -1px;
 }
 
 .card-head-right { display: flex; align-items: center; gap: 6px; }
@@ -352,21 +356,21 @@ body {
   white-space: nowrap;
   border: 1px solid transparent;
 }
-.pill-neutral { background: #1e2732; color: var(--text-dim); border-color: var(--line); }
-.pill-good    { background: #122f24; color: var(--good); border-color: #1d4c38; }
-.pill-warn    { background: #2f2512; color: var(--warn); border-color: #4c3c1a; }
-.pill-bad     { background: #331a18; color: var(--bad);  border-color: #522a26; }
-.pill-win     { background: var(--good); color: #06150f; border-color: var(--good); }
-.pill-dead    { background: #1a1f26; color: var(--text-faint); border-color: var(--line); text-decoration: line-through; }
+.pill-neutral { background: var(--bg-chip); color: var(--text-dim); border-color: var(--line); }
+.pill-good    { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
+.pill-warn    { background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise)); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); }
+.pill-bad     { background: color-mix(in srgb, var(--bad) 14%, var(--bg-raise)); color: var(--bad);  border-color: color-mix(in srgb, var(--bad) 45%, var(--bg-raise)); }
+.pill-win     { background: var(--good); color: var(--bg); border-color: var(--good); }
+.pill-dead    { background: var(--bg-chip); color: var(--text-faint); border-color: var(--line); text-decoration: line-through; }
 /* "we cannot grade this" is not the same as "this bet is dead" — no strike */
-.pill-na      { background: #1a1f26; color: var(--text-faint); border-color: var(--line); font-style: italic; }
-.pill-pending { background: #2a2413; color: var(--brass); border-color: #4a4020; }
-.pill-mode    { background: #12232c; color: var(--info); border-color: #1d4152; }
+.pill-na      { background: var(--bg-chip); color: var(--text-faint); border-color: var(--line); font-style: italic; }
+.pill-pending { background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); color: var(--brass); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); }
+.pill-mode    { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); color: var(--info); border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
 
 .btn {
   border-radius: 9px;
   border: 1px solid var(--line);
-  background: #1e2732;
+  background: var(--bg-chip);
   color: var(--text);
   font-size: 13px;
   font-weight: 600;
@@ -401,7 +405,7 @@ body {
   border-bottom: 1px solid var(--line-soft);
 }
 .stat { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.stat-value { font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.stat-value { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .stat-label { font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
 .stat.good .stat-value { color: var(--good); }
 .stat.bad  .stat-value { color: var(--bad); }
@@ -431,7 +435,7 @@ body {
 /* the ticket's `class` from the vault: conviction, not outcome */
 .stripe-core  { border-left-color: var(--brass); }
 .stripe-lean  { border-left-color: var(--info); }
-.stripe-flier { border-left-color: #6b4b8a; }
+.stripe-flier { border-left-color: var(--pc-serial); }
 
 .ticket-main { min-width: 0; }
 .ticket-label { font-size: 13px; font-weight: 560; }
@@ -474,8 +478,8 @@ body {
   font-weight: 700;
   white-space: nowrap;
 }
-.form-streak-hot  { background: #122f24; color: var(--good);      border-color: #1d4c38; }
-.form-streak-cold { background: #19222c; color: var(--text-dim);  border-color: #2a3644; }
+.form-streak-hot  { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good);      border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
+.form-streak-cold { background: var(--bg-chip); color: var(--text-dim);  border-color: var(--line); }
 .form-streak-emoji { font-size: 10px; line-height: 1; }
 
 /* A form guide: read as a shape first, interrogated by tooltip second. */
@@ -534,11 +538,11 @@ body {
 .flip-up   { animation: bets-flip-up 600ms ease-out 1; }
 .flip-down { animation: bets-flip-down 600ms ease-out 1; }
 @keyframes bets-flip-up {
-  0%   { background: rgba(63, 185, 132, 0.28); }
+  0%   { background: color-mix(in srgb, var(--good) 28%, transparent); }
   100% { background: transparent; }
 }
 @keyframes bets-flip-down {
-  0%   { background: rgba(226, 86, 77, 0.28); }
+  0%   { background: color-mix(in srgb, var(--bad) 28%, transparent); }
   100% { background: transparent; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -607,13 +611,13 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .ledger-spark-good .ledger-spark-line { stroke: var(--good); }
-.ledger-spark-good .ledger-spark-fill { fill: rgba(63, 185, 132, 0.12); }
+.ledger-spark-good .ledger-spark-fill { fill: color-mix(in srgb, var(--good) 12%, transparent); }
 .ledger-spark-good .ledger-spark-now  { fill: var(--good); }
 .ledger-spark-bad  .ledger-spark-line { stroke: var(--bad); }
-.ledger-spark-bad  .ledger-spark-fill { fill: rgba(226, 86, 77, 0.12); }
+.ledger-spark-bad  .ledger-spark-fill { fill: color-mix(in srgb, var(--bad) 12%, transparent); }
 .ledger-spark-bad  .ledger-spark-now  { fill: var(--bad); }
 .ledger-spark-flat .ledger-spark-line { stroke: var(--text-dim); }
-.ledger-spark-flat .ledger-spark-fill { fill: rgba(154, 171, 189, 0.12); }
+.ledger-spark-flat .ledger-spark-fill { fill: color-mix(in srgb, var(--text-dim) 12%, transparent); }
 .ledger-spark-flat .ledger-spark-now  { fill: var(--text-dim); }
 
 /* L3 — 7d · 30d · slate, three equal cells. Not tappable in v1: the sheet is
@@ -801,7 +805,7 @@ body {
   padding: 9px 10px;
   border-radius: 9px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   font-family: inherit;
   font-size: 11.5px;
@@ -811,7 +815,7 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.tg-btn:hover { color: var(--text); border-color: #2f3d4c; }
+.tg-btn:hover { color: var(--text); border-color: var(--line); }
 .tg-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 /* The label is what gives; the count must never be pushed off the button. */
 .tg-btn-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -819,10 +823,10 @@ body {
 
 /* A league with games on: lit. One of them under way: lit green, with a dot.
    Nothing on today, or nothing known yet: dimmed — but still a button. */
-.tg-btn-on   { background: #12232c; color: var(--info); border-color: #1d4152; }
-.tg-btn-live { background: #122f24; color: var(--good); border-color: #1d4c38; }
+.tg-btn-on   { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); color: var(--info); border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
+.tg-btn-live { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
 .tg-btn-none,
-.tg-btn-wait { background: #15191f; color: var(--text-faint); }
+.tg-btn-wait { background: var(--bg-chip); color: var(--text-faint); }
 
 .tg-dot {
   margin-left: auto;
@@ -843,7 +847,7 @@ body {
   margin-left: auto;
   padding: 1px 6px;
   border-radius: 999px;
-  background: #0e1318;
+  background: var(--bg-sink);
   border: 1px solid var(--line);
   color: var(--text-dim);
   font-size: 10px;
@@ -942,18 +946,18 @@ body {
   padding: 2px 7px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   font-size: 10.5px;
   font-weight: 600;
   white-space: nowrap;
 }
 /* He has it. */
-.tg-chip-mapped { background: #122f24; color: var(--good); border-color: #1d4c38; }
+.tg-chip-mapped { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
 /* Somebody else's RSN — it will black out. Said quietly, not in red: it is
    not an error, just not his. */
 .tg-chip-regional,
-.tg-chip-none { background: #15191f; color: var(--text-faint); border-style: dashed; }
+.tg-chip-none { background: var(--bg-chip); color: var(--text-faint); border-style: dashed; }
 
 .tg-warn { margin: 0 0 10px; font-size: 11.5px; color: var(--warn); }
 
@@ -983,14 +987,14 @@ body {
   font-size: 13px;
   font-weight: 600;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   cursor: pointer;
   font-family: inherit;
 }
-.wx-alert-warn     { background: #331a18; border-color: #6d332d; color: #f2a9a2; }
-.wx-alert-watch    { background: #2f2512; border-color: #4c3c1a; color: var(--warn); }
-.wx-alert-advisory { background: #1a1f26; border-color: var(--line); color: var(--text-dim); font-weight: 500; }
+.wx-alert-warn     { background: color-mix(in srgb, var(--bad) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--bad) 45%, var(--bg-raise)); color: var(--bad); }
+.wx-alert-watch    { background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); color: var(--warn); }
+.wx-alert-advisory { background: var(--bg-chip); border-color: var(--line); color: var(--text-dim); font-weight: 500; }
 
 .wx-alert-text { flex: 1; min-width: 0; }
 .wx-alert-more {
@@ -1439,7 +1443,7 @@ body {
   padding: 9px 10px;
   border-radius: 9px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   font-family: inherit;
   font-size: 11.5px;
@@ -1449,7 +1453,7 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.news-menu-btn:hover { color: var(--text); border-color: #2f3d4c; }
+.news-menu-btn:hover { color: var(--text); border-color: var(--line); }
 .news-menu-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 /* The label is what gives; the count must never be pushed off the button. */
 .news-menu-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1458,11 +1462,11 @@ body {
 
 /* Same palette as the category chips, so a category looks like itself on the
    board and in the panel. */
-.news-menu-local { background: #12232c; color: var(--info);  border-color: #1d4152; }
-.news-menu-sport { background: #122f24; color: var(--good);  border-color: #1d4c38; }
-.news-menu-civic { background: #2a2413; color: var(--brass); border-color: #4a4020; }
-.news-menu-tech  { background: #1d1b2e; color: #9f8fd8;      border-color: #332e4d; }
-.news-menu-money { background: #2f2512; color: var(--warn);  border-color: #4c3c1a; }
+.news-menu-local { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); color: var(--info);  border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
+.news-menu-sport { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good);  border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
+.news-menu-civic { background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); color: var(--brass); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); }
+.news-menu-tech  { background: color-mix(in srgb, var(--pc-serial) 14%, var(--bg-raise)); color: var(--pc-serial);      border-color: color-mix(in srgb, var(--pc-serial) 45%, var(--bg-raise)); }
+.news-menu-money { background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise)); color: var(--warn);  border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); }
 
 .news { display: flex; flex-direction: column; }
 .news-card { padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
@@ -1481,17 +1485,17 @@ body {
   padding: 2px 7px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   font-size: 10.5px;
   font-weight: 600;
   white-space: nowrap;
 }
-.news-cat-local { background: #12232c; color: var(--info);  border-color: #1d4152; }
-.news-cat-sport { background: #122f24; color: var(--good);  border-color: #1d4c38; }
-.news-cat-civic { background: #2a2413; color: var(--brass); border-color: #4a4020; }
-.news-cat-tech  { background: #1d1b2e; color: #9f8fd8;      border-color: #332e4d; }
-.news-cat-money { background: #2f2512; color: var(--warn);  border-color: #4c3c1a; }
+.news-cat-local { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); color: var(--info);  border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
+.news-cat-sport { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good);  border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
+.news-cat-civic { background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); color: var(--brass); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); }
+.news-cat-tech  { background: color-mix(in srgb, var(--pc-serial) 14%, var(--bg-raise)); color: var(--pc-serial);      border-color: color-mix(in srgb, var(--pc-serial) 45%, var(--bg-raise)); }
+.news-cat-money { background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise)); color: var(--warn);  border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); }
 
 /* The source name is required on every row now (raw RSS, ~40 feeds) and the
    age chip sits after it. Both are furniture: quiet, tabular, and never
@@ -1527,7 +1531,7 @@ body {
 .news-lens {
   margin: 6px 0 0;
   padding-left: 8px;
-  border-left: 2px solid #1d4152;
+  border-left: 2px solid color-mix(in srgb, var(--info) 45%, var(--bg-raise));
   color: var(--info);
   font-size: 12px;
   line-height: 1.4;
@@ -1554,7 +1558,7 @@ body {
   padding: 9px 10px;
   border-radius: 9px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   font-family: inherit;
   font-size: 11.5px;
@@ -1564,20 +1568,20 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.ent-btn:hover { color: var(--text); border-color: #2f3d4c; }
+.ent-btn:hover { color: var(--text); border-color: var(--line); }
 .ent-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 .ent-btn-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ent-emoji { font-size: 12px; line-height: 1; }
 
-.ent-btn-screen { background: #12232c; color: var(--info);  border-color: #1d4152; }
-.ent-btn-mic    { background: #2a2413; color: var(--brass); border-color: #4a4020; }
-.ent-btn-film   { background: #1d1b2e; color: #9f8fd8;      border-color: #332e4d; }
-.ent-btn-audio  { background: #122f24; color: var(--good);  border-color: #1d4c38; }
+.ent-btn-screen { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); color: var(--info);  border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
+.ent-btn-mic    { background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); color: var(--brass); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); }
+.ent-btn-film   { background: color-mix(in srgb, var(--pc-serial) 14%, var(--bg-raise)); color: var(--pc-serial);      border-color: color-mix(in srgb, var(--pc-serial) 45%, var(--bg-raise)); }
+.ent-btn-audio  { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good);  border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
 
 /* A face the engine has not built yet: present, obviously inert, and not
    pretending to be a tap target. */
 .ent-btn-soon {
-  background: #15191f;
+  background: var(--bg-chip);
   color: var(--text-faint);
   border-style: dashed;
   cursor: default;
@@ -1598,7 +1602,7 @@ body {
   padding: 1px 6px;
   border-radius: 999px;
   background: var(--brass);
-  color: #15120a;
+  color: var(--bg);
   font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -1629,7 +1633,7 @@ body {
   padding: 2px 7px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   font-size: 10.5px;
   font-weight: 600;
@@ -1672,7 +1676,7 @@ body {
   flex-shrink: 0;
   border-radius: 3px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   object-fit: cover;
 }
 
@@ -1751,7 +1755,7 @@ body {
   padding: 1px 5px;
   border-radius: 999px;
   background: var(--brass);
-  color: #15120a;
+  color: var(--bg);
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -1892,9 +1896,9 @@ body {
   right: calc(14px + var(--safe-r));
   bottom: calc(14px + var(--safe-b));
   z-index: 30;
-  border: 1px solid #5c4a14;
+  border: 1px solid color-mix(in srgb, var(--brass) 60%, var(--bg));
   background: var(--brass);
-  color: #150f02;
+  color: var(--bg);
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -2026,7 +2030,7 @@ body {
 .ask-transcript:not(:has(.bubble)) { padding-bottom: 2px; }
 
 .bubble { max-width: 88%; padding: 8px 11px; border-radius: 12px; font-size: 13.5px; }
-.bubble-user { align-self: flex-end; background: #233042; border-bottom-right-radius: 4px; }
+.bubble-user { align-self: flex-end; background: var(--bg-chip); border-bottom-right-radius: 4px; }
 .bubble-assistant { align-self: flex-start; background: var(--bg-sink); border: 1px solid var(--line-soft); border-bottom-left-radius: 4px; }
 .bubble-wait { opacity: 0.6; font-style: italic; }
 .bubble-text { white-space: pre-wrap; word-break: break-word; }
@@ -2036,9 +2040,9 @@ body {
 .ask-offer {
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   padding: 8px 9px; margin-bottom: 8px;
-  background: #221d10; border: 1px solid #443a1c; border-radius: 9px;
+  background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); border: 1px solid color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); border-radius: 9px;
 }
-.ask-offer-text { font-size: 12px; color: #e8cf94; flex: 1 1 100%; }
+.ask-offer-text { font-size: 12px; color: var(--brass); flex: 1 1 100%; }
 
 /* Pinned to the sheet's bottom edge: last child, never shrinking, so the
    transcript above it is the only thing that gives. The hairline makes the
@@ -2067,7 +2071,7 @@ body {
 }
 .ask-input:focus { outline: none; border-color: var(--brass); }
 
-.btn-send { background: var(--brass); color: #150f02; border-color: #5c4a14; flex: 0 0 auto; }
+.btn-send { background: var(--brass); color: var(--bg); border-color: color-mix(in srgb, var(--brass) 60%, var(--bg)); flex: 0 0 auto; }
 
 /* Desktop, part two: everything inside the sheets.
 
@@ -2088,10 +2092,10 @@ body {
 
 /* gate token form (iOS installed-app path) */
 .gate-form{display:flex;gap:8px;margin-top:12px}
-.gate-input{flex:1;min-width:0;font:14px ui-monospace,Menlo,monospace;padding:10px 12px;border-radius:8px;border:1px solid var(--line,#28333f);background:var(--panel2,#1e2733);color:var(--ink,#e6ebf0)}
-.gate-input.bad{border-color:var(--lose,#e5484d)}
-.gate-btn{font:600 14px system-ui,sans-serif;padding:10px 14px;border-radius:8px;border:0;background:var(--accent,#d4a72c);color:#0f141a}
-.gate-btn:focus-visible,.gate-input:focus-visible{outline:2px solid var(--accent,#d4a72c);outline-offset:2px}
+.gate-input{flex:1;min-width:0;font:14px ui-monospace,Menlo,monospace;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg-chip);color:var(--text)}
+.gate-input.bad{border-color:var(--bad)}
+.gate-btn{font:600 14px system-ui,sans-serif;padding:10px 14px;border-radius:8px;border:0;background:var(--brass);color:var(--bg)}
+.gate-btn:focus-visible,.gate-input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
 /* header refresh — an installed iOS web app has no pull-to-refresh and no address bar */
 .refresh-btn {
@@ -2152,7 +2156,7 @@ body {
   padding: 1px 5px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-faint);
   font-size: 9.5px;
   font-weight: 600;
@@ -2169,7 +2173,7 @@ body {
   padding: 7px 10px;
   border-radius: 9px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   font-family: inherit;
   font-size: 11.5px;
@@ -2177,7 +2181,7 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.lc-more:hover { color: var(--text); border-color: #2f3d4c; }
+.lc-more:hover { color: var(--text); border-color: var(--line); }
 .lc-more:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 /* status: stale — the rows are real, one of the feeds simply did not answer.
@@ -2288,18 +2292,18 @@ body {
 .tape-a0 { color: var(--info); }
 .tape-a1 { color: var(--good); }
 .tape-a2 { color: var(--brass); }
-.tape-a3 { color: #9f8fd8; }
-.tape-a4 { color: #e08a6a; }
-.tape-a5 { color: #63c6c0; }
+.tape-a3 { color: var(--pc-serial); }
+.tape-a4 { color: var(--tape-a4); }
+.tape-a5 { color: var(--tape-a5); }
 
 /* A chip is the actor's colour at chip weight — tinted ground, coloured text,
    and a border that belongs to the same family rather than the default line. */
-.tape-chip.tape-a0 { background: #12232c; border-color: #1d4152; }
-.tape-chip.tape-a1 { background: #122f24; border-color: #1d4c38; }
-.tape-chip.tape-a2 { background: #2a2413; border-color: #4a4020; }
-.tape-chip.tape-a3 { background: #1d1b2e; border-color: #332e4d; }
-.tape-chip.tape-a4 { background: #2c1d17; border-color: #4a3227; }
-.tape-chip.tape-a5 { background: #10282a; border-color: #1c4547; }
+.tape-chip.tape-a0 { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
+.tape-chip.tape-a1 { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
+.tape-chip.tape-a2 { background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); }
+.tape-chip.tape-a3 { background: color-mix(in srgb, var(--pc-serial) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--pc-serial) 45%, var(--bg-raise)); }
+.tape-chip.tape-a4 { background: color-mix(in srgb, var(--tape-a4) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--tape-a4) 45%, var(--bg-raise)); }
+.tape-chip.tape-a5 { background: color-mix(in srgb, var(--tape-a5) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--tape-a5) 45%, var(--bg-raise)); }
 
 /* The way into the rest of the day. Same control as Lake Country's, because it
    opens the same sheet and should not read as a different kind of button. */
@@ -2310,7 +2314,7 @@ body {
   padding: 7px 10px;
   border-radius: 9px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   font-family: inherit;
   font-size: 11.5px;
@@ -2318,7 +2322,7 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.tape-more:hover { color: var(--text); border-color: #2f3d4c; }
+.tape-more:hover { color: var(--text); border-color: var(--line); }
 .tape-more:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 .tape-yesterday { margin-top: 2px; }
@@ -2381,7 +2385,7 @@ a.wb-doc:hover { text-decoration: underline; }
   padding: 7px 10px;
   border-radius: 9px;
   border: 1px solid var(--line);
-  background: #1a1f26;
+  background: var(--bg-chip);
   color: var(--text-dim);
   font-family: inherit;
   font-size: 11.5px;
@@ -2389,7 +2393,7 @@ a.wb-doc:hover { text-decoration: underline; }
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.wb-more:hover { color: var(--text); border-color: #2f3d4c; }
+.wb-more:hover { color: var(--text); border-color: var(--line); }
 .wb-more:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 .wb-note { margin-top: 12px; }
@@ -2431,18 +2435,18 @@ a.wb-doc:hover { text-decoration: underline; }
   text-align: left;
   cursor: pointer;
 }
-.cards-btn:hover { color: var(--text); border-color: #2f3d4c; }
+.cards-btn:hover { color: var(--text); border-color: var(--line); }
 .cards-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 .cards-btn-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cards-emoji { font-size: 12px; line-height: 1; }
 
-.cards-btn-hunt { background: #2a2413; color: var(--brass); border-color: #4a4020; }
-.cards-btn-shop { background: #12232c; color: var(--info);  border-color: #1d4152; }
-.cards-btn-pc   { background: #1d1830; color: var(--pc-serial); border-color: #3a2f5c; }
+.cards-btn-hunt { background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); color: var(--brass); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); }
+.cards-btn-shop { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); color: var(--info);  border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
+.cards-btn-pc   { background: color-mix(in srgb, var(--pc-serial) 14%, var(--bg-raise)); color: var(--pc-serial); border-color: color-mix(in srgb, var(--pc-serial) 45%, var(--bg-raise)); }
 
 /* A face the engine has not built yet: visible, so it reads as coming. */
 .cards-btn-soon {
-  background: #15191f;
+  background: var(--bg-chip);
   color: var(--text-faint);
   border-style: dashed;
   cursor: default;
@@ -2464,7 +2468,7 @@ a.wb-doc:hover { text-decoration: underline; }
   padding: 1px 7px;
   border-radius: 999px;
   background: var(--brass);
-  color: #150f02;
+  color: var(--bg);
   font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -2516,7 +2520,7 @@ a.wb-doc:hover { text-decoration: underline; }
   background: var(--bg-sink);
   object-fit: cover;
 }
-.cards-thumb-none { background: #151b22; }
+.cards-thumb-none { background: var(--bg-sink); }
 
 .cards-main { min-width: 0; flex: 1; }
 .cards-title-line { display: flex; gap: 6px; align-items: baseline; }
@@ -2567,8 +2571,8 @@ a.wb-doc:hover { text-decoration: underline; }
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.cards-fmv-good  { background: #122f24; color: var(--good); border-color: #1d4c38; }
-.cards-fmv-muted { background: #15191f; color: var(--text-faint); }
+.cards-fmv-good  { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
+.cards-fmv-muted { background: var(--bg-chip); color: var(--text-faint); }
 .cards-check { font-weight: 700; }
 .cards-bookage { font-size: 11px; color: var(--text-faint); }
 
@@ -2583,9 +2587,9 @@ a.wb-doc:hover { text-decoration: underline; }
   white-space: nowrap;
   color: var(--text-dim);
 }
-.cards-chip-max  { color: var(--brass); background: #2a2413; border-color: #4a4020; font-variant-numeric: tabular-nums; }
-.cards-chip-obo  { color: var(--info);  background: #12232c; border-color: #1d4152; }
-.cards-chip-band { color: var(--bad);   background: #331a18; border-color: #522a26; }
+.cards-chip-max  { color: var(--brass); background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); font-variant-numeric: tabular-nums; }
+.cards-chip-obo  { color: var(--info);  background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
+.cards-chip-band { color: var(--bad);   background: color-mix(in srgb, var(--bad) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--bad) 45%, var(--bg-raise)); }
 
 /* The end-time line: a live countdown, with the wall stamp muted behind it.
    Baseline-aligned and tabular so the seconds ticking in the last quarter of
@@ -2670,18 +2674,18 @@ a.wb-doc:hover { text-decoration: underline; }
 
 /* The anchor. Violet: this is a collection, not a deal. */
 .pc-serial {
-  background: #201a33;
+  background: color-mix(in srgb, var(--pc-serial) 14%, var(--bg-raise));
   color: var(--pc-serial);
-  border-color: #3d3168;
+  border-color: color-mix(in srgb, var(--pc-serial) 45%, var(--bg-raise));
   font-weight: 700;
 }
 
 /* One of one. Gold, its own token, and the only thing on this sheet that
    wears it — the auction countdown here never goes amber. */
 .pc-serial.pc-one {
-  background: #2e2611;
+  background: color-mix(in srgb, var(--pc-one) 14%, var(--bg-raise));
   color: var(--pc-one);
-  border-color: #5c4c1c;
+  border-color: color-mix(in srgb, var(--pc-one) 45%, var(--bg-raise));
 }
 
 /* Secondary to the serial, and it should look it. */
@@ -2773,8 +2777,8 @@ a.wb-doc:hover { text-decoration: underline; }
   flex: 0 0 auto;
   padding: 1px 5px;
   border-radius: 4px;
-  background: #2a2413;
-  border: 1px solid #4a4020;
+  background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise));
+  border: 1px solid color-mix(in srgb, var(--brass) 45%, var(--bg-raise));
   color: var(--brass);
   font-size: 9.5px;
   font-weight: 700;
@@ -2796,7 +2800,7 @@ a.wb-doc:hover { text-decoration: underline; }
   font-size: 12px;
   cursor: pointer;
 }
-.cards-fold:hover { color: var(--text-dim); border-color: #2f3d4c; }
+.cards-fold:hover { color: var(--text-dim); border-color: var(--line); }
 .cards-fold:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 .cards-nb { display: flex; flex-direction: column; margin-top: 6px; }
