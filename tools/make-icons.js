@@ -71,8 +71,8 @@ function encodePng(w, h, rgba) {
 
 // ---------------------------------------------------------------- the glyph
 
-const BG = [15, 20, 26]; // #0f141a — matches the app background
-const FG = [201, 162, 39]; // #c9a227 — brass
+const BG = [26, 26, 28]; // #1a1a1c — Night Watch (9/27): --bg-chip, deep grey rather than the page black so the tile reads on a dark dock
+const FG = [255, 140, 26]; // #ff8c1a — the Night Watch accent (--brass)
 
 /**
  * Coverage of the ship's-wheel glyph at a point, 0..1, by supersampling.
