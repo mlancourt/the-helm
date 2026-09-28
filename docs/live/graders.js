@@ -26,6 +26,22 @@
  *
  * States: pre | lead | trail | even | win | lose | push | dead | unsupported
  *
+ * MARGIN (B11, v1.24.0). Every result also carries `margin`: how far the
+ * ticket is on the right side of its number, signed, positive = good for the
+ * ticket. It is the same arithmetic the `why` already prints, published as a
+ * number so the tile can draw it — never a second opinion, and never read by
+ * the state logic above:
+ *
+ *   spread / spread_1h   pick − opp + line   (1H on the first-half sums)
+ *   ml                   pick − opp
+ *   total_over           total − line
+ *   total_under          line − total
+ *
+ * `null` wherever a distance has no meaning: the binary markets (anytime TD,
+ * anytime goal, both teams to score — a player has scored or has not), a
+ * game not yet started (0–0 against a −3.5 is not "3.5 short"), no game,
+ * dead, unsupported.
+ *
  * No fetching, no DOM, no clock. Everything is decided from the arguments, so
  * every market can be unit-tested against fixture games.
  */
@@ -37,7 +53,7 @@
  * about what a ticket returns.
  */
 
-const r = (state, label, why) => ({ state, label, why });
+const r = (state, label, why, margin = null) => ({ state, label, why, margin });
 
 /**
  * Soccer anytime-goal grading.
@@ -242,13 +258,13 @@ function gradeMl(ticket, game) {
   const score = `${pick.abbr} ${pick.score}–${opp.score} ${opp.abbr}`;
 
   if (game.state === 'post') {
-    if (margin > 0) return r('win', 'WIN', `${score} final`);
-    if (margin < 0) return r('lose', 'LOSS', `${score} final`);
-    return r('push', 'PUSH', `${score} final — drawn`);
+    if (margin > 0) return r('win', 'WIN', `${score} final`, margin);
+    if (margin < 0) return r('lose', 'LOSS', `${score} final`, margin);
+    return r('push', 'PUSH', `${score} final — drawn`, margin);
   }
-  if (margin > 0) return r('lead', 'LEADING', `${score}, ${game.detail || 'live'}`);
-  if (margin < 0) return r('trail', 'TRAILING', `${score}, ${game.detail || 'live'}`);
-  return r('even', 'TIED', `${score}, ${game.detail || 'live'}`);
+  if (margin > 0) return r('lead', 'LEADING', `${score}, ${game.detail || 'live'}`, margin);
+  if (margin < 0) return r('trail', 'TRAILING', `${score}, ${game.detail || 'live'}`, margin);
+  return r('even', 'TIED', `${score}, ${game.detail || 'live'}`, margin);
 }
 
 function gradeSpread(ticket, game, { half = false } = {}) {
@@ -283,13 +299,13 @@ function gradeSpread(ticket, game, { half = false } = {}) {
   const at = `${pick.abbr} ${fmtLine(line)}`;
 
   if (decided) {
-    if (margin > 0) return r('win', 'WIN', `${score} ${scope}, ${at} covers by ${Math.abs(margin)}`);
-    if (margin < 0) return r('lose', 'LOSS', `${score} ${scope}, ${at} misses by ${Math.abs(margin)}`);
-    return r('push', 'PUSH', `${score} ${scope}, lands exactly on ${fmtLine(line)}`);
+    if (margin > 0) return r('win', 'WIN', `${score} ${scope}, ${at} covers by ${Math.abs(margin)}`, margin);
+    if (margin < 0) return r('lose', 'LOSS', `${score} ${scope}, ${at} misses by ${Math.abs(margin)}`, margin);
+    return r('push', 'PUSH', `${score} ${scope}, lands exactly on ${fmtLine(line)}`, margin);
   }
-  if (margin > 0) return r('lead', 'COVERING', `${score}, ${at} by ${Math.abs(margin)}`);
-  if (margin < 0) return r('trail', 'TRAILING', `${score}, ${at} short by ${Math.abs(margin)}`);
-  return r('even', 'ON THE NUMBER', `${score}, exactly on ${fmtLine(line)}`);
+  if (margin > 0) return r('lead', 'COVERING', `${score}, ${at} by ${Math.abs(margin)}`, margin);
+  if (margin < 0) return r('trail', 'TRAILING', `${score}, ${at} short by ${Math.abs(margin)}`, margin);
+  return r('even', 'ON THE NUMBER', `${score}, exactly on ${fmtLine(line)}`, margin);
 }
 
 function gradeTotal(ticket, game, over) {
@@ -298,13 +314,14 @@ function gradeTotal(ticket, game, over) {
 
   const total = game.home.score + game.away.score;
   const word = over ? 'over' : 'under';
+  const margin = over ? total - line : line - total;
 
   if (game.state === 'post') {
-    if (total === line) return r('push', 'PUSH', `${total} total, lands on ${line}`);
+    if (total === line) return r('push', 'PUSH', `${total} total, lands on ${line}`, margin);
     const won = over ? total > line : total < line;
     return won
-      ? r('win', 'WIN', `${total} total, ${word} ${line}`)
-      : r('lose', 'LOSS', `${total} total, ${word} ${line} missed`);
+      ? r('win', 'WIN', `${total} total, ${word} ${line}`, margin)
+      : r('lose', 'LOSS', `${total} total, ${word} ${line} missed`, margin);
   }
 
   // B3, the lock: a score cannot go down, so the moment the total clears the
@@ -312,21 +329,21 @@ function gradeTotal(ticket, game, over) {
   // whistle to say so would be the tile pretending not to know.
   if (total > line) {
     return over
-      ? r('win', 'WIN', `${total} total, already past ${line}`)
-      : r('lose', 'LOSS', `${total} total, already past ${line}`);
+      ? r('win', 'WIN', `${total} total, already past ${line}`, margin)
+      : r('lose', 'LOSS', `${total} total, already past ${line}`, margin);
   }
   // Level with the number: alive for the over (one more point does it) and
   // heading for a push on the under. "needs 0 more" reads as a bug, so it is
   // said in words instead.
   if (total === line) {
     return over
-      ? r('trail', 'TRAILING', `${total} total, level with ${line}`)
-      : r('lead', 'LEADING', `${total} total, level with ${line}`);
+      ? r('trail', 'TRAILING', `${total} total, level with ${line}`, margin)
+      : r('lead', 'LEADING', `${total} total, level with ${line}`, margin);
   }
   const need = (line - total).toFixed(1).replace(/\.0$/, '');
   return over
-    ? r('trail', 'TRAILING', `${total} total, needs ${need} more`)
-    : r('lead', 'LEADING', `${total} total, ${need} of room left`);
+    ? r('trail', 'TRAILING', `${total} total, needs ${need} more`, margin)
+    : r('lead', 'LEADING', `${total} total, ${need} of room left`, margin);
 }
 
 function gradeAnytimeTd(ticket, game, extras) {
@@ -419,4 +436,85 @@ export function gradeTicket(ticket, game, extras) {
   } catch (e) {
     return r('unsupported', 'N/A', `grading failed: ${e.message}`);
   }
+}
+
+// ---------------------------------------------------------- game progress
+
+/**
+ * Regulation shape per timed league: [periods, seconds per period] (B13).
+ *
+ * Football is one shape at every level, and hockey is too, so those key on
+ * the slug's SPORT segment. Basketball is not — the pro game is four twelves
+ * and the college game two twenties — so it keys on the whole slug, and a
+ * basketball league not listed here answers null rather than a guess.
+ */
+const TIMED_SPORT = {
+  football: [4, 15 * 60],
+  hockey: [3, 20 * 60],
+};
+const TIMED_LEAGUE = {
+  'basketball/nba': [4, 12 * 60],
+  'basketball/wnba': [4, 10 * 60],
+  'basketball/mens-college-basketball': [2, 20 * 60],
+};
+
+/** `football/nfl` -> `football`. */
+export function sportOf(league) {
+  return String(league || '').split('/')[0].toLowerCase();
+}
+
+/**
+ * ESPN's displayClock as seconds left in the period: "8:12" -> 492, and the
+ * sub-minute spelling basketball uses ("34.5") -> 34.5. Anything else is null.
+ */
+function clockSecs(clock) {
+  const s = String(clock || '').trim();
+  let m = s.match(/^(\d+):(\d{1,2}(?:\.\d+)?)$/);
+  if (m) return Number(m[1]) * 60 + Number(m[2]);
+  m = s.match(/^(\d+(?:\.\d+)?)$/);
+  if (m) return Number(m[1]);
+  return null;
+}
+
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+
+/**
+ * How much of the game has been played, 0..1, or null when it cannot be
+ * known (B13). Pure: no clock, no DOM, no fetch — everything comes off the
+ * normalised game, and the league off the game or the caller.
+ *
+ *   pre -> 0 · post -> 1
+ *   timed   (period − 1 + (1 − clockSecs / periodLen)) / periods;
+ *           overtime (any period past regulation) -> 1
+ *   baseball  inning / 9, capped (half-innings ignored)
+ *   soccer    clock minutes / 90, capped — ESPN's soccer clock counts UP
+ *             ("67'", "90'+3'")
+ *
+ * This is decoration's input, never a grade's: nothing in the graders above
+ * reads it, and a null leaves the bar's track full rather than inventing time.
+ */
+export function gameProgress(game, league = game && game.league) {
+  if (!game || typeof game !== 'object') return null;
+  if (game.state === 'pre') return 0;
+  if (game.state === 'post') return 1;
+  if (game.state !== 'in') return null;
+
+  const slug = String(league || '').toLowerCase();
+  const sport = sportOf(slug);
+  const period = Number(game.period) || 0;
+
+  if (sport === 'baseball') return period > 0 ? clamp01(period / 9) : null;
+
+  if (sport === 'soccer') {
+    const m = String(game.clock || '').match(/^\s*(\d+)/);
+    return m ? clamp01(Number(m[1]) / 90) : null;
+  }
+
+  const shape = TIMED_LEAGUE[slug] || TIMED_SPORT[sport];
+  if (!shape || period < 1) return null;
+  const [periods, len] = shape;
+  if (period > periods) return 1;
+  const left = clockSecs(game.clock);
+  if (left === null) return null;
+  return clamp01((period - 1 + (1 - Math.min(left, len) / len)) / periods);
 }

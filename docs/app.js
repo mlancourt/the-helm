@@ -54,6 +54,7 @@ const state = {
   error: null,
   live: null, // the LIVE band fills this: {games, grades, today, fetched_at, error}
   weather: null, // the weather band fills this: {alerts, now, days, ok, error}
+  tileTeardowns: [], // what the current board's tiles started; run before the next
 };
 
 let askController = null;
@@ -119,7 +120,7 @@ const mockEspn = {
 };
 
 /**
- * The LIVE band runs on its own clock — 45s while a game is in progress —
+ * The LIVE band runs on its own clock — 20s while a game is in progress —
  * independently of the 5-minute snapshot refresh. It re-renders on its own
  * whenever grades move.
  */
@@ -446,7 +447,10 @@ function tileCard(id, entry, tile) {
     const mod = modules.get(id);
     try {
       if (mod) {
-        mod(body, tile, { id, title, snapshot: state.snapshot, pending: state.pending, actions, live: state.live, weather: state.weather });
+        const teardown = mod(body, tile, { id, title, snapshot: state.snapshot, pending: state.pending, actions, live: state.live, weather: state.weather });
+        // A tile that started a clock hands back its teardown (bets_live's
+        // graded-ago stamp); renderAll runs every one before the next board.
+        if (typeof teardown === 'function') (state.tileTeardowns ||= []).push(teardown);
       } else {
         genericCard(body, tile);
       }
@@ -586,6 +590,13 @@ function renderAll() {
   renderBanner();
   renderBoardBanner();
   renderHeader();
+
+  // The board is about to be replaced: stop whatever the last one started.
+  // One that throws is swallowed — a clock is never worth a blank page.
+  for (const fn of state.tileTeardowns || []) {
+    try { fn(); } catch { /* rule 8 */ }
+  }
+  state.tileTeardowns = [];
 
   const main = document.getElementById('board');
   clear(main);
@@ -936,7 +947,7 @@ async function boot() {
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') {
-      // A phone in a pocket has no business hitting ESPN every 45 seconds,
+      // A phone in a pocket has no business hitting ESPN every 20 seconds,
       // and none at all polling the NWS (W5).
       liveBand.stop();
       weatherBand.stop();

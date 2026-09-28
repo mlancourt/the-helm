@@ -250,7 +250,7 @@ export function normalizeEvent(event, league = '') {
  *
  * `bets_live` and `today_games` both want MLB's slate, and the band asks for
  * both in the same Promise.all. Without this they would be two identical HTTP
- * calls on every 45-second tick; with it, the second caller awaits the first
+ * calls on every 20-second tick; with it, the second caller awaits the first
  * one's promise and the tick makes one call per league (G5).
  *
  * It holds PROMISES, not results, and every entry is dropped the moment its

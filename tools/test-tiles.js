@@ -3119,6 +3119,177 @@ async function main() {
     const downed = new El('div');
     bets.render(downed, betsTile({ tickets: [tkt({ id: 'down-1' })] }), { id: 'bets_live', actions: {}, live: { grades: new Map(), games: new Map(), fetched_at: null, error: 'espn http 503' } });
     check('a dead feed says so without blanking the board', /feed unavailable/.test(textOf(downed)) && countOf(downed, 'ticket') === 1);
+
+    // -- B11–B13: the cover bar ----------------------------------------------
+    //
+    // One ticket per market at each state it can reach, on one live football
+    // game at Q3 4:12 — (2 + (1 − 252/900)) / 4 = 0.68 played, so the track
+    // is 32.0% of the row. Every grade carries the margin the grader would.
+    console.log('\nbets_live — the cover bar (B11, B12, B13)');
+    const COVER_GAME = gameIn({ league: 'football/nfl', period: 3, clock: '4:12' });
+    const CASES = [
+      // id, market, state, margin, expected {tone, side, fill}
+      ['sp-lead', 'spread', 'lead', 7, { tone: 'good', side: 'right', fill: '25.0%' }],
+      ['sp-trail', 'spread', 'trail', -3.5, { tone: 'bad', side: 'left', fill: '12.5%' }],
+      ['sp-big', 'spread', 'lead', 30, { tone: 'good', side: 'right', fill: '50.0%' }],
+      ['sp-win', 'spread', 'win', 0.5, { tone: 'good', side: 'right', fill: '50.0%' }],
+      ['sp-lose', 'spread', 'lose', -0.5, { tone: 'bad', side: 'left', fill: '50.0%' }],
+      ['h1-lead', 'spread_1h', 'lead', 3.5, { tone: 'good', side: 'right', fill: '12.5%' }],
+      ['ml-lead', 'ml', 'lead', 14, { tone: 'good', side: 'right', fill: '50.0%' }],
+      ['ml-trail', 'ml', 'trail', -7, { tone: 'bad', side: 'left', fill: '25.0%' }],
+      ['ov-trail', 'total_over', 'trail', -7, { tone: 'bad', side: 'left', fill: '25.0%' }],
+      ['ov-win', 'total_over', 'win', 1.5, { tone: 'good', side: 'right', fill: '50.0%' }],
+      ['un-lead', 'total_under', 'lead', 3.5, { tone: 'good', side: 'right', fill: '12.5%' }],
+      ['un-lose', 'total_under', 'lose', -0.5, { tone: 'bad', side: 'left', fill: '50.0%' }],
+      ['un-level', 'total_under', 'lead', 0, { tone: 'good', side: null }],
+      ['td-trail', 'anytime_td', 'trail', null, { tone: 'bad', side: 'full', fill: '100.0%' }],
+      ['td-win', 'anytime_td', 'win', null, { tone: 'good', side: 'full', fill: '100.0%' }],
+      ['td-lose', 'anytime_td', 'lose', null, { tone: 'bad', side: 'full', fill: '100.0%' }],
+      ['bt-trail', 'btts', 'trail', null, { tone: 'bad', side: 'full', fill: '100.0%' }],
+      ['bt-win', 'btts', 'win', null, { tone: 'good', side: 'full', fill: '100.0%' }],
+      ['sp-pre', 'spread', 'pre', null, { tone: 'muted', side: null }],
+      ['sp-push', 'spread', 'push', 0, { tone: 'muted', side: null }],
+      ['ml-even', 'ml', 'even', 0, { tone: 'muted', side: null }],
+      ['sp-dead', 'spread', 'dead', null, { tone: 'muted', side: null }],
+      ['ag-na', 'anytime_goal', 'unsupported', null, { tone: 'muted', side: null }],
+    ];
+    const coverTickets = CASES.map(([id, market]) => tkt({ id, market, player: /anytime/.test(market) ? 'D. Vasquez' : null }));
+    const coverGrades = new Map(CASES.map(([id, , state, margin]) => [id, { state, label: state.toUpperCase(), why: 'w', margin }]));
+    const coverRoot = new El('div');
+    bets.render(coverRoot, betsTile({ tickets: coverTickets }), {
+      id: 'bets_live',
+      actions: {},
+      live: { grades: coverGrades, games: new Map([['ev-live', COVER_GAME]]), fetched_at: null, error: null },
+    });
+    const rowsById = new Map(coverRoot.querySelectorAll('.ticket').map((row, i) => [coverTickets[i].id, row]));
+    check('every row carries exactly one bar', coverRoot.querySelectorAll('.ticket').every((r) => countOf(r, 'cover-bar') === 1) && countOf(coverRoot, 'ticket') === CASES.length);
+    check('the bar is the LAST thing in the row, under label/why/pill/units', coverRoot.querySelectorAll('.ticket').every((r) => r.childNodes[r.childNodes.length - 1].classList.contains('cover-bar')));
+    check('every bar is aria-hidden', coverRoot.querySelectorAll('.cover-bar').every((b) => b.getAttribute('aria-hidden') === 'true'));
+    check('and has no text of its own', coverRoot.querySelectorAll('.cover-bar').every((b) => b.textContent === ''));
+    check('every bar has its centre notch', coverRoot.querySelectorAll('.cover-bar').every((b) => countOf(b, 'cover-notch') === 1));
+    for (const [id, market, state, margin, want] of CASES) {
+      const row = rowsById.get(id);
+      const bar = row.querySelector('.cover-bar');
+      const fill = bar.querySelector('.cover-fill');
+      const tag = `${market} ${state} ${margin}`;
+      check(`${tag}: tone ${want.tone}`, bar.classList.contains(`cover-${want.tone}`), bar.className);
+      if (want.side === null) {
+        check(`${tag}: no fill`, fill === null, fill && fill.className);
+      } else {
+        check(`${tag}: fill ${want.side} at ${want.fill}`, !!fill && fill.classList.contains(`cover-fill-${want.side}`) && fill.getAttribute('style') === `width:${want.fill}`, fill && `${fill.className} ${fill.getAttribute('style')}`);
+      }
+    }
+    check('the track drains with the game: 32.0% left at Q3 4:12', coverRoot.querySelectorAll('.cover-track').every((t) => t.getAttribute('style') === 'width:32.0%'), coverRoot.querySelector('.cover-track').getAttribute('style'));
+
+    // Tone follows the pill, never the number: a state the margin disagrees
+    // with still wears the state's colour.
+    const { coverBar } = bets;
+    check('coverBar is exported for the tests', typeof coverBar === 'function');
+    const ct = (market, state, margin, game = COVER_GAME, league = 'football/nfl') => coverBar(tkt({ market, league }), { state, margin }, game);
+    check('a locked win on a tiny margin is FULL green', ct('spread', 'win', 0.5).fill === 0.5 && ct('spread', 'win', 0.5).tone === 'good' && ct('spread', 'win', 0.5).side === 'right');
+    check('a locked loss on a tiny margin is FULL red', ct('total_under', 'lose', -0.5).fill === 0.5 && ct('total_under', 'lose', -0.5).tone === 'bad');
+    check('tone is the pill\'s: lead with an odd negative margin is still good', ct('spread', 'lead', -2).tone === 'good' && ct('spread', 'lead', -2).side === 'right');
+    check('no fill when the margin is 0, whatever the state', ct('total_over', 'trail', 0).side === null && ct('total_under', 'lead', 0).fill === 0);
+    check('scale by sport — baseball ±3: 1.5 runs is a quarter row', ct('spread', 'lead', 1.5, { state: 'in', period: 5 }, 'baseball/mlb').fill === 0.25);
+    check('hockey ±3: 3 goals pins at the half', ct('ml', 'lead', 3, { state: 'in', period: 2, clock: '10:00' }, 'hockey/nhl').fill === 0.5);
+    check('soccer ±3', ct('ml', 'trail', -1, { state: 'in', clock: "30'" }, 'soccer/eng.1').fill === 1 / 6);
+    check('basketball ±14: 7 is a quarter row', ct('spread', 'lead', 7, { state: 'in', period: 2, clock: '6:00' }, 'basketball/nba').fill === 0.25);
+    check('an unknown sport falls back to ±14', ct('ml', 'lead', 7, null, 'cricket/ipl').fill === 0.25);
+    check('track: pre is full', ct('spread', 'pre', null, gamePre()).track === 1);
+    check('track: no game matched is full', ct('spread', 'lead', 3, null).track === 1);
+    check('track: an unknowable clock leaves it full', ct('spread', 'lead', 3, gameIn({ league: 'football/nfl', clock: 'Halftime' })).track === 1);
+    check('track: post is gone', ct('spread', 'win', 3, gamePost({ league: 'football/nfl' })).track === 0);
+    check('track: mid-game tracks gameProgress', Math.abs(ct('spread', 'lead', 3, gameIn({ league: 'football/nfl', period: 2, clock: '0:00' })).track - 0.5) < 1e-9);
+    const postRoot = new El('div');
+    bets.render(postRoot, betsTile({ tickets: [tkt({ id: 'post-bar', espn_event_id: 'ev-post' })] }), {
+      id: 'bets_live', actions: {},
+      live: { grades: new Map([['post-bar', { state: 'win', label: 'WIN', why: 'w', margin: 3 }]]), games: new Map([['ev-post', gamePost({ league: 'football/nfl' })]]), fetched_at: null, error: null },
+    });
+    check('at post the drained track is not drawn at all', countOf(postRoot, 'cover-track') === 0 && countOf(postRoot, 'cover-notch') === 1);
+    const preRoot = new El('div');
+    bets.render(preRoot, betsTile({ tickets: [tkt({ id: 'pre-bar', espn_event_id: 'ev-pre' })] }), {
+      id: 'bets_live', actions: {},
+      live: { grades: new Map([['pre-bar', { state: 'pre', label: 'PRE', why: 'not started', margin: null }]]), games: new Map([['ev-pre', gamePre({ league: 'football/nfl' })]]), fetched_at: null, error: null },
+    });
+    check('pre: notch only, muted, full track', countOf(preRoot, 'cover-fill') === 0 && countOf(preRoot, 'cover-muted') === 1 && preRoot.querySelector('.cover-track').getAttribute('style') === 'width:100.0%');
+    check('an ungraded board still draws a muted bar', bare.querySelectorAll('.cover-bar').length === 1 && countOf(bare, 'cover-muted') === 1 && countOf(bare, 'cover-fill') === 0);
+    // The bar is a picture, never a number: the B5 sum still reconciles.
+    check('the cover bar adds no figure — lean-now still sums the rows', statValue(mixedRoot, 'lean now') === '+0.69u');
+
+    // Colour discipline: only the tile's existing good / bad / muted.
+    const CSS_ALL = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+    const coverCss = CSS_ALL.slice(CSS_ALL.indexOf('/* B11–B13'), CSS_ALL.indexOf('/* B14 — the live pulse'));
+    const pulseCss = CSS_ALL.slice(CSS_ALL.indexOf('/* B14 — the live pulse'));
+    const tokensIn = (css) => [...new Set((css.match(/var\(--[a-z0-9-]+\)/g) || []))];
+    const ALLOWED = new Set(['var(--good)', 'var(--bad)', 'var(--line-soft)', 'var(--text-dim)', 'var(--text-faint)']);
+    check('the cover bar stylesheet block was found', coverCss.length > 100 && pulseCss.length > 50);
+    check('the bar reaches for no colour token but good / bad / muted', tokensIn(coverCss + pulseCss).every((t) => ALLOWED.has(t)), tokensIn(coverCss + pulseCss).join(' '));
+    check('and names no colour literal', !/#[0-9a-f]{3,8}\b|rgba?\(|hsl/i.test(coverCss + pulseCss));
+    const SRC_NC = BETS_SRC;
+    check('the module picks no colour token itself', !/var\(--/.test(SRC_NC));
+    const barCls = (SRC_NC.match(/cls: `cover-[^`]*`/g) || []);
+    check('every bar class is cover-${tone} or cover-fill-${side} — no third palette', barCls.length === 2 && barCls.every((c) => /\$\{b\.(tone|side)\}/.test(c)), barCls.join(' | '));
+
+    // -- B15: what is still not on this tile --------------------------------
+    console.log('\nbets_live — B15 guard');
+    check('no ESPN win probability anywhere', !/winProbability|win_prob|predictor|probability/i.test(SRC_NC));
+    check('no pace or drawdown language', !/\bpace\b|drawdown|on track|projected/i.test(SRC_NC));
+    check('the bankroll stat still wears no tone', /stat\('bankroll', units\(data\.bankroll_u\)\)/.test(SRC_NC));
+
+    // -- B14: the live pulse -------------------------------------------------
+    console.log('\nbets_live — the live pulse (B14)');
+    const realNow = Date.now;
+    try {
+      Date.now = () => Date.parse('2026-09-28T20:00:12.000Z');
+      withTimers((spy) => {
+        const liveAt = (over = {}) => ({ grades: new Map(), games: new Map(), fetched_at: '2026-09-28T20:00:00.000Z', error: null, ...over });
+        const a = new El('div');
+        const teardownA = bets.render(a, betsTile({ tickets: [tkt({ id: 'p-1' })] }), { id: 'bets_live', actions: {}, live: liveAt() });
+        const stampA = a.querySelector('.bets-graded');
+        check('the stamp reads graded 12s ago from fetched_at', stampA && stampA.textContent === 'graded 12s ago', stampA && stampA.textContent);
+        check('it sits in the header, straight after the stats', a.childNodes[0].classList.contains('bets-stats') && a.childNodes[1] === stampA);
+        check('one interval, at 5 s', spy.live.size === 1 && [...spy.live][0].ms === 5000);
+        Date.now = () => Date.parse('2026-09-28T20:00:17.000Z');
+        spy.beat();
+        check('the beat repaints the same node', stampA.textContent === 'graded 17s ago', stampA.textContent);
+        Date.now = () => Date.parse('2026-09-28T20:02:05.000Z');
+        spy.beat();
+        check('past a minute it counts minutes', stampA.textContent === 'graded 2m ago', stampA.textContent);
+        check('render hands the shell its teardown', typeof teardownA === 'function');
+
+        const b = new El('div');
+        bets.render(b, betsTile({ tickets: [tkt({ id: 'p-1' })] }), { id: 'bets_live', actions: {}, live: liveAt() });
+        check('a second render leaves exactly one interval, never two', spy.live.size === 1 && spy.peak === 1, `live ${spy.live.size}, peak ${spy.peak}`);
+        teardownA();
+        check('the teardown stops it', spy.live.size === 0);
+        teardownA();
+        check('and is safe to call twice', spy.live.size === 0);
+
+        const c = new El('div');
+        bets.render(c, betsTile({ tickets: [tkt({ id: 'p-1' })] }), { id: 'bets_live', actions: {}, live: liveAt({ error: 'feed unavailable' }) });
+        const stampC = c.querySelector('.bets-graded');
+        check('the band\'s own error string wins over the age', stampC && stampC.textContent === 'feed unavailable', stampC && stampC.textContent);
+        check('and an error stamp starts no clock', spy.live.size === 0);
+        const c2 = new El('div');
+        bets.render(c2, betsTile({ tickets: [tkt({ id: 'p-1' })] }), { id: 'bets_live', actions: {}, live: liveAt({ error: 'espn http 503' }) });
+        check('whatever that string is', c2.querySelector('.bets-graded').textContent === 'espn http 503');
+
+        const d = new El('div');
+        bets.render(d, betsTile({ tickets: [tkt({ id: 'p-1' })] }), { id: 'bets_live', actions: {}, live: liveAt({ fetched_at: null }) });
+        check('no fetched_at renders nothing at all', countOf(d, 'bets-graded') === 0 && spy.live.size === 0);
+        const e = new El('div');
+        bets.render(e, betsTile({ tickets: [tkt({ id: 'p-1' })] }), { id: 'bets_live', actions: {} });
+        check('no band renders nothing at all', countOf(e, 'bets-graded') === 0 && spy.live.size === 0);
+        const f = new El('div');
+        const teardownF = bets.render(f, betsTile({ tickets: [] }), { id: 'bets_live', actions: {}, live: liveAt() });
+        check('an empty board still stamps, and still hands back its teardown', countOf(f, 'bets-graded') === 1 && typeof teardownF === 'function');
+        teardownF();
+        check('no interval survives the suite', spy.live.size === 0);
+      });
+    } finally {
+      Date.now = realNow;
+    }
+    check('the stamp is muted, not a tone', /\.bets-graded \{[^}]*color: var\(--text-faint\)/.test(CSS_ALL));
   }
 
   // -- cards: the desk ------------------------------------------------------

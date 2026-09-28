@@ -305,6 +305,81 @@ function check(name, cond, detail) {
   const TILESRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'bets_live.js'), 'utf8');
   check('the tile does no odds math either', !/payoutMultiple|price\s*[/*]|\/\s*100/.test(TILESRC.replace(/\/\*[\s\S]*?\*\//g, '')));
 
+  // ---------------------------------------------------- margin (B11)
+  //
+  // The cover bar draws `margin`; the grade itself never reads it. So the
+  // checks are the arithmetic, the SIGN (positive = good for the ticket), and
+  // that every state/label above came out exactly as before — which the rest
+  // of this file already holds untouched.
+  console.log('\nmargin — signed, positive = good for the ticket (B11)');
+  const mg = (t, g, x) => gradeTicket(t, g, x).margin;
+  // CIN 33 – TB 27 final; first half CIN 24 – TB 10.
+  check('spread: CIN -5.5 covers by +0.5', mg(sp('home', -5.5), NFL) === 0.5, String(mg(sp('home', -5.5), NFL)));
+  check('spread: CIN -6.5 short is −0.5', mg(sp('home', -6.5), NFL) === -0.5);
+  check('spread: TB +6.5 is +0.5 from the other side', mg(sp('away', 6.5), NFL) === 0.5);
+  check('spread: TB +5.5 is −0.5', mg(sp('away', 5.5), NFL) === -0.5);
+  check('spread: a push is exactly 0', mg(sp('home', -6), NFL) === 0);
+  check('spread: live, the same number the why prints', mg(sp('home', -5.5), live(NFL)) === 0.5);
+  check('spread_1h uses the first-half sums: CIN -13.5 → 24−10−13.5 = +0.5', mg(h1('home', -13.5), NFL) === 0.5, String(mg(h1('home', -13.5), NFL)));
+  check('spread_1h: TB +13.5 → 10−24+13.5 = −0.5', mg(h1('away', 13.5), NFL) === -0.5);
+  check('spread_1h: mid-Q2 lean carries the half margin too', mg(h1('home', -13.5), q2) === 0.5);
+  check('ml: CIN leads by +6', mg(mlHome, NFL) === 6);
+  check('ml: TB is −6', mg(mlAway, NFL) === -6);
+  check('ml: live, same sign', mg(mlHome, live(NFL)) === 6 && mg(mlAway, live(NFL)) === -6);
+  check('ml: MLB SF won 6-5 away → +1', mg(mlAway, MLB) === 1);
+  check('ml: tied is 0', mg(mlHome, live(NFL, { home: { ...NFL.home, score: 27 } })) === 0);
+  check('total_over 48.5 at 60 → +11.5', mg(tot('total_over', 48.5), NFL) === 11.5);
+  check('total_under 48.5 at 60 → −11.5', mg(tot('total_under', 48.5), NFL) === -11.5);
+  check('total_over 65 live → −5', mg(tot('total_over', 65), live(NFL)) === -5);
+  check('total_under 63.5 → +3.5', mg(tot('total_under', 63.5), NFL) === 3.5);
+  check('total level with the number is 0 both ways', mg(tot('total_over', 60), live(NFL)) === 0 && mg(tot('total_under', 60), live(NFL)) === 0);
+  check('anytime TD has no margin (binary)', mg(td('M. Gesicki'), NFL, PLAYS) === null && mg(td('Nobody Here'), live(NFL), PLAYS) === null);
+  check('btts has no margin (binary)', mg({ id: 'b', market: 'btts' }, SOC) === null && mg({ id: 'b', market: 'btts' }, live(NFL)) === null);
+  check('anytime goal has no margin', mg({ id: 'g', market: 'anytime_goal', player: 'X Y' }, live(SOC)) === null);
+  check('unsupported has no margin', mg({ id: 'u', market: 'parlay' }, NFL) === null && mg({ id: 'c', market: 'ml' }, NFL) === null);
+  check('dead has no margin', mg(mlHome, { ...NFL, dead: true }) === null);
+  check('no game has no margin', mg(mlHome, null) === null);
+  check('pre-game has no margin (0–0 against a line is not a distance)', mg(sp('home', -6), NFL_PRE) === null);
+  check('every grade carries the field, even when null', 'margin' in gradeTicket(td('X'), NFL_PRE, PLAYS));
+
+  // --------------------------------------------- gameProgress (B13)
+  //
+  // NFL and MLB are the real fixtures; basketball and hockey reuse the NFL
+  // shape with the league and clock rewound (derived, marked).
+  console.log('\ngameProgress — how much of the game is gone (B13)');
+  const { gameProgress } = G;
+  const at = (g, over) => ({ ...g, state: 'in', ...over });
+  const near = (a, b) => a !== null && Math.abs(a - b) < 1e-9;
+  check('exported as a function', typeof gameProgress === 'function');
+  check('pre is 0', gameProgress(NFL_PRE) === 0);
+  check('post is 1', gameProgress(NFL) === 1 && gameProgress(MLB) === 1 && gameProgress(SOC) === 1);
+  check('football reads the league off the normalised game', NFL.league === 'football/nfl');
+  check('football Q1 15:00 is 0', near(gameProgress(at(NFL, { period: 1, clock: '15:00' })), 0));
+  check('football Q3 7:30 is 0.625', near(gameProgress(at(NFL, { period: 3, clock: '7:30' })), 0.625));
+  check('football halftime (Q2 0:00) is 0.5', near(gameProgress(at(NFL, { period: 2, clock: '0:00' })), 0.5));
+  check('football OT is 1', gameProgress(at(NFL, { period: 5, clock: '8:12' })) === 1);
+  check('college football is the same shape', near(gameProgress(at(NFL, { league: 'football/college-football', period: 4, clock: '15:00' })), 0.75));
+  check('NBA Q2 6:00 is 0.375', near(gameProgress(at(NFL, { league: 'basketball/nba', period: 2, clock: '6:00' })), 0.375));
+  check('NBA sub-minute clock ("30.0") parses', near(gameProgress(at(NFL, { league: 'basketball/nba', period: 4, clock: '30.0' })), (3 + (1 - 30 / 720)) / 4));
+  check('NBA OT is 1', gameProgress(at(NFL, { league: 'basketball/nba', period: 5, clock: '2:00' })) === 1);
+  check('college basketball 2H 10:00 is 0.75', near(gameProgress(at(NFL, { league: 'basketball/mens-college-basketball', period: 2, clock: '10:00' })), 0.75));
+  check('college basketball OT (period 3) is 1', gameProgress(at(NFL, { league: 'basketball/mens-college-basketball', period: 3, clock: '4:00' })) === 1);
+  check('hockey P2 10:00 is 0.5', near(gameProgress(at(NFL, { league: 'hockey/nhl', period: 2, clock: '10:00' })), 0.5));
+  check('hockey OT is 1', gameProgress(at(NFL, { league: 'hockey/nhl', period: 4, clock: '3:00' })) === 1);
+  check('baseball 3rd inning is 3/9', near(gameProgress(at(MLB, { period: 3 })), 3 / 9));
+  check('baseball extras (the real 10-inning game, live) cap at 1', MLB.period === 10 && gameProgress(at(MLB, {})) === 1);
+  check('soccer 67\' is 67/90', near(gameProgress(at(SOC, { clock: "67'" })), 67 / 90));
+  check('soccer stoppage 90\'+3\' is 1', gameProgress(at(SOC, { clock: "90'+3'" })) === 1);
+  check('the league can be passed by the caller', near(gameProgress({ state: 'in', period: 3, clock: '7:30' }, 'football/nfl'), 0.625));
+  check('unknown league is null', gameProgress({ state: 'in', period: 2, clock: '5:00', league: 'cricket/ipl' }) === null);
+  check('an unlisted basketball league is null, not a guess', gameProgress(at(NFL, { league: 'basketball/fiba', period: 2, clock: '5:00' })) === null);
+  check('an unparseable clock is null', gameProgress(at(NFL, { period: 2, clock: 'Halftime' })) === null);
+  check('soccer with no clock is null', gameProgress(at(SOC, { clock: '' })) === null);
+  check('null game is null, never a throw', gameProgress(null) === null);
+  check('a dead or odd state is null', gameProgress({ state: 'weird', league: 'football/nfl' }) === null);
+  const GSRC2 = GSRC.slice(GSRC.indexOf('export function gameProgress'));
+  check('gameProgress reads no clock and fetches nothing', !/Date\.now|new Date|fetch\(|document\./.test(GSRC2));
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));

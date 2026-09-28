@@ -10,12 +10,12 @@
  * often. A tile module never fetches.
  *
  * They are separate controllers rather than one because their clocks have
- * nothing to do with each other: a score moves on a 45-second tick and stops
+ * nothing to do with each other: a score moves on a 20-second tick and stops
  * at the whistle, a forecast moves on a half-hour and an alert on five minutes
  * — or one, under a Warning.
  *
  * Cadence (per the brief):
- *   45s   while any relevant game is in progress
+ *   20s   while any relevant game is in progress
  *   5min  while everything is still pre
  *   stop  once every relevant game is post
  *
@@ -55,12 +55,12 @@ import {
   nowLine,
 } from './nws.js';
 
-export const LIVE_MS = 45 * 1000;
+export const LIVE_MS = 20 * 1000;
 export const PRE_MS = 5 * 60 * 1000;
 
 /**
  * The cadence rule, pulled out so it can be tested directly:
- *   45s while any relevant game is in progress
+ *   20s while any relevant game is in progress
  *   5min while everything is still pre
  *   0 (stop) once every relevant game is final
  */

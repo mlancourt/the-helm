@@ -150,8 +150,8 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
 
   // ------------------------------------------------------------ cadence
   console.log('cadence');
-  check('a live game polls at 45s', nextDelay({ anyLive: true, anyPre: false }) === LIVE_MS);
-  check('45s is actually 45 seconds', LIVE_MS === 45000);
+  check('a live game polls at 20s (B14)', nextDelay({ anyLive: true, anyPre: false }) === LIVE_MS);
+  check('20s is actually 20 seconds (B14; was 45)', LIVE_MS === 20000);
   check('all-pre polls at 5 min', nextDelay({ anyLive: false, anyPre: true }) === PRE_MS);
   check('5 min is actually 5 minutes', PRE_MS === 300000);
   check('all-final stops', nextDelay({ anyLive: false, anyPre: false }) === 0);
@@ -295,7 +295,7 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
     stubFetch({ scoreboards: { 'baseball/mlb': [asLive(mlbPost)] } });
     const band = createLiveBand(() => {});
     const res = await band.runOnce(snapshotWith([], ['baseball/mlb'], MLB_DAY));
-    check('a live game on the board alone polls at 45s', nextDelay(res) === LIVE_MS);
+    check('a live game on the board alone polls at 20s', nextDelay(res) === LIVE_MS);
   }
   {
     stubFetch({ scoreboards: { 'baseball/mlb': [mlbPost] } });
@@ -378,10 +378,10 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
     stubFetch({ scoreboards: { 'football/nfl': [asLive(nflPost)] } });
     const band = createLiveBand(() => {});
     const good = await band.runOnce(snapshotWith([tkt()]));
-    check('baseline: the live game polls at 45s', nextDelay(good) === LIVE_MS);
+    check('baseline: the live game polls at 20s', nextDelay(good) === LIVE_MS);
     stubFetch({ fail: new Set(['*']) });
     const blip = await band.runOnce(snapshotWith([tkt()]));
-    check('a blip mid-game HOLDS the 45s cadence', nextDelay(blip) === LIVE_MS);
+    check('a blip mid-game HOLDS the 20s cadence', nextDelay(blip) === LIVE_MS);
   }
   {
     // But a blip when nothing was live should not invent a fast cadence.
@@ -413,7 +413,7 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
     const band = createLiveBand((s) => (got = s));
     const res = await band.runOnce(snapshotWith([tkt()]));
     check('an in-progress game is detected', res.anyLive === true);
-    check('so the loop drops to 45s', nextDelay(res) === LIVE_MS);
+    check('so the loop drops to 20s', nextDelay(res) === LIVE_MS);
     check('and the grade is a lean, not a result', got.grades.get('t1').state === 'lead');
     check('the pill reads LEADING', got.grades.get('t1').label === 'LEADING');
   }

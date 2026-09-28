@@ -3,7 +3,7 @@
  *
  * Published DAILY, graded LIVE in the browser: the snapshot supplies the
  * tickets and the numbers, `ctx.live` supplies the games and the grades, and
- * every pill on the board moves on the band's 45-second tick.
+ * every pill on the board moves on the band's 20-second tick (B14).
  *
  * WORDING RULE (non-negotiable): this tile says *lean*, never *settled*. A
  * different system settles bets. This page is the scoreboard's opinion, and
@@ -49,11 +49,25 @@
  * text. Ordering needs it as a number, which `kickKey()` gets from the parts —
  * nothing here is handed `new Date(string)`.
  *
+ * THE COVER BAR (B11–B13, v1.24.0). Under every row, a thin bar centred on
+ * the line: a fill from the centre notch whose side and colour are the PILL's
+ * (never a second opinion off the number) and whose length is the grader's
+ * own `margin` against a per-sport scale, over a track that drains as the
+ * game runs. It is a picture of the row's `why` — aria-hidden, no text, and
+ * no new number: lean-now still sums the row figures and nothing else (B15).
+ *
+ * THE PULSE (B14). One muted `graded 12s ago` in the header, repainted every
+ * 5 s by exactly one interval. The render returns its teardown to the shell,
+ * and the module also clears its own last timer at the top of every render,
+ * so two renders can never leave two clocks.
+ *
  * RULE 10: labels, team names, the sport emoji and every grader `why` land via
  * textContent. ESPN text is untrusted exactly like snapshot text is.
  */
 
 import { el, pill, empty } from '../lib/dom.js';
+// Pure functions only — no fetch, no clock. The tile still never fetches.
+import { gameProgress, sportOf } from '../live/graders.js';
 // The streak chip is shared with `bets_ledger` — see lib/bets.js.
 import { streakChip } from '../lib/bets.js';
 import {
@@ -369,6 +383,112 @@ function lastCardLine(card) {
   return el('div', { cls: 'bets-lastcard' }, [toggle, rows]);
 }
 
+// ---------------------------------------------------------------- cover bar
+
+/**
+ * How many points reach the edge of the bar (B11): per SPORT, not per market.
+ * A 14-point football cover and a 3-run baseball cover both read as "all the
+ * way" — the scale is the sport's own sense of a comfortable margin.
+ */
+const COVER_SCALE = {
+  football: 14,
+  basketball: 14,
+  baseball: 3,
+  hockey: 3,
+  soccer: 3,
+};
+const DEFAULT_SCALE = 14;
+
+/** Markets that are hit-or-not (B12): no distance, so no partial fill. */
+const BINARY = new Set(['anytime_td', 'anytime_goal', 'btts']);
+
+/** The pill's side of the story. Only these five states draw a fill. */
+const BAR_TONE = { lead: 'good', win: 'good', trail: 'bad', lose: 'bad' };
+
+const pct = (x) => `${(x * 100).toFixed(1)}%`;
+
+/**
+ * The bar's geometry as data — `{track, tone, side, fill}` — so the tests can
+ * read the decision without a layout engine.
+ *
+ *   track  0..1 of the row still to play, anchored left (B13)
+ *   tone   'good' | 'bad' | 'muted' — from the grade's STATE, never the margin
+ *   side   'right' | 'left' | 'full' | null
+ *   fill   0..1 of the WHOLE row (a half-row from the notch is 0.5)
+ */
+export function coverBar(ticket, grade, game) {
+  const progress = game ? gameProgress(game, (ticket && ticket.league) || game.league) : null;
+  // pre, unmatched, or unknowable: the whole game is still ahead.
+  const track = progress === null ? 1 : 1 - progress;
+
+  const state = grade && grade.state;
+  const tone = BAR_TONE[state] || null;
+  if (!tone) return { track, tone: 'muted', side: null, fill: 0 };
+
+  if (BINARY.has(ticket && ticket.market)) {
+    // B12: red the whole way until it hits, green the whole way after.
+    return { track, tone, side: 'full', fill: 1 };
+  }
+
+  const side = tone === 'good' ? 'right' : 'left';
+  // B11: a locked result is final — it wears the whole half, whatever the
+  // number it locked on.
+  if (state === 'win' || state === 'lose') return { track, tone, side, fill: 0.5 };
+
+  const margin = num(grade.margin);
+  if (margin === null || margin === 0) return { track, tone, side: null, fill: 0 };
+  const scale = COVER_SCALE[sportOf(ticket && ticket.league)] || DEFAULT_SCALE;
+  return { track, tone, side, fill: Math.min(Math.abs(margin) / scale, 1) * 0.5 };
+}
+
+/** The bar itself. Decorative-with-meaning: the `why` above says the number. */
+function coverBarEl(ticket, grade, game) {
+  const b = coverBar(ticket, grade, game);
+  return el('div', { cls: `cover-bar cover-${b.tone}`, attrs: { 'aria-hidden': 'true' } }, [
+    b.track > 0 ? el('div', { cls: 'cover-track', attrs: { style: `width:${pct(b.track)}` } }) : null,
+    b.side ? el('div', { cls: `cover-fill cover-fill-${b.side}`, attrs: { style: `width:${pct(b.fill)}` } }) : null,
+    el('div', { cls: 'cover-notch' }),
+  ]);
+}
+
+// -------------------------------------------------------------------- pulse
+
+/** The one repaint interval this module may own. Cleared on every render. */
+let stampTimer = null;
+
+function stopStamp() {
+  if (stampTimer !== null) clearInterval(stampTimer);
+  stampTimer = null;
+}
+
+const SECOND_MS = 1000;
+
+/** `graded 12s ago`, or `graded 3m ago` once seconds stop being useful. */
+export function gradedAgo(fetchedAt, now = Date.now()) {
+  const t = Date.parse(String(fetchedAt || ''));
+  if (!Number.isFinite(t)) return '';
+  const s = Math.floor(Math.max(0, now - t) / SECOND_MS);
+  return s < 60 ? `graded ${s}s ago` : `graded ${Math.floor(s / 60)}m ago`;
+}
+
+/**
+ * The header stamp (B14). The band's own error string wins — the lag becomes
+ * a number, and a dead feed says so in the band's words, not this module's.
+ * No fetched_at and no error: nothing at all.
+ */
+function pulseStamp(live) {
+  if (!live) return null;
+  if (live.error) return el('div', { cls: 'bets-graded bets-graded-error', text: String(live.error) });
+  if (!live.fetched_at) return null;
+  const text = gradedAgo(live.fetched_at);
+  if (!text) return null;
+  const node = el('div', { cls: 'bets-graded', text });
+  stampTimer = setInterval(() => {
+    node.textContent = gradedAgo(live.fetched_at);
+  }, 5000);
+  return node;
+}
+
 // --------------------------------------------------------------------- rows
 
 /**
@@ -378,7 +498,7 @@ function lastCardLine(card) {
  * once and the class is never removed, because the node itself is replaced on
  * the next render.
  */
-function ticketRow(ticket, grade, flip) {
+function ticketRow(ticket, grade, flip, game) {
   const [label, tone] = STATE_PILL[grade && grade.state] || STATE_PILL.pre;
   const cls = str(ticket.class) || 'core';
   const u = ticketUnits(ticket, grade);
@@ -406,6 +526,8 @@ function ticketRow(ticket, grade, flip) {
         text: `${units(ticket.stake_u)} @ ${odds(ticket.price) || '—'}`,
       }),
     ]),
+    // B11: last in the row, full width under everything above.
+    coverBarEl(ticket, grade, game),
   ]);
 }
 
@@ -525,12 +647,17 @@ function sortCards(cards) {
 // --------------------------------------------------------------------- tile
 
 export function render(el_, tile, ctx) {
+  // Whatever the last render started, it ends here — one clock, ever.
+  stopStamp();
+
   const data = (tile && tile.data) || {};
   const tickets = arr(data.tickets).filter((t) => t && typeof t === 'object');
   const grades = (ctx && ctx.live && ctx.live.grades) || null;
   const games = (ctx && ctx.live && ctx.live.games) || null;
 
   el_.appendChild(headerStats(data, grades, games));
+  const pulse = pulseStamp(ctx && ctx.live);
+  if (pulse) el_.appendChild(pulse);
   const form = formLine(data.form);
   if (form) el_.appendChild(form);
   // B10: under the form strip. Absent on an older engine's snapshot, and
@@ -541,7 +668,7 @@ export function render(el_, tile, ctx) {
   if (!tickets.length) {
     el_.appendChild(empty('No open tickets.'));
     rememberStates(tickets, grades);
-    return;
+    return stopStamp;
   }
 
   // One card per game, tickets grouped under it. Grouped by espn_event_id and
@@ -566,7 +693,7 @@ export function render(el_, tile, ctx) {
           // Snapshot order within a card — the Bet-Log's order (B7).
           card.tickets.map((t) => {
             const grade = grades ? grades.get(t.id) : null;
-            return ticketRow(t, grade, grade ? flipClass(String(t.id), grade.state) : '');
+            return ticketRow(t, grade, grade ? flipClass(String(t.id), grade.state) : '', card.game);
           })
         ),
       ])
@@ -587,4 +714,8 @@ export function render(el_, tile, ctx) {
   if (ctx && ctx.live && ctx.live.error) {
     el_.appendChild(el('p', { cls: 'tile-foot warn-text', text: 'feed unavailable — showing last known' }));
   }
+
+  // The shell calls this before the next render (and the top of render does
+  // the same), so the stamp's interval never outlives its node.
+  return stopStamp;
 }

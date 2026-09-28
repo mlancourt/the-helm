@@ -452,6 +452,10 @@ console.log('\nsubhead never contains me.name');
     const cardSrc = (CODE.match(/function tileCard\(id, entry, tile\)\s*\{[\s\S]*?\n\}/) || [''])[0];
     const allSrc = (CODE.match(/function renderAll\(\)\s*\{[\s\S]*?\n\}/) || [''])[0];
     check('renderAll was found', allSrc.length > 0);
+    // v1.24.0: a tile render may hand back a teardown (bets_live's stamp
+    // clock). tileCard files it on state; renderAll runs them all first.
+    check('tileCard files a returned teardown on state', /const teardown = mod\(body[\s\S]*?state\.tileTeardowns \|\|= \[\]\)\.push\(teardown\)/.test(cardSrc));
+    check('renderAll runs every teardown before it clears the board', /state\.tileTeardowns[\s\S]*?state\.tileTeardowns = \[\];[\s\S]*?clear\(main\)/.test(allSrc));
     check('tileCard was found', cardSrc.length > 0);
 
     const noop = () => {};
@@ -523,6 +527,15 @@ console.log('\nsubhead never contains me.name');
       'a missing tile says so',
       /Not in this snapshot\./.test(boardEl.querySelectorAll('.grid')[0].childNodes[0].textContent)
     );
+
+    // The tile teardown seam, run for real: what the last board started is
+    // stopped before the next one, and one that throws cannot stop the board.
+    let stopped = 0;
+    shellState.tileTeardowns = [() => { stopped++; }, () => { throw new Error('boom'); }, () => { stopped++; }];
+    renderAll();
+    check('renderAll runs the last board\'s teardowns', stopped === 2, String(stopped));
+    check('a throwing teardown does not stop the board', titles().length === ORDER.length);
+    check('and the list is emptied for the next board', Array.isArray(shellState.tileTeardowns) && shellState.tileTeardowns.length === 0);
   }
 
   console.log(`\n${pass} passed, ${failures.length} failed`);
