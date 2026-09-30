@@ -2402,15 +2402,14 @@ a.wb-doc:hover { text-decoration: underline; }
 
 /* ------------------------------------------------------------------- cards
 
-   The trading-card desk. A two-button menu on the board, exactly like
-   Entertainment; the listings live in the sheet, where a row is a 40px photo
-   beside four short lines: title, who it is, the money, and the marks.
+   The trading-card desk. A two-button menu on the board — 🎯 Watching
+   (payload `pc`) and 🎖️ PC (payload `shop`); class names follow the payload
+   keys, not the labels. The listings live in the sheet, where a row is a
+   40px photo beside a few short lines.
 
-   The tick and the green are reserved for one thing — a fresh book under the
-   engine's gate. Everything else (an aging book, an auction still moving) is
-   muted, because the number is worth showing and not worth trusting at a
-   glance. Amber is likewise reserved: the dot on the button and the `ends`
-   line both mean "inside two hours", and nothing else on this tile is amber. */
+   Neither face is a gate, so nothing on this tile is green or ticked, and
+   no row is amber: the one-of-one gold is the only accent a badge wears.
+   (The warn tone is kept for feed trouble — the ⚠︎ and the errors line.) */
 
 .cards-menu {
   display: grid;
@@ -2440,7 +2439,6 @@ a.wb-doc:hover { text-decoration: underline; }
 .cards-btn-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cards-emoji { font-size: 12px; line-height: 1; }
 
-.cards-btn-hunt { background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); color: var(--brass); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); }
 .cards-btn-shop { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); color: var(--info);  border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
 .cards-btn-pc   { background: color-mix(in srgb, var(--pc-serial) 14%, var(--bg-raise)); color: var(--pc-serial); border-color: color-mix(in srgb, var(--pc-serial) 45%, var(--bg-raise)); }
 
@@ -2475,18 +2473,6 @@ a.wb-doc:hover { text-decoration: underline; }
 }
 .cards-count-new { font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.8; }
 
-/* Inside two hours. Ahead of the count, because it is the only thing on this
-   tile with a clock on it. */
-.cards-dot {
-  margin-left: auto;
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--warn);
-  flex: 0 0 auto;
-}
-.cards-dot + .cards-count { margin-left: 4px; }
-
 /* -- the sheet -------------------------------------------------------- */
 
 .cards-head {
@@ -2499,15 +2485,6 @@ a.wb-doc:hover { text-decoration: underline; }
 }
 .cards-head:first-child { margin-top: 2px; }
 
-.cards-list { display: flex; flex-direction: column; }
-
-.cards-row {
-  display: flex;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line-soft);
-}
-.cards-list .cards-row:last-child { border-bottom: 0; }
 .cards-row-link { text-decoration: none; color: inherit; -webkit-tap-highlight-color: transparent; }
 .cards-row-link:hover .cards-title { color: var(--brass); text-decoration: underline; }
 
@@ -2536,7 +2513,6 @@ a.wb-doc:hover { text-decoration: underline; }
   overflow: hidden;
 }
 .cards-who { margin-top: 2px; font-size: 11.5px; color: var(--text-dim); }
-.cards-rung { color: var(--text-faint); }
 
 .cards-money {
   margin-top: 4px;
@@ -2551,31 +2527,6 @@ a.wb-doc:hover { text-decoration: underline; }
 .cards-allin { font-size: 13.5px; font-weight: 700; color: var(--text); }
 .cards-arrow { color: var(--text-faint); }
 
-.cards-marks {
-  margin-top: 5px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-}
-
-.cards-fmv {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  font-size: 11px;
-  font-weight: 650;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-.cards-fmv-good  { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
-.cards-fmv-muted { background: var(--bg-chip); color: var(--text-faint); }
-.cards-check { font-weight: 700; }
-.cards-bookage { font-size: 11px; color: var(--text-faint); }
-
 .cards-chip {
   padding: 2px 7px;
   border-radius: 999px;
@@ -2587,9 +2538,7 @@ a.wb-doc:hover { text-decoration: underline; }
   white-space: nowrap;
   color: var(--text-dim);
 }
-.cards-chip-max  { color: var(--brass); background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); font-variant-numeric: tabular-nums; }
 .cards-chip-obo  { color: var(--info);  background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
-.cards-chip-band { color: var(--bad);   background: color-mix(in srgb, var(--bad) 14%, var(--bg-raise)); border-color: color-mix(in srgb, var(--bad) 45%, var(--bg-raise)); }
 
 /* The end-time line: a live countdown, with the wall stamp muted behind it.
    Baseline-aligned and tabular so the seconds ticking in the last quarter of
@@ -2614,20 +2563,15 @@ a.wb-doc:hover { text-decoration: underline; }
 .cards-clock-glyph { font-size: 10.5px; opacity: 0.75; }
 .cards-ends-at { color: var(--text-faint); }
 
-/* Inside two hours: the countdown carries the amber, the stamp stays quiet —
-   one alarm per row, not two. */
-.cards-ends-soon .cards-countdown { color: var(--warn); }
-
-/* Run out. Grey, not amber: there is nothing left to do about it, and the row
+/* Run out. Grey: there is nothing left to do about it, and the row
    waits here until the engine's next pass takes it away. */
 .cards-ends-done .cards-countdown { color: var(--text-faint); font-weight: 600; }
 .cards-row-ended { opacity: 0.55; }
 .cards-row-ended .cards-title { color: var(--text-dim); }
 
-/* -- the PC sheet ------------------------------------------------------
-   Deliberately its own block. The PC net answers "does this exist", not
-   "is this cheap", so nothing in here borrows the Watch sheet's green,
-   its tick or its percentage chip — see the header of tiles/cards.js. */
+/* -- the Watching sheet (payload `pc`) ---------------------------------
+   The net answers "does this exist", not "is this cheap", so nothing in
+   here is green, ticked or a percentage — see the header of tiles/cards.js. */
 
 .pc-showing {
   margin: 2px 0 0;
@@ -2708,10 +2652,10 @@ a.wb-doc:hover { text-decoration: underline; }
 }
 .pc-who-line { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
-/* -- the shop sheet ----------------------------------------------------
-   Matt's OWN storefront. Not a gate and not a collection, so nothing in
-   here borrows Watch's green, its tick or its percentage chip, and
-   nothing borrows PC's serial or grade badges either.
+/* -- the PC sheet (payload `shop`) -------------------------------------
+   Matt's OWN storefront — his collection, up for sale. Not a gate, so
+   nothing in here is green, ticked or a percentage, and nothing borrows
+   Watching's serial or grade badges either.
 
    AND NOTHING IN HERE COLOURS THE AGE. `days_listed` is grey at three
    days and grey at three hundred: the number is information, a colour
@@ -2770,7 +2714,6 @@ a.wb-doc:hover { text-decoration: underline; }
 }
 .shop-gone-line { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
 
-.cards-seller { margin-top: 3px; font-size: 11px; color: var(--text-faint); }
 .cards-sep { margin: 0 4px; color: var(--text-faint); }
 
 .cards-new-mark {
@@ -2785,33 +2728,6 @@ a.wb-doc:hover { text-decoration: underline; }
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-
-/* -- the folded "no book" list -- */
-
-.cards-fold {
-  margin-top: 14px;
-  align-self: flex-start;
-  padding: 6px 11px;
-  border-radius: 999px;
-  border: 1px dashed var(--line);
-  background: transparent;
-  color: var(--text-faint);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-.cards-fold:hover { color: var(--text-dim); border-color: var(--line); }
-.cards-fold:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
-
-.cards-nb { display: flex; flex-direction: column; margin-top: 6px; }
-.cards-nb-row {
-  padding: 6px 0;
-  font-size: 12px;
-  color: var(--text-faint);
-  border-bottom: 1px solid var(--line-soft);
-}
-.cards-nb .cards-nb-row:last-child { border-bottom: 0; }
-.cards-nb-player { color: var(--text-dim); }
 
 .cards-errors { margin: 2px 0 8px; font-size: 11.5px; color: var(--warn); }
 .cards-foot { margin: 14px 0 0; font-size: 11px; color: var(--text-faint); line-height: 1.4; }

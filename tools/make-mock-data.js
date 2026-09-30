@@ -601,16 +601,13 @@ function snapshot() {
       }),
 
       /**
-       * The card desk. Every player, rung, price and seller below is invented;
-       * "eBay" is the real service the engine pulls from and is named as such
-       * in `sources` and in the footer, which is where the credit belongs.
-       *
-       * The three flags cover the three things the Watch face has to get
-       * right: one plain BIN under the gate, one OBO that is also brand new,
-       * and one whose comp book has gone 30 days stale (so it keeps its
-       * percentage and loses the tick and the badge) and is OVER BAND besides.
+       * The card desk: two faces, 🎯 Watching (`pc`) and 🎖️ PC (`shop`).
+       * Every player, price and seller below is invented; "eBay" is the real
+       * service the engine pulls from and is named as such in `sources` and
+       * in the footers, which is where the credit belongs. `watch` is null,
+       * exactly as the engine publishes it since the buy-side hunt retired.
        */
-      cards: tile('HOURLY', cardsWatch()),
+      cards: tile('HOURLY', cardsPayload()),
 
       newsstand: tile('HOURLY', newsstandPayload(), 'ok', agoIso(23)),
 
@@ -896,236 +893,22 @@ function snapshot() {
 }
 
 /**
- * The `cards` payload, on its own so the stale variant can degrade the same
+ * The `cards` payload, on its own so the variants below can degrade the same
  * data rather than a second invented copy of it. Every figure is made up.
+ *
+ * `watch: null` — the Watch face is retired and the engine publishes null.
+ * The payload keys are the engine's: `pc` feeds the face labelled Watching,
+ * `shop` feeds the face labelled PC.
  */
-function cardsWatch() {
+function cardsPayload() {
   return {
-    watch: {
-      updated_at: agoIso(18),
-      targets: 14,
-      booked: 12,
-      fresh: 9,
-      oldest_book_days: 30,
-      calls: 26,
-      flags: [
-        {
-          item_id: '2864-0001',
-          title: '2019 Prism Foundry Kestrel Vance RC Refractor PSA 9 — sharp corners',
-          player: 'Kestrel Vance',
-          rung: 'RC refractor',
-          fmv: 260,
-          tag: 'SOLID',
-          lane: 'FLIP',
-          type: 'BIN',
-          price: 129,
-          ship: 4.99,
-          all_in: 133.99,
-          pct_fmv: 0.51,
-          max: 169,
-          gate: 0.65,
-          book_age_days: 3,
-          book_state: 'fresh',
-          ends_ct: null,
-          ends_utc: null,
-          seller: 'northport_cardworks',
-          seller_fb: 1204,
-          listed: addDays(TODAY, -2),
-          url: 'https://example.com/mock/cards/2864-0001',
-          image: 'https://example.com/mock/cards/2864-0001.jpg',
-          band: null,
-          new: false,
-        },
-        {
-          item_id: '2864-0002',
-          title: 'Marisol Quint Signature Patch /99 — Harbor Kestrels',
-          player: 'Marisol Quint',
-          rung: 'patch auto /99',
-          fmv: 410,
-          tag: 'SOLID',
-          lane: 'H',
-          type: 'OBO',
-          price: 232,
-          ship: 0,
-          all_in: 232,
-          pct_fmv: 0.57,
-          max: 266,
-          gate: 0.65,
-          book_age_days: 1,
-          book_state: 'fresh',
-          ends_ct: null,
-          ends_utc: null,
-          seller: 'lakeside_slabs',
-          seller_fb: 88,
-          listed: TODAY,
-          url: 'https://example.com/mock/cards/2864-0002',
-          image: null,
-          band: null,
-          new: true,
-        },
-        {
-          item_id: '2864-0003',
-          title: 'Dov Ferreira Ironsides Rookie Auto BGS 9.5 — gem subs',
-          player: 'Dov Ferreira',
-          rung: 'rookie auto',
-          fmv: 180,
-          tag: 'THIN',
-          lane: 'FLIP',
-          type: 'BIN',
-          price: 111,
-          ship: 6.5,
-          all_in: 117.5,
-          pct_fmv: 0.65,
-          max: 117,
-          gate: 0.65,
-          book_age_days: 30,
-          book_state: 'aging',
-          ends_ct: null,
-          ends_utc: null,
-          seller: 'attic_finds_wi',
-          seller_fb: 41,
-          listed: addDays(TODAY, -9),
-          url: 'https://example.com/mock/cards/2864-0003',
-          image: 'https://example.com/mock/cards/2864-0003.jpg',
-          band: 'OVER BAND',
-          new: false,
-        },
-      ],
-      auctions: [
-        {
-          item_id: '2864-0101',
-          title: 'Kestrel Vance Prism Foundry Gold /10 — no reserve',
-          player: 'Kestrel Vance',
-          rung: 'gold /10',
-          fmv: 900,
-          tag: 'SOLID',
-          lane: 'H',
-          type: 'AUCTION',
-          price: 410,
-          ship: 12,
-          all_in: 422,
-          pct_fmv: 0.47,
-          max: 585,
-          gate: 0.65,
-          book_age_days: 3,
-          book_state: 'fresh',
-          // Inside the two-hour window, outside the last quarter-hour: amber,
-          // and the countdown reads in hours and minutes ('1h 30m').
-          ends_ct: ctStampIn(90),
-          ends_utc: utcStampIn(90),
-          seller: 'bayfield_auctions',
-          seller_fb: 5310,
-          listed: addDays(TODAY, -6),
-          url: 'https://example.com/mock/cards/2864-0101',
-          image: 'https://example.com/mock/cards/2864-0101.jpg',
-          band: null,
-          new: false,
-        },
-        {
-          item_id: '2864-0103',
-          title: 'Sable Nkemdi Ironsides Holo /25 — bidding closes shortly',
-          player: 'Sable Nkemdi',
-          rung: 'holo /25',
-          fmv: 520,
-          tag: 'SOLID',
-          lane: 'H',
-          type: 'AUCTION',
-          price: 246,
-          ship: 8.5,
-          all_in: 254.5,
-          pct_fmv: 0.49,
-          max: 338,
-          gate: 0.65,
-          book_age_days: 1,
-          book_state: 'fresh',
-          // The last quarter of an hour — the one window where the seconds
-          // are a fact Matt can act on, so the countdown shows them.
-          ends_ct: ctStampIn(8),
-          ends_utc: utcStampIn(8),
-          seller: 'bayfield_auctions',
-          seller_fb: 5310,
-          listed: addDays(TODAY, -4),
-          url: 'https://example.com/mock/cards/2864-0103',
-          image: 'https://example.com/mock/cards/2864-0103.jpg',
-          band: null,
-          new: true,
-        },
-        {
-          item_id: '2864-0102',
-          title: 'Dov Ferreira Ironsides Rookie Auto raw — starts at a dollar',
-          player: 'Dov Ferreira',
-          rung: 'rookie auto',
-          fmv: 180,
-          tag: 'THIN',
-          lane: 'FLIP',
-          type: 'AUCTION',
-          price: 31,
-          ship: 5,
-          all_in: 36,
-          pct_fmv: 0.2,
-          max: 117,
-          gate: 0.65,
-          book_age_days: 4,
-          book_state: 'fresh',
-          // Three days out: the days form ('3d 0h'), no amber, and the sheet
-          // stays on its thirty-second beat because of it. The two extra
-          // minutes are so a freshly generated mock still reads '3d 0h'
-          // rather than flipping to '2d 23h' the moment it is opened.
-          ends_ct: ctStampIn(3 * 1440 + 2),
-          ends_utc: utcStampIn(3 * 1440 + 2),
-          seller: 'attic_finds_wi',
-          seller_fb: 41,
-          listed: addDays(TODAY, -1),
-          url: 'https://example.com/mock/cards/2864-0102',
-          image: null,
-          band: null,
-          new: true,
-        },
-        {
-          item_id: '2864-0104',
-          title: 'Ines Okafor Prism Foundry Refractor — older cached listing',
-          player: 'Ines Okafor',
-          rung: 'refractor',
-          fmv: 240,
-          tag: 'THIN',
-          lane: 'FLIP',
-          type: 'AUCTION',
-          price: 96,
-          ship: 4.5,
-          all_in: 100.5,
-          pct_fmv: 0.42,
-          max: 156,
-          gate: 0.65,
-          book_age_days: 6,
-          book_state: 'fresh',
-          // A pre-v1.6.0 row: wall stamp, no instant. The tile must print
-          // 'ends …' exactly as it always did and raise no countdown, no
-          // amber and no error — a snapshot still in the service worker's
-          // cache is not a broken snapshot.
-          ends_ct: ctStampIn(5 * 60),
-          ends_utc: null,
-          seller: 'attic_finds_wi',
-          seller_fb: 41,
-          listed: addDays(TODAY, -3),
-          url: 'https://example.com/mock/cards/2864-0104',
-          image: 'https://example.com/mock/cards/2864-0104.jpg',
-          band: null,
-          new: false,
-        },
-      ],
-      unbooked: [
-        { player: 'Ines Okafor', rung: 'rookie auto', book_age_days: 61, cheapest_all_in: 88.25, url: 'https://example.com/mock/cards/search-okafor' },
-        { player: 'Teo Brandt', rung: 'prizm silver', book_age_days: 44, cheapest_all_in: null, url: null },
-      ],
-      errors: [],
-    },
+    watch: null,
     shop: cardsShop(),
     shop_footer:
       'Active listings and sold-detection. Watchers and pending offers live in the eBay app — see C6.',
     pc: cardsPc(),
     pc_footer: 'No book, no gate — a bookend is one of one by definition. Price is yours to judge.',
-    sources: { listings: 'eBay Browse API', fmv: 'mock comp engine', shop: 'eBay Browse API' },
-    footer: 'lean, not an appraisal — every figure is the engine\'s',
+    sources: { listings: 'eBay Browse API', shop: 'eBay Browse API' },
   };
 }
 
@@ -1227,14 +1010,15 @@ function cardsShop() {
 }
 
 /**
- * The PC net's payload — the personal-collection bookend face.
+ * The `pc` payload — the net the page labels 🎯 Watching.
  *
  * INVENTED throughout: the players, the products, the sellers. Real service
  * name (eBay) and real eBay-ish shapes, because those are what the module
  * parses; nothing here is a card anyone owns.
  *
  * The fixture exists to exercise every branch the tile has, so it carries on
- * purpose: three bookends (a 1/N, an N/N and one with unknown shipping), two
+ * purpose: three first-of-run finds, all 1/N PSA as the engine now publishes
+ * (C12a), one with unknown shipping, two
  * one-of-ones (a BIN and an auction closing in about forty minutes), one
  * arrival, one OBO, one with no photo — and a `counts.shown` deliberately
  * below `total_found`, so the "Showing X of Y" line has something to say.
@@ -1252,10 +1036,10 @@ function cardsPc({ errors = [] } = {}) {
       // -- bookends: the target ------------------------------------------
       {
         item_id: '7731-0001',
-        title: '2023 Prism Foundry #334 Kestrel Vance GOLD Wave BOOKEND',
+        title: '2023 Prism Foundry #334 Kestrel Vance GOLD Wave 1/10',
         player: 'Kestrel Vance',
-        serial: '10/10',
-        num: 10,
+        serial: '1/10',
+        num: 1,
         den: 10,
         one_of_one: false,
         grade: 'PSA 10',
@@ -1280,7 +1064,7 @@ function cardsPc({ errors = [] } = {}) {
         num: 1,
         den: 25,
         one_of_one: false,
-        grade: 'BGS 9.5',
+        grade: 'PSA 9',
         type: 'OBO',
         price: 288,
         ship: 6.5,
@@ -1298,13 +1082,13 @@ function cardsPc({ errors = [] } = {}) {
         item_id: '7731-0003',
         // Shipping the listing never stated: the row must say `+ ship?` and
         // stop, with no arrow pointing at a total nobody computed.
-        title: 'Dov Ferreira Prism Foundry Sapphire /50 — last serial',
+        title: 'Dov Ferreira Prism Foundry Sapphire 1/50',
         player: 'Dov Ferreira',
-        serial: '50/50',
-        num: 50,
+        serial: '1/50',
+        num: 1,
         den: 50,
         one_of_one: false,
-        grade: 'SGC 9',
+        grade: 'PSA 9',
         type: 'BIN',
         price: 175,
         ship: null,
@@ -1354,8 +1138,8 @@ function cardsPc({ errors = [] } = {}) {
         price: 920,
         ship: 15,
         all_in: 935,
-        // Inside forty minutes. On the Watch sheet that would be amber; here
-        // it must NOT be, because amber on this sheet means one of one.
+        // Inside forty minutes — and still not amber: nothing on this
+        // sheet is, and the one-of-one gold is the only accent it wears.
         ends_ct: ctStampIn(40),
         ends_utc: utcStampIn(40),
         seller: 'bayfield_auctions',
@@ -1834,13 +1618,13 @@ function newsstandStaleSnapshot() {
  */
 function cardsStaleSnapshot() {
   const snap = snapshot();
-  const data = cardsWatch();
-  data.watch.errors = ['eBay Browse API: 3 of 14 searches rate-limited (429)'];
+  const data = cardsPayload();
+  data.pc.errors = ['eBay Browse API: 3 of 121 player searches rate-limited (429)'];
   snap.tiles.cards = {
     band: 'HOURLY',
     updated_at: agoIso(96),
     status: 'stale',
-    error: 'eBay Browse API rate-limited the 06:00 pull — 11 of 14 targets answered',
+    error: 'eBay Browse API rate-limited the 06:00 sweep — 118 of 121 player searches answered',
     data,
   };
   return snap;
@@ -1849,7 +1633,7 @@ function cardsStaleSnapshot() {
 /** `shop: null` — the engine degraded, and the face greyed back to "soon". */
 function cardsNoShopSnapshot() {
   const snap = snapshot();
-  const data = cardsWatch();
+  const data = cardsPayload();
   data.shop = null;
   snap.tiles.cards = { band: 'HOURLY', updated_at: agoIso(18), status: 'ok', error: null, data };
   return snap;
@@ -1863,7 +1647,7 @@ function cardsNoShopSnapshot() {
  */
 function cardsShopEmptySnapshot() {
   const snap = snapshot();
-  const data = cardsWatch();
+  const data = cardsPayload();
   data.shop = cardsShop();
   data.shop.listings = [];
   data.shop.gone = [];
@@ -1875,7 +1659,7 @@ function cardsShopEmptySnapshot() {
 /** `pc: null` — the face greyed to "soon". */
 function cardsNoPcSnapshot() {
   const snap = snapshot();
-  const data = cardsWatch();
+  const data = cardsPayload();
   data.pc = null;
   snap.tiles.cards = { band: 'HOURLY', updated_at: agoIso(18), status: 'ok', error: null, data };
   return snap;
@@ -1884,7 +1668,7 @@ function cardsNoPcSnapshot() {
 /** The net half-answered: the finds it DID get, and the reason for the rest. */
 function cardsPcErrorsSnapshot() {
   const snap = snapshot();
-  const data = cardsWatch();
+  const data = cardsPayload();
   data.pc = cardsPc({
     errors: ['eBay Browse API: 6 of 121 player searches rate-limited (429)', 'grading lookup timed out for 2 listings'],
   });

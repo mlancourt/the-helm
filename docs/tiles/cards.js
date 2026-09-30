@@ -1,57 +1,46 @@
 /**
- * cards — the trading-card desk. Three faces: 🎯 Watch · 🏷️ Shop · 🎖️ PC.
+ * PAYLOAD KEYS vs PAGE LABELS — READ THIS BEFORE "FIXING" THE MISMATCH.
+ * `data.pc` feeds the face labelled 🎯 Watching. `data.shop` feeds the face
+ * labelled 🎖️ PC. `data.watch` is ignored entirely. The payload keys are the
+ * engine's contract and do not change; only the page's labels did (Matt,
+ * 2026-09-30). The CSS classes follow the payload keys (`pc-*`, `shop-*`).
+ */
+
+/**
+ * cards — the trading-card desk. Two faces: 🎯 Watching · 🎖️ PC.
  *
  * A menu tile in the `entertainment` mould: the board carries the buttons and
  * a faint line per live face, and everything with a price on it lives in the
- * sheet. A shopping list is never urgent enough to earn board height, and a
- * card that listed every flag would be the tallest thing on the page within a
- * week.
+ * sheet. A shopping list is never urgent enough to earn board height.
  *
- * THE THREE FACES ASK THREE DIFFERENT QUESTIONS, AND MUST NOT LOOK ALIKE.
- * Watch: is this cheap enough. PC: does this exist. Shop: what is up, and
- * what has left. Only Watch has a gate, so only Watch has green, a ✓, a
- * percentage and a MAX — see the Shop section's own header for what that face
- * deliberately does not do.
+ * The buy-side hunt against the FMV book (the old 🎯 Watch face) is RETIRED
+ * (Matt, 2026-09-30). The engine publishes `watch: null` and will keep doing
+ * so; a cached snapshot that still carries a populated `watch` renders the
+ * identical two buttons, because this module never reads the key.
  *
- *   Watch asks "is this under 65% of book?" — a gate, with an answer the
- *   engine computed: a percentage, a MAX bid, and a green tick when it
- *   clears. Everything in that sheet is about a number being low enough.
+ * THE TWO FACES ASK TWO DIFFERENT QUESTIONS, AND NEITHER IS A GATE.
  *
- *   PC asks "does this exist?" — the personal-collection bookend net. A
- *   bookend is one of one by definition, so there is no matched-grade tape
- *   behind it, no FMV, no percentage and no gate. Price is Matt's to judge.
+ *   Watching (`data.pc`) asks "does this exist?" — the first-off-the-press
+ *   net. There is no matched-grade tape behind a first-of-run card, so there
+ *   is no FMV, no percentage and no MAX. Price is Matt's to judge. Its badges
+ *   are the SERIAL and the GRADE, and nothing on it is green or ticked.
  *
- * So the PC sheet carries NO green, no ✓, no `% of FMV`, no `MAX $` and no
- * gate language anywhere. Its badges are the SERIAL and the GRADE. The parts
- * the two sheets genuinely share are the thumbnail, the title clamp, the
- * price line, the seller line and the countdown — and nothing else. Reusing
- * `listingRow` here would be the bug, not the shortcut.
+ *   PC (`data.shop`) asks "what is up, and what has left?" — Matt's own
+ *   storefront, which IS his personal collection, currently for sale. No
+ *   serial, no grade, and an age that is a number rather than a verdict — see
+ *   that section's own header.
  *
- * Amber means ONE thing per screen. On Watch it means "ending inside two
- * hours". On PC it means "one of one" — so the PC sheet's auction rows never
- * go amber at all, and the 1/1 badge has its own token rather than borrowing
- * the warn colour. Two meanings for one colour on one screen is how somebody
- * buys the wrong card.
+ * Amber means nothing here. On Watching the one-of-one gold carries the only
+ * accent a badge wears, so an auction countdown never goes amber: two
+ * meanings for one colour on one screen is how somebody buys the wrong card.
  *
- * THE DIVISION OF LABOUR. The engine does all of the judgement. It sets the
- * fair-market value, picks the gate, works out the all-in price, decides the
- * MAX bid, ages the book and marks a listing OVER BAND — and it sorts both
- * lists before publishing (flags by `pct_fmv` ascending, auctions by end
- * time). This module recomputes NONE of it. In particular:
+ * THE DIVISION OF LABOUR. The engine does all of the judgement and sorts
+ * every list before publishing. This module recomputes NONE of it:
  *
  *   - `all_in` is printed, never derived from `price + ship`. If the engine's
  *     arithmetic and this page's ever disagree, the engine is right, and a
  *     number invented here would be indistinguishable from a real one.
- *   - `max` is printed, never derived from `fmv * gate`. The MAX is Matt's
- *     bidding ceiling; it is not the page's business to have an opinion.
  *   - the order of every list is the order it arrived in.
- *
- * FRESH vs AGING (the badge). A flag's chip only counts when its comp book is
- * `fresh`. A 30-day-old book is a 30-day-old opinion about what a card is
- * worth, and "51% of FMV" resting on one is a guess wearing a number's
- * clothes — so an aging flag still renders, still shows its percentage, and
- * loses the green tick and the badge. Auctions never count toward the badge
- * either: a current bid is not a price, and it has hours left to move.
  *
  * RULE 7, SATISFIED RATHER THAN BENT. An auction arrives with two end times
  * and they do very different jobs:
@@ -77,34 +66,22 @@
  *
  * A row whose `ends_utc` is missing or unreadable — an older snapshot still
  * in the service worker's cache — falls back to the pre-v1.6 line: `ends`
- * plus the raw wall stamp, no countdown, no amber, no error.
+ * plus the raw wall stamp, no countdown, no error.
  *
- * RULE 4, and the one thing worth flagging: the thumbnails are `<img>` tags
- * pointing at the listing host's own CDN, which is a third external origin
- * that the hard rules do not list. It is here because a card you cannot see is
- * a card you cannot judge, and because it was asked for explicitly — but it is
- * a deliberate exception, not an oversight. It is kept as narrow as possible:
- * http(s) only via `safeUrl`, `referrerpolicy="no-referrer"` so the URL of
- * Matt's homepage never reaches the host, `loading="lazy"` so nothing is
- * fetched until the sheet is actually open, and a plain grey box whenever
- * there is no usable image. The service worker never caches them.
+ * RULE 4: the thumbnails are `<img>` tags pointing at the listing host's own
+ * CDN — the snapshot-image carve-out. Kept as narrow as possible: http(s)
+ * only via `safeUrl`, `referrerpolicy="no-referrer"` so the URL of Matt's
+ * homepage never reaches the host, `loading="lazy"` so nothing is fetched
+ * until the sheet is actually open, and a plain grey box whenever there is no
+ * usable image. The service worker never caches them.
  *
- * RULE 10: every title, seller, player and rung lands via textContent, the alt
- * text included, and every row's anchor goes through `safeUrl` — a row whose
- * URL is junk stays a row, it just stops being tappable.
+ * RULE 10: every title, seller and player lands via textContent, the alt text
+ * included, and every row's anchor goes through `safeUrl` — a row whose URL is
+ * junk stays a row, it just stops being tappable.
  */
 
 import { el, empty, genericCard, safeUrl } from '../lib/dom.js';
 import { ctTime, usd, msUntil, countdown } from '../lib/fmt.js';
-
-/**
- * How close to the hammer an auction has to be to turn amber.
- *
- * Two hours is the last window in which Matt can actually do something about
- * it — get to a desk, decide, and bid — which is the only thing a dot on a
- * homepage is good for.
- */
-const SOON_MS = 2 * 3600000;
 
 /**
  * The two cadences, and the line between them.
@@ -134,88 +111,10 @@ function num(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-/** 0.51 -> '51%', and nothing at all for a percentage that did not arrive. */
-function pct(v) {
-  const n = num(v);
-  return n === null ? '' : `${Math.round(n * 100)}%`;
-}
-
 /** 1204 -> '1,204'. A feedback score, so it is a count and not a currency. */
 function count(v) {
   const n = num(v);
   return n === null ? '' : n.toLocaleString('en-US');
-}
-
-// ------------------------------------------------------------------ planning
-
-/**
- * One listing, cleaned up. Both lists share a shape, so they share this.
- *
- * Nothing is computed here beyond formatting: `pct_fmv`, `all_in`, `max` and
- * `gate` come out the other side as the engine sent them.
- */
-function planItem(raw) {
-  const i = obj(raw);
-  return {
-    id: str(i.item_id).trim(),
-    title: str(i.title).trim(),
-    player: str(i.player).trim(),
-    rung: str(i.rung).trim(),
-    tag: str(i.tag).trim(),
-    lane: str(i.lane).trim(),
-    type: str(i.type).trim().toUpperCase(),
-    price: num(i.price),
-    ship: num(i.ship),
-    allIn: num(i.all_in),
-    fmv: num(i.fmv),
-    pctFmv: num(i.pct_fmv),
-    max: num(i.max),
-    gate: num(i.gate),
-    bookAge: num(i.book_age_days),
-    bookState: str(i.book_state).trim().toLowerCase(),
-    endsCt: str(i.ends_ct).trim(),
-    // The instant. `ends_ct` is its wall-clock twin and stays text forever.
-    endsUtc: str(i.ends_utc).trim(),
-    seller: str(i.seller).trim(),
-    sellerFb: num(i.seller_fb),
-    listed: str(i.listed).trim(),
-    url: str(i.url),
-    image: str(i.image),
-    // The engine's own band call — a string when it applies, null when it
-    // does not. Printed, never judged.
-    band: str(i.band).trim(),
-    isNew: i.new === true,
-  };
-}
-
-/** A target with no comp book behind it yet. */
-function planUnbooked(raw) {
-  const u = obj(raw);
-  const player = str(u.player).trim();
-  const rung = str(u.rung).trim();
-  if (!player && !rung) return null;
-  return {
-    player,
-    rung,
-    bookAge: num(u.book_age_days),
-    cheapest: num(u.cheapest_all_in),
-    url: str(u.url),
-  };
-}
-
-/**
- * Is this auction inside the alarm window? Counted from `ends_utc` only.
- *
- * A lot already past counts as soon, not as quiet: the engine drops a closed
- * row on its next pass, and going silent in the gap would drop the alarm at
- * the exact moment it mattered most. The ROW itself greys out at zero — that
- * is the row telling the truth about itself — but the dot on the board stays
- * up until the row is gone. A pre-v1.6 payload with no instant raises
- * nothing: there is no honest way to count from a string with no offset.
- */
-function endingSoon(item) {
-  const ms = msUntil(item.endsUtc);
-  return ms !== null && ms <= SOON_MS;
 }
 
 /** classList.toggle with a force flag, which not every shim implements. */
@@ -267,55 +166,22 @@ function thumb(item) {
  * with weight on it. An auction leads with `bid`, because a current bid is not
  * a price and should not read like one.
  *
- * `unknownShip` is the PC net's case: eBay does not always say what postage
- * costs, and when it does not there is no all-in to print. The line says
- * `+ ship?` and STOPS — no arrow pointing at nothing, and certainly no total
- * this page invented out of a missing number. Watch never passes it, because
- * every flag the comp engine clears has a shipping figure behind it.
+ * eBay does not always say what postage costs, and when it does not there is
+ * no all-in to print. The line says `+ ship?` and STOPS — no arrow pointing at
+ * nothing, and certainly no total this page invented out of a missing number.
  */
-function priceLine(item, { auction = false, unknownShip = false } = {}) {
+function priceLine(item, { auction = false } = {}) {
   const parts = [];
   const price = usd(item.price);
   parts.push(el('span', { cls: 'cards-price', text: auction ? `bid ${price}` : price }));
-  if (item.ship !== null) {
-    parts.push(el('span', { cls: 'cards-ship', text: `+ ${usd(item.ship)} ship` }));
-  } else if (unknownShip) {
+  if (item.ship === null) {
     parts.push(el('span', { cls: 'cards-ship', text: '+ ship?' }));
     return el('div', { cls: 'cards-money' }, parts);
   }
+  parts.push(el('span', { cls: 'cards-ship', text: `+ ${usd(item.ship)} ship` }));
   parts.push(el('span', { cls: 'cards-arrow', attrs: { 'aria-hidden': 'true' }, text: '→' }));
   parts.push(el('span', { cls: 'cards-allin', text: usd(item.allIn) }));
   return el('div', { cls: 'cards-money' }, parts);
-}
-
-/**
- * `✓ 51% of FMV $260`, green — or the same line, muted, when the number is
- * standing on an old book or on an auction that has not finished moving.
- *
- * The tick is the whole signal: it means "the engine's gate, on a book it
- * still trusts". Take either half away and the percentage is still worth
- * showing, just not worth trusting at a glance.
- */
-function fmvChip(item, { auction = false } = {}) {
-  const aging = item.bookState === 'aging';
-  const under = !auction && !aging && item.pctFmv !== null && item.gate !== null && item.pctFmv <= item.gate;
-  const p = pct(item.pctFmv);
-  const text = p ? `${p} of FMV ${usd(item.fmv)}` : `FMV ${usd(item.fmv)}`;
-  return el('span', { cls: `cards-fmv ${under ? 'cards-fmv-good' : 'cards-fmv-muted'}` }, [
-    under ? el('span', { cls: 'cards-check', attrs: { 'aria-hidden': 'true' }, text: '✓' }) : null,
-    el('span', { text }),
-  ]);
-}
-
-/** `seller · 1,204 fb`, or nothing when there is no seller to name. */
-function sellerLine(item) {
-  if (!item.seller) return null;
-  const fb = count(item.sellerFb);
-  return el('div', { cls: 'cards-seller' }, [
-    el('span', { text: item.seller }),
-    fb ? sep() : null,
-    fb ? el('span', { text: `${fb} fb` }) : null,
-  ]);
 }
 
 /**
@@ -323,12 +189,12 @@ function sellerLine(item) {
  *
  *     ⏱ 1h 42m        ends 7:48 PM
  *
- * BOTH halves come from `ends_utc` (Matt, 2026-09-20, overturning v1.6.0's
- * first cut). The countdown is the number he reads at a glance; the clock
- * time is the one he can trust without arithmetic, and it is formatted by
- * `ctTime`, which pins America/Chicago explicitly. That pin is the whole
- * point: this is a Central-time board, and opening it on a laptop in Denver
- * must not quietly shift every auction by an hour.
+ * BOTH halves come from `ends_utc` (Matt, 2026-09-20). The countdown is the
+ * number he reads at a glance; the clock time is the one he can trust without
+ * arithmetic, and it is formatted by `ctTime`, which pins America/Chicago
+ * explicitly. That pin is the whole point: this is a Central-time board, and
+ * opening it on a laptop in Denver must not quietly shift every auction by an
+ * hour.
  *
  * `ends_ct` is NOT a display field. It is the pre-v1.6 fallback below and
  * nothing else — the one place it reaches the DOM, printed raw and unparsed.
@@ -336,11 +202,8 @@ function sellerLine(item) {
  * Pushes a clock entry onto `clocks` when there is a real instant to count
  * from, so the sheet's single interval can repaint it. Returns null when the
  * listing carries no end time at all.
- *
- * `amber: false` keeps the last two hours from turning warn-coloured. The PC
- * sheet passes it, because amber is spoken for there — see the header.
  */
-function endsLine(item, clocks, { amber = true } = {}) {
+function endsLine(item, clocks) {
   const ms = msUntil(item.endsUtc);
 
   // No instant, or one this browser cannot read: the pre-v1.6.0 line, intact.
@@ -364,7 +227,7 @@ function endsLine(item, clocks, { amber = true } = {}) {
   // `ms` is kept so the row can be greyed at build time without a second
   // subtraction — two reads of the clock a microsecond apart could in
   // principle disagree about whether a lot has closed.
-  const entry = { endsUtc: item.endsUtc, value, node, row: null, ms, amber };
+  const entry = { endsUtc: item.endsUtc, value, node, row: null, ms };
   if (clocks) clocks.push(entry);
   return { node, entry };
 }
@@ -380,12 +243,9 @@ function paintClock(c, ms) {
   if (ms === null) return null;
   c.value.textContent = countdown(ms);
   const ended = ms <= 0;
-  // Amber is "you can still do something about this". At zero the row stops
-  // being amber and goes grey — it has not gone wrong, it is over — and it
+  // At zero the row goes grey — it has not gone wrong, it is over — and it
   // stays exactly where it is until the engine's next pass removes it. A row
   // vanishing under Matt's thumb mid-scroll would be the worse bug.
-  // `amber` is off on the PC sheet, where amber already means "one of one".
-  setClass(c.node, 'cards-ends-soon', c.amber !== false && !ended && ms <= SOON_MS);
   setClass(c.node, 'cards-ends-done', ended);
   if (c.row) setClass(c.row, 'cards-row-ended', ended);
   return ms;
@@ -446,101 +306,34 @@ function startClock(clocks) {
   };
 }
 
-/**
- * One listing. The whole row is the link — or is not a link at all, if the
- * URL is junk (rule 10).
- */
-function listingRow(item, { auction = false, clocks = null } = {}) {
-  const chips = [];
-  if (item.type === 'OBO') chips.push(chip('OBO', 'obo'));
-  if (item.band) chips.push(chip(item.band, 'band'));
-  if (item.max !== null) chips.push(chip(`MAX ${usd(item.max)}`, 'max'));
-
-  const ends = auction ? endsLine(item, clocks) : null;
-
-  const kids = [
-    thumb(item),
-    el('div', { cls: 'cards-main' }, [
-      el('div', { cls: 'cards-title-line' }, [
-        el('span', { cls: 'cards-title', text: item.title || '(untitled listing)' }),
-        item.isNew ? newMark() : null,
-      ]),
-      item.player || item.rung
-        ? el('div', { cls: 'cards-who' }, [
-            item.player ? el('span', { text: item.player }) : null,
-            item.player && item.rung ? sep() : null,
-            item.rung ? el('span', { cls: 'cards-rung', text: item.rung }) : null,
-          ])
-        : null,
-      priceLine(item, { auction }),
-      el('div', { cls: 'cards-marks' }, [
-        fmvChip(item, { auction }),
-        // Why the tick is missing, said out loud rather than left to be
-        // noticed. The number is the engine's; the caveat is the payload's.
-        item.bookState === 'aging' && item.bookAge !== null
-          ? el('span', { cls: 'cards-bookage', text: `book ${item.bookAge}d old` })
-          : null,
-        ...chips,
-      ]),
-      ends ? ends.node : null,
-      sellerLine(item),
-    ]),
-  ];
-
-  const safe = safeUrl(item.url);
-  const row = safe
-    ? el(
-        'a',
-        { cls: 'cards-row cards-row-link', attrs: { href: safe, target: '_blank', rel: 'noopener noreferrer' } },
-        kids
-      )
-    : el('div', { cls: 'cards-row' }, kids);
-
-  // The clock greys the whole row at zero, not just its own line, so it needs
-  // a handle on the row — which only exists once the kids are built. The
-  // first paint happens here, for the same reason.
-  if (ends && ends.entry) {
-    ends.entry.row = row;
-    paintClock(ends.entry, ends.entry.ms);
-  }
-  return row;
-}
-
-/** `Kestrel Vance · rung 2 — book 41d old · cheapest $118`, muted. */
-function unbookedRow(u) {
-  const parts = [];
-  const lead = () => (parts.length ? sep() : null);
-
-  if (u.player) parts.push(el('span', { cls: 'cards-nb-player', text: u.player }));
-  if (u.rung) parts.push(el('span', {}, [lead(), el('span', { text: u.rung })]));
-  if (u.bookAge !== null) parts.push(el('span', {}, [lead(), el('span', { text: `book ${u.bookAge}d old` })]));
-  if (u.cheapest !== null) parts.push(el('span', {}, [lead(), el('span', { text: `cheapest ${usd(u.cheapest)}` })]));
-
-  const safe = safeUrl(u.url);
-  if (!safe) return el('div', { cls: 'cards-nb-row' }, parts);
-  return el(
-    'a',
-    { cls: 'cards-nb-row cards-row-link', attrs: { href: safe, target: '_blank', rel: 'noopener noreferrer' } },
-    parts
-  );
-}
-
 /** A section heading, printed only when the section has something under it. */
 const sectionHead = (text) => el('h4', { cls: 'cards-head', text });
 
 /**
  * The small ⚠︎ a stale tile wears, or null.
  *
- * `stale` here means the listing pull half-answered — some of the search calls
- * came back, some did not. What DID arrive is still real, and a flag Matt can
- * act on is worth more than a blank card, so the rows render and the mark
- * carries the reason (rule 8).
+ * Keyed off the TILE's own status and nothing else — `stale` means the sweep
+ * half-answered. What DID arrive is still real, so the rows render and the
+ * mark carries the reason (rule 8): the tile's `error`, else what the faces
+ * say they could not reach, else when each face last swept (its `updated_at`,
+ * in Central), else a plain sentence.
+ *
+ * `faces` is `[[label, payload], …]` — the two faces on the board, or the one
+ * whose sheet is open.
  */
-function staleMark(tile, watch) {
+function staleMark(tile, faces) {
   if (str(tile && tile.status) !== 'stale') return null;
+  const errors = faces.flatMap(([, f]) => arr(obj(f).errors).filter(Boolean).map(String));
+  const swept = faces
+    .map(([label, f]) => {
+      const at = ctTime(obj(f).updated_at);
+      return at ? `${label} ${at}` : '';
+    })
+    .filter(Boolean);
   const reason =
     str(tile.error).trim() ||
-    arr(watch.errors).filter(Boolean).map(String).join(' · ') ||
+    errors.join(' · ') ||
+    (swept.length ? `last sweep: ${swept.join(' · ')}` : '') ||
     'the listing pull did not finish';
   return el('p', { cls: 'tile-foot cards-stale' }, [
     el('span', {
@@ -551,90 +344,13 @@ function staleMark(tile, watch) {
   ]);
 }
 
-// --------------------------------------------------------------------- sheet
+// --------------------------------------------------------- 🎯 Watching (data.pc)
 
 /**
- * The "No book" list, folded shut.
- *
- * These are targets the engine has no comp book for — a to-do for the vault,
- * not a buy. They belong in the sheet so nothing goes missing, and they belong
- * folded so they never come between Matt and a flag.
- */
-function unbookedSection(unbooked) {
-  const rows = el('div', { cls: 'cards-nb hidden' }, unbooked.map(unbookedRow));
-  const toggle = el('button', {
-    cls: 'cards-fold',
-    text: `No book (${unbooked.length})`,
-    attrs: { type: 'button', 'aria-expanded': 'false' },
-    on: {
-      click: (e) => {
-        e.stopPropagation();
-        const open = rows.classList.toggle('hidden') === false;
-        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      },
-    },
-  });
-  return [toggle, rows];
-}
-
-/**
- * The Watch sheet: errors, flags, auctions, no-book, one footer.
- *
- * The builder returns the clock's teardown. The shell holds it and calls it
- * when the sheet closes or another one opens — a countdown left running
- * behind a closed sheet would tick against detached nodes forever.
- */
-function watchBody(watch, data, tile) {
-  const flags = arr(watch.flags).map(planItem);
-  const auctions = arr(watch.auctions).map(planItem);
-  const unbooked = arr(watch.unbooked).map(planUnbooked).filter(Boolean);
-  const errors = arr(watch.errors).filter(Boolean).map(String);
-
-  return (body) => {
-    const clocks = [];
-    // What the engine could not reach, said once and quietly, at the top —
-    // because everything below it may be an incomplete picture.
-    if (errors.length) {
-      body.appendChild(el('p', { cls: 'cards-errors', text: `feed trouble: ${errors.join(' · ')}` }));
-    }
-    const warn = staleMark(tile, watch);
-    if (warn) body.appendChild(warn);
-
-    body.appendChild(sectionHead('Flags'));
-    if (!flags.length) {
-      body.appendChild(empty('Nothing under the gate right now.'));
-    } else {
-      // Order is the engine's, untouched — it sorted by pct_fmv ascending.
-      body.appendChild(el('div', { cls: 'cards-list' }, flags.map((f) => listingRow(f))));
-    }
-
-    // No auctions is not an empty state worth a sentence: there is simply no
-    // section. A heading over "none" would read as a feed that broke.
-    if (auctions.length) {
-      body.appendChild(sectionHead('Auctions'));
-      body.appendChild(
-        el('div', { cls: 'cards-list' }, auctions.map((a) => listingRow(a, { auction: true, clocks })))
-      );
-    }
-
-    if (unbooked.length) for (const node of unbookedSection(unbooked)) body.appendChild(node);
-
-    // Said once, at the bottom: the vault's own wording plus eBay's required
-    // credit. Both are printed verbatim.
-    const foot = [str(data.footer).trim(), 'eBay data via Browse API'].filter(Boolean).join(' · ');
-    body.appendChild(el('p', { cls: 'cards-foot', text: foot }));
-
-    return startClock(clocks);
-  };
-}
-
-// ------------------------------------------------------------------- the PC net
-
-/**
- * One PC find. A listing, plus the two things that make it a bookend.
+ * One find — a listing, plus the two things that make it first off the press.
  *
  * `serial` is the engine's own display string and is printed verbatim — the
- * page does not build "10/10" out of `num` and `den`, it is handed it. The
+ * page does not build "1/25" out of `num` and `den`, it is handed it. The
  * ints ride along for anyone who needs to count, and nothing here does.
  *
  * `grade` is always a string from the engine, which only emits graded cards.
@@ -644,25 +360,37 @@ function watchBody(watch, data, tile) {
  */
 function planFind(raw) {
   const f = obj(raw);
-  const item = planItem(f);
-  item.serial = str(f.serial).trim();
-  item.num = num(f.num);
-  item.den = num(f.den);
-  item.oneOfOne = f.one_of_one === true;
-  item.grade = str(f.grade).trim();
-  return item;
+  return {
+    title: str(f.title).trim(),
+    player: str(f.player).trim(),
+    type: str(f.type).trim().toUpperCase(),
+    price: num(f.price),
+    ship: num(f.ship),
+    allIn: num(f.all_in),
+    endsCt: str(f.ends_ct).trim(),
+    // The instant. `ends_ct` is its wall-clock twin and stays text forever.
+    endsUtc: str(f.ends_utc).trim(),
+    seller: str(f.seller).trim(),
+    sellerFb: num(f.seller_fb),
+    listed: str(f.listed).trim(),
+    url: str(f.url),
+    image: str(f.image),
+    isNew: f.new === true,
+    serial: str(f.serial).trim(),
+    num: num(f.num),
+    den: num(f.den),
+    oneOfOne: f.one_of_one === true,
+    grade: str(f.grade).trim(),
+  };
 }
 
 /**
- * The serial badge — the visual anchor of a PC row, and deliberately nothing
- * like anything in the Watch sheet.
+ * The serial badge — the visual anchor of a Watching row.
  *
- * Violet, because this is a collection and not a deal: green in the Watch
- * sheet means "the engine's gate cleared", and a bookend has no gate to
- * clear. A one-of-one wears the same badge in gold, reading its own serial,
- * which for a 1/1 is "1/1" — one badge, not two saying the same thing. The
- * gold is its own token and NOT the auction amber: on this sheet amber means
- * one of one, and nothing else is allowed to say it.
+ * Violet, because this is a collection and not a deal: there is no gate to
+ * clear and so no green. A one-of-one wears the same badge in gold, reading
+ * its own serial, which for a 1/1 is "1/1" — one badge, not two saying the
+ * same thing. The gold is its own token and NOT the warn amber.
  */
 function serialBadge(find) {
   const text = find.serial || (find.num !== null && find.den !== null ? `${find.num}/${find.den}` : '');
@@ -705,16 +433,12 @@ function pcFootLine(find) {
 }
 
 /**
- * One PC find, laid out. NOT `listingRow` with a flag set — see the header.
- *
- * The shape is serial-and-grade first, money second, because the question
- * this sheet answers is "does it exist, and in what grade". On Watch the
- * money leads, because there the question is whether the number is low
- * enough. Same components, opposite emphasis, and that is the point.
+ * One find, laid out: serial-and-grade first, money second, because the
+ * question this sheet answers is "does it exist, and in what grade".
  */
 function pcRow(find, clocks) {
   const auction = find.type === 'AUCTION';
-  const ends = auction ? endsLine(find, clocks, { amber: false }) : null;
+  const ends = auction ? endsLine(find, clocks) : null;
 
   const marks = [serialBadge(find), gradeChip(find)].filter(Boolean);
   if (find.type === 'OBO') marks.push(chip('OBO', 'obo'));
@@ -730,7 +454,7 @@ function pcRow(find, clocks) {
       // to two on a phone. The serial is the anchor, so it leads.
       el('div', { cls: 'pc-line' }, [
         marks.length ? el('div', { cls: 'pc-marks' }, marks) : null,
-        priceLine(find, { auction, unknownShip: true }),
+        priceLine(find, { auction }),
       ]),
       ends ? ends.node : null,
       pcFootLine(find),
@@ -746,6 +470,9 @@ function pcRow(find, clocks) {
       )
     : el('div', { cls: 'pc-row' }, kids);
 
+  // The clock greys the whole row at zero, not just its own line, so it needs
+  // a handle on the row — which only exists once the kids are built. The
+  // first paint happens here, for the same reason.
   if (ends && ends.entry) {
     ends.entry.row = row;
     paintClock(ends.entry, ends.entry.ms);
@@ -754,18 +481,19 @@ function pcRow(find, clocks) {
 }
 
 /**
- * The PC sheet: what the net caught, bookends first.
+ * The Watching sheet: first off the press, then the one-of-ones.
  *
- * `finds` arrives ordered — bookends, then one-of-ones — and the order INSIDE
- * each class is the engine's. This partitions on `one_of_one` rather than
- * trusting the boundary to be where it looks, and re-sorts neither half.
+ * `finds` arrives ordered — first-of-run, then one-of-ones — and the order
+ * INSIDE each class is the engine's. This partitions on `one_of_one` rather
+ * than trusting the boundary to be where it looks, and re-sorts neither half.
  *
- * Returns the clock's teardown, exactly as the Watch sheet does: an auction
- * in here counts down on the same machinery, minus the amber.
+ * The builder returns the clock's teardown. The shell holds it and calls it
+ * when the sheet closes or another one opens — a countdown left running
+ * behind a closed sheet would tick against detached nodes forever.
  */
 function pcBody(pc, data, tile) {
   const finds = arr(pc.finds).map(planFind);
-  const bookends = finds.filter((f) => !f.oneOfOne);
+  const firsts = finds.filter((f) => !f.oneOfOne);
   const ones = finds.filter((f) => f.oneOfOne);
   const errors = arr(pc.errors).filter(Boolean).map(String);
   const counts = obj(pc.counts);
@@ -775,10 +503,12 @@ function pcBody(pc, data, tile) {
   return (body) => {
     const clocks = [];
 
+    // What the net could not reach, said once and quietly, at the top —
+    // because everything below it may be an incomplete picture.
     if (errors.length) {
       body.appendChild(el('p', { cls: 'cards-errors', text: `feed trouble: ${errors.join(' · ')}` }));
     }
-    const warn = staleMark(tile, pc);
+    const warn = staleMark(tile, [['Watching', pc]]);
     if (warn) body.appendChild(warn);
 
     // The caps are deliberate — per class and per seller — so the gap between
@@ -789,13 +519,13 @@ function pcBody(pc, data, tile) {
     }
 
     if (!finds.length) {
-      body.appendChild(empty('Nothing graded and numbered 1/N or N/N on the board right now.'));
+      body.appendChild(empty('nothing new — 1/N PSA only'));
     } else {
-      // Bookends are the target; one-of-ones are the bonus class. That order
-      // is the engine's and it is the order they are read in.
-      if (bookends.length) {
-        body.appendChild(sectionHead(`Bookends (${bookends.length})`));
-        body.appendChild(el('div', { cls: 'pc-list' }, bookends.map((f) => pcRow(f, clocks))));
+      // First-of-run is the target; one-of-ones are the bonus class. That
+      // order is the engine's and it is the order they are read in.
+      if (firsts.length) {
+        body.appendChild(sectionHead(`First off the press (${firsts.length})`));
+        body.appendChild(el('div', { cls: 'pc-list' }, firsts.map((f) => pcRow(f, clocks))));
       }
       if (ones.length) {
         body.appendChild(sectionHead(`One of ones (${ones.length})`));
@@ -810,17 +540,17 @@ function pcBody(pc, data, tile) {
   };
 }
 
-// --------------------------------------------------------------------- shop
+// ------------------------------------------------------------ 🎖️ PC (data.shop)
 
 /**
- * 🏷️ Shop — Matt's OWN eBay storefront. What is up, and what has dropped off.
+ * 🎖️ PC — Matt's OWN eBay storefront, which is his personal collection up
+ * for sale. What is up, and what has dropped off.
  *
- * WHAT THIS FACE IS NOT. It is not a gate and it is not a collection. There is
- * no FMV, no percentage, no ✓, no MAX — Watch's whole vocabulary is absent,
- * because nothing here is being judged against a comp book. And unlike PC
- * there is no serial and no grade either: these are Matt's listings, not
- * finds. The only things a row carries are the photo, the title, the asking
- * price, what kind of listing it is, and how long it has been up.
+ * WHAT THIS FACE IS NOT. It is not a gate and it is not a hunt. There is no
+ * FMV, no percentage, no ✓, no MAX, and unlike Watching there is no serial
+ * and no grade either: these are Matt's listings, not finds. The only things
+ * a row carries are the photo, the title, the asking price, what kind of
+ * listing it is, and how long it has been up.
  *
  * NOR does it show watchers or pending best offers. Both need user OAuth and
  * the legacy Trading API, and eBay's own app already pushes them to his phone
@@ -951,9 +681,9 @@ function goneRow(g) {
 }
 
 /**
- * The Shop sheet: errors, what is listed, what has dropped off, one footer.
+ * The PC sheet: errors, what is listed, what has dropped off, one footer.
  *
- * Nothing in here ticks, so — unlike Watch and PC — the builder hands back no
+ * Nothing in here ticks, so — unlike Watching — the builder hands back no
  * teardown. A storefront is a slow-moving thing and a countdown on it would
  * be the tile inventing urgency it has no evidence for.
  */
@@ -968,7 +698,7 @@ function shopBody(shop, data, tile) {
     if (errors.length) {
       body.appendChild(el('p', { cls: 'cards-errors', text: `feed trouble: ${errors.join(' · ')}` }));
     }
-    const warn = staleMark(tile, shop);
+    const warn = staleMark(tile, [['PC', shop]]);
     if (warn) body.appendChild(warn);
 
     body.appendChild(sectionHead(`Listed (${listings.length})`));
@@ -997,7 +727,7 @@ function shopBody(shop, data, tile) {
 
 // ---------------------------------------------------------------------- tile
 
-/** A button for a face that does not exist yet: visible, inert, wearing "soon". */
+/** A button for a face the engine has not lit: visible, inert, wearing "soon". */
 function soonButton(face) {
   return el('button', { cls: 'cards-btn cards-btn-soon', attrs: { type: 'button', disabled: 'disabled' } }, [
     el('span', { cls: 'cards-emoji', attrs: { 'aria-hidden': 'true' }, text: face.emoji }),
@@ -1006,7 +736,7 @@ function soonButton(face) {
   ]);
 }
 
-function liveButton(face, { chipNode = null, dot = false, open = null }) {
+function liveButton(face, { chipNode = null, open = null }) {
   return el(
     'button',
     {
@@ -1025,15 +755,14 @@ function liveButton(face, { chipNode = null, dot = false, open = null }) {
     [
       el('span', { cls: 'cards-emoji', attrs: { 'aria-hidden': 'true' }, text: face.emoji }),
       el('span', { cls: 'cards-btn-label', text: face.label }),
-      dot ? el('span', { cls: 'cards-dot', attrs: { 'aria-label': 'an auction ends within two hours' } }) : null,
       chipNode,
     ]
   );
 }
 
-const WATCH_FACE = { key: 'watch', emoji: '🎯', label: 'Watch', tone: 'hunt' };
-const SHOP_FACE = { key: 'shop', emoji: '🏷️', label: 'Shop', tone: 'shop' };
-const PC_FACE = { key: 'pc', emoji: '🎖️', label: 'PC', tone: 'pc' };
+// Label ≠ key, on purpose — see the note at the top of this file.
+const WATCHING_FACE = { key: 'pc', emoji: '🎯', label: 'Watching', tone: 'pc' };
+const PC_FACE = { key: 'shop', emoji: '🎖️', label: 'PC', tone: 'shop' };
 
 /** Is this payload a face the engine has actually lit up? */
 const isFace = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -1051,112 +780,57 @@ export function render(root, tile, ctx) {
   const openPanel =
     ctx && ctx.actions && typeof ctx.actions.openPanel === 'function' ? ctx.actions.openPanel : null;
 
-  const hasWatch = data.watch && typeof data.watch === 'object' && !Array.isArray(data.watch);
-  const watch = obj(data.watch);
   const buttons = [];
 
-  if (!hasWatch) {
-    buttons.push(soonButton(WATCH_FACE));
-  } else {
-    const flags = arr(watch.flags).map(planItem);
-    // The badge counts flags standing on a book the engine still trusts, and
-    // nothing else. Nothing under the gate means NO chip — not a zero. The
-    // tile is quiet by default.
-    const fresh = flags.filter((f) => f.bookState === 'fresh');
-    const anyNew = fresh.some((f) => f.isNew);
-
-    const soon = arr(watch.auctions).map(planItem).some(endingSoon);
-
-    const chipNode = fresh.length
-      ? el('span', { cls: 'cards-count' }, [
-          el('span', { text: String(fresh.length) }),
-          anyNew ? el('span', { cls: 'cards-count-new', text: 'new' }) : null,
-        ])
-      : null;
-
-    buttons.push(
-      liveButton(WATCH_FACE, {
-        chipNode,
-        dot: soon,
-        open: openPanel ? () => openPanel('🎯 Watch', watchBody(watch, data, tile)) : null,
-      })
-    );
-  }
-
-  // 🏷️ Shop — Matt's own storefront. `shop: null` is the engine degraded, not
-  // an empty shop, so the button stays put and greys to "soon" exactly as it
-  // did before the face shipped rather than vanishing off the menu.
-  //
-  // Its chip is `active`, the engine's own count of what is up — a plain
-  // number with no decision in it, which is the whole point of this face. And
-  // no dot: nothing in a storefront is ending in two hours.
-  const hasShop = isFace(data.shop);
-  const shop = obj(data.shop);
-  const shopActive = num(shop.active);
-  if (!hasShop) {
-    buttons.push(soonButton(SHOP_FACE));
-  } else {
-    buttons.push(
-      liveButton(SHOP_FACE, {
-        chipNode:
-          shopActive === null
-            ? null
-            : el('span', { cls: 'cards-count cards-count-shop', text: String(shopActive) }),
-        open: openPanel ? () => openPanel('🏷️ Shop', shopBody(shop, data, tile)) : null,
-      })
-    );
-  }
-
-  // 🎖️ PC — the bookend net. Its chip counts arrivals and nothing else:
-  // there is no gate here to have cleared, so a count of finds would be a
-  // number with no decision in it. Zero new means no chip; the button stays
+  // 🎯 Watching (`data.pc`) — first. Its chip counts arrivals and nothing
+  // else: there is no gate here to have cleared, so a count of finds would be
+  // a number with no decision in it. Zero new means no chip; the button stays
   // tappable, because "nothing new tonight" is worth being able to confirm.
+  // `pc: null` is the engine degraded, so the button greys to "soon" rather
+  // than vanishing off the menu.
   const hasPc = isFace(data.pc);
   const pc = obj(data.pc);
   if (!hasPc) {
-    buttons.push(soonButton(PC_FACE));
+    buttons.push(soonButton(WATCHING_FACE));
   } else {
     const fresh = arr(pc.finds).filter((f) => obj(f).new === true).length;
     buttons.push(
-      liveButton(PC_FACE, {
+      liveButton(WATCHING_FACE, {
         chipNode: fresh
           ? el('span', { cls: 'cards-count cards-count-pc' }, [
               el('span', { text: String(fresh) }),
               el('span', { cls: 'cards-count-new', text: 'new' }),
             ])
           : null,
-        open: openPanel ? () => openPanel('🎖️ PC', pcBody(pc, data, tile)) : null,
+        open: openPanel ? () => openPanel('🎯 Watching', pcBody(pc, data, tile)) : null,
+      })
+    );
+  }
+
+  // 🎖️ PC (`data.shop`) — second. Its chip is `active`, the engine's own
+  // count of what is up — a plain number with no decision in it.
+  const hasShop = isFace(data.shop);
+  const shop = obj(data.shop);
+  const shopActive = num(shop.active);
+  if (!hasShop) {
+    buttons.push(soonButton(PC_FACE));
+  } else {
+    buttons.push(
+      liveButton(PC_FACE, {
+        chipNode:
+          shopActive === null
+            ? null
+            : el('span', { cls: 'cards-count cards-count-shop', text: String(shopActive) }),
+        open: openPanel ? () => openPanel('🎖️ PC', shopBody(shop, data, tile)) : null,
       })
     );
   }
 
   root.appendChild(el('div', { cls: 'cards-menu', attrs: { role: 'group', 'aria-label': 'Cards' } }, buttons));
 
-  // The faint line under the menu: the shape of the hunt, in the engine's own
-  // counts. Every part is omitted rather than guessed at, so a payload that
-  // half-arrived says less instead of saying something wrong.
-  const bits = [];
-  const targets = num(watch.targets);
-  if (targets !== null) bits.push(`${targets} targets`);
-  const freshBooks = num(watch.fresh);
-  if (freshBooks !== null) bits.push(`${freshBooks} fresh books`);
-  const feed = ctTime(watch.updated_at);
-  if (feed) bits.push(`feed ${feed}`);
-  if (bits.length) root.appendChild(el('p', { cls: 'tile-foot', text: bits.join(' · ') }));
-
-  // The shop's own line, in the menu's order. `{n} listed`, and what has left
-  // the board only when something has — "0 dropped off" would be the tile
-  // reporting on a week in which nothing happened.
-  if (hasShop) {
-    const shopBits = [];
-    if (shopActive !== null) shopBits.push(`${shopActive} listed`);
-    const dropped = arr(shop.gone).length;
-    if (dropped) shopBits.push(`${dropped} dropped off`);
-    if (shopBits.length) root.appendChild(el('p', { cls: 'tile-foot', text: shopBits.join(' · ') }));
-  }
-
-  // The PC net's own line, under Watch's. The two faces count different
-  // things and neither number belongs in the other's sentence.
+  // One faint line per live face, in the menu's order. Every part is omitted
+  // rather than guessed at, so a payload that half-arrived says less instead
+  // of saying something wrong.
   if (hasPc) {
     const c = obj(pc.counts);
     const pcBits = [];
@@ -1167,6 +841,16 @@ export function render(root, tile, ctx) {
     if (pcBits.length) root.appendChild(el('p', { cls: 'tile-foot', text: pcBits.join(' · ') }));
   }
 
-  const warn = staleMark(tile, watch);
+  // `{n} listed`, and what has left the board only when something has —
+  // "0 dropped off" would be the tile reporting on a week nothing happened.
+  if (hasShop) {
+    const shopBits = [];
+    if (shopActive !== null) shopBits.push(`${shopActive} listed`);
+    const dropped = arr(shop.gone).length;
+    if (dropped) shopBits.push(`${dropped} dropped off`);
+    if (shopBits.length) root.appendChild(el('p', { cls: 'tile-foot', text: shopBits.join(' · ') }));
+  }
+
+  const warn = staleMark(tile, [['Watching', data.pc], ['PC', data.shop]]);
   if (warn) root.appendChild(warn);
 }
