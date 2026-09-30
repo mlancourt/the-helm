@@ -876,6 +876,9 @@ function snapshot() {
           note: null,
           source: 'mock generator — invented percentages, not a real plan',
         },
+        // The hull panel — an invented machine. The host name is made up
+        // (rule 1); the com.lannyai.* labels are job names, not secrets.
+        hull: hullPayload(),
         kill_switch: 'launchctl unload ~/Library/LaunchAgents/com.example.mock-helm.plist',
       }),
 
@@ -889,6 +892,51 @@ function snapshot() {
         data: {},
       },
     },
+  };
+}
+
+/**
+ * `ship_status.hull` — the Mac mini's launchd crew and five vitals. All
+ * invented: seven jobs (ok ×4, stale, idle ×2), producers 15/15.
+ */
+function hullPayload() {
+  const job = (id, label, over = {}) => ({
+    id: `com.lannyai.${id}`,
+    label,
+    kind: 'timer',
+    state: 'ok',
+    tone: 'good',
+    every: 'every 1h',
+    last_exit: 0,
+    pid: null,
+    last_seen_at: agoIso(20),
+    last_secs: null,
+    last_line: `${id}: finished rc=0`,
+    ...over,
+  });
+  return {
+    state: 'ok',
+    host: 'mock-mini',
+    fetched_at: agoIso(6),
+    note: null,
+    crew: [
+      job('helm-engine', 'Helm engine', { last_secs: 47, last_seen_at: agoIso(46), last_line: 'helm: finished rc=0 in 47s (full)' }),
+      job('wss-fleet', 'Fleet tracker', { every: '13×/day 07:05–19:05', last_line: 'fleet: finished 18:05:11' }),
+      job('newsstand', 'Newsstand', { every: 'every 2h', last_secs: 112 }),
+      job('bookie', 'Bookie', { every: 'daily 06:30', last_secs: 9 }),
+      job('purser', 'Purser', { state: 'stale', tone: 'warn', every: 'every 10m', last_seen_at: agoIso(95), last_line: 'purser: waiting on ledger lock' }),
+      job('helm-tunnel', 'Helm tunnel', { state: 'idle', tone: 'neutral', every: 'on demand', last_seen_at: null, last_line: null }),
+      job('vault-sweep', 'Vault sweep', { state: 'idle', tone: 'neutral', every: 'on demand', last_seen_at: null, last_line: null }),
+    ],
+    vitals: [
+      { id: 'uptime', label: 'Uptime', value: '6h 54m', tone: 'neutral', since: agoIso(414) },
+      { id: 'load', label: 'Load', value: '1.84', tone: 'neutral', detail: '1.84 · 1.78 · 1.68 on 12 cores' },
+      { id: 'disk', label: 'Disk', value: '120 GB free', tone: 'good', percent_free: 49, detail: '49% of 245 GB free' },
+      { id: 'backup', label: 'Time Machine', value: agoIso(47), tone: 'good' },
+      { id: 'tailscale', label: 'Tailscale', value: 'online', tone: 'good', detail: 'mock-mini · Running' },
+    ],
+    producers: { ok: 15, total: 15, not_ok: [] },
+    source: 'mock generator — an invented machine, not a real host',
   };
 }
 

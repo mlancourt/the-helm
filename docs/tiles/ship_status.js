@@ -36,6 +36,7 @@ const KNOWN = new Set([
   'worker_published_at',
   'spend',
   'plan',
+  'hull',
   'kill_switch',
 ]);
 
@@ -89,6 +90,203 @@ function capMeter(spent, cap) {
       el('span', { cls: 'ship-meter-cap', text: ` of ${usdPrecise(cap)} today` }),
     ]),
   ]);
+}
+
+/**
+ * The hull panel — the Mac mini and the launchd crew on it, as an
+ * annunciator: a fixed grid of labelled lamps learned by position and read
+ * from across the room. This is the control board; everything under it on
+ * the card is detail.
+ *
+ * THE RULING: tone is the engine's. The page maps `tone` to a class and
+ * touches no threshold — nothing here weighs percent_free, last_secs, load or
+ * an age against a number. A tone the page does not know is `neutral`.
+ *
+ * THE ONE EXCEPTION (H8): the heartbeat lamp. The engine cannot report its
+ * own absence, so the age of `worker_published_at` goes through the same
+ * `freshnessTone(iso, 3, 12)` as the "snapshot published" row below — the
+ * only page-derived tone in the panel, and why a dark mini turns red on the
+ * phone within hours.
+ *
+ * H3: crew and vitals render in payload order. A red lamp turns red where it
+ * always sits.
+ */
+const HULL_TONES = new Set(['good', 'warn', 'bad', 'neutral']);
+
+/** The engine's tone, or neutral for one this page has never heard of. */
+function hullTone(t) {
+  return HULL_TONES.has(t) ? t : 'neutral';
+}
+
+/** States that print their own word in place of the run time. */
+const HULL_STATE_WORD = new Set(['idle', 'not_loaded', 'failed', 'stale']);
+
+/** Keep a tap on the panel from reaching the shell's long-press. */
+function stop(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+}
+
+/** A lamp's dot. `pulse` is for a running job — the only motion on the panel. */
+function hullDot(tone, pulse = false) {
+  return el('span', {
+    cls: pulse ? `hull-dot hull-dot-${tone} hull-pulse` : `hull-dot hull-dot-${tone}`,
+    attrs: { 'aria-hidden': 'true' },
+  });
+}
+
+/** Line two of a lamp: cadence, then the run time or the state word. */
+function lampSub(c) {
+  const parts = [];
+  if (has(c.every)) parts.push(String(c.every));
+  if (HULL_STATE_WORD.has(c.state)) parts.push(String(c.state).replace(/_/g, ' '));
+  else if (isNum(c.last_secs)) parts.push(`${c.last_secs}s`);
+  return parts.join(' · ');
+}
+
+/** What a tapped lamp says under the grid. */
+function lampDetail(c) {
+  const parts = [];
+  if (has(c.last_line)) parts.push(String(c.last_line));
+  const seen = has(c.last_seen_at) ? ago(c.last_seen_at) : '';
+  if (seen) parts.push(`last seen ${seen}`);
+  if (!parts.length) parts.push('no run recorded');
+  if (isNum(c.last_exit) && c.last_exit !== 0) parts.push(`exit ${c.last_exit}`);
+  return parts.join(' · ');
+}
+
+/** The header: whose hull, the heartbeat, and the producers chip. */
+function hullHead(hull, publishedAt, section) {
+  const title = has(hull.host) ? `Hull · ${hull.host}` : 'Hull';
+  const right = el('div', { cls: 'hull-head-right' });
+
+  // H8 — the only tone on this panel the page works out for itself.
+  const tone = freshnessTone(publishedAt, 3, 12);
+  const beatAge = has(publishedAt) ? ago(publishedAt) : '';
+  right.appendChild(
+    el('span', { cls: 'hull-beat', attrs: { title: 'snapshot heartbeat' } }, [
+      hullDot(tone),
+      el('span', { cls: 'hull-beat-age', text: beatAge || 'no heartbeat' }),
+    ])
+  );
+
+  const p = hull.producers && typeof hull.producers === 'object' ? hull.producers : null;
+  if (p && isNum(p.ok) && isNum(p.total)) {
+    const notOk = Array.isArray(p.not_ok) ? p.not_ok.filter(has).map(String) : [];
+    const chipLine = el('p', { cls: 'hull-notok' });
+    right.appendChild(chipButton(p, notOk, chipLine));
+    section.appendChild(el('div', { cls: 'hull-head' }, [el('h4', { cls: 'ship-heading hull-title', text: title }), right]));
+    section.appendChild(chipLine);
+    return;
+  }
+  section.appendChild(el('div', { cls: 'hull-head' }, [el('h4', { cls: 'ship-heading hull-title', text: title }), right]));
+}
+
+/** `{ok}/{total}` — tapping it lists the producers that are not ok. */
+function chipButton(p, notOk, line) {
+  const tone = notOk.length ? 'warn' : 'good';
+  const btn = el('button', {
+    cls: `hull-chip hull-chip-${tone}`,
+    text: `${p.ok}/${p.total}`,
+    attrs: { type: 'button', 'aria-expanded': 'false', title: 'producers reporting ok' },
+  });
+  btn.addEventListener('click', (e) => {
+    stop(e);
+    const open = btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    line.textContent = open ? (notOk.length ? `not ok: ${notOk.join(', ')}` : 'every producer ok') : '';
+  });
+  return btn;
+}
+
+/** One lamp per crew entry, payload order (H3), one detail line under them. */
+function hullCrew(crew, section) {
+  const grid = el('div', { cls: 'hull-crew' });
+  const detail = el('p', { cls: 'hull-detail', attrs: { 'aria-live': 'polite' } });
+  let open = null;
+
+  for (const c of crew) {
+    const tone = hullTone(c.tone);
+    const lamp = el('button', {
+      cls: `hull-lamp hull-lamp-${tone}`,
+      attrs: { type: 'button', 'aria-expanded': 'false', title: has(c.id) ? String(c.id) : null },
+    }, [
+      el('span', { cls: 'hull-lamp-name' }, [
+        hullDot(tone, c.state === 'running'),
+        el('span', { cls: 'hull-lamp-label', text: String(c.label ?? c.id ?? '') }),
+      ]),
+      el('span', { cls: 'hull-lamp-sub', text: lampSub(c) }),
+    ]);
+    lamp.addEventListener('click', (e) => {
+      stop(e);
+      if (open) open.setAttribute('aria-expanded', 'false');
+      if (open === lamp) {
+        open = null;
+        detail.textContent = '';
+        return;
+      }
+      open = lamp;
+      lamp.setAttribute('aria-expanded', 'true');
+      detail.textContent = lampDetail(c);
+    });
+    grid.appendChild(lamp);
+  }
+
+  section.appendChild(grid);
+  section.appendChild(detail);
+}
+
+/** The value a vital cell prints, and whether it is a note standing in. */
+function vitalValue(v) {
+  if (has(v.note)) return { text: String(v.note), muted: true };
+  if (v.id === 'backup') {
+    const rel = has(v.value) ? ago(v.value) : '';
+    if (rel) return { text: rel, muted: false };
+    return has(v.value) ? { text: String(v.value), muted: false } : { text: '—', muted: true };
+  }
+  return has(v.value) ? { text: String(v.value), muted: false } : { text: '—', muted: true };
+}
+
+/** The two vitals that can go bad — a green dot there is the reassurance. */
+const HULL_ALWAYS_DOT = new Set(['backup', 'tailscale']);
+
+function hullVitals(vitals, section) {
+  const strip = el('div', { cls: 'hull-vitals' });
+  for (const v of vitals) {
+    const tone = hullTone(v.tone);
+    const dot = tone === 'warn' || tone === 'bad' || HULL_ALWAYS_DOT.has(v.id);
+    const val = vitalValue(v);
+    strip.appendChild(
+      el('div', { cls: 'hull-cell', attrs: { title: has(v.detail) ? String(v.detail) : null } }, [
+        el('span', { cls: 'hull-cell-label', text: String(v.label ?? v.id ?? '') }),
+        el('span', { cls: val.muted ? 'hull-cell-value hull-cell-note' : 'hull-cell-value' }, [
+          dot ? hullDot(tone) : null,
+          el('span', { text: val.text }),
+        ]),
+      ])
+    );
+  }
+  section.appendChild(strip);
+}
+
+/**
+ * The whole panel, or null when the engine has not sent one (rule 9).
+ * `state: "error"` is the header and the note, nothing else.
+ */
+function hullSection(hull, publishedAt) {
+  if (!hull || typeof hull !== 'object' || Array.isArray(hull)) return null;
+  const section = el('div', { cls: 'hull' });
+  hullHead(hull, publishedAt, section);
+
+  if (hull.state === 'error') {
+    if (has(hull.note)) section.appendChild(el('p', { cls: 'hull-note', text: String(hull.note) }));
+    return section;
+  }
+
+  const crew = Array.isArray(hull.crew) ? hull.crew.filter((c) => c && typeof c === 'object') : [];
+  const vitals = Array.isArray(hull.vitals) ? hull.vitals.filter((v) => v && typeof v === 'object') : [];
+  if (crew.length) hullCrew(crew, section);
+  if (vitals.length) hullVitals(vitals, section);
+  return section;
 }
 
 /**
@@ -213,6 +411,12 @@ export function render(el_, tile) {
     el_.appendChild(empty('No status reported.'));
     return;
   }
+
+  // ---- the hull ---------------------------------------------------------
+  //
+  // First, because it IS the control board. Everything below is detail.
+  const hull = hullSection(d.hull, d.worker_published_at);
+  if (hull) el_.appendChild(hull);
 
   // ---- the engine ------------------------------------------------------
   const engine = el('div', { cls: 'ship-block' });

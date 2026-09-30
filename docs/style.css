@@ -1862,6 +1862,103 @@ body {
    for a live one. The age rides on the note line below it. */
 .ship-plan-stale { opacity: 0.55; }
 
+/* The hull panel — an overhead annunciator, not a dashboard widget. Hairline
+   panels on the card surface, lamps learned by position. Every tint is a
+   color-mix off the four tone tokens; the dots are the pill palette, so a red
+   here is the red everywhere else on the board. No glow, no scanlines. */
+.hull { margin-bottom: 4px; }
+.hull-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.hull-head .hull-title { margin: 0; }
+.hull-head-right { display: flex; align-items: center; gap: 8px; }
+.hull-beat { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.hull-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.hull-dot-good    { background: var(--good); }
+.hull-dot-warn    { background: var(--warn); }
+.hull-dot-bad     { background: var(--bad); }
+.hull-dot-neutral { background: var(--text-faint); }
+.hull-pulse { animation: hull-pulse 2s ease-in-out infinite; }
+@keyframes hull-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hull-pulse { animation: none; }
+}
+.hull-chip {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.hull-chip-good { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good); border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
+.hull-chip-warn { background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise)); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); }
+.hull-notok { margin: 4px 0 0; font-size: 11px; color: var(--text-faint); text-align: right; }
+.hull-notok:empty { display: none; }
+.hull-note { margin: 6px 0 0; font-size: 12px; color: var(--text-faint); }
+
+.hull-crew {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.hull-lamp {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 8px;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-raise);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.hull-lamp[aria-expanded="true"] { border-color: var(--line); background: var(--bg-chip); }
+.hull-lamp-warn { border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); background: color-mix(in srgb, var(--warn) 8%, var(--bg-raise)); }
+.hull-lamp-bad  { border-color: color-mix(in srgb, var(--bad) 45%, var(--bg-raise)); background: color-mix(in srgb, var(--bad) 8%, var(--bg-raise)); }
+.hull-lamp-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.hull-lamp-label { font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hull-lamp-sub { font-size: 10.5px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hull-detail {
+  margin: 6px 0 0;
+  padding: 6px 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-dim);
+  background: var(--bg-sink);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  word-break: break-word;
+}
+.hull-detail:empty { display: none; }
+
+.hull-vitals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.hull-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+}
+.hull-cell-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+.hull-cell-value { display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--text); font-variant-numeric: tabular-nums; min-width: 0; overflow-wrap: anywhere; }
+.hull-cell-note { color: var(--text-faint); font-size: 11px; }
+
 .ship-kill {
   margin-top: 12px;
   padding: 8px 10px;
