@@ -3518,7 +3518,7 @@ async function main() {
     check('both live', countOf(root, 'cards-btn-soon') === 0);
     check('the board carries no listings of its own', countOf(root, 'pc-row') === 0 && countOf(root, 'shop-row') === 0);
     check('one faint line per face', countOf(root, 'tile-foot') === 2, String(countOf(root, 'tile-foot')));
-    check('in the menu\'s order', /79 bookends[\s\S]*4 listed/.test(textOf(root)), textOf(root));
+    check('in the menu\'s order', /79 1\/N[\s\S]*4 listed/.test(textOf(root)), textOf(root));
     check('no amber dot anywhere on the board', countOf(root, 'cards-dot') === 0);
     check('no targets / fresh books / feed line', !/targets|fresh books|feed \d/.test(textOf(root)), textOf(root));
 
@@ -3962,7 +3962,7 @@ async function main() {
       check('Watching is the first button', labelsOf(pcBoard).join('|') === 'Watching|PC', labelsOf(pcBoard).join('|'));
       check('and it opens its own sheet, titled 🎯 Watching', pcView.panel.last.title === '🎯 Watching', pcView.panel.last.title);
       check('the chip counts arrivals, not finds', pcBoard.querySelector('.cards-count').textContent.startsWith('1'), pcBoard.querySelector('.cards-count').textContent);
-      check('the faint line counts the two classes', /79 bookends/.test(textOf(pcBoard)) && /29 1\/1s/.test(textOf(pcBoard)), textOf(pcBoard));
+      check('the faint line counts the two classes', /79 1\/N/.test(textOf(pcBoard)) && /29 1\/1s/.test(textOf(pcBoard)), textOf(pcBoard));
       const quietPc = new El('div');
       cards.render(quietPc, cardsTile(pcData({ finds: FINDS.map((f) => ({ ...f, new: false })) })), { id: 'cards', actions: {} });
       check('nothing new means no chip at all, not a zero', countOf(quietPc, 'cards-count') === 0);
@@ -3978,7 +3978,7 @@ async function main() {
       check('still labelled Watching', labelsOf(noPc)[0] === 'Watching');
       check('and that button is inert', cardBtns(noPc)[0].getAttribute('disabled') === 'disabled');
       check('while PC stays live', !cardBtns(noPc)[1].className.includes('cards-btn-soon'));
-      check('with no Watching line under the menu', !/bookends/.test(textOf(noPc)));
+      check('with no Watching line under the menu', !/1\/N/.test(textOf(noPc)));
 
       // -- two sections, first-of-run first ----------------------------------
       const heads = pcSheet.querySelectorAll('.cards-head').map((h) => h.textContent);

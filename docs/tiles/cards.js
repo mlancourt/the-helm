@@ -835,7 +835,7 @@ export function render(root, tile, ctx) {
     const c = obj(pc.counts);
     const pcBits = [];
     const bookends = num(c.bookend);
-    if (bookends !== null) pcBits.push(`${bookends} bookends`);
+    if (bookends !== null) pcBits.push(`${bookends} 1/N`);
     const oneOfOnes = num(c.one_of_one);
     if (oneOfOnes !== null) pcBits.push(`${oneOfOnes} 1/1s`);
     if (pcBits.length) root.appendChild(el('p', { cls: 'tile-foot', text: pcBits.join(' · ') }));
