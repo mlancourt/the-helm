@@ -157,7 +157,8 @@ Reject anything else with 400 + reason. `build_request` also has a UI entry: in 
 
 ## LIVE band — ESPN + graders (proven in the Phase 0 spike, 2026-09-17)
 
-- Base `https://site.api.espn.com/apis/site/v2/sports/<league>/scoreboard?dates=YYYYMMDD&limit=60` — **always pass `dates=`** (the default view is not "today"). Match games by **`event.id` = ticket.espn_event_id**, never by team name (ESPN abbreviations drift: `OLM`, `BES`, `LEVS`).
+- Base `https://site.api.espn.com/apis/site/v2/sports/<league>/scoreboard?dates=YYYYMMDD&limit=100` — **always pass `dates=`** (the default view is not "today"). Match games by **`event.id` = ticket.espn_event_id**, never by team name (ESPN abbreviations drift: `OLM`, `BES`, `LEVS`).
+- **Each ticket is queried on its own game day** (v1.27.1): `requirements()` dates a ticket's scoreboard call from the leading `YYYY-MM-DD` of `ticket.kick_ct` (string ops, RULE 7), today only when that is unreadable. Tomorrow's tickets sit on the board the night before — querying today's slate for them can never match. The `league` slug is the engine's (it picks the league whose scoreboard holds the pinned id); the page never infers one.
 - Normalize: `{home:{abbr,score,linescores}, away:{…}, state:"pre|in|post", detail, period, clock}` from `competitions[0]`. `linescores` is **null pre-game**, per-period once live.
 - NFL scoring plays: `…/football/nfl/summary?event=<id>` → `scoringPlays[]` (`type.abbreviation`, `text`). **Key absent pre-game — default `[]`.** Fetch summary only when the game is `in|post` and a ticket needs it.
 - Graders (`live/graders.js`) return `{state:"pre|lead|trail|win|lose|push", label, why}`:
