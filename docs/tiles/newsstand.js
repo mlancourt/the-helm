@@ -446,7 +446,9 @@ export function render(el_, tile, ctx) {
     el_.appendChild(empty('No paper yet.'));
   } else {
     // Stamps as of this draw. A category never opened on this device is
-    // baselined now (N10) — the Uncategorised bucket is keyed by its label.
+    // baselined now (N10). Keys are String(g.key): the category key, or
+    // "Symbol(uncategorised)" for the fallback bucket — the same spelling the
+    // tap handler writes, so the two can never disagree.
     const stamps = readLastOpened();
     let baselined = false;
     for (const g of groups) {
