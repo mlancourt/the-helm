@@ -26,12 +26,13 @@
  * date) pairs, deduped, fetches each exactly once, and hands the same events
  * to both. espn.js coalesces anything that still arrives twice.
  *
- * Two dates, not one, because the two tiles date their slates differently:
- * tickets are graded against today as the browser reckons it in Central, and
- * the board is dated by the snapshot's own `date_ct`. They are the same string
- * on every ordinary day, which is why the ordinary day costs one call per
- * league; when a stale snapshot makes them differ, two calls is the correct
- * answer rather than one wrong one.
+ * More than one date, because the tiles date their slates differently: each
+ * ticket is queried on its own game day (the leading YYYY-MM-DD of kick_ct,
+ * v1.27.1 — today only when that is unreadable), and the board is dated by
+ * the snapshot's own `date_ct`. On an ordinary day those are the same string
+ * and it costs one call per league; a ticket for tomorrow, or a stale
+ * snapshot, adds a (league, date) call — the correct answer rather than one
+ * wrong one.
  *
  * On a fetch error the LAST GOOD grades and games are kept and an error flag
  * is raised, so the tiles show "feed unavailable" over the previous numbers
@@ -75,7 +76,7 @@ export function nextDelay({ anyLive, anyPre }) {
  * to board, and the deduped list of scoreboard calls that covers both.
  *
  * Exported because it is the whole sharing decision in one pure function, and
- * "one call per league per tick" is a claim worth testing directly.
+ * "one call per (league, date) per tick" is a claim worth testing directly.
  */
 export function requirements(snapshot, now = new Date()) {
   const tiles = snapshot?.tiles || {};
