@@ -97,7 +97,15 @@ export function requirements(snapshot, now = new Date()) {
     plan.set(`${league}|${date}`, { league, date });
   };
 
-  for (const t of tickets) add(String(t?.league || ''), ticketDate);
+  // Each ticket is fetched on ITS OWN game day — the leading YYYY-MM-DD of
+  // kick_ct, by string ops only (RULE 7) — with today as the fallback.
+  // Fixed 2026-10-02: every ticket was queried on today's slate, so a
+  // Saturday ticket on a Friday board was never found and read "no ESPN
+  // event matched". Two days in one league is two calls, correctly.
+  for (const t of tickets) {
+    const day = compactCtDate(String(t?.kick_ct || '').slice(0, 10)) || ticketDate;
+    add(String(t?.league || ''), day);
+  }
 
   const leagues = [];
   for (const l of rawLeagues) {

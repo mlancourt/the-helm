@@ -277,6 +277,21 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
     check('an unusable date_ct falls back to today rather than querying junk', req.boardDate === ctDateCompact());
   }
   {
+    // 2026-10-02: tickets are queried on their OWN kick_ct day, not today's —
+    // a Saturday CFB ticket on a Friday board was never on today's slate.
+    const req = requirements(snapshotWith([
+      tkt({ id: 'fri', league: 'football/college-football', kick_ct: '2026-10-02 6:00 PM' }),
+      tkt({ id: 'sat', league: 'football/college-football', kick_ct: '2026-10-03' }),
+    ], []));
+    const plan = req.plan.map((p) => `${p.league}|${p.date}`);
+    check('a ticket is queried on its own kick_ct day', plan.includes('football/college-football|20261003'), plan.join(' '));
+    check('two game days in one league are two calls', plan.includes('football/college-football|20261002') && plan.length === 2, plan.join(' '));
+  }
+  {
+    const req = requirements(snapshotWith([tkt({ kick_ct: 'Sat 11 AM' })], []));
+    check('an unreadable kick_ct falls back to today', req.plan.length === 1 && req.plan[0].date === ctDateCompact(), JSON.stringify(req.plan));
+  }
+  {
     // Both events on the SAME Central day as the snapshot, so the filter is
     // not what is under test here.
     const second = redate(nflPre, '2026-09-17T00:15Z'); // 7:15 PM CT on the 16th
