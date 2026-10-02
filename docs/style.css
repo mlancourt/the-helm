@@ -1462,11 +1462,27 @@ body {
 
 /* Same palette as the category chips, so a category looks like itself on the
    board and in the panel. */
-.news-menu-local { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); color: var(--info);  border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
-.news-menu-sport { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good);  border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
-.news-menu-civic { background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); color: var(--brass); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); }
-.news-menu-tech  { background: color-mix(in srgb, var(--pc-serial) 14%, var(--bg-raise)); color: var(--pc-serial);      border-color: color-mix(in srgb, var(--pc-serial) 45%, var(--bg-raise)); }
-.news-menu-money { background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise)); color: var(--warn);  border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); }
+/* N10: every button is the same colour; the pill is the only accent. */
+.news-menu-new {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--brass);
+  color: var(--bg);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.news-new-mark {
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--brass);
+  color: var(--bg);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 .news { display: flex; flex-direction: column; }
 .news-card { padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
@@ -1491,11 +1507,6 @@ body {
   font-weight: 600;
   white-space: nowrap;
 }
-.news-cat-local { background: color-mix(in srgb, var(--info) 14%, var(--bg-raise)); color: var(--info);  border-color: color-mix(in srgb, var(--info) 45%, var(--bg-raise)); }
-.news-cat-sport { background: color-mix(in srgb, var(--good) 14%, var(--bg-raise)); color: var(--good);  border-color: color-mix(in srgb, var(--good) 45%, var(--bg-raise)); }
-.news-cat-civic { background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); color: var(--brass); border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise)); }
-.news-cat-tech  { background: color-mix(in srgb, var(--pc-serial) 14%, var(--bg-raise)); color: var(--pc-serial);      border-color: color-mix(in srgb, var(--pc-serial) 45%, var(--bg-raise)); }
-.news-cat-money { background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise)); color: var(--warn);  border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); }
 
 /* The source name is required on every row now (raw RSS, ~40 feeds) and the
    age chip sits after it. Both are furniture: quiet, tabular, and never

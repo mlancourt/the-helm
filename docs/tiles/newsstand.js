@@ -33,11 +33,32 @@
  * category the vault invents tomorrow shows up on its own, wearing its own
  * emoji, with no page deploy (rule 9).
  *
- * There is no "All" button and nothing is remembered on the device: the sheet
- * is transient, so there is no per-viewer state worth keeping. Cards the vault
- * left without a category would have no button to live under, so they get one
- * last bucket rather than falling off the board — a menu that silently drops
- * stories is worse than one extra button.
+ * There is no "All" button. Cards the vault left without a category would
+ * have no button to live under, so they get one last bucket rather than
+ * falling off the board — a menu that silently drops stories is worse than
+ * one extra button.
+ *
+ * THE NEW PILL (N10, 2026-10-02). Each button may carry a brass pill counting
+ * stories published since Matt last opened that category ON THIS DEVICE — a
+ * UTC stamp per category in localStorage, the entertainment tile's E8
+ * pattern. Rules:
+ *   - Opening a category stamps it now and the pill goes on the spot.
+ *   - Nothing new means NO pill. Not "0". The menu is quiet by default.
+ *   - A category with no stamp yet is BASELINED at first sight, not shouted:
+ *     seventeen buttons all wearing their full count on day one is noise,
+ *     not news. (E8 goes the other way for its three faces; this menu has
+ *     seventeen buttons, so the quiet default wins here.) A device whose
+ *     storage is blocked re-baselines every load and simply never shows a
+ *     pill — quiet, never wrong.
+ *   - `published_at` is the only clock. A card with no stamp is never new.
+ *   - Inside the sheet, a new row wears a small "new" mark so the pill's
+ *     promise is visible once you tap through.
+ *
+ * ALL BUTTONS ARE THE SAME COLOUR (N10). The old per-category tint palette was
+ * written for the curated era's nine categories; with seventeen it tinted
+ * three buttons (Local News, Local Sports, Tech) and left fourteen grey, which
+ * read as "highlighted" rather than "categorised". The palette and the tone
+ * classes are gone; the chip inside the sheet is neutral too.
  *
  * The fields that carry the editorial weight are all the engine's:
  *   emoji        drawn from the card first, then from `by_category`, never
@@ -78,21 +99,54 @@
 import { el, empty, extLink, genericCard } from '../lib/dom.js';
 import { ago, ageChip } from '../lib/fmt.js';
 
-/**
- * Button and chip tints. A category with no entry here renders neutral rather
- * than unstyled — the engine owns this taxonomy and will grow it without
- * asking.
- */
-const CATEGORY_TONE = {
-  'local news': 'local',
-  'local sports': 'sport',
-  'national politics': 'civic',
-  tech: 'tech',
-  business: 'money',
-  markets: 'money',
-};
-
 const arr = (v) => (Array.isArray(v) ? v : []);
+
+// ------------------------------------------------------------- last opened
+
+/** {categoryKey: '<UTC ISO>'} — per device, never in the snapshot (N10). */
+const LS_KEY = 'helm.newsstand.lastOpened';
+
+/**
+ * Every read is defended: Safari private mode throws on access, the key may
+ * be absent, and whatever is in there was written by an older version of this
+ * file. Any of those reads as "no stamps".
+ */
+function readLastOpened() {
+  try {
+    const raw = globalThis.localStorage?.getItem(LS_KEY);
+    if (!raw) return {};
+    const v = JSON.parse(raw);
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Write the whole map back. A failure here costs a pill, never the page. */
+function writeLastOpened(all) {
+  try {
+    globalThis.localStorage?.setItem(LS_KEY, JSON.stringify(all));
+  } catch {
+    /* no storage: no pills on this device */
+  }
+}
+
+/**
+ * A stored stamp as epoch ms, or NaN when it is not a real instant. A
+ * date-only string parses in JS (as UTC midnight) but would compare a day
+ * wrong forever, so it reads as no stamp — the entertainment tile's rule.
+ */
+function stampMs(v) {
+  if (typeof v !== 'string' || /^\d{4}-\d{2}-\d{2}$/.test(v)) return NaN;
+  return Date.parse(v);
+}
+
+/** true when the card was published after `sinceMs`; never true without a stamp. */
+function isNew(c, sinceMs) {
+  if (!Number.isFinite(sinceMs)) return false;
+  const t = Date.parse(str(c.published_at));
+  return Number.isFinite(t) && t > sinceMs;
+}
 
 /**
  * A payload value as display text, or ''.
@@ -121,14 +175,13 @@ const NO_CATEGORY = Symbol('uncategorised');
 const NO_CATEGORY_LABEL = 'Uncategorised';
 
 function categoryChip(category, emoji) {
-  const tone = CATEGORY_TONE[catKey(category)] || 'neutral';
-  return el('span', { cls: `news-cat news-cat-${tone}` }, [
+  return el('span', { cls: 'news-cat news-cat-neutral' }, [
     emoji ? el('span', { cls: 'news-emoji', attrs: { 'aria-hidden': 'true' }, text: emoji }) : null,
     el('span', { text: str(category) }),
   ]);
 }
 
-function card(c) {
+function card(c, fresh = false) {
   const bits = [];
   const category = str(c.category).trim();
   const emoji = str(c.emoji).trim();
@@ -149,6 +202,7 @@ function card(c) {
   // Chip, source, age. Each part is omitted when it is not there rather than
   // rendered empty — an empty span still costs a gap in a flex row.
   const meta = [];
+  if (fresh) meta.push(el('span', { cls: 'news-new-mark', text: 'new' }));
   if (category) meta.push(categoryChip(category, emoji));
   if (source) meta.push(el('span', { cls: 'news-source', text: source }));
   if (age) meta.push(el('span', { cls: 'news-age', text: age, attrs: { title: str(c.published_at) } }));
@@ -217,7 +271,6 @@ function groupByCategory(cards, byCategory) {
         key,
         label: keyed ? label : NO_CATEGORY_LABEL,
         emoji: keyed ? str(c.emoji).trim() : '',
-        tone: keyed ? CATEGORY_TONE[key] || 'neutral' : 'neutral',
         cards: [],
       };
       groups.set(key, g);
@@ -266,17 +319,22 @@ function headingFor(group) {
  * payload and a busy category can hold forty; the sheet is a scrolling sheet,
  * and a cap would drop stories with nothing on screen to say it had.
  */
-function sheetBody(group) {
+function sheetBody(group, sinceMs) {
   return (body) => {
-    body.appendChild(el('div', { cls: 'news' }, group.cards.map((c) => card(c))));
+    body.appendChild(el('div', { cls: 'news' }, group.cards.map((c) => card(c, isNew(c, sinceMs)))));
   };
 }
 
-function menuButton(group, ctx) {
+function menuButton(group, ctx, sinceMs) {
+  // The sheet is built against the stamp as it stood when the board drew, so
+  // the rows marked "new" are exactly the ones the pill counted.
+  const fresh = group.cards.filter((c) => isNew(c, sinceMs)).length;
+  // Quiet when nothing is new: no pill at all, not a zero.
+  const pill = fresh > 0 ? el('span', { cls: 'news-menu-new', text: String(fresh) }) : null;
   return el(
     'button',
     {
-      cls: `news-menu-btn news-menu-${group.tone}`,
+      cls: 'news-menu-btn',
       attrs: { type: 'button' },
       on: {
         click: (e) => {
@@ -284,8 +342,14 @@ function menuButton(group, ctx) {
           e.stopPropagation();
           const open = ctx && ctx.actions && ctx.actions.openPanel;
           // No sheet to open (the test harness, an older shell): the menu is
-          // inert rather than broken.
-          if (typeof open === 'function') open(headingFor(group), sheetBody(group));
+          // inert rather than broken, and nothing is marked seen either.
+          if (typeof open !== 'function') return;
+          open(headingFor(group), sheetBody(group, sinceMs));
+          // Seen. The pill goes now rather than at the next snapshot.
+          const all = readLastOpened();
+          all[String(group.key)] = new Date().toISOString();
+          writeLastOpened(all);
+          if (pill) pill.classList.add('hidden');
         },
       },
     },
@@ -294,6 +358,7 @@ function menuButton(group, ctx) {
         ? el('span', { cls: 'news-emoji', attrs: { 'aria-hidden': 'true' }, text: group.emoji })
         : null,
       el('span', { cls: 'news-menu-label', text: group.label }),
+      pill,
       el('span', { cls: 'news-menu-dot', attrs: { 'aria-hidden': 'true' }, text: '·' }),
       el('span', { cls: 'news-menu-count', text: String(group.cards.length) }),
     ]
@@ -380,11 +445,23 @@ export function render(el_, tile, ctx) {
     // tile beside a silent footer reads as a tile that forgot to load.
     el_.appendChild(empty('No paper yet.'));
   } else {
+    // Stamps as of this draw. A category never opened on this device is
+    // baselined now (N10) — the Uncategorised bucket is keyed by its label.
+    const stamps = readLastOpened();
+    let baselined = false;
+    for (const g of groups) {
+      const k = String(g.key);
+      if (!Number.isFinite(stampMs(stamps[k]))) {
+        stamps[k] = new Date().toISOString();
+        baselined = true;
+      }
+    }
+    if (baselined) writeLastOpened(stamps);
     el_.appendChild(
       el(
         'div',
         { cls: 'news-menu', attrs: { role: 'group', 'aria-label': 'Newsstand categories' } },
-        groups.map((g) => menuButton(g, ctx))
+        groups.map((g) => menuButton(g, ctx, stampMs(stamps[String(g.key)])))
       )
     );
   }

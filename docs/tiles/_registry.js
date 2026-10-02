@@ -28,7 +28,7 @@ export const REGISTRY = {
   captains_log: { band: 'DAILY', position: 25, module: './tiles/captains_log.js', title: "⚓ Captain's Log" },
   dinner: { band: 'DAILY', position: 30, module: './tiles/dinner.js', title: 'Dinner' },
   weather: { band: 'LIVE', position: 40, module: './tiles/weather.js', title: 'Weather' },
-  newsstand: { band: 'HOURLY', position: 50, module: './tiles/newsstand.js', title: 'Newsstand' },
+  newsstand: { band: 'HOURLY', position: 50, module: './tiles/newsstand.js', title: '📰 Newsstand' },
   entertainment: { band: 'DAILY', position: 60, module: './tiles/entertainment.js', title: 'Entertainment' },
   local_events: { band: 'DAILY', position: 70, module: './tiles/local_events.js', title: 'Lake Country' },
   today_games: { band: 'LIVE', position: 80, module: './tiles/today_games.js', title: "Today's Games" },

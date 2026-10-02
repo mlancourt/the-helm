@@ -459,8 +459,86 @@ async function main() {
     check('a button wears its category emoji', /💻/.test(btns[0].textContent) && /🏙️/.test(btns[1].textContent));
     check('a category whose first card forgot its emoji still wears one', /💼/.test(btns[2].textContent));
     check('an unknown category still gets a button', /Weather Balloons/.test(btns[3].textContent));
-    check('a known category is tinted', btns[0].className.includes('news-menu-tech'));
-    check('an unknown category falls back to neutral', btns[3].className.includes('news-menu-neutral'));
+    // N10: one colour for every button — no category earns a tint.
+    check('no button wears a category tint', btns.every((b) => b.className === 'news-menu-btn'), btns.map((b) => b.className).join('|'));
+    const NEWS_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'newsstand.js'), 'utf8');
+    const NEWS_CSS = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+    check('and no tint palette survives in the module', !/CATEGORY_TONE/.test(NEWS_SRC) && !/news-menu-\$\{/.test(NEWS_SRC));
+    check('nor in the stylesheet', !/\.news-menu-(local|sport|civic|tech|money)\b/.test(NEWS_CSS) && !/\.news-cat-(local|sport|civic|tech|money)\b/.test(NEWS_CSS));
+
+    // -- N10: the "new since you opened it" pill ----------------------------
+    //
+    // A brass pill per button counting cards published after the device's
+    // stamp for that category; quiet (no pill) when nothing is new; the
+    // category is stamped on open and the pill hides on the spot. A category
+    // with no stamp is baselined on first sight, not shouted.
+    console.log('\nnewsstand — the new pill (N10)');
+    {
+      const LS = 'helm.newsstand.lastOpened';
+      const hourAgo = new Date(Date.now() - 3600e3).toISOString();
+      const twoHoursAgo = new Date(Date.now() - 7200e3).toISOString();
+      const yesterday = new Date(Date.now() - 86400e3).toISOString();
+      const pillCards = [
+        { title: 'N1', source: 's', url: 'https://example.com/n1', category: 'Tech', emoji: '💻', published_at: hourAgo },
+        { title: 'N2', source: 's', url: 'https://example.com/n2', category: 'Tech', published_at: yesterday },
+        { title: 'N3', source: 's', url: 'https://example.com/n3', category: 'Tech' },
+        { title: 'N4', source: 's', url: 'https://example.com/n4', category: 'Music', emoji: '🎸', published_at: hourAgo },
+      ];
+      const pillOf = (btn) => btn.querySelector('.news-menu-new');
+
+      // Tech was opened two hours ago; Music has never been opened here.
+      const store = fakeStorage({ tech: twoHoursAgo });
+      const r1 = new El('div');
+      const p1 = fakePanel();
+      withStorage(store, () => news.render(r1, newsTile(pillCards), { id: 'newsstand', actions: p1.actions }));
+      const b1 = btnsOf(r1);
+      check('a category opened earlier counts only cards published since', pillOf(b1[0]) && pillOf(b1[0]).textContent === '1', pillOf(b1[0]) && pillOf(b1[0]).textContent);
+      check('a card with no published_at is never new', countChip(b1[0]) === '3');
+      check('a never-opened category is baselined, not shouted', !pillOf(b1[1]));
+      check('and the baseline is written to the device', store.parsed && Number.isFinite(Date.parse(store.parsed.music)), JSON.stringify(store.parsed));
+      check('the stamp that was there is kept', store.parsed && store.parsed.tech === twoHoursAgo);
+      check('the total count still shows beside the pill', b1[0].querySelector('.news-menu-count').textContent === '3');
+
+      // Tap Tech: the sheet marks the new row, the pill hides, the stamp moves.
+      withStorage(store, () => tap(b1[0]));
+      check('opening the sheet marks the new row', countOf(p1.last.body, 'news-new-mark') === 1, String(countOf(p1.last.body, 'news-new-mark')));
+      check('and only the new row', /N1/.test(textOf(p1.last.body)) && countOf(p1.last.body, 'news-card') === 3);
+      check('the pill hides on the spot', pillOf(b1[0]).classList.contains('hidden'));
+      check('the category is stamped now', store.parsed && Date.parse(store.parsed.tech) > Date.parse(twoHoursAgo));
+
+      // Re-render after the tap: quiet.
+      const r2 = new El('div');
+      withStorage(store, () => news.render(r2, newsTile(pillCards), { id: 'newsstand', actions: fakePanel().actions }));
+      check('nothing new means no pill, not a zero', !pillOf(btnsOf(r2)[0]) && !/\b0\b/.test(btnsOf(r2)[0].textContent));
+
+      // A stamp from an older version that is not an instant reads as none.
+      const junk = fakeStorage({ tech: '2026-09-19' });
+      const r3 = new El('div');
+      withStorage(junk, () => news.render(r3, newsTile(pillCards), { id: 'newsstand', actions: {} }));
+      check('a date-only stamp is re-baselined rather than compared', !pillOf(btnsOf(r3)[0]) && junk.parsed && !/^2026-09-19$/.test(junk.parsed.tech));
+
+      // Private mode: the accessor throws. Quiet, never a crash.
+      let threw = null;
+      const r4 = new El('div');
+      try { withStorage(fakeStorage(null, { broken: true }), () => news.render(r4, newsTile(pillCards), { id: 'newsstand', actions: {} })); } catch (e) { threw = e; }
+      check('blocked storage never throws', !threw, threw && threw.message);
+      check('and shows no pill', countOf(r4, 'news-menu-new') === 0);
+
+      // No localStorage at all (Node, an old browser).
+      let none = null;
+      const r5 = new El('div');
+      try { news.render(r5, newsTile(pillCards), { id: 'newsstand', actions: {} }); } catch (e) { none = e; }
+      check('no localStorage at all never throws', !none, none && none.message);
+
+      // Inert shell: a tap with no sheet stamps nothing.
+      const inertStore = fakeStorage({ tech: twoHoursAgo, music: twoHoursAgo });
+      const r6 = new El('div');
+      withStorage(inertStore, () => news.render(r6, newsTile(pillCards), { id: 'newsstand', actions: {} }));
+      withStorage(inertStore, () => tap(btnsOf(r6)[0]));
+      check('a tap with no sheet to open stamps nothing', inertStore.parsed.tech === twoHoursAgo);
+      check('the pill is only ever a number', /^\d+$/.test(pillOf(btnsOf(r6)[0]).textContent));
+      check('the sheet row mark is brass like the entertainment mark', /\.news-new-mark \{[^}]*var\(--brass\)/.test(NEWS_CSS));
+    }
     // A card with no category has no button of its own to live under, and must
     // not simply vanish from the board.
     check('uncategorised cards collect in one trailing button', btns[4].querySelector('.news-menu-label').textContent === 'Uncategorised');
