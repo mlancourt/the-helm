@@ -12,6 +12,13 @@
  * Every /api/ask failure is a reason string from the Worker, not a stack
  * trace: the chat says what went wrong in Matt's words and keeps the
  * transcript (rule 8).
+ *
+ * Phase 2 (A10): `ctx.actions.ask` tries the vault-smart brain first and
+ * falls back to the Worker, so the mode chip says WHICH brain answered —
+ * vault · snapshot — or why none did: sign in · off · cap. "sign in" is a
+ * button: it opens the brain's /health top-level, where Access sends the OTP,
+ * and the next ask carries the cookie. A vault answer wears a footer,
+ * "read N files ▸", that opens to the files it read — the audit made visible.
  */
 
 import { el, clear, pill } from '../lib/dom.js';
@@ -24,14 +31,18 @@ const MAX_TURNS = 10;
  * already short and human.
  */
 const FAILURES = {
-  cap: ['The day\u2019s ask budget is spent. It resets at 00:00 UTC.', 'cap'],
+  cap: ['The day\u2019s ask budget is spent. It resets at midnight.', 'cap'],
+  signin: ['The brain wants you to sign in. Tap \u201csign in\u201d, enter the code, then ask again.', 'sign in'],
   timeout: ['The model did not answer in time. Worth another go.', 'slow'],
-  upstream: ['The model API is not answering right now.', 'offline'],
+  upstream: ['The model API is not answering right now.', 'off'],
   no_key: ['Ask is not configured on the Worker yet (no model key).', 'unset'],
   no_system: ['Ask has no system prompt installed yet.', 'unset'],
   too_large: ['That question carried too much with it.', 'snapshot'],
-  unauthorized: ['The Worker did not recognise this token.', 'offline'],
+  unauthorized: ['The Worker did not recognise this token.', 'off'],
 };
+
+/** `[[Some-Note]]` → `Some-Note`; a plain path passes through. */
+const unbracket = (f) => String(f).replace(/^\[\[|\]\]$/g, '');
 
 /** The build-request affordance from the brief. */
 const BUILD_RE = /^\s*(add a tile\b|build\b|i want a tile\b)/i;
@@ -44,7 +55,24 @@ export function render(root, tile, ctx) {
 
   // ---------------------------------------------------------------- layout
   const transcript = el('div', { cls: 'ask-transcript' });
-  const modeChip = pill('snapshot', 'mode');
+  const modeChip = pill('vault', 'mode');
+  // Shown in the chip's place when the brain's door wants a sign-in. The URL
+  // is the one app.js pinned (BRAIN_BASE + /health), never the server's.
+  let loginUrl = null;
+  const signInBtn = el('button', {
+    cls: 'pill pill-mode ask-signin hidden',
+    text: 'sign in',
+    attrs: { type: 'button', title: 'Open the brain\u2019s sign-in in a new tab' },
+    on: { click: () => loginUrl && window.open(loginUrl, '_blank') },
+  });
+
+  function setChip(text, title = '') {
+    modeChip.textContent = text;
+    modeChip.title = title;
+    const signin = text === 'sign in' && !!loginUrl;
+    modeChip.classList.toggle('hidden', signin);
+    signInBtn.classList.toggle('hidden', !signin);
+  }
   const pinBar = el('div', { cls: 'ask-pin hidden' });
 
   const input = el('textarea', {
@@ -68,6 +96,33 @@ export function render(root, tile, ctx) {
     ]);
   }
 
+  /** "read N files ▸" under a vault answer; tap to list them (textContent only). */
+  function filesFooter(m) {
+    const n = m.files.length;
+    const wrap = el('div', { cls: 'ask-files' });
+    const list = el(
+      'ul',
+      { cls: `ask-files-list${m.filesOpen ? '' : ' hidden'}` },
+      m.files.map((f) => el('li', { text: unbracket(f) }))
+    );
+    const toggle = el('button', {
+      cls: 'link-btn ask-files-toggle',
+      text: `read ${n} file${n === 1 ? '' : 's'} ${m.filesOpen ? '\u25be' : '\u25b8'}`,
+      attrs: { type: 'button', 'aria-expanded': m.filesOpen ? 'true' : 'false' },
+      on: {
+        click: () => {
+          m.filesOpen = !m.filesOpen;
+          list.classList.toggle('hidden', !m.filesOpen);
+          toggle.textContent = `read ${n} file${n === 1 ? '' : 's'} ${m.filesOpen ? '\u25be' : '\u25b8'}`;
+          toggle.setAttribute('aria-expanded', m.filesOpen ? 'true' : 'false');
+        },
+      },
+    });
+    wrap.appendChild(toggle);
+    wrap.appendChild(list);
+    return wrap;
+  }
+
   function scrollDown() {
     transcript.scrollTop = transcript.scrollHeight;
   }
@@ -82,7 +137,11 @@ export function render(root, tile, ctx) {
         el('p', { cls: 'empty ask-hint', text: 'Ask about the board, or long-press a tile.' })
       );
     }
-    for (const m of history) transcript.appendChild(bubble(m.role, m.content));
+    for (const m of history) {
+      const b = bubble(m.role, m.content);
+      if (m.files && m.files.length) b.appendChild(filesFooter(m));
+      transcript.appendChild(b);
+    }
     scrollDown();
   }
 
@@ -182,7 +241,11 @@ export function render(root, tile, ctx) {
 
     try {
       // Last MAX_TURNS entries, excluding the question we are about to send.
-      const priorTurns = history.slice(0, -1).slice(-MAX_TURNS);
+      // Role + content only: the files footer is page state, not a turn.
+      const priorTurns = history
+        .slice(0, -1)
+        .slice(-MAX_TURNS)
+        .map((m) => ({ role: m.role, content: m.content }));
       const res = await ctx.actions.ask({
         q,
         history: priorTurns,
@@ -190,11 +253,15 @@ export function render(root, tile, ctx) {
         tile_data: pinned?.data,
       });
       transcript.removeChild(thinking);
-      history.push({ role: 'assistant', content: String(res.answer ?? '') });
-      if (res.mode) modeChip.textContent = String(res.mode);
+      const turn = { role: 'assistant', content: String(res.answer ?? '') };
+      if (res.mode === 'vault' && Array.isArray(res.files_read) && res.files_read.length) {
+        turn.files = res.files_read.map(String);
+        turn.filesOpen = false;
+      }
+      history.push(turn);
       // The cap is real money on a card, so the cost of the last answer is
       // one long-press away rather than buried in the Worker log.
-      if (typeof res.usd === 'number') modeChip.title = `last answer cost $${res.usd.toFixed(4)}`;
+      setChip(res.mode ? String(res.mode) : modeChip.textContent, typeof res.usd === 'number' ? `last answer cost $${res.usd.toFixed(4)}` : '');
     } catch (e) {
       transcript.removeChild(thinking);
       // Rule 8: /ask down means the chat says so, plainly.
@@ -202,8 +269,8 @@ export function render(root, tile, ctx) {
       // otherwise hand back an Object method and throw inside the catch.
       const [text, chip] = Object.prototype.hasOwnProperty.call(FAILURES, e.reason) ? FAILURES[e.reason] : [];
       history.push({ role: 'assistant', content: text || e.message || 'Ask is unavailable right now.' });
-      modeChip.textContent = chip || 'offline';
-      modeChip.title = e.reason ? `/ask failed: ${e.reason}` : '/ask failed';
+      if (e.reason === 'signin' && typeof e.login === 'string') loginUrl = e.login;
+      setChip(chip || 'off', e.reason ? `/ask failed: ${e.reason}` : '/ask failed');
     } finally {
       busy = false;
       sendBtn.disabled = false;
@@ -227,6 +294,7 @@ export function render(root, tile, ctx) {
     el('div', { cls: 'ask-head' }, [
       el('span', { cls: 'ask-title', text: 'Ask' }),
       modeChip,
+      signInBtn,
       el('button', {
         cls: 'link-btn ask-clear',
         text: 'clear',
@@ -236,8 +304,7 @@ export function render(root, tile, ctx) {
             history.length = 0;
             setPinned(null);
             clearOffer();
-            modeChip.textContent = 'snapshot';
-            modeChip.title = '';
+            setChip('vault');
             paint();
           },
         },

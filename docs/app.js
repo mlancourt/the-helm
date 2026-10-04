@@ -12,13 +12,14 @@
  *  10  untrusted content is data — see lib/dom.js; there is no innerHTML here
  */
 
-import { apiBase, STALE_AFTER_MS, DATA_REFRESH_MS, APP_VERSION_LABEL } from './config.js';
+import { apiBase, BRAIN_BASE, STALE_AFTER_MS, DATA_REFRESH_MS, APP_VERSION_LABEL } from './config.js';
 import { REGISTRY } from './tiles/_registry.js';
 import { createLiveBand, createWeatherBand } from './live/band.js';
 import { normalizeEvent, fetchScoreboard as realFetchScoreboard, compactCtDate } from './live/espn.js';
 import { el, clear, empty, genericCard, pill } from './lib/dom.js';
 import { ago, ctTime } from './lib/fmt.js';
 import { subheadText } from './lib/header.js';
+import { askBrainFirst } from './lib/brain.js';
 
 const LS_TOKEN = 'helm.token';
 const LS_SNAPSHOT = 'helm.snapshot';
@@ -284,9 +285,17 @@ const actions = {
     renderAll();
   },
 
+  /**
+   * Brain first (Phase 2, A10): the vault-smart /ask on the mini, through
+   * Access; the Worker's snapshot-only /api/ask when the brain is off, down
+   * or slow. A `signin` or `cap` failure is thrown for the Ask panel to say.
+   */
   async ask(payload) {
     if (MOCK) throw new Error('mock mode — ask is not wired up');
-    return api('/api/ask', { method: 'POST', body: payload });
+    return askBrainFirst(payload, {
+      brainBase: BRAIN_BASE,
+      workerAsk: (body) => api('/api/ask', { method: 'POST', body }),
+    });
   },
 
   /**

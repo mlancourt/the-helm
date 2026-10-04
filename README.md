@@ -206,8 +206,10 @@ That constant is the only place the page learns where its API lives.
 GitHub Pages serves from `/docs` on `main`, so a push deploys it. Then open
 
 ```
-https://mlancourt.github.io/the-helm/?t=<token>
+https://helm.lannyai.com/?t=<token>
 ```
+
+**Custom domain (v1.30.0, Phase 2 A1):** the page lives at `https://helm.lannyai.com` (`docs/CNAME`; the old `mlancourt.github.io/the-helm` 301s there) so it shares a site with `brain.lannyai.com` and Safari sends the Access cookie. **Re-add the PWA from helm.lannyai.com** — localStorage (token, pill baselines) starts fresh on the new origin, so open it once with `?t=`.
 
 once on the phone. The token moves into localStorage and is stripped from the
 address bar, so every later visit works from the bare URL — and the token stops
@@ -273,7 +275,7 @@ curl -X PUT "$HELM/api/admin/draft-system" \
 
 Page endpoints take the token as `?t=` or `Authorization: Bearer`. Admin
 endpoints take `X-Admin-Secret`. Anything unauthenticated gets a 401 JSON body.
-CORS allows `https://mlancourt.github.io` and `http://localhost:*`.
+CORS allows `https://helm.lannyai.com`, `https://mlancourt.github.io` and `http://localhost:*`.
 
 | Endpoint | Auth | Behavior |
 |---|---|---|
@@ -1045,6 +1047,8 @@ week.
 ---
 
 ## Ask
+
+**Phase 2 (v1.30.0): the page asks the brain first.** `https://brain.lannyai.com/ask` (the vault-smart service in `agent/`, behind Cloudflare Access) answers with `mode: "vault"` and a `files_read` list; on a network failure, timeout (95 s) or any 5xx — including `503 brain_off` — the page falls back to the Worker below and tags the answer `snapshot`. A 401/403/Access redirect turns the mode chip into a **sign in** button (opens `brain.lannyai.com/health` in a new tab for the OTP); a brain `429 cap` is shown as cap, never spent against the Worker's rail. See `agent/README.md`.
 
 `POST /api/ask` answers questions about the board. One user, one token, one
 model call per question, and a hard dollar ceiling on the day.

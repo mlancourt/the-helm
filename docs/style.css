@@ -2187,6 +2187,12 @@ body {
 .bubble-assistant { align-self: flex-start; background: var(--bg-sink); border: 1px solid var(--line-soft); border-bottom-left-radius: 4px; }
 .bubble-wait { opacity: 0.6; font-style: italic; }
 .bubble-text { white-space: pre-wrap; word-break: break-word; }
+/* Phase 2: the brain's door wants a sign-in — the chip becomes a button. */
+.ask-signin { cursor: pointer; font-family: inherit; background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise)); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--bg-raise)); }
+/* "read N files ▸" under a vault answer — the audit made visible. */
+.ask-files { margin-top: 6px; padding-top: 5px; border-top: 1px solid var(--line-soft); }
+.ask-files-toggle { font-size: 11.5px; color: var(--text-dim); }
+.ask-files-list { margin: 4px 0 0; padding-left: 16px; font-size: 11.5px; color: var(--text-dim); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break: break-all; }
 
 .ask-hint { margin: 2px 0; }
 

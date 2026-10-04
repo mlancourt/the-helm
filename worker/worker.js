@@ -20,7 +20,7 @@
 
 // ---------------------------------------------------------------- constants
 
-const ALLOWED_ORIGIN_EXACT = new Set(['https://mlancourt.github.io']);
+const ALLOWED_ORIGIN_EXACT = new Set(['https://mlancourt.github.io', 'https://helm.lannyai.com']);
 const ALLOWED_ORIGIN_RE = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 const MAX_EVENT_BYTES = 16 * 1024;

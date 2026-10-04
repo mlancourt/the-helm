@@ -9,6 +9,15 @@
 export const WORKER_BASE = 'https://the-helm.mlancourt.workers.dev';
 
 /**
+ * The brain (Phase 2, Brain-Service-Spec A1): the vault-smart /ask on the
+ * mini, behind Cloudflare Access. Pinned like WORKER_BASE and deliberately
+ * NOT overridable from the query string — the brain fetch carries the Access
+ * cookie (`credentials: 'include'`), so a crafted `?brain=` would hand Matt's
+ * session to whoever wrote the link. The one origin rule 4 admits for it.
+ */
+export const BRAIN_BASE = 'https://brain.lannyai.com';
+
+/**
  * Dev-only API override: `?api=http://127.0.0.1:8787`.
  *
  * Deliberately refused unless the page itself is on localhost. Honouring it on
@@ -47,7 +56,7 @@ export const DATA_REFRESH_MS = 5 * 60 * 1000;
  *
  * Bump this with each ruling batch, alongside CACHE_VERSION in sw.js.
  */
-export const APP_VERSION = '1.29.0';
+export const APP_VERSION = '1.30.0';
 
 /** `v1.0` — what the header chip shows. */
 export const APP_VERSION_LABEL = `v${APP_VERSION.split('.').slice(0, 2).join('.')}`;

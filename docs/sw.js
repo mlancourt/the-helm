@@ -14,7 +14,7 @@
  * Bump CACHE_VERSION to evict the old shell on deploy.
  */
 
-const CACHE_VERSION = 'helm-v50';
+const CACHE_VERSION = 'helm-v51';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -26,6 +26,7 @@ const SHELL = [
   './style.css',
   './manifest.webmanifest',
   './lib/bets.js',
+  './lib/brain.js',
   './lib/dom.js',
   './lib/fmt.js',
   './lib/header.js',
@@ -89,13 +90,16 @@ self.addEventListener('fetch', (e) => {
 
   const url = new URL(req.url);
 
-  // Never cache: live scores, live weather, and anything from /ask or /draft.
+  // Never cache: live scores, live weather, the brain, and anything from /ask
+  // or /draft. (The brain's /ask is a POST and bails above anyway; the
+  // hostname check keeps any future GET to it out of the cache too.)
   // The weather.gov bail covers BOTH amended origins — api.weather.gov, whose
   // whole point is being current, and radar.weather.gov, whose loop is ~1 MB
   // a pull and must never be allowed near a cache the shell also lives in.
   if (
     url.hostname.endsWith('espn.com') ||
     url.hostname.endsWith('weather.gov') ||
+    url.hostname === 'brain.lannyai.com' ||
     url.pathname.endsWith('/api/ask') ||
     url.pathname.endsWith('/api/draft')
   )
