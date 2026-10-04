@@ -115,6 +115,7 @@ const mockEspn = {
     return {
       scoringPlays: Array.isArray(s.scoringPlays) ? s.scoringPlays : [],
       keyEvents: Array.isArray(s.keyEvents) ? s.keyEvents : [],
+      players: Array.isArray(s.boxscore?.players) ? s.boxscore.players : [],
     };
   },
 };

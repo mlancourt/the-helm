@@ -114,9 +114,16 @@ export function scorerText(playText) {
   return paren > 0 ? text.slice(0, paren) : text;
 }
 
-/** Lowercase, drop punctuation that varies, collapse spaces. Hyphens stay. */
+/**
+ * Lowercase, fold accents, drop punctuation that varies, collapse spaces.
+ * Hyphens stay. Accents fold because the slip and the feed disagree about
+ * them ("Ibanez" on the slip, "Ibáñez" in the play text) — and an accented
+ * letter would otherwise read as a word boundary to hasWord() below.
+ */
 function norm(s) {
   return String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[.,'’]/g, '')
     .replace(/\s+/g, ' ')
@@ -517,4 +524,241 @@ export function gameProgress(game, league = game && game.league) {
   const left = clockSecs(game.clock);
   if (left === null) return null;
   return clamp01((period - 1 + (1 - Math.min(left, len) / len)) / periods);
+}
+
+// ------------------------------------------------------------------ parlays
+
+/*
+ * PARLAYS (B16–B19, v1.28.0). A parlay is one ticket with N legs across 1..N
+ * games. The engine publishes `market: "parlay"`, `legs[]` and `games[]`; the
+ * page grades each leg on its own and then ANDs them — strictly. It does no
+ * odds math here either: `to_win_u` / `payout_x` are the engine's, and
+ * nothing below so much as reads them.
+ *
+ * Every leg names a player, never a game, so the player is FOUND: across the
+ * parlay's started games' box scores, full name first, then a surname token
+ * that is unique across those games. A stat column is located by its KEY in
+ * that block's `keys` array — verified 10/4 that the arrays are stable and
+ * the positions are not — and never by index.
+ */
+
+/** Stat legs: market -> [box-score block, key, unit word for the readout]. */
+export const LEG_STAT = {
+  player_rush_yds: ['rushing', 'rushingYards', 'yds'],
+  player_pass_yds: ['passing', 'passingYards', 'yds'],
+  player_rec_yds: ['receiving', 'receivingYards', 'yds'],
+  player_rec: ['receiving', 'receptions', 'rec'],
+};
+
+const PLAYER_BLOCKS = ['passing', 'rushing', 'receiving'];
+
+/**
+ * A name as comparable tokens: lowercase, accents and punctuation gone,
+ * generational suffixes dropped. "Amon-Ra St. Brown" -> ['amonra', 'st',
+ * 'brown']; "José Ramírez Jr." -> ['jose', 'ramirez'].
+ */
+export function nameTokens(name) {
+  return String(name || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((p) => !NAME_SUFFIX.test(p));
+}
+
+/**
+ * Every athlete in a summary's box score: `[{name, team, blocks: {block:
+ * {keys, stats}}}]`. One entry per athlete — a back who also catches passes
+ * appears once, with both blocks.
+ */
+function boxAthletes(summary) {
+  const out = new Map();
+  for (const team of Array.isArray(summary?.players) ? summary.players : []) {
+    const abbr = String(team?.team?.abbreviation || '');
+    for (const block of Array.isArray(team?.statistics) ? team.statistics : []) {
+      const bname = String(block?.name || '');
+      if (!PLAYER_BLOCKS.includes(bname)) continue;
+      const keys = Array.isArray(block.keys) ? block.keys : [];
+      for (const a of Array.isArray(block.athletes) ? block.athletes : []) {
+        const name = String(a?.athlete?.displayName || '');
+        if (!name) continue;
+        const id = String(a?.athlete?.id || `${abbr}:${name}`);
+        if (!out.has(id)) out.set(id, { id, name, team: abbr, blocks: {} });
+        out.get(id).blocks[bname] = { keys, stats: Array.isArray(a.stats) ? a.stats : [] };
+      }
+    }
+  }
+  return [...out.values()];
+}
+
+/**
+ * Find a leg's player across the parlay's games. `slots` are the games that
+ * have a box score to look in. Full name first; then a surname token that
+ * matches exactly ONE athlete across every slot — two Browns is no answer.
+ */
+function findPlayer(player, slots) {
+  const want = nameTokens(player);
+  if (!want.length) return null;
+  const pool = [];
+  for (const slot of slots) for (const a of boxAthletes(slot.summary)) pool.push({ slot, a, toks: nameTokens(a.name) });
+
+  const full = want.join(' ');
+  const exact = pool.filter((p) => p.toks.join(' ') === full);
+  if (exact.length === 1) return exact[0];
+  if (exact.length > 1) return null;
+
+  const sur = want[want.length - 1];
+  const bySurname = pool.filter((p) => p.toks.length && p.toks[p.toks.length - 1] === sur);
+  return bySurname.length === 1 ? bySurname[0] : null;
+}
+
+/** One stat off an athlete, by KEY. Missing block or key -> 0 (none recorded). */
+function statOf(athlete, block, key) {
+  const b = athlete && athlete.blocks[block];
+  if (!b) return 0;
+  const i = b.keys.indexOf(key);
+  if (i < 0) return 0;
+  const n = Number(String(b.stats[i] ?? '').replace(/,/g, ''));
+  return Number.isFinite(n) ? n : 0;
+}
+
+const legOut = (state, label, why, extra = {}) => ({
+  state,
+  label,
+  why,
+  margin: null,
+  stat: null,
+  gameId: null,
+  gameAbbr: '',
+  ...extra,
+});
+
+/**
+ * Grade one leg. `games` is the parlay's games, each `{game, summary}` —
+ * `game` the normalised scoreboard event (null when ESPN did not match it),
+ * `summary` the `{scoringPlays, players}` the band fetched once it started.
+ *
+ * Returns `{state, label, why, margin, stat, gameId, gameAbbr}`. `stat` is the
+ * number the readout prints; `gameId` names the leg's OWN game, so its cover
+ * bar drains with that game's clock (B20) and nobody else's.
+ */
+export function gradeLeg(leg, games) {
+  if (!leg || typeof leg !== 'object') return legOut('unsupported', 'N/A', 'grading unsupported');
+  const market = leg.market;
+  const spec = LEG_STAT[market];
+  if (!spec && market !== 'anytime_td') return legOut('unsupported', 'N/A', 'grading unsupported');
+  if (!leg.player) return legOut('unsupported', 'N/A', 'leg names no player');
+
+  const list = (Array.isArray(games) ? games : []).filter((g) => g && g.game && !g.game.dead);
+  const started = list.filter((g) => g.game.state === 'in' || g.game.state === 'post');
+  if (!started.length) return legOut('pre', 'PRE', 'not started');
+
+  const withBox = started.filter((g) => g.summary);
+  const hit = findPlayer(leg.player, withBox);
+
+  // Where is he? Found — that game. Not found — the only started game when
+  // there is just one; otherwise, if a game is still to come he is most
+  // likely in it, and the leg has not started.
+  let slot = hit ? hit.slot : null;
+  if (!slot) {
+    const unstarted = list.length > started.length || list.length < (Array.isArray(games) ? games.length : 0);
+    if (unstarted) return legOut('pre', 'PRE', 'not in a started box score yet');
+    if (withBox.length < started.length) return legOut('pre', 'PRE', 'waiting on box score');
+    slot = started.length === 1 ? started[0] : started.find((g) => g.game.state === 'in') || started[0];
+  }
+  const game = slot.game;
+  const gameId = String(game.id || '');
+  const gameAbbr = hit ? hit.a.team : '';
+
+  if (market === 'anytime_td') {
+    // The TD grader, as for a single, against the game that carries him.
+    // Graded on the box score's own spelling of him when he was found there:
+    // the feed spells him the same way in its scoring plays.
+    const g = gradeAnytimeTd({ player: hit ? hit.a.name : leg.player }, game, slot.summary);
+    return legOut(g.state, g.label, g.why, { gameId, gameAbbr, stat: g.state === 'win' ? 1 : 0 });
+  }
+
+  const [block, key, unit] = spec;
+  const line = Number(leg.line);
+  if (!Number.isFinite(line)) return legOut('unsupported', 'N/A', 'leg needs a line', { gameId, gameAbbr });
+  const side = leg.side === 'under' ? 'under' : leg.side === 'over' ? 'over' : null;
+  if (!side) return legOut('unsupported', 'N/A', 'leg needs over or under', { gameId, gameAbbr });
+
+  // A player absent from a started box score has recorded none of it (B18).
+  const stat = hit ? statOf(hit.a, block, key) : 0;
+  const margin = side === 'over' ? stat - line : line - stat;
+  const base = { gameId, gameAbbr, stat, margin };
+  const read = `${stat} ${unit}`;
+
+  if (side === 'over') {
+    // B3 per leg: a stat cannot go down, so past the line is cashed.
+    if (stat > line) return legOut('win', 'WIN', `${read}, past ${line}`, base);
+    if (game.state === 'post') return legOut('lose', 'LOSS', `${read} final, short of ${line}`, base);
+    return legOut('trail', 'TRAILING', `${read}, needs ${+(line - stat).toFixed(1)} more`, base);
+  }
+  // Under: busted the moment it clears; won only at the whistle.
+  if (stat > line) return legOut('lose', 'LOSS', `${read}, past ${line}`, base);
+  if (game.state === 'post') return legOut('win', 'WIN', `${read} final, under ${line}`, base);
+  return legOut('lead', 'LEADING', `${read}, ${+(line - stat).toFixed(1)} of room`, base);
+}
+
+/**
+ * The parlay's ticket state — the AND of its legs, strictly (B19):
+ *
+ *   any leg LOSS                      dead
+ *   every leg WIN                     win
+ *   every leg LEADING or WIN          lead
+ *   any leg TRAILING (none lost)      trail
+ *   an ungradable leg                 pre   (never green on a leg we cannot read)
+ *   a game started, none lost         alive
+ *   nothing started                   pre
+ *
+ * One leg leading out of three is not a lean on the payout: it is a ticket
+ * that has not been tested yet, and the board says ALIVE rather than green.
+ */
+export function parlayState(legGrades, games) {
+  const states = (Array.isArray(legGrades) ? legGrades : []).map((g) => (g && g.state) || 'pre');
+  const anyStarted = (Array.isArray(games) ? games : []).some(
+    (g) => g && g.game && !g.game.dead && (g.game.state === 'in' || g.game.state === 'post')
+  );
+  if (!states.length) return anyStarted ? 'alive' : 'pre';
+  if (states.includes('lose')) return 'dead';
+  if (states.every((s) => s === 'win')) return 'win';
+  if (states.every((s) => s === 'win' || s === 'lead')) return 'lead';
+  if (states.includes('trail')) return 'trail';
+  if (states.includes('unsupported')) return 'pre';
+  return anyStarted ? 'alive' : 'pre';
+}
+
+const PARLAY_LABEL = { pre: 'PRE', alive: 'ALIVE', lead: 'LEADING', trail: 'TRAILING', win: 'WIN', dead: 'DEAD' };
+
+/**
+ * Grade a parlay ticket: `{state, label, why, margin: null, legs, won, n}`.
+ * `games` is aligned with `ticket.games`. An older snapshot's parlay with no
+ * `legs` grades as unsupported rather than throwing (rule 9).
+ */
+export function gradeParlay(ticket, games) {
+  const legs = Array.isArray(ticket && ticket.legs) ? ticket.legs : null;
+  if (!legs || !legs.length) {
+    return { state: 'unsupported', label: 'N/A', why: 'grading unsupported', margin: null, legs: [], won: 0, n: 0 };
+  }
+  let legGrades;
+  try {
+    legGrades = legs.map((leg) => gradeLeg(leg, games));
+  } catch (e) {
+    legGrades = legs.map(() => legOut('unsupported', 'N/A', `grading failed: ${e.message}`));
+  }
+  const state = parlayState(legGrades, games);
+  const won = legGrades.filter((g) => g.state === 'win').length;
+  return {
+    state,
+    label: PARLAY_LABEL[state],
+    why: `${won}/${legs.length} legs`,
+    margin: null,
+    legs: legGrades,
+    won,
+    n: legs.length,
+  };
 }

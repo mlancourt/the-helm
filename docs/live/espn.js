@@ -242,6 +242,41 @@ export function normalizeEvent(event, league = '') {
     broadcasts: broadcastsOf(comp),
     home: sideOf(comp.competitors, 'home'),
     away: sideOf(comp.competitors, 'away'),
+    situation: situationOf(comp),
+  };
+}
+
+/**
+ * The live situation, as ESPN tells it (B21) — `null` when the key is absent,
+ * which is every game that is not in progress and most that are not football
+ * or baseball. Only the fields the situation line reads are carried, each
+ * one null when ESPN left it out, so the line can hide a segment rather than
+ * print "undefined". Verified on the 10/4 NFL and MLB scoreboards:
+ * `possession` is a TEAM ID, resolved here to its abbreviation through
+ * `competitors[].id`; `lastPlay.text` arrives with a leading space.
+ *
+ * Facts only — nothing here decides what is worth showing.
+ */
+function situationOf(comp) {
+  const s = comp?.situation;
+  if (!s || typeof s !== 'object') return null;
+  const bool = (v) => (typeof v === 'boolean' ? v : null);
+  const numOrNull = (v) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : null);
+  let possession = null;
+  if (s.possession !== undefined && s.possession !== null && s.possession !== '') {
+    const c = arr(comp.competitors).find((x) => String(x?.id ?? x?.team?.id) === String(s.possession));
+    possession = c?.team?.abbreviation || null;
+  }
+  const lastPlay = typeof s.lastPlay?.text === 'string' ? s.lastPlay.text.trim() : '';
+  return {
+    possession,
+    downDistanceText: typeof s.downDistanceText === 'string' ? s.downDistanceText.trim() : '',
+    isRedZone: s.isRedZone === true,
+    lastPlay,
+    outs: numOrNull(s.outs),
+    onFirst: bool(s.onFirst),
+    onSecond: bool(s.onSecond),
+    onThird: bool(s.onThird),
   };
 }
 
@@ -290,9 +325,11 @@ export function fetchScoreboard(league, dateCompact = ctDateCompact()) {
  * Call this ONLY when the game is in|post and a ticket actually needs it: it
  * is a much heavier document than the scoreboard.
  *
- * Returns {scoringPlays, keyEvents} with both defaulted to [], because the
- * keys are simply absent pre-game (verified) and soccer has no scoringPlays
- * at all — it carries goals in keyEvents.
+ * Returns {scoringPlays, keyEvents, players} with all three defaulted to [],
+ * because the keys are simply absent pre-game (verified) and soccer has no
+ * scoringPlays at all — it carries goals in keyEvents. `players` is
+ * `boxscore.players` as ESPN sent it, which the parlay leg graders read by
+ * KEY (B18); it is passed through, not interpreted, here.
  */
 export async function fetchSummary(league, eventId) {
   const url = `${ESPN_BASE}/${league}/summary?event=${encodeURIComponent(eventId)}`;
@@ -300,6 +337,7 @@ export async function fetchSummary(league, eventId) {
   return {
     scoringPlays: Array.isArray(json?.scoringPlays) ? json.scoringPlays : [],
     keyEvents: Array.isArray(json?.keyEvents) ? json.keyEvents : [],
+    players: Array.isArray(json?.boxscore?.players) ? json.boxscore.players : [],
   };
 }
 

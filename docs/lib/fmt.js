@@ -264,6 +264,11 @@ export function ago(iso) {
  * already Central, so it is reformatted as text — not parsed as an instant.
  */
 export function ctKick(kick) {
+  // The engine's spelling, '2026-10-04 3:05 PM': already a Central wall
+  // clock, so the time half is printed as written (fixed v1.28.0 — it fell
+  // through to the raw string, date and all).
+  const ampm = String(kick ?? '').match(/^\d{4}-\d{2}-\d{2}[ T](\d{1,2}):(\d{2})\s*([AaPp])\.?[Mm]\.?/);
+  if (ampm) return `${Number(ampm[1])}:${ampm[2]} ${/p/i.test(ampm[3]) ? 'PM' : 'AM'}`;
   const m = String(kick ?? '').match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})/);
   if (!m) return String(kick ?? '');
   let h = Number(m[2]);

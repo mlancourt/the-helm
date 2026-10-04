@@ -61,13 +61,30 @@
  * and the module also clears its own last timer at the top of every render,
  * so two renders can never leave two clocks.
  *
+ * PARLAYS (B16–B20, v1.28.0). A `market: "parlay"` ticket is its own card,
+ * never merged into a game card: `🎟️ {game}` with the stake @ the slip's
+ * price and a `{won}/{n} legs ✓` chip, a chip per game with its state dot,
+ * one row per leg in slip order (label · the abbr of the game the player was
+ * found in · the live stat · pill · its own cover bar), and a footer row that
+ * carries the TICKET's pill and units figure — the one row lean-now sums.
+ * Legs print no units. The ticket state is the strict AND of the legs
+ * (`graders.js` → `parlayState`), so TRAILING and the new ALIVE are both
+ * `0.00u`: one leg up out of three is not a lean on the payout. `payout_x`
+ * and `to_win_u` are printed as the engine sent them — nothing here prices
+ * a parlay.
+ *
+ * THE SITUATION LINE (B21). A live 🏈 card adds `{abbr} ball · {down &
+ * distance}` (+ `🔴 RZ`) and the last play under it; a live ⚾ card adds
+ * `T5 · 1 out · 1st, 3rd`. Off the scoreboard's own `situation` — no new
+ * fetch — and each missing field hides its own segment.
+ *
  * RULE 10: labels, team names, the sport emoji and every grader `why` land via
  * textContent. ESPN text is untrusted exactly like snapshot text is.
  */
 
 import { el, pill, empty } from '../lib/dom.js';
 // Pure functions only — no fetch, no clock. The tile still never fetches.
-import { gameProgress, sportOf } from '../live/graders.js';
+import { gameProgress, sportOf, LEG_STAT } from '../live/graders.js';
 // The streak chip is shared with `bets_ledger` — see lib/bets.js.
 import { streakChip } from '../lib/bets.js';
 import {
@@ -96,6 +113,8 @@ const STATE_PILL = {
   push: ['PUSH', 'neutral'],
   dead: ['DEAD', 'dead'],
   unsupported: ['N/A', 'na'],
+  // B19: a parlay with nothing lost and a game still to play.
+  alive: ['ALIVE', 'alive'],
 };
 
 /**
@@ -112,6 +131,7 @@ const DIRECTION = {
   push: 0,
   even: 0,
   unsupported: 0,
+  alive: 0,
   trail: -1,
   lose: -2,
   dead: -2,
@@ -157,6 +177,12 @@ export function ticketUnits(ticket, grade) {
   // stands in, in every state, and the ticket leans nowhere (B4).
   if (toWin === null) return idle;
 
+  // B19: a parlay that is trailing or alive has lost nothing yet and is not
+  // leaning on the payout either — the AND is strict, so it reads 0.00u.
+  if (ticket.market === 'parlay' && (state === 'trail' || state === 'alive')) {
+    return { value: 0, text: '0.00u', tone: 'flat' };
+  }
+
   if (state === 'lead' || state === 'win') {
     return { value: toWin, text: signedUnits(toWin), tone: 'good' };
   }
@@ -198,12 +224,29 @@ function closedUnits(tickets, grades, games) {
   let net = 0;
   let any = false;
   for (const t of tickets) {
-    const game = games.get(String(t.espn_event_id));
-    if (!game || game.state !== 'post') continue;
+    if (!ticketFinal(t, games)) continue;
     any = true;
     net += ticketUnits(t, grades.get(t.id)).value;
   }
   return any ? net : 0;
+}
+
+/** Is every game this ticket rides on final? A parlay needs all of its own. */
+function ticketFinal(t, games) {
+  if (t.market === 'parlay') {
+    const gs = parlayGames(t);
+    return gs.length > 0 && gs.every((g) => {
+      const game = games.get(String(g.espn_event_id));
+      return !!game && game.state === 'post';
+    });
+  }
+  const game = games.get(String(t.espn_event_id));
+  return !!game && game.state === 'post';
+}
+
+/** A parlay's games, tolerating an older snapshot that sent none (rule 9). */
+function parlayGames(t) {
+  return arr(t && t.games).filter((g) => g && typeof g === 'object');
 }
 
 // -------------------------------------------------------------------- header
@@ -399,6 +442,17 @@ const COVER_SCALE = {
 };
 const DEFAULT_SCALE = 14;
 
+/**
+ * Parlay stat legs (B20) scale by the STAT, not the sport: forty rushing
+ * yards over the line is as comfortable as a hundred passing.
+ */
+const MARKET_SCALE = {
+  player_rush_yds: 40,
+  player_pass_yds: 100,
+  player_rec_yds: 50,
+  player_rec: 3,
+};
+
 /** Markets that are hit-or-not (B12): no distance, so no partial fill. */
 const BINARY = new Set(['anytime_td', 'anytime_goal', 'btts']);
 
@@ -437,7 +491,8 @@ export function coverBar(ticket, grade, game) {
 
   const margin = num(grade.margin);
   if (margin === null || margin === 0) return { track, tone, side: null, fill: 0 };
-  const scale = COVER_SCALE[sportOf(ticket && ticket.league)] || DEFAULT_SCALE;
+  const scale =
+    MARKET_SCALE[ticket && ticket.market] || COVER_SCALE[sportOf(ticket && ticket.league)] || DEFAULT_SCALE;
   return { track, tone, side, fill: Math.min(Math.abs(margin) / scale, 1) * 0.5 };
 }
 
@@ -602,10 +657,190 @@ function gameHeader(sample, game, today) {
     statusText = `${score.trim()}  ·  final`;
   }
 
+  const situation = game && game.state === 'in' ? situationLines(game, sample.league) : [];
   return el('div', { cls: 'game-head' }, [
     title,
     el('div', { cls: `game-status game-${statusTone}`, text: statusText }),
+    ...situation.map((text, i) => el('div', { cls: i ? 'game-lastplay' : 'game-situation', text })),
   ]);
+}
+
+const LAST_PLAY_MAX = 70;
+
+/**
+ * The situation line (B21): `[situation, lastPlay?]` as plain strings, or []
+ * when there is nothing to say. Only while the game is `in`; every segment
+ * hides on its own when ESPN left its field out, and no `situation` at all
+ * is no line at all.
+ *
+ *   🏈  `DET ball · 2nd & 7 at CAR 31 · 🔴 RZ`, then the last play (≤ 70 chars)
+ *   ⚾  `T5 · 1 out · 1st, 3rd`
+ */
+export function situationLines(game, league) {
+  const s = game && game.situation;
+  if (!game || game.state !== 'in' || !s || typeof s !== 'object') return [];
+  const sport = sportOf(game.league || league);
+  const out = [];
+  if (sport === 'football') {
+    const segs = [];
+    if (s.possession) segs.push(`${str(s.possession)} ball`);
+    if (str(s.downDistanceText).trim()) segs.push(str(s.downDistanceText).trim());
+    if (s.isRedZone === true) segs.push('🔴 RZ');
+    if (segs.length) out.push(segs.join(' · '));
+    const play = str(s.lastPlay).trim();
+    if (play) out.push(play.length > LAST_PLAY_MAX ? `${play.slice(0, LAST_PLAY_MAX).trimEnd()}…` : play);
+    // The last play alone, with no down to hang it under, still reads.
+    return out;
+  }
+  if (sport === 'baseball') {
+    const segs = [];
+    const half = /^\s*top/i.test(str(game.detail)) ? 'T' : /^\s*bot/i.test(str(game.detail)) ? 'B' : '';
+    const inning = num(game.period);
+    if (half && inning) segs.push(`${half}${inning}`);
+    const outs = num(s.outs);
+    if (outs !== null) segs.push(`${outs} out`);
+    const bases = [
+      [s.onFirst, '1st'],
+      [s.onSecond, '2nd'],
+      [s.onThird, '3rd'],
+    ];
+    const on = bases.filter(([v]) => v === true).map(([, b]) => b);
+    if (on.length) segs.push(on.join(', '));
+    if (segs.length) out.push(segs.join(' · '));
+  }
+  return out;
+}
+
+// ------------------------------------------------------------------ parlays
+
+/** The live readout for one leg: `47 yds`, `2 rec`, `TD ✓`, or `—`. */
+function legReadout(leg, lg) {
+  if (!lg || lg.state === 'pre' || lg.state === 'unsupported') return '—';
+  if (leg.market === 'anytime_td') return lg.state === 'win' ? 'TD ✓' : 'no TD';
+  const spec = LEG_STAT[leg.market];
+  const stat = num(lg.stat);
+  return spec && stat !== null ? `${stat} ${spec[2]}` : '—';
+}
+
+/** One game on a parlay: `DET@CAR` with its state dot, and the kick when pre. */
+function parlayGameChip(meta, game, today) {
+  const state = !game || game.dead ? 'pre' : game.state;
+  const name = `${str(meta.away).trim()}@${str(meta.home).trim()}`;
+  const label = name === '@' ? str(meta.game) || 'game' : name;
+  return el('span', { cls: 'parlay-game', attrs: { title: str(meta.game) || null } }, [
+    el('span', { cls: `parlay-dot parlay-dot-${state}`, attrs: { 'aria-label': state === 'in' ? 'live' : state === 'post' ? 'final' : 'not started' } }),
+    el('span', { text: label }),
+    state === 'pre' && meta.kick_ct ? el('span', { cls: 'parlay-kick', text: kickText(meta, today) }) : null,
+  ]);
+}
+
+/** One leg: label · found-game abbr · stat · pill, and its own cover bar (B17/B20). */
+function legRow(leg, lg, gameFor) {
+  const [label, tone] = STATE_PILL[lg && lg.state] || STATE_PILL.pre;
+  const game = lg ? gameFor(lg.gameId) : null;
+  const abbr = lg ? str(lg.gameAbbr).trim() : '';
+  return el('div', { cls: 'ticket parlay-leg' }, [
+    el('div', { cls: 'ticket-main' }, [
+      el('div', { cls: 'ticket-label' }, [
+        el('span', { text: str(leg.label) || str(leg.player) || 'leg' }),
+        abbr ? el('span', { cls: 'parlay-abbr', text: abbr }) : null,
+      ]),
+      el('div', { cls: 'ticket-why', text: lg ? str(lg.why) : 'not graded yet' }),
+    ]),
+    el('div', { cls: 'ticket-side' }, [
+      pill((lg && lg.label) || label, tone),
+      el('div', { cls: 'parlay-stat', text: legReadout(leg, lg) }),
+    ]),
+    coverBarEl({ market: leg.market, league: game ? game.league : '' }, lg, game),
+  ]);
+}
+
+/**
+ * The parlay's own card (B17). Its legs are the picture; the footer row is
+ * the ticket — pill and units figure, the figure lean-now adds up.
+ */
+function parlayCard(ticket, grade, flip, games, today) {
+  const metas = parlayGames(ticket);
+  const legs = arr(ticket.legs).filter((l) => l && typeof l === 'object');
+  const legGrades = grade && Array.isArray(grade.legs) ? grade.legs : [];
+  const liveOf = (meta) => (games ? games.get(String(meta.espn_event_id)) || null : null);
+  const gameFor = (id) => {
+    if (games && id) return games.get(String(id)) || null;
+    // A one-game parlay has only one clock to drain with.
+    return metas.length === 1 ? liveOf(metas[0]) : null;
+  };
+
+  const [plabel, ptone] = STATE_PILL[grade && grade.state] || STATE_PILL.pre;
+  const u = ticketUnits(ticket, grade);
+  const won = legGrades.filter((g) => g && g.state === 'win').length;
+  const stake = num(ticket.stake_u);
+  const price = odds(ticket.price) || str(ticket.price).trim() || '—';
+  const payout = num(ticket.payout_x);
+
+  const head = el('div', { cls: 'game-head' }, [
+    el('div', { cls: 'parlay-head' }, [
+      el('div', { cls: 'game-title' }, [
+        el('span', { cls: 'game-sport', attrs: { 'aria-hidden': 'true' }, text: '🎟️' }),
+        el('span', { text: str(ticket.game) || str(ticket.label) || 'parlay' }),
+      ]),
+      el('div', { cls: 'parlay-right' }, [
+        el('span', { cls: 'parlay-stake', text: `${stake === null ? '—' : `${stake}u`} @ ${price}` }),
+        legs.length ? el('span', { cls: 'parlay-legs-chip', text: `${won}/${legs.length} legs ✓` }) : null,
+      ]),
+    ]),
+    metas.length ? el('div', { cls: 'parlay-games' }, metas.map((m) => parlayGameChip(m, liveOf(m), today))) : null,
+  ]);
+
+  const rows = legs.length
+    ? legs.map((leg, i) => legRow(leg, grade ? legGrades[i] || null : null, gameFor))
+    : // Rule 9: an older snapshot's parlay with no legs is a label and an
+      // honest "grading unsupported", never a throw.
+      [
+        el('div', { cls: 'ticket parlay-leg' }, [
+          el('div', { cls: 'ticket-main' }, [
+            el('div', { cls: 'ticket-label', text: str(ticket.label) || 'parlay' }),
+            el('div', { cls: 'ticket-why', text: 'grading unsupported' }),
+          ]),
+          el('div', { cls: 'ticket-side' }, [pill(STATE_PILL.unsupported[0], STATE_PILL.unsupported[1])]),
+        ]),
+      ];
+
+  const cls = str(ticket.class) || 'core';
+  const foot = el('div', { cls: `ticket parlay-foot stripe-${cls}${flip}` }, [
+    el('div', { cls: 'ticket-main' }, [
+      el('div', { cls: 'ticket-label', text: legs.length ? str(ticket.label) || 'parlay' : 'parlay' }),
+      el('div', { cls: 'ticket-why', text: payout === null ? '' : `pays ${payout}x` }),
+    ]),
+    el('div', { cls: 'ticket-side' }, [
+      pill((grade && grade.label) || plabel, ptone),
+      el('div', { cls: `ticket-units ticket-units-${u.tone}`, text: u.text }),
+    ]),
+  ]);
+
+  return el('div', { cls: 'game game-parlay' }, [head, el('div', { cls: 'tickets' }, [...rows, foot])]);
+}
+
+/** Where a parlay sits on the board: any game in -> in play; all final -> decided. */
+function parlayRank(ticket, games) {
+  const states = parlayGames(ticket).map((m) => {
+    const g = games ? games.get(String(m.espn_event_id)) : null;
+    return !g ? 'pre' : g.dead ? 'post' : g.state;
+  });
+  if (states.includes('in')) return 0;
+  if (states.length && states.every((s) => s === 'post')) return 2;
+  return 1;
+}
+
+/** A parlay's kick for ordering: its next unstarted game, else its own kick_ct. */
+function parlayKick(ticket, games) {
+  const next = parlayGames(ticket)
+    .filter((m) => {
+      const g = games ? games.get(String(m.espn_event_id)) : null;
+      return !g || g.state === 'pre';
+    })
+    .map((m) => kickKey(m.kick_ct))
+    .filter((k) => Number.isFinite(k));
+  return next.length ? Math.min(...next) : kickKey(ticket.kick_ct);
 }
 
 /**
@@ -631,12 +866,12 @@ function sortCards(cards) {
   return cards
     .map((card, i) => ({ card, i }))
     .sort((a, b) => {
-      const ra = cardRank(a.card.game);
-      const rb = cardRank(b.card.game);
+      const ra = a.card.rank;
+      const rb = b.card.rank;
       if (ra !== rb) return ra - rb;
       if (ra === 1) {
-        const ka = kickKey(a.card.sample.kick_ct);
-        const kb = kickKey(b.card.sample.kick_ct);
+        const ka = a.card.kick;
+        const kb = b.card.kick;
         if (ka !== kb) return ka - kb;
       }
       return a.i - b.i;
@@ -673,17 +908,34 @@ export function render(el_, tile, ctx) {
 
   // One card per game, tickets grouped under it. Grouped by espn_event_id and
   // never by team name — ESPN abbreviations drift (OLM, BES, LEVS).
+  // A parlay is its own card, never merged into a game card (B17) — its
+  // espn_event_id is games[0]'s and means nothing on its own.
   const byGame = new Map();
+  const parlays = [];
   for (const t of tickets) {
+    if (t.market === 'parlay') {
+      parlays.push({ parlay: t, rank: parlayRank(t, games), kick: parlayKick(t, games) });
+      continue;
+    }
     const key = String(t.espn_event_id ?? `no-event:${t.id}`);
     if (!byGame.has(key)) byGame.set(key, { key, sample: t, game: null, tickets: [] });
     byGame.get(key).tickets.push(t);
   }
-  for (const card of byGame.values()) card.game = games ? games.get(card.key) || null : null;
+  for (const card of byGame.values()) {
+    card.game = games ? games.get(card.key) || null : null;
+    card.rank = cardRank(card.game);
+    card.kick = kickKey(card.sample.kick_ct);
+  }
 
   const today = ctToday();
   const board = el('div', { cls: 'games' });
-  for (const card of sortCards([...byGame.values()])) {
+  for (const card of sortCards([...byGame.values(), ...parlays])) {
+    if (card.parlay) {
+      const t = card.parlay;
+      const grade = grades ? grades.get(t.id) : null;
+      board.appendChild(parlayCard(t, grade, grade ? flipClass(String(t.id), grade.state) : '', games, today));
+      continue;
+    }
     board.appendChild(
       el('div', { cls: 'game' }, [
         gameHeader(card.sample, card.game, today),

@@ -22,7 +22,7 @@
  * `new Date()`.
  */
 
-const { todayGamesPayload, slate } = require('./mock-espn.js');
+const { todayGamesPayload, slate, PARLAY_EVT } = require('./mock-espn.js');
 
 const CT_YMD = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Chicago',
@@ -245,6 +245,66 @@ function snapshot() {
             class: 'lean',
             sport: '🏀',
             to_win_u: null,
+          },
+          // B16 — two parlays, on the three invented NFL games in the mock
+          // slate (one live, one to come, one final). `payout_x` and
+          // `to_win_u` are the engine's; the page prints them and computes
+          // neither. `espn_event_id`/`home`/`away` repeat games[0]'s, as the
+          // engine sends them, and the page ignores them for a parlay.
+          {
+            id: 'tkt-mock-007',
+            market: 'parlay',
+            game: '3-leg parlay · 4.10x',
+            label: 'Okafor O59.5 rush yds + Ibanez ATD + Pruitt O39.5 rush yds',
+            stake_u: 0.25,
+            price: '4.10x',
+            payout_x: 4.1,
+            to_win_u: 0.78,
+            sport: '🏈',
+            class: 'flier',
+            kick_ct: `${TODAY} 12:00`,
+            league: 'football/nfl',
+            espn_event_id: PARLAY_EVT.live,
+            home: 'FDI',
+            away: 'HRK',
+            legs: [
+              { label: 'Renny Okafor O59.5 rush yds', market: 'player_rush_yds', player: 'Renny Okafor', side: 'over', line: 59.5 },
+              // Plain on the slip, accented in the box score.
+              { label: 'Ibanez ATD', market: 'anytime_td', player: 'Tomas Ibanez', side: null, line: null },
+              // Surname only, and his game has not kicked.
+              { label: 'Pruitt O39.5 rush yds', market: 'player_rush_yds', player: 'Pruitt', side: 'over', line: 39.5 },
+            ],
+            games: [
+              { game: 'Kestrels @ Ironsides', league: 'football/nfl', espn_event_id: PARLAY_EVT.live, home: 'FDI', away: 'HRK', kick_ct: `${TODAY} 12:00` },
+              { game: 'Foremen @ Drays', league: 'football/nfl', espn_event_id: PARLAY_EVT.post, home: 'CVD', away: 'GCF', kick_ct: `${TODAY} 12:00` },
+              { game: 'Sentinels @ Loons', league: 'football/nfl', espn_event_id: PARLAY_EVT.pre, home: 'LKL', away: 'NPS', kick_ct: `${TODAY} 19:20` },
+            ],
+          },
+          {
+            id: 'tkt-mock-008',
+            market: 'parlay',
+            game: '3-leg SGP · 2.45x',
+            label: 'Lindqvist O199.5 pass yds + Kowalczyk O2.5 rec + Bell U30.5 rec yds',
+            stake_u: 0.25,
+            price: '2.45x',
+            payout_x: 2.45,
+            to_win_u: 0.36,
+            sport: '🏈',
+            class: 'flier',
+            kick_ct: `${TODAY} 12:00`,
+            league: 'football/nfl',
+            espn_event_id: PARLAY_EVT.live,
+            home: 'FDI',
+            away: 'HRK',
+            legs: [
+              { label: 'Sven Lindqvist O199.5 pass yds', market: 'player_pass_yds', player: 'Sven Lindqvist', side: 'over', line: 199.5 },
+              { label: 'Dariusz Kowalczyk O2.5 rec', market: 'player_rec', player: 'Dariusz Kowalczyk', side: 'over', line: 2.5 },
+              // In no box-score block at all: 0 recorded, so the under leads.
+              { label: 'Marcus Bell U30.5 rec yds', market: 'player_rec_yds', player: 'Marcus Bell', side: 'under', line: 30.5 },
+            ],
+            games: [
+              { game: 'Kestrels @ Ironsides', league: 'football/nfl', espn_event_id: PARLAY_EVT.live, home: 'FDI', away: 'HRK', kick_ct: `${TODAY} 12:00` },
+            ],
           },
         ],
         /**

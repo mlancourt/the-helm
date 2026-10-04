@@ -454,6 +454,51 @@ body {
 .ticket-units-flat { color: var(--text-dim); }
 .ticket-units-idle { color: var(--text-faint); font-weight: 600; }
 
+/* B19 (v1.28.0) — ALIVE: a parlay with nothing lost and a game still to
+   play. Muted amber, deliberately quieter than TRAILING's warn: it is not
+   behind, it is untested. */
+.pill-alive { background: var(--bg-chip); color: color-mix(in srgb, var(--warn) 65%, var(--text-faint)); border-color: color-mix(in srgb, var(--warn) 30%, var(--bg-raise)); }
+
+/* B17 — the parlay's own card: a head with the slip, a chip per game, one
+   row per leg, and the ticket's own row at the foot. */
+.parlay-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.parlay-right { display: flex; align-items: baseline; gap: 6px; flex: 0 0 auto; }
+.parlay-stake { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.parlay-legs-chip {
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 9px;
+  background: var(--bg-chip);
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.parlay-games { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.parlay-game {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  padding: 1px 6px;
+  border-radius: 9px;
+  border: 1px solid var(--line-soft);
+}
+.parlay-kick { color: var(--text-faint); }
+.parlay-dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }
+.parlay-dot-pre  { background: var(--text-faint); }
+.parlay-dot-in   { background: var(--good); }
+.parlay-dot-post { background: var(--bg-sink); box-shadow: inset 0 0 0 1px var(--text-faint); }
+.parlay-abbr { margin-left: 6px; font-size: 10.5px; font-weight: 500; color: var(--text-faint); }
+.parlay-stat { font-size: 12px; font-weight: 600; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.parlay-leg { border-left-color: var(--line-soft); }
+.parlay-foot { background: var(--bg-sink); }
+.game-parlay .ticket-main { flex: 1 1 0; }
+
+/* B21 — the situation line on a live game card. */
+.game-situation { font-size: 11px; color: var(--text-dim); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.game-lastplay { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+
 /* B1/B6 — the 7-day form line, under the stats and above the board. The
    Bookie's settled rows only; the page's live leans never reach it. */
 .bets-form {

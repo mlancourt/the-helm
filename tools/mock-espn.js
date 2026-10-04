@@ -124,6 +124,115 @@ function todayGamesPayload(todayCt, nextCt) {
 
 // ----------------------------------------------------------- the fake slate
 
+/**
+ * The parlay games (B16–B21). Three invented NFL games — one live, one still
+ * to come, one final — that the two mock parlays in make-mock-data.js ride
+ * on, plus the box scores their legs are graded off.
+ */
+const PARLAY_EVT = { live: '401990501', pre: '401990502', post: '401990503' };
+
+/**
+ * A box-score block, ESPN's shape. The `keys` arrays below are deliberately
+ * NOT in ESPN's order (live sample 10/4: rushing is attempts, yards, avg, td,
+ * long) — the graders must find a column by its key, never its position.
+ */
+const block = (name, keys, rows) => ({
+  name,
+  keys,
+  athletes: rows.map(([id, displayName, byKey]) => ({
+    athlete: { id, displayName },
+    stats: keys.map((k) => String(byKey[k] ?? '0')),
+  })),
+});
+const RUSH_KEYS = ['rushingTouchdowns', 'longRushing', 'yardsPerRushAttempt', 'rushingAttempts', 'rushingYards'];
+const PASS_KEYS = ['QBRating', 'interceptions', 'passingYards', 'completions/passingAttempts', 'passingTouchdowns'];
+const REC_KEYS = ['receivingYards', 'longReception', 'receptions', 'receivingTargets', 'receivingTouchdowns'];
+
+function parlaySummaries() {
+  return {
+    // LIVE, Q3: Okafor has 47 rush yds (O59.5 trailing); Lindqvist has thrown
+    // for 212 (O199.5 cashed mid-game); Kowalczyk has 2 catches (O2.5
+    // trailing). Bell — on the SGP's under — is in no block at all: a player
+    // missing from a started box score has recorded none of it.
+    [PARLAY_EVT.live]: {
+      scoringPlays: [
+        { type: { abbreviation: 'TD', text: 'Rushing Touchdown' }, text: 'Renny Okafor 3 Yd Run (Tad Moss Kick)', period: { number: 1 }, homeScore: 0, awayScore: 7 },
+      ],
+      boxscore: {
+        players: [
+          {
+            team: { id: '91', abbreviation: 'HRK' },
+            statistics: [
+              block('passing', PASS_KEYS, [['9001', 'Sven Lindqvist', { passingYards: 212, 'completions/passingAttempts': '17/24', passingTouchdowns: 1 }]]),
+              block('rushing', RUSH_KEYS, [['9002', 'Renny Okafor', { rushingYards: 47, rushingAttempts: 11, rushingTouchdowns: 1, longRushing: 14 }]]),
+              block('receiving', REC_KEYS, [['9003', 'Dariusz Kowalczyk', { receptions: 2, receivingYards: 38, receivingTargets: 4 }]]),
+            ],
+          },
+          {
+            team: { id: '92', abbreviation: 'FDI' },
+            statistics: [block('rushing', RUSH_KEYS, [['9004', 'Abel Strand', { rushingYards: 22, rushingAttempts: 6 }]])],
+          },
+        ],
+      },
+    },
+    // FINAL: Ibáñez — accented in the box score, plain on the slip — scored.
+    [PARLAY_EVT.post]: {
+      scoringPlays: [
+        { type: { abbreviation: 'TD', text: 'Passing Touchdown' }, text: 'Tomás Ibáñez 18 Yd pass from Cole Varga (Ike Dunn Kick)', period: { number: 2 }, homeScore: 7, awayScore: 0 },
+      ],
+      boxscore: {
+        players: [
+          {
+            team: { id: '95', abbreviation: 'CVD' },
+            statistics: [block('receiving', REC_KEYS, [['9011', 'Tomás Ibáñez', { receptions: 5, receivingYards: 71, receivingTouchdowns: 1 }]])],
+          },
+        ],
+      },
+    },
+  };
+}
+
+/** The three parlay games as scoreboard events, on `todayCt`. */
+function parlayEvents(at) {
+  return [
+    event({
+      id: PARLAY_EVT.live,
+      date: at('12:00'),
+      state: 'in',
+      shortDetail: '3rd Quarter',
+      period: 3,
+      clock: '8:41',
+      venue: 'Harbor Field',
+      away: { abbr: 'HRK', name: 'Harbor Kestrels', short: 'Kestrels', score: 17, linescores: [7, 3, 7] },
+      home: { abbr: 'FDI', name: 'Foundry Ironsides', short: 'Ironsides', score: 10, linescores: [0, 10, 0] },
+      situation: {
+        down: 2,
+        distance: 7,
+        downDistanceText: '2nd & 7 at FDI 14',
+        isRedZone: true,
+        possession: `${PARLAY_EVT.live}-away`,
+        lastPlay: { text: ' (Shotgun) S.Lindqvist pass short right to D.Kowalczyk to FDI 14 for 9 yards (A.Strand). The longest play-by-play line the feed sends' },
+      },
+    }),
+    event({
+      id: PARLAY_EVT.pre,
+      date: at('19:20'),
+      state: 'pre',
+      venue: 'Pike Bowl',
+      away: { abbr: 'NPS', name: 'North Pike Sentinels', short: 'Sentinels', score: 0 },
+      home: { abbr: 'LKL', name: 'Lakeshore Loons', short: 'Loons', score: 0 },
+    }),
+    event({
+      id: PARLAY_EVT.post,
+      date: at('12:00'),
+      state: 'post',
+      venue: 'Drayworks Stadium',
+      away: { abbr: 'GCF', name: 'Granite City Foremen', short: 'Foremen', score: 13, linescores: [3, 3, 7, 0] },
+      home: { abbr: 'CVD', name: 'Cedar Valley Drays', short: 'Drays', score: 24, linescores: [7, 7, 3, 7] },
+    }),
+  ];
+}
+
 const STATUS = {
   pre: { state: 'pre', name: 'STATUS_SCHEDULED', completed: false, detail: 'Scheduled', shortDetail: 'Scheduled' },
   in: { state: 'in', name: 'STATUS_IN_PROGRESS', completed: false, detail: 'In Progress', shortDetail: 'In Progress' },
@@ -134,7 +243,7 @@ const STATUS = {
  * One event in ESPN's shape. Scores are STRINGS, as ESPN sends them; that is
  * gotcha #1 in live/espn.js and the mock must not paper over it.
  */
-function event({ id, date, away, home, state, shortDetail, period = 0, clock = '0:00', venue, broadcasts = [], geo = [] }) {
+function event({ id, date, away, home, state, shortDetail, period = 0, clock = '0:00', venue, broadcasts = [], geo = [], situation = null }) {
   const side = (t, homeAway) => {
     const c = {
       id: `${id}-${homeAway}`,
@@ -169,6 +278,8 @@ function event({ id, date, away, home, state, shortDetail, period = 0, clock = '
         status: { period, displayClock: clock, type: st },
         broadcasts,
         geoBroadcasts: geo,
+        // B21: only a live game carries one, and `possession` is a TEAM id.
+        ...(situation ? { situation } : {}),
       },
     ],
     status: { period, displayClock: clock, type: st },
@@ -276,6 +387,9 @@ function slate(todayCt, nextCt, afterCt) {
           home: { abbr: 'SWU', name: 'Slack Water United', short: 'Slack Water', score: 1 },
         }),
       ],
+
+      // Not a today_games league — only the mock parlays ride on these.
+      'football/nfl': parlayEvents(at),
 
       // Nothing on today. The button greys and says so, and still opens (G6).
       'soccer/eng.1': [],
@@ -389,10 +503,11 @@ function slate(todayCt, nextCt, afterCt) {
       ],
     },
 
-    // No scoring plays in the fake slate: the mock tickets name fake players
-    // and a grader that says "waiting on scoring plays" is the honest answer.
-    summaries: {},
+    // Only the parlay games carry summaries. The single mock tickets name
+    // events this slate does not hold, and "no ESPN event matched" is the
+    // honest answer for them.
+    summaries: parlaySummaries(),
   };
 }
 
-module.exports = { LEAGUES, SERVICES, WATCH_MAP, LOCAL_TEAMS, todayGamesPayload, slate, ctInstant };
+module.exports = { LEAGUES, SERVICES, WATCH_MAP, LOCAL_TEAMS, todayGamesPayload, slate, ctInstant, PARLAY_EVT, parlaySummaries };

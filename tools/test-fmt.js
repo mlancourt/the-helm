@@ -107,6 +107,10 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('ctKick midnight', fmt.ctKick('2026-09-17 00:30'), '12:30 AM');
   eq('ctKick morning', fmt.ctKick('2026-09-17 09:05'), '9:05 AM');
   eq('ctKick passes junk through', fmt.ctKick('TBD'), 'TBD');
+  // The engine's spelling (v1.28.0): it used to fall through to the raw string.
+  eq('ctKick engine spelling', fmt.ctKick('2026-10-04 3:05 PM'), '3:05 PM');
+  eq('ctKick engine spelling, two-digit hour', fmt.ctKick('2026-10-04 12:00 PM'), '12:00 PM');
+  eq('ctKick engine spelling, morning', fmt.ctKick('2026-10-04 11:30 am'), '11:30 AM');
   eq('kickDate extracts the date half', fmt.kickDate('2026-09-17 15:25'), '2026-09-17');
   eq('kickDate on junk is empty', fmt.kickDate('TBD'), '');
 

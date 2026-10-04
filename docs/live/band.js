@@ -46,7 +46,7 @@ import {
   compactCtDate,
   onCtDate,
 } from './espn.js';
-import { gradeTicket, NEEDS_SUMMARY } from './graders.js';
+import { gradeTicket, gradeParlay, NEEDS_SUMMARY } from './graders.js';
 import {
   fetchAlerts as realFetchAlerts,
   fetchForecast as realFetchForecast,
@@ -104,6 +104,15 @@ export function requirements(snapshot, now = new Date()) {
   // Saturday ticket on a Friday board was never found and read "no ESPN
   // event matched". Two days in one league is two calls, correctly.
   for (const t of tickets) {
+    if (isParlay(t)) {
+      // B16/B18: a parlay names its games itself — every one goes in the
+      // plan, each on ITS OWN kick date, coalesced with everything else.
+      // The ticket's own league/espn_event_id are games[0]'s and add nothing.
+      for (const g of parlayGames(t)) {
+        add(String(g.league || ''), compactCtDate(String(g.kick_ct || '').slice(0, 10)) || ticketDate);
+      }
+      continue;
+    }
     const day = compactCtDate(String(t?.kick_ct || '').slice(0, 10)) || ticketDate;
     add(String(t?.league || ''), day);
   }
@@ -124,6 +133,16 @@ export function requirements(snapshot, now = new Date()) {
     dateCt: typeof board.date_ct === 'string' ? board.date_ct : '',
     plan: [...plan.values()],
   };
+}
+
+/** A parlay ticket (B16). Its games are in `games[]`, never in the ticket. */
+export function isParlay(t) {
+  return !!t && t.market === 'parlay';
+}
+
+/** A parlay's games, tolerating an older snapshot that sent none (rule 9). */
+export function parlayGames(t) {
+  return (Array.isArray(t?.games) ? t.games : []).filter((g) => g && typeof g === 'object');
 }
 
 export function createLiveBand(onUpdate, deps = {}) {
@@ -188,9 +207,17 @@ export function createLiveBand(onUpdate, deps = {}) {
       return { anyLive: lastAnyLive, anyPre: true };
     }
 
-    // Tickets match ONLY by event id. Never by team name.
+    // Tickets match ONLY by event id. Never by team name. A parlay matches
+    // each of its games the same way, by that game's own id.
     const ticketGame = new Map();
-    for (const t of req.tickets) ticketGame.set(t.id, games.get(String(t.espn_event_id)) || null);
+    const parlaySlots = new Map(); // ticket.id -> [game|null], aligned with ticket.games
+    for (const t of req.tickets) {
+      if (isParlay(t)) {
+        parlaySlots.set(t.id, parlayGames(t).map((g) => games.get(String(g.espn_event_id)) || null));
+        continue;
+      }
+      ticketGame.set(t.id, games.get(String(t.espn_event_id)) || null);
+    }
 
     // Summaries are heavy, so fetch one only when a ticket's market needs it
     // AND that game is actually under way. Pre-game summaries carry no
@@ -202,6 +229,10 @@ export function createLiveBand(onUpdate, deps = {}) {
       const g = ticketGame.get(t.id);
       if (!g || g.state === 'pre') continue;
       wanted.set(g.id, g.league);
+    }
+    // Every started game a parlay names: its legs are found in the box score.
+    for (const slots of parlaySlots.values()) {
+      for (const g of slots) if (g && !g.dead && g.state !== 'pre') wanted.set(g.id, g.league);
     }
     await Promise.all(
       [...wanted].map(async ([eventId, league]) => {
@@ -218,6 +249,11 @@ export function createLiveBand(onUpdate, deps = {}) {
 
     const grades = new Map();
     for (const t of req.tickets) {
+      if (isParlay(t)) {
+        const slots = parlaySlots.get(t.id).map((g) => ({ game: g, summary: g ? summaryFor.get(g.id) : undefined }));
+        grades.set(t.id, gradeParlay(t, slots));
+        continue;
+      }
       const g = ticketGame.get(t.id);
       grades.set(t.id, gradeTicket(t, g, g ? summaryFor.get(g.id) : undefined));
     }
@@ -260,6 +296,7 @@ export function createLiveBand(onUpdate, deps = {}) {
       const g = ticketGame.get(t.id);
       if (g) relevant.add(g);
     }
+    for (const slots of parlaySlots.values()) for (const g of slots) if (g) relevant.add(g);
     for (const [, entry] of byLeague) for (const g of entry.games) relevant.add(g);
 
     let anyLive = false;

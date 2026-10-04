@@ -1,19 +1,19 @@
 {
   "_comment": "INVENTED ESPN SLATE for ?mock=1. Real league slugs and response shapes; every team, score, channel and event id is fake. Regenerate with: node tools/make-mock-data.js --espn > docs/mock/espn-today.json",
-  "date_ct": "2026-09-30",
-  "date_next_ct": "2026-10-01",
+  "date_ct": "2026-10-04",
+  "date_next_ct": "2026-10-05",
   "leagues": {
     "baseball/mlb": [
       {
         "id": "401998201",
         "uid": "s:1~l:1~e:401998201",
-        "date": "2026-10-01T00:10:00.000Z",
+        "date": "2026-10-05T00:10:00.000Z",
         "name": "Lakeshore Loons at Cream City Nine",
         "shortName": "LKL @ CCN",
         "competitions": [
           {
             "id": "401998201",
-            "date": "2026-10-01T00:10:00.000Z",
+            "date": "2026-10-05T00:10:00.000Z",
             "venue": {
               "fullName": "Cream City Yard",
               "address": {
@@ -184,13 +184,13 @@
       {
         "id": "401998202",
         "uid": "s:1~l:1~e:401998202",
-        "date": "2026-09-30T18:10:00.000Z",
+        "date": "2026-10-04T18:10:00.000Z",
         "name": "Harbor Herons at Foundry Ironsides",
         "shortName": "HRN @ FIS",
         "competitions": [
           {
             "id": "401998202",
-            "date": "2026-09-30T18:10:00.000Z",
+            "date": "2026-10-04T18:10:00.000Z",
             "venue": {
               "fullName": "Foundry Field",
               "address": {
@@ -383,13 +383,13 @@
       {
         "id": "401998203",
         "uid": "s:1~l:1~e:401998203",
-        "date": "2026-10-01T02:40:00.000Z",
+        "date": "2026-10-05T02:40:00.000Z",
         "name": "Granite City Foremen at Cedar Valley Drays",
         "shortName": "GCF @ CVD",
         "competitions": [
           {
             "id": "401998203",
-            "date": "2026-10-01T02:40:00.000Z",
+            "date": "2026-10-05T02:40:00.000Z",
             "venue": {
               "fullName": "Drayworks Park",
               "address": {
@@ -488,13 +488,13 @@
       {
         "id": "742118",
         "uid": "s:1~l:1~e:742118",
-        "date": "2026-10-01T00:30:00.000Z",
+        "date": "2026-10-05T00:30:00.000Z",
         "name": "Cross Harbor SC at Riverbend FC",
         "shortName": "CHS @ RVB",
         "competitions": [
           {
             "id": "742118",
-            "date": "2026-10-01T00:30:00.000Z",
+            "date": "2026-10-05T00:30:00.000Z",
             "venue": {
               "fullName": "Riverbend Grounds",
               "address": {
@@ -574,13 +574,13 @@
       {
         "id": "742119",
         "uid": "s:1~l:1~e:742119",
-        "date": "2026-10-01T01:00:00.000Z",
+        "date": "2026-10-05T01:00:00.000Z",
         "name": "North Pike Sentinels at Slack Water United",
         "shortName": "NPS @ SWU",
         "competitions": [
           {
             "id": "742119",
-            "date": "2026-10-01T01:00:00.000Z",
+            "date": "2026-10-05T01:00:00.000Z",
             "venue": {
               "fullName": "Pike Street Stadium",
               "address": {
@@ -639,18 +639,311 @@
         }
       }
     ],
+    "football/nfl": [
+      {
+        "id": "401990501",
+        "uid": "s:1~l:1~e:401990501",
+        "date": "2026-10-04T17:00:00.000Z",
+        "name": "Harbor Kestrels at Foundry Ironsides",
+        "shortName": "HRK @ FDI",
+        "competitions": [
+          {
+            "id": "401990501",
+            "date": "2026-10-04T17:00:00.000Z",
+            "venue": {
+              "fullName": "Harbor Field",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "401990501-home",
+                "homeAway": "home",
+                "score": "10",
+                "team": {
+                  "abbreviation": "FDI",
+                  "displayName": "Foundry Ironsides",
+                  "shortDisplayName": "Ironsides"
+                },
+                "linescores": [
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 1
+                  },
+                  {
+                    "value": 10,
+                    "displayValue": "10",
+                    "period": 2
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 3
+                  }
+                ]
+              },
+              {
+                "id": "401990501-away",
+                "homeAway": "away",
+                "score": "17",
+                "team": {
+                  "abbreviation": "HRK",
+                  "displayName": "Harbor Kestrels",
+                  "shortDisplayName": "Kestrels"
+                },
+                "linescores": [
+                  {
+                    "value": 7,
+                    "displayValue": "7",
+                    "period": 1
+                  },
+                  {
+                    "value": 3,
+                    "displayValue": "3",
+                    "period": 2
+                  },
+                  {
+                    "value": 7,
+                    "displayValue": "7",
+                    "period": 3
+                  }
+                ]
+              }
+            ],
+            "status": {
+              "period": 3,
+              "displayClock": "8:41",
+              "type": {
+                "state": "in",
+                "name": "STATUS_IN_PROGRESS",
+                "completed": false,
+                "detail": "3rd Quarter",
+                "shortDetail": "3rd Quarter"
+              }
+            },
+            "broadcasts": [],
+            "geoBroadcasts": [],
+            "situation": {
+              "down": 2,
+              "distance": 7,
+              "downDistanceText": "2nd & 7 at FDI 14",
+              "isRedZone": true,
+              "possession": "401990501-away",
+              "lastPlay": {
+                "text": " (Shotgun) S.Lindqvist pass short right to D.Kowalczyk to FDI 14 for 9 yards (A.Strand). The longest play-by-play line the feed sends"
+              }
+            }
+          }
+        ],
+        "status": {
+          "period": 3,
+          "displayClock": "8:41",
+          "type": {
+            "state": "in",
+            "name": "STATUS_IN_PROGRESS",
+            "completed": false,
+            "detail": "3rd Quarter",
+            "shortDetail": "3rd Quarter"
+          }
+        }
+      },
+      {
+        "id": "401990502",
+        "uid": "s:1~l:1~e:401990502",
+        "date": "2026-10-05T00:20:00.000Z",
+        "name": "North Pike Sentinels at Lakeshore Loons",
+        "shortName": "NPS @ LKL",
+        "competitions": [
+          {
+            "id": "401990502",
+            "date": "2026-10-05T00:20:00.000Z",
+            "venue": {
+              "fullName": "Pike Bowl",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "401990502-home",
+                "homeAway": "home",
+                "score": "0",
+                "team": {
+                  "abbreviation": "LKL",
+                  "displayName": "Lakeshore Loons",
+                  "shortDisplayName": "Loons"
+                }
+              },
+              {
+                "id": "401990502-away",
+                "homeAway": "away",
+                "score": "0",
+                "team": {
+                  "abbreviation": "NPS",
+                  "displayName": "North Pike Sentinels",
+                  "shortDisplayName": "Sentinels"
+                }
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "pre",
+                "name": "STATUS_SCHEDULED",
+                "completed": false,
+                "detail": "Scheduled",
+                "shortDetail": "Scheduled"
+              }
+            },
+            "broadcasts": [],
+            "geoBroadcasts": []
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "pre",
+            "name": "STATUS_SCHEDULED",
+            "completed": false,
+            "detail": "Scheduled",
+            "shortDetail": "Scheduled"
+          }
+        }
+      },
+      {
+        "id": "401990503",
+        "uid": "s:1~l:1~e:401990503",
+        "date": "2026-10-04T17:00:00.000Z",
+        "name": "Granite City Foremen at Cedar Valley Drays",
+        "shortName": "GCF @ CVD",
+        "competitions": [
+          {
+            "id": "401990503",
+            "date": "2026-10-04T17:00:00.000Z",
+            "venue": {
+              "fullName": "Drayworks Stadium",
+              "address": {
+                "city": "Nowhere",
+                "state": "Invented"
+              },
+              "indoor": false
+            },
+            "competitors": [
+              {
+                "id": "401990503-home",
+                "homeAway": "home",
+                "score": "24",
+                "team": {
+                  "abbreviation": "CVD",
+                  "displayName": "Cedar Valley Drays",
+                  "shortDisplayName": "Drays"
+                },
+                "linescores": [
+                  {
+                    "value": 7,
+                    "displayValue": "7",
+                    "period": 1
+                  },
+                  {
+                    "value": 7,
+                    "displayValue": "7",
+                    "period": 2
+                  },
+                  {
+                    "value": 3,
+                    "displayValue": "3",
+                    "period": 3
+                  },
+                  {
+                    "value": 7,
+                    "displayValue": "7",
+                    "period": 4
+                  }
+                ],
+                "winner": true
+              },
+              {
+                "id": "401990503-away",
+                "homeAway": "away",
+                "score": "13",
+                "team": {
+                  "abbreviation": "GCF",
+                  "displayName": "Granite City Foremen",
+                  "shortDisplayName": "Foremen"
+                },
+                "linescores": [
+                  {
+                    "value": 3,
+                    "displayValue": "3",
+                    "period": 1
+                  },
+                  {
+                    "value": 3,
+                    "displayValue": "3",
+                    "period": 2
+                  },
+                  {
+                    "value": 7,
+                    "displayValue": "7",
+                    "period": 3
+                  },
+                  {
+                    "value": 0,
+                    "displayValue": "0",
+                    "period": 4
+                  }
+                ],
+                "winner": false
+              }
+            ],
+            "status": {
+              "period": 0,
+              "displayClock": "0:00",
+              "type": {
+                "state": "post",
+                "name": "STATUS_FINAL",
+                "completed": true,
+                "detail": "Final",
+                "shortDetail": "Final"
+              }
+            },
+            "broadcasts": [],
+            "geoBroadcasts": []
+          }
+        ],
+        "status": {
+          "period": 0,
+          "displayClock": "0:00",
+          "type": {
+            "state": "post",
+            "name": "STATUS_FINAL",
+            "completed": true,
+            "detail": "Final",
+            "shortDetail": "Final"
+          }
+        }
+      }
+    ],
     "soccer/eng.1": [],
     "soccer/esp.1": [
       {
         "id": "731447",
         "uid": "s:1~l:1~e:731447",
-        "date": "2026-09-30T19:00:00.000Z",
+        "date": "2026-10-04T19:00:00.000Z",
         "name": "Almendro CF at Val de Mar",
         "shortName": "ALM @ VDM",
         "competitions": [
           {
             "id": "731447",
-            "date": "2026-09-30T19:00:00.000Z",
+            "date": "2026-10-04T19:00:00.000Z",
             "venue": {
               "fullName": "Estadio Inventado",
               "address": {
@@ -744,13 +1037,13 @@
       {
         "id": "731448",
         "uid": "s:1~l:1~e:731448",
-        "date": "2026-09-30T14:00:00.000Z",
+        "date": "2026-10-04T14:00:00.000Z",
         "name": "Puerto Faro at Montaraz",
         "shortName": "PTF @ MNT",
         "competitions": [
           {
             "id": "731448",
-            "date": "2026-09-30T14:00:00.000Z",
+            "date": "2026-10-04T14:00:00.000Z",
             "venue": {
               "fullName": "Campo del Faro",
               "address": {
@@ -853,13 +1146,13 @@
       {
         "id": "401998211",
         "uid": "s:1~l:1~e:401998211",
-        "date": "2026-10-01T23:40:00.000Z",
+        "date": "2026-10-05T23:40:00.000Z",
         "name": "Granite City Foremen at Cream City Nine",
         "shortName": "GCF @ CCN",
         "competitions": [
           {
             "id": "401998211",
-            "date": "2026-10-01T23:40:00.000Z",
+            "date": "2026-10-05T23:40:00.000Z",
             "venue": {
               "fullName": "Cream City Yard",
               "address": {
@@ -956,13 +1249,13 @@
       {
         "id": "401998212",
         "uid": "s:1~l:1~e:401998212",
-        "date": "2026-10-01T18:10:00.000Z",
+        "date": "2026-10-05T18:10:00.000Z",
         "name": "Lakeshore Loons at Foundry Ironsides",
         "shortName": "LKL @ FIS",
         "competitions": [
           {
             "id": "401998212",
-            "date": "2026-10-01T18:10:00.000Z",
+            "date": "2026-10-05T18:10:00.000Z",
             "venue": {
               "fullName": "Foundry Field",
               "address": {
@@ -1042,13 +1335,13 @@
       {
         "id": "401998213",
         "uid": "s:1~l:1~e:401998213",
-        "date": "2026-10-03T00:05:00.000Z",
+        "date": "2026-10-07T00:05:00.000Z",
         "name": "Harbor Herons at Cedar Valley Drays",
         "shortName": "HRN @ CVD",
         "competitions": [
           {
             "id": "401998213",
-            "date": "2026-10-03T00:05:00.000Z",
+            "date": "2026-10-07T00:05:00.000Z",
             "venue": {
               "fullName": "Drayworks Park",
               "address": {
@@ -1130,13 +1423,13 @@
       {
         "id": "742131",
         "uid": "s:1~l:1~e:742131",
-        "date": "2026-10-02T00:30:00.000Z",
+        "date": "2026-10-06T00:30:00.000Z",
         "name": "Riverbend FC at Slack Water United",
         "shortName": "RVB @ SWU",
         "competitions": [
           {
             "id": "742131",
-            "date": "2026-10-02T00:30:00.000Z",
+            "date": "2026-10-06T00:30:00.000Z",
             "venue": {
               "fullName": "Pike Street Stadium",
               "address": {
@@ -1200,13 +1493,13 @@
       {
         "id": "731461",
         "uid": "s:1~l:1~e:731461",
-        "date": "2026-10-01T19:00:00.000Z",
+        "date": "2026-10-05T19:00:00.000Z",
         "name": "Montaraz at Almendro CF",
         "shortName": "MNT @ ALM",
         "competitions": [
           {
             "id": "731461",
-            "date": "2026-10-01T19:00:00.000Z",
+            "date": "2026-10-05T19:00:00.000Z",
             "venue": {
               "fullName": "Estadio Inventado",
               "address": {
@@ -1285,5 +1578,195 @@
       }
     ]
   },
-  "summaries": {}
+  "summaries": {
+    "401990501": {
+      "scoringPlays": [
+        {
+          "type": {
+            "abbreviation": "TD",
+            "text": "Rushing Touchdown"
+          },
+          "text": "Renny Okafor 3 Yd Run (Tad Moss Kick)",
+          "period": {
+            "number": 1
+          },
+          "homeScore": 0,
+          "awayScore": 7
+        }
+      ],
+      "boxscore": {
+        "players": [
+          {
+            "team": {
+              "id": "91",
+              "abbreviation": "HRK"
+            },
+            "statistics": [
+              {
+                "name": "passing",
+                "keys": [
+                  "QBRating",
+                  "interceptions",
+                  "passingYards",
+                  "completions/passingAttempts",
+                  "passingTouchdowns"
+                ],
+                "athletes": [
+                  {
+                    "athlete": {
+                      "id": "9001",
+                      "displayName": "Sven Lindqvist"
+                    },
+                    "stats": [
+                      "0",
+                      "0",
+                      "212",
+                      "17/24",
+                      "1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "rushing",
+                "keys": [
+                  "rushingTouchdowns",
+                  "longRushing",
+                  "yardsPerRushAttempt",
+                  "rushingAttempts",
+                  "rushingYards"
+                ],
+                "athletes": [
+                  {
+                    "athlete": {
+                      "id": "9002",
+                      "displayName": "Renny Okafor"
+                    },
+                    "stats": [
+                      "1",
+                      "14",
+                      "0",
+                      "11",
+                      "47"
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "receiving",
+                "keys": [
+                  "receivingYards",
+                  "longReception",
+                  "receptions",
+                  "receivingTargets",
+                  "receivingTouchdowns"
+                ],
+                "athletes": [
+                  {
+                    "athlete": {
+                      "id": "9003",
+                      "displayName": "Dariusz Kowalczyk"
+                    },
+                    "stats": [
+                      "38",
+                      "0",
+                      "2",
+                      "4",
+                      "0"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "team": {
+              "id": "92",
+              "abbreviation": "FDI"
+            },
+            "statistics": [
+              {
+                "name": "rushing",
+                "keys": [
+                  "rushingTouchdowns",
+                  "longRushing",
+                  "yardsPerRushAttempt",
+                  "rushingAttempts",
+                  "rushingYards"
+                ],
+                "athletes": [
+                  {
+                    "athlete": {
+                      "id": "9004",
+                      "displayName": "Abel Strand"
+                    },
+                    "stats": [
+                      "0",
+                      "0",
+                      "0",
+                      "6",
+                      "22"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "401990503": {
+      "scoringPlays": [
+        {
+          "type": {
+            "abbreviation": "TD",
+            "text": "Passing Touchdown"
+          },
+          "text": "Tomás Ibáñez 18 Yd pass from Cole Varga (Ike Dunn Kick)",
+          "period": {
+            "number": 2
+          },
+          "homeScore": 7,
+          "awayScore": 0
+        }
+      ],
+      "boxscore": {
+        "players": [
+          {
+            "team": {
+              "id": "95",
+              "abbreviation": "CVD"
+            },
+            "statistics": [
+              {
+                "name": "receiving",
+                "keys": [
+                  "receivingYards",
+                  "longReception",
+                  "receptions",
+                  "receivingTargets",
+                  "receivingTouchdowns"
+                ],
+                "athletes": [
+                  {
+                    "athlete": {
+                      "id": "9011",
+                      "displayName": "Tomás Ibáñez"
+                    },
+                    "stats": [
+                      "71",
+                      "0",
+                      "5",
+                      "0",
+                      "1"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
 }
