@@ -4,6 +4,8 @@
  *   shell      stale-while-revalidate (instant open, updates in the background)
  *   /api/data  network-first, cache fallback (the offline snapshot)
  *   /api/ask   NEVER cached — answers are one-shot and can contain anything
+ *   /api/draft NEVER cached (Yeoman Y13) — a pasted message and its draft
+ *              live in the sheet's memory and nowhere else
  *   ESPN       NEVER cached — a stale score is worse than no score
  *   *.weather.gov  NEVER cached (Weather spec, W3) — a cached forecast is a
  *              stale forecast, and the RIDGE radar loop is a 1 MB GIF that
@@ -12,7 +14,7 @@
  * Bump CACHE_VERSION to evict the old shell on deploy.
  */
 
-const CACHE_VERSION = 'helm-v49';
+const CACHE_VERSION = 'helm-v50';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -49,6 +51,7 @@ const SHELL = [
   './tiles/watch_bill.js',
   './tiles/weather.js',
   './tiles/wss_tape.js',
+  './tiles/yeoman.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
@@ -86,14 +89,15 @@ self.addEventListener('fetch', (e) => {
 
   const url = new URL(req.url);
 
-  // Never cache: live scores, live weather, and anything from /ask.
+  // Never cache: live scores, live weather, and anything from /ask or /draft.
   // The weather.gov bail covers BOTH amended origins — api.weather.gov, whose
   // whole point is being current, and radar.weather.gov, whose loop is ~1 MB
   // a pull and must never be allowed near a cache the shell also lives in.
   if (
     url.hostname.endsWith('espn.com') ||
     url.hostname.endsWith('weather.gov') ||
-    url.pathname.endsWith('/api/ask')
+    url.pathname.endsWith('/api/ask') ||
+    url.pathname.endsWith('/api/draft')
   )
     return;
 

@@ -18,7 +18,14 @@ class ClassList {
   add(...c) { for (const x of c) if (x) this.set.add(x); }
   remove(...c) { for (const x of c) this.set.delete(x); }
   contains(c) { return this.set.has(c); }
-  toggle(c) { if (this.set.has(c)) { this.set.delete(c); return false; } this.set.add(c); return true; }
+  // `force` as the real DOM has it: toggle(c, true) adds, toggle(c, false)
+  // removes. Without it a tile that writes toggle('hidden', cond) — the
+  // Yeoman's paste box — would flip on every call in here and never on a phone.
+  toggle(c, force) {
+    const on = force === undefined ? !this.set.has(c) : !!force;
+    if (on) this.set.add(c); else this.set.delete(c);
+    return on;
+  }
   get value() { return [...this.set].join(' '); }
 }
 

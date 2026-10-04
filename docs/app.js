@@ -290,6 +290,15 @@ const actions = {
   },
 
   /**
+   * The Yeoman (Y2). One POST, never cached by the SW, never stored. The
+   * draft drafts; Matt sends — nothing here or in the tile sends anything.
+   */
+  async draft(payload) {
+    if (MOCK) return mockDraft(payload);
+    return api('/api/draft', { method: 'POST', body: payload });
+  },
+
+  /**
    * A tile asking for the detail sheet. It hands over a title and a builder
    * and never touches the sheet itself — Ask's body stays Ask's.
    */
@@ -312,6 +321,26 @@ const actions = {
     else if (askController) askController.focus();
   },
 };
+
+/**
+ * `?mock=1`'s /api/draft: a canned answer in the Worker's contract shape, with
+ * ONE bracketed blank, so the sheet — read line, fill-in line, nudges, copy,
+ * hand-off — can be exercised with no Worker and no model. Invented text.
+ */
+function mockDraft(req) {
+  const name = req?.to?.name || 'there';
+  const nudged = req?.nudge ? `\n\n(mock draft · nudged ${req.nudge})` : '';
+  const answer = {
+    read: req?.mode === 'compose' ? 'Starting a new conversation.' : 'They want to know where things stand.',
+    assumed: req?.intent ? null : 'Assumed you want to confirm and give a price.',
+    subject: req?.channel === 'email' ? 'Following up' : null,
+    draft: `Hi ${name},\n\nThanks for checking in. We can do that for [PRICE] and I'll let you know as soon as it's on the way.${nudged}`,
+    blanks: ['PRICE'],
+    usd: 0,
+    mode: 'draft',
+  };
+  return new Promise((resolve) => setTimeout(() => resolve(answer), 450));
+}
 
 // -------------------------------------------------------------------- load
 
@@ -402,6 +431,9 @@ function ownsErrorLine(id) {
 }
 
 function tileCard(id, entry, tile) {
+  // An ASK-band tile is on demand: no producer, no snapshot entry (Yeoman
+  // Y15). Its face renders from nothing rather than as rule 9's "missing".
+  if (!tile && entry?.band === 'ASK') tile = { band: 'ASK', status: 'ok', error: null, data: null };
   const title = entry?.title || id;
   const status = tile?.status || (tile ? 'ok' : 'missing');
   const degraded = status === 'error' || status === 'stale' || status === 'missing';
@@ -619,13 +651,13 @@ function renderAll() {
   // both directions of drift render something (rule 9).
   const ids = new Set([...Object.keys(REGISTRY), ...Object.keys(tiles)]);
 
-  // One flat grid in the registry's order (ruling, 2026-09-20). `band` no
-  // longer groups anything; the only thing it still does here is keep the ask
-  // tile off the board, because that panel lives in the sheet.
+  // One flat grid in the registry's order (ruling, 2026-09-20). `band` groups
+  // nothing. The ask tile is kept off the board BY ID, because that panel
+  // lives in the sheet; any other ASK-band tile (the Yeoman) has a face.
   const items = [];
   for (const id of ids) {
     const entry = REGISTRY[id];
-    if (entry?.band === 'ASK') continue;
+    if (id === 'ask') continue;
     items.push({ id, entry, tile: tiles[id] || null });
   }
 
@@ -650,7 +682,8 @@ function renderAll() {
 async function loadModules() {
   await Promise.all(
     Object.entries(REGISTRY).map(async ([id, entry]) => {
-      if (!entry.module || entry.band === 'ASK') return;
+      // `ask` is imported once by mountAsk(), not here.
+      if (!entry.module || id === 'ask') return;
       try {
         const m = await import(entry.module);
         moduleNs.set(id, m);

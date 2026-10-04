@@ -189,6 +189,7 @@ npx wrangler secret put ADMIN_SECRET          # required — long random string
 npx wrangler secret put ANTHROPIC_API_KEY     # required for /ask — never reaches the page
 npx wrangler secret put ASK_DAILY_CAP_USD     # optional — default 3.00
 npx wrangler secret put ASK_MODEL             # optional — default claude-sonnet-5
+npx wrangler secret put DRAFT_MODEL           # optional — default claude-sonnet-5-5 (the Yeoman)
 ```
 
 ### 3. Deploy the Worker
@@ -253,6 +254,19 @@ curl -X PUT "$HELM/api/admin/ask-system" \
   --data-binary @ask-system.txt      # gitignored
 ```
 
+The Yeoman's prompt (its system prompt + the Voice Book — Matt's own sent
+messages as samples) is the same shape, also **never committed**, and is
+loaded by the vault's `Scripts/load-draft-system.sh`:
+
+```bash
+curl -X PUT "$HELM/api/admin/draft-system" \
+  -H "X-Admin-Secret: $ADMIN_SECRET" \
+  --data-binary @draft-system.txt    # gitignored
+```
+
+`GET /api/health` reports `draft_sys_bytes` — 0 until it is loaded, and
+`/api/draft` answers `503 no_system` until then.
+
 ---
 
 ## API
@@ -266,13 +280,15 @@ CORS allows `https://mlancourt.github.io` and `http://localhost:*`.
 | `GET /api/data` | token | `{me, snapshot, pending}` |
 | `POST /api/event` | token | validate, stamp `{id, ts, actor}`, store; returns 201 + the stored event |
 | `DELETE /api/event/:id` | token | withdraw ONE still-pending event, only if `actor` matches. 404 once drained |
-| `GET /api/health` | token | `{published_at, pending_count, ask_today_usd, ask_cap_usd}` |
+| `GET /api/health` | token | `{published_at, pending_count, ask_today_usd, ask_cap_usd, draft_sys_bytes}` |
 | `POST /api/ask` | token | `{q, tile_id?, tile_data?, history?}` → `{answer, mode:"snapshot", usd}`. See [Ask](#ask) |
+| `POST /api/draft` | token | the Yeoman: `{mode, channel, to:{name, role, context?}, incoming?, intent?, nudge?, history? ≤10, calendar?}` → `{read, assumed, subject, draft, blanks, usd, mode:"draft"}`. Same daily cap as `/ask`; nothing from the body is stored or logged |
 | `POST /api/admin/publish` | secret | body = full snapshot; must parse and carry `schema` |
 | `GET /api/admin/events` | secret | every pending event, oldest first |
 | `POST /api/admin/events/ack` | secret | `{ids:[…]}` — deletes exactly those keys |
 | `POST /api/admin/tokens` | secret | replace the token map |
 | `PUT /api/admin/ask-system` | secret | body = text → `ask:sys` |
+| `PUT /api/admin/draft-system` | secret | body = text → `draft:sys` (the Yeoman's prompt + Voice Book) |
 
 Error bodies are always `{error:true, reason, detail?}`. Reasons in use:
 `unauthorized`, `bad_json`, `bad_shape`, `bad_type`, `bad_payload`, `bad_id`,
@@ -301,8 +317,9 @@ pending and never renders a submitted write as applied.
 | `snapshot` | the full `helm-data.json` string, replaced atomically on publish |
 | `tokens` | `{"<token>": {"name":…,"role":…}}` |
 | `evt:<utc-iso>:<rand6>` | one event JSON |
-| `ask:cap:<YYYY-MM-DD>` | `{usd, calls}` — UTC day, expires after 14 days |
+| `ask:cap:<YYYY-MM-DD>` | `{usd, calls}` — UTC day, expires after 14 days; `/ask` AND `/draft` spend |
 | `ask:sys` | the `/ask` system prompt text |
+| `draft:sys` | the Yeoman's system prompt + Voice Book |
 
 **One KV key per event, never a single array key.** KV has no atomic append, so
 an array would silently drop writes whenever two events raced. The test suite

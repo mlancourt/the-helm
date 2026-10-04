@@ -150,6 +150,8 @@ async function route(world, url, method = 'GET') {
     check('ESPN summary is left entirely alone', espn2.handled === false);
     const ask = await route(w, 'https://the-helm.example.workers.dev/api/ask');
     check('/api/ask is left entirely alone', ask.handled === false);
+    const draft = await route(w, 'https://the-helm.example.workers.dev/api/draft');
+    check('/api/draft is left entirely alone (Yeoman Y13)', draft.handled === false);
     check('nothing was written to any cache', w.log.puts.length === 0);
   }
 

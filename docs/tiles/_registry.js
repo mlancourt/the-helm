@@ -8,19 +8,26 @@
  * renumber.
  *
  * `band` survives that ruling because it never described layout in the first
- * place: it says how often the engine refreshes a tile, and it is what keeps
- * the ASK tile off the board and out of module preloading. The LIVE fetch
+ * place: it says how often the engine refreshes a tile. ASK means on demand —
+ * no producer, no snapshot entry — so an ASK tile's face renders from nothing
+ * (the Yeoman). The `ask` tile itself is the one kept off the board, by id:
+ * it lives in the sheet. The LIVE fetch
  * clocks in live/band.js key off the snapshot payloads (tiles.bets_live,
  * tiles.today_games, tiles.weather), never off this field.
  *
  * Rule 9 — the page tolerates schema growth in both directions:
  *   - a snapshot tile with no entry here renders as a generic key/value card
  *   - an entry here missing from the snapshot renders as an empty grey card
+ *     (except band ASK, which never has a snapshot entry to miss)
  * Neither throws. Adding a tile to the engine never requires a page deploy.
  */
 
 export const REGISTRY = {
   calendar: { band: 'DAILY', position: 10, module: './tiles/calendar.js', title: 'Calendar' },
+  // The Yeoman (Y1, Y15): band ASK — on demand, no producer, no snapshot
+  // entry — but ON the board, because its face is two buttons. Slotted at 15
+  // without moving anyone; Matt can move it here.
+  yeoman: { band: 'ASK', position: 15, module: './tiles/yeoman.js', title: '✍️ Yeoman' },
   reminders: { band: 'DAILY', position: 20, module: './tiles/reminders.js', title: 'Reminders' },
   // The morning brief, straight under Reminders and above Dinner. Slotted in
   // at 25 without touching a single other number — which is what the tens
@@ -42,6 +49,6 @@ export const REGISTRY = {
   // (140) — the second tile slotted into the tens without a renumber.
   watch_bill: { band: 'DAILY', position: 135, module: './tiles/watch_bill.js', title: 'Watch Bill' },
   ship_status: { band: 'DAILY', position: 140, module: './tiles/ship_status.js', title: 'Ship Status' },
-  // Off-board: band ASK is what skips it, not the position.
+  // Off-board: the shell skips `ask` by id (it is the sheet), not by band or position.
   ask: { band: 'ASK', position: 999, module: './tiles/ask.js', title: 'Ask' },
 };

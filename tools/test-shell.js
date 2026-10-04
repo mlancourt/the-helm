@@ -388,7 +388,7 @@ console.log('\nsubhead never contains me.name');
     const REG = read('docs', 'tiles', '_registry.js');
 
     const ORDER = [
-      'calendar', 'reminders', 'captains_log', 'dinner', 'weather', 'newsstand',
+      'calendar', 'yeoman', 'reminders', 'captains_log', 'dinner', 'weather', 'newsstand',
       'entertainment', 'local_events', 'today_games', 'bets_live', 'bets_ledger',
       'cards', 'purser_due', 'wss_tape', 'watch_bill', 'ship_status',
     ];
@@ -397,11 +397,13 @@ console.log('\nsubhead never contains me.name');
     // between reminders (20) and dinner (30) on 2026-09-21 and NO other number
     // moved — which is the whole reason the grid was renumbered in tens rather
     // than one-per-tile. Asserted as what it is: an insert, not a renumber.
-    const INSERTS = { captains_log: 25, watch_bill: 135 };
+    // The Yeoman (2026-10-04) is the third, at 15 between calendar and
+    // reminders — band ASK, on the board anyway (Y1, Y15).
+    const INSERTS = { yeoman: 15, captains_log: 25, watch_bill: 135 };
 
     // -- the registry ------------------------------------------------------
     const onBoard = Object.entries(REGISTRY)
-      .filter(([, e]) => e.band !== 'ASK')
+      .filter(([id]) => id !== 'ask')
       .sort((a, b) => a[1].position - b[1].position)
       .map(([id]) => id);
 
@@ -433,6 +435,9 @@ console.log('\nsubhead never contains me.name');
       );
     }
     check('ask is band ASK, off-board at 999', REGISTRY.ask.band === 'ASK' && REGISTRY.ask.position === 999);
+    check('yeoman is band ASK and still on the board (Y15)', REGISTRY.yeoman.band === 'ASK' && onBoard.includes('yeoman'));
+    check('the shell skips ask BY ID, not by band', /if \(id === 'ask'\) continue;/.test(CODE) && !/entry\?\.band === 'ASK'\) continue/.test(CODE));
+    check('loadModules skips ask by id too', /if \(!entry\.module \|\| id === 'ask'\) return;/.test(CODE));
     check('every board tile still declares a band', onBoard.every((id) => !!REGISTRY[id].band));
 
     // The dead exports. Nothing imports them after this change, and a dead
@@ -523,6 +528,14 @@ console.log('\nsubhead never contains me.name');
     renderAll();
     check('a snapshot with one tile still renders the whole board', titles().length === ORDER.length, String(titles().length));
     check('and the missing ones keep their slots, greyed', titles().join(' | ') === ORDER.map((id) => REGISTRY[id].title).join(' | '));
+    {
+      // The Yeoman has no snapshot entry, ever — and is not "missing".
+      const grid = boardEl.querySelectorAll('.grid')[0];
+      const yeo = grid.childNodes[ORDER.indexOf('yeoman')];
+      check('an ASK-band tile with no snapshot entry is not greyed', !yeo.classList.contains('card-degraded'), yeo.className);
+      check('and does not say "Not in this snapshot."', !/Not in this snapshot\./.test(yeo.textContent));
+      check('and carries no missing pill', yeo.querySelectorAll('.pill').length === 0);
+    }
     check(
       'a missing tile says so',
       /Not in this snapshot\./.test(boardEl.querySelectorAll('.grid')[0].childNodes[0].textContent)

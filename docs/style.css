@@ -2553,6 +2553,81 @@ a.wb-doc:hover { text-decoration: underline; }
 /* The sheet scrolls; keep the right-aligned times clear of its scrollbar. */
 .wb-detail { padding-right: 8px; }
 
+/* ---------------------------------------------------------------- yeoman
+
+   The Yeoman (Y1–Y16): a face of two buttons and a sheet that is a form.
+   Night Watch tokens only. The one tone in it is `assumed` — the warn tone,
+   tinted the way every pill is — because "I guessed what you wanted" is the
+   line Matt must read before he sends. */
+.yeo-line { margin: 0 0 10px; font-size: 13px; color: var(--text-dim); }
+.yeo-face { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+.yeo-sheet { display: flex; flex-direction: column; gap: 9px; padding-bottom: 4px; }
+.yeo-segs { display: flex; gap: 8px; }
+.yeo-seg {
+  flex: 1 1 0; display: flex; min-width: 0;
+  border: 1px solid var(--line); border-radius: 9px; overflow: hidden;
+}
+.yeo-seg-btn {
+  flex: 1 1 0; min-height: 36px; padding: 7px 8px;
+  border: 0; background: var(--bg-chip); color: var(--text-dim);
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.yeo-seg-btn + .yeo-seg-btn { border-left: 1px solid var(--line); }
+.yeo-seg-btn[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise));
+  color: var(--brass);
+}
+
+.yeo-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+.yeo-to { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.yeo-to .yeo-context { grid-column: 1 / -1; }
+
+/* 16px keeps iOS Safari from zooming the viewport on focus */
+.yeo-input, .yeo-select, .yeo-paste {
+  width: 100%; min-width: 0;
+  padding: 9px 10px; border-radius: 9px;
+  border: 1px solid var(--line); background: var(--bg-sink); color: var(--text);
+  font-family: inherit; font-size: 16px; line-height: 1.35;
+}
+.yeo-input:focus, .yeo-select:focus, .yeo-paste:focus { outline: none; border-color: var(--brass); }
+.yeo-paste { min-height: 92px; max-height: 36vh; resize: vertical; field-sizing: content; }
+.yeo-paste-block { display: flex; flex-direction: column; gap: 5px; }
+.yeo-paste-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+.yeo-recents, .yeo-nudges, .yeo-hand { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.yeo-chip {
+  padding: 5px 10px; min-height: 30px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--bg-chip); color: var(--text-dim);
+  font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.yeo-chip:disabled { opacity: 0.45; cursor: default; }
+.yeo-pos { font-size: 11.5px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+.yeo-status { margin: 0; font-size: 12.5px; color: var(--text-dim); }
+.yeo-status-bad { color: var(--bad); }
+
+.yeo-result { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.yeo-read { margin: 0; font-size: 12.5px; color: var(--text-dim); }
+.yeo-assumed {
+  margin: 0; padding: 6px 9px; border-radius: 8px; font-size: 12.5px;
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 14%, var(--bg-raise));
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--bg-raise));
+}
+.yeo-subject { margin: 0; font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--text-dim); }
+.yeo-draft {
+  padding: 10px 12px; border-radius: 9px;
+  background: var(--bg-sink); border: 1px solid var(--line-soft);
+  font-size: 15px; line-height: 1.45;
+  white-space: pre-wrap; word-break: break-word;
+  -webkit-user-select: text; user-select: text;
+}
+.yeo-blanks { margin: 0; font-size: 12.5px; color: var(--brass); }
+.yeo-hand a.btn { display: inline-flex; align-items: center; text-decoration: none; }
+.yeo-copy-buf { position: fixed; top: 0; left: -9999px; opacity: 0; }
+
 /* ------------------------------------------------------------------- cards
 
    The trading-card desk. A two-button menu on the board — 🎯 Watching
