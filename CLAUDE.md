@@ -27,19 +27,21 @@ If real data ever looks wrong, **report it — never "fix" data**. The vault win
 ## Architecture (locked — do not redesign)
 
 ```
- Matt's phone/desk ──token URL──► mlancourt.github.io/the-helm  (GitHub Pages: static shell, ZERO data in repo)
+ Matt's phone/desk ──token URL──► helm.lannyai.com  (GitHub Pages via docs/CNAME — mlancourt.github.io/the-helm 301s here; static shell, ZERO data in repo)
                                    │
                                    ├─► GET  /api/data        ─┐
                                    ├─► POST /api/event       ─┤  Cloudflare Worker (workers.dev)
                                    ├─► DELETE /api/event/:id ─┤   • token auth (KV)
                                    ├─► POST /api/ask         ─┤   • KV: snapshot + event inbox
                                    │                          │   • /ask → Anthropic API (v1) — key lives in the Worker
-                                   └─► site.api.espn.com  (LIVE band: page fetches ESPN DIRECTLY — verified CORS-open from a GitHub Pages origin 2026-09-17)
+                                   ├─► site.api.espn.com  (LIVE band: page fetches ESPN DIRECTLY — verified CORS-open from a GitHub Pages origin 2026-09-17)
+                                   └─► POST brain.lannyai.com/ask ─► Cloudflare Access (OTP) ─► cloudflared ─► mini 127.0.0.1:8787 (agent/, read-only vault)
+                                        (Phase 2: tried FIRST; any 5xx / network / timeout falls back to the Worker's /api/ask)
  Engine (elsewhere) ◄── GET /api/admin/events ── Worker
                     ── POST /api/admin/publish ►
 ```
 
-Later (Phase 2, not this build): `/ask` forwards to a Cloudflare Tunnel instead of Anthropic directly. Design `/ask` so the *backend* is one swappable function; the page never knows which.
+**Phase 2 (v1.30.0, live):** the page asks the brain (`agent/`, through a Cloudflare Tunnel + Access) first and the Worker's snapshot-only `/api/ask` second. The Worker's `/ask` is unchanged and is now the fallback.
 
 **Hosting:** GitHub `mlancourt` (Pages from `/docs` on `main`) · Matt's existing Cloudflare account (Workers + KV; he has deployed both before). Prefer `wrangler`; keep the Worker a single self-contained `worker.js` so dashboard-paste stays a fallback.
 
@@ -51,6 +53,7 @@ Later (Phase 2, not this build): `/ask` forwards to a Cloudflare Tunnel instead 
 4. **No external CDNs, fonts, analytics, or trackers.** Self-contained assets. Must load on one bar of LTE. The **only** external calls the page makes are to the Worker, to `site.api.espn.com`, and to the two NWS origins below — **plus one carve-out (Matt, 2026-09-18): listing images whose URLs arrive in the snapshot** (e.g. eBay thumbnails on `cards`). Rules for that carve-out: `<img>` only, never script/style/fetch; `http(s)` URLs only; `referrerpolicy="no-referrer"`, `loading="lazy"`; never cached by the service worker; a same-size placeholder when absent. Content the user will judge by eye is data, not a dependency.
    - **`api.weather.gov` (fetch)** — amended in by Matt 2026-09-19 (Weather spec, W3). Alerts, forecast, hourly, observations. No key, and **no custom header**: a header makes the request non-simple and triggers a CORS preflight the NWS need not answer. (The *engine's* Python client does need a `User-Agent`; the browser does not. Do not "fix" the page by adding one.) `live/nws.js` is the only file that may call it.
    - **`radar.weather.gov` (`<img>` only)** — same amendment. Never fetch, script, style or `link`; `referrerpolicy="no-referrer"`, `loading="lazy"`, **never cached by the service worker**, loaded only when the tile reaches the viewport, and a tap-to-load placeholder on a metered connection (it is a ~1 MB GIF). It is not CORS-open, so JS could not read those pixels if it wanted to — which is exactly why rule 3 still holds here: **no Leaflet, no tile library, no WMS client.**
+   - **`https://brain.lannyai.com` (fetch, `credentials: 'include'`) — the ONLY new fetch target of Phase 2** (Matt, 2026-10-04, Brain-Service-Spec A1/A2/A10). The vault-smart `/ask` on the mini behind Cloudflare Access. `docs/lib/brain.js` is the only file that may call it, one `POST /ask`, and it is the **only fetch in the page allowed to send credentials** — the Access cookie is the credential and the page never holds a brain token. `BRAIN_BASE` is pinned in `config.js` with **no query-string override** (a crafted `?brain=` would hand Matt's session away). `redirect: 'manual'` so an Access login redirect is seen, not followed. The page itself moved to `https://helm.lannyai.com` (same site, so iOS Safari sends the cookie); `sign in` opens `brain.lannyai.com/health` top-level via `window.open`, nothing else on that origin is navigated to. Never cached by the service worker.
    - **`sms:` and `mailto:` — two anchors in the Yeoman, nothing else** (Matt, 2026-10-04, Yeoman spec Y11; field-scoped, the `obsidian:` WB5 pattern). Admitted ONLY on the sheet's **Open in Messages** (`sms:?&body=<draft>`) and **Open in Mail** (`mailto:?subject=<subject>&body=<draft>`) anchors, built by ONE module-local function (`handoffHref` in `tiles/yeoman.js`) from the draft/subject strings via `encodeURIComponent`, no recipient, no `target`, no fetch. No other scheme literal in that module, and `safeUrl()` is NOT widened — these hrefs are composed from the model's words, never read from a snapshot. They open an app on the phone with a prefilled body; **Matt sends, the page never does.**
 5. **Writes are proposals, not truth.** Every event is *pending* until the engine applies it. Badge it "pending"; never render a submitted write as applied.
 6. **Money never moves from here.** Any dollar figure in the snapshot is display-only. No payment, invoice, or bet-placing actions exist in this UI.
@@ -75,6 +78,8 @@ Later (Phase 2, not this build): `/ask` forwards to a Cloudflare Tunnel instead 
   manifest.webmanifest  sw.js  icons/
 /worker/
   worker.js  wrangler.toml
+/agent/                     ← the brain (Phase 2): Node + Agent SDK, its OWN package.json, runs on the mini
+  server.js  brain.js  vault.js  prompt.js  snapshot.js  prices.js  ledger.js  test/  README.md
 /tools/
   make-mock-data.js         ← fake snapshot generator (node, no deps)
   dom-shim.js               ← the 60-line DOM the tile tests render into (rule 3, not jsdom)
@@ -113,7 +118,7 @@ Auth: page endpoints take the token (`?t=` or `Authorization: Bearer`); admin en
 | `PUT /api/admin/ask-system` | secret | body = text → `ask:sys` |
 | `PUT /api/admin/draft-system` | secret | body = text → `draft:sys`; returns `{stored, bytes}` (UTF-8), never the text |
 
-CORS: allow `https://mlancourt.github.io` and `http://localhost:*` (dev). Handle preflight.
+CORS: allow `https://helm.lannyai.com` (the page, v1.30.0), `https://mlancourt.github.io` (it 301s, kept for stale tabs) and `http://localhost:*` (dev). Handle preflight.
 
 ## Snapshot contract — `helm-data.json` (schema 1)
 
@@ -149,6 +154,18 @@ CORS: allow `https://mlancourt.github.io` and `http://localhost:*` (dev). Handle
 | `ask` | ASK | — | chat panel, bottom sheet on phone; `q` + optional pinned tile context; history kept in memory only |
 
 Every tile supports **long-press / right-click → "Explain"** → opens `ask` with `tile_id` + that tile's `data` pinned.
+
+## agent/ — the brain (Phase 2, vault spec `Brain-Service-Spec.md`, A1–A10)
+
+A standalone Node service (ESM, its own `agent/package.json` + `node_modules`; never imports `worker/` or `docs/`) that runs on the Mac mini under launchd as `com.lannyai.helm-agent`, bound to **127.0.0.1:8787 only**, reached from the page through `cloudflared` (`com.lannyai.helm-tunnel`) and Cloudflare Access (OTP, Matt's email). `GET /health` → `{ok, mode:"vault", host, ts, spend_today_usd, cap_usd}`; `POST /ask {q, history?, tile_id?, tile_data?}` → `{answer, mode:"vault", usd, files_read[], ms}`; failures are `{reason}` (`brain_off`/`busy`/`no_key`/`no_system` 503 · `cap` 429 · `timeout` 504 · `upstream` 502).
+
+- **By construction, not by prompt (A3/A5):** `query()` runs with `tools: []` (every built-in off), `settingSources: []`, `permissionMode: 'dontAsk'`, `maxTurns: 12`, `cwd` = the OS temp dir, and `allowedTools` = exactly `mcp__vault__read_file`, `mcp__vault__grep_vault`, `mcp__vault__list_dir` — three in-process tools on one SDK MCP server. **No fetch tool, no write tool, no shell tool — do not add one for any reason.** `propose_event` / `ask_crew` are v1b and need their own ruling.
+- **The vault is read-only to it.** One path guard for all three tools: vault-relative only, `realpath` must stay inside the vault (a symlink out is refused), `.git` / `.obsidian` / `.trash` denied; `read_file` 200 KB; `grep_vault` spawns `/opt/homebrew/bin/rg` with an argv array, the pattern after `--`, 10 s, a match cap; `list_dir` 500 entries. A refusal is a tool error string, never a crash.
+- **Secrets live in `~/.config/the-helm/` and are never read into the repo** — the model key (`anthropic-key`, read per request) and the soft kill switch (`brain-off` → every route `503 brain_off`, and the page falls back). No key, token or vault content is ever committed; tests use an invented temp vault.
+- **Context from disk, never KV (A6):** the vault's `Ask-System-Prompt-v1.md` verbatim · the Hub's `**` header line · `About-Matt.md` · the charter's `### Crew Routing` section · the board from `_runtime/helm-data.json` through `snapshot.js` (a hand copy of the Worker's `askSnapshotView` — keep them in step) · the pinned tile · the brain preamble.
+- **Its own $3/day rail (A7)** — `~/Library/Logs/the-helm/ask-spend.json` `{day (Central), usd, n}`, checked before the model is called, priced by `prices.js` (the Worker's table + an explicit `claude-sonnet-5-5` row; unknown models at the top tier). **Audit (A8)** — `ask-audit.jsonl`, one line per ask, counts/paths/money only: **never the question, the answer or a grep pattern.** Those two files are the only things it writes.
+- One ask at a time (a second waits 20 s, then `503 busy`); 90 s wall clock; a 12-turn run returns its partial answer + `(stopped at the 12-turn limit.)`. Model `ASK_MODEL`, default `claude-sonnet-5-5` (A4).
+- Tests: `cd agent && npm test` (node:test, no key, no network). Ops: `agent/README.md`.
 
 ## Event types (`POST /api/event`) — exactly these
 
@@ -199,6 +216,8 @@ Generates a valid schema-1 snapshot with all v1 tiles populated from **invented*
 Tests (Worker, `wrangler dev` + node): token 401s; event shape rejection; per-event KV keys; delete-event actor check; cap enforcement; snapshot validation. Page: graders are pure functions — unit-test every market with fixture game objects (pre / in / post / push).
 
 ## Change log
+
+**v1.30.0 (2026-10-04):** **Phase 2 — the vault-smart `/ask`** (vault spec `Brain-Service-Spec.md`, A1–A10). Three pieces. **`agent/`** — new: the brain service for the mini (Node, Agent SDK, its own package), loopback only, every built-in tool off and three read-only vault tools behind one realpath guard, context assembled from the vault on disk per request, its own $3/day Central-day ledger and a content-free audit line per ask (see §agent/). **The page** — `ctx.actions.ask()` tries `https://brain.lannyai.com/ask` first through the pure `docs/lib/brain.js` (`credentials: 'include'`, `redirect: 'manual'`, 95 s) and falls back to the Worker's `/api/ask` on any 5xx / network failure / timeout, tagging that answer `snapshot`; 401/403/an Access redirect → `signin`; a brain `429` → `cap`, deliberately NOT spent against the Worker's rail (A7: two independent rails). The Ask chip reads **vault · snapshot · sign in · off · cap** (the old `offline` chip is now `off`); **sign in** is a button that opens `BRAIN_BASE/health` in a new tab for the Access OTP; a vault answer wears `read N files ▸`, folding open to the paths it read. History sent upstream is role + content only. **The domain** — `docs/CNAME` = `helm.lannyai.com` (A1: same site as the brain so Safari sends the cookie; re-add the PWA from there), and **the Worker's CORS gains `https://helm.lannyai.com`**: github.io already 301s to the new domain, so without it the board could not reach `/api/data`. Rule 4 gains the brain origin as the only new fetch target and the only credentialed one. New `tools/test-brain.js` (88) + `agent/test/` (40 node:test cases). APP_VERSION 1.30.0, SW cache helm-v51 (precaches `lib/brain.js`, never caches the brain origin); 3,312 page assertions green.
 
 **v1.29.2 (2026-10-04, Worker only — no page change, no bump):** `/api/draft`'s parser is **separator-agnostic**. 4 of 6 live Sonnet 5.5 answers put the draft on the line straight after `ASSUMED:` — no `---`, no blank line — so v1.29.1's blank-line fallback never fired. One rule now covers every shape: text starting `READ: ` → header = the leading `READ:`/`ASSUMED:`/`SUBJECT:` lines (colon-space required), blank/`---` lines skipped, the rest is the draft verbatim; the separate `---` path is gone because this rule covers it. Behaviour change worth knowing: a header that starts with `SUBJECT:` or `ASSUMED:` instead of `READ:` is now whole-text (the rule as ruled). Fixtures for `---`, blank-line, single-newline (READ+ASSUMED and READ-only), the READ+SUBJECT email shape and no-READ, the first five asserted to parse to identical objects, plus "READY…"/"READ the…" drafts that must not be eaten.
 
