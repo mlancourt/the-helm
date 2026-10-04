@@ -340,12 +340,14 @@ const REPLY = {
     check('ASSUMED and SUBJECT are optional', readOnly.read === 'just the read' && readOnly.assumed === null &&
       readOnly.subject === null && readOnly.draft === 'hi there\n\nsecond para');
     const anyOrder = p('SUBJECT: s\nREAD: r\n---\nd');
-    check('header lines in any order', anyOrder.read === 'r' && anyOrder.subject === 's');
+    check('READ must lead: SUBJECT first is whole text (v1.29.2 rule)', anyOrder.read === null && anyOrder.draft === 'SUBJECT: s\nREAD: r\n---\nd');
+    const afterRead = p('READ: r\nSUBJECT: s\nASSUMED: a\n---\nd');
+    check('after READ, ASSUMED/SUBJECT in any order', afterRead.subject === 's' && afterRead.assumed === 'a' && afterRead.draft === 'd');
     const crlf = p('READ: r\r\n---\r\nline one\r\nline two');
     check('CRLF tolerated', crlf.read === 'r' && /line one/.test(crlf.draft));
 
     const noRule = 'READ: r\nHi Jeff, it shipped.';
-    check('no --- -> whole text as draft, read null', p(noRule).read === null && p(noRule).draft === noRule);
+    check('no --- is no longer a miss: READ then the draft on the next line parses', p(noRule).read === 'r' && p(noRule).draft === 'Hi Jeff, it shipped.');
     const noRead = 'ASSUMED: x\n---\nHi';
     check('no READ -> whole text as draft', p(noRead).read === null && p(noRead).draft === noRead);
     const preamble = "Here's a draft:\nREAD: r\n---\nHi";
@@ -354,24 +356,46 @@ const REPLY = {
     check('a --- inside the draft stays in the draft', p('READ: r\n---\nabove\n---\nbelow').draft === 'above\n---\nbelow');
     check('null text never throws', p(null).draft === '' && p(undefined).read === null);
 
-    // Live Sonnet 5.5 sometimes drops the `---` for a blank line.
-    const ruled = 'READ: He wants a date.\nASSUMED: You can do Thursday.\nSUBJECT: Thursday\n---\nHi Jeff,\n\nThursday works.\n\nThanks,';
-    const blank = 'READ: He wants a date.\nASSUMED: You can do Thursday.\nSUBJECT: Thursday\n\nHi Jeff,\n\nThursday works.\n\nThanks,';
-    check('the blank-line shape parses to the same object as the --- shape', JSON.stringify(p(blank)) === JSON.stringify(p(ruled)), JSON.stringify(p(blank)));
-    check('and the draft keeps its own blank lines', p(blank).draft === 'Hi Jeff,\n\nThursday works.\n\nThanks,');
-    check('blank-line shape with READ alone', JSON.stringify(p('READ: r\n\nHi')) === JSON.stringify({ read: 'r', assumed: null, subject: null, draft: 'Hi' }));
-    check('leading blank lines before READ are fine', p('\n\nREAD: r\n\nHi').read === 'r');
-    check('CRLF blank-line shape', p('READ: r\r\nASSUMED: a\r\n\r\nHi there').assumed === 'a');
-    const noReadBlank = 'ASSUMED: a\n\nHi Jeff';
-    check('no READ: still returns whole-as-draft', p(noReadBlank).read === null && p(noReadBlank).draft === noReadBlank);
-    const plainText = 'Hi Jeff,\n\nThursday works.';
-    check('a plain draft with no header is whole-as-draft', p(plainText).read === null && p(plainText).draft === plainText);
-    const stray = 'READ: r\nhe wants a date\n\nHi Jeff';
-    check('a stray line between the header and the blank line falls through (no words lost)', p(stray).read === null && p(stray).draft === stray);
-    check('a header with no blank line after it falls through', p('READ: r\nASSUMED: a').read === null);
-    check('a header with nothing after the blank line falls through', p('READ: r\n\n   ').read === null);
-    check('when a --- exists, the --- path still wins', p('READ: r\n\nignored?\n---\nreal draft').read === null &&
-      p('READ: r\n---\nabove\n\nbelow').draft === 'above\n\nbelow');
+    // Separator-agnostic (v1.29.2): live Sonnet 5.5 sends `---`, a blank
+    // line, or a bare single newline between header and draft.
+    const DRAFT = 'Hi Jeff,\n\nThursday works.\n\nThanks,';
+    const shapes = {
+      a_rule: `READ: He wants a date.\nASSUMED: You can do Thursday.\n---\n${DRAFT}`,
+      b_blank: `READ: He wants a date.\nASSUMED: You can do Thursday.\n\n${DRAFT}`,
+      c_newline: `READ: He wants a date.\nASSUMED: You can do Thursday.\n${DRAFT}`,
+      a_rule_crlf: `READ: He wants a date.\r\nASSUMED: You can do Thursday.\r\n---\r\n${DRAFT.split('\n').join('\r\n')}`,
+      blank_and_rule: `READ: He wants a date.\nASSUMED: You can do Thursday.\n\n---\n\n${DRAFT}`,
+    };
+    const want = { read: 'He wants a date.', assumed: 'You can do Thursday.', subject: null, draft: DRAFT };
+    for (const [name, text] of Object.entries(shapes)) {
+      const got = name.includes('crlf') ? { ...p(text), draft: p(text).draft.split('\r\n').join('\n') } : p(text);
+      check(`(${name}) READ+ASSUMED parses to the identical object`, JSON.stringify(got) === JSON.stringify(want), JSON.stringify(got));
+    }
+
+    const wantRead = { read: 'He wants a date.', assumed: null, subject: null, draft: DRAFT };
+    check('(d) single-newline shape, READ only', JSON.stringify(p(`READ: He wants a date.\n${DRAFT}`)) === JSON.stringify(wantRead), JSON.stringify(p(`READ: He wants a date.\n${DRAFT}`)));
+    check('(d) …identical to the --- shape with READ only', JSON.stringify(p(`READ: He wants a date.\n---\n${DRAFT}`)) === JSON.stringify(wantRead));
+    check('(d) …and to the blank-line shape with READ only', JSON.stringify(p(`READ: He wants a date.\n\n${DRAFT}`)) === JSON.stringify(wantRead));
+
+    const wantEmail = { read: 'He wants a date.', assumed: null, subject: 'Thursday', draft: DRAFT };
+    check('(e) READ+SUBJECT+--- email shape', JSON.stringify(p(`READ: He wants a date.\nSUBJECT: Thursday\n---\n${DRAFT}`)) === JSON.stringify(wantEmail));
+    check('(e) …identical without the ---', JSON.stringify(p(`READ: He wants a date.\nSUBJECT: Thursday\n${DRAFT}`)) === JSON.stringify(wantEmail));
+    check('(e) all three header lines, single newline', JSON.stringify(p(`READ: r\nASSUMED: a\nSUBJECT: s\n${DRAFT}`)) ===
+      JSON.stringify({ read: 'r', assumed: 'a', subject: 's', draft: DRAFT }));
+
+    const noReadF = `ASSUMED: You can do Thursday.\n${DRAFT}`;
+    check('(f) no READ at all -> whole text, read null', JSON.stringify(p(noReadF)) === JSON.stringify({ read: null, assumed: null, subject: null, draft: noReadF }));
+    check('(f) a bare draft -> whole text', p(DRAFT).read === null && p(DRAFT).draft === DRAFT);
+
+    check('a draft whose first line starts "READY" is not eaten', p(`READ: r\nREADY when you are.\nThanks`).draft === 'READY when you are.\nThanks');
+    check('a draft whose first line starts "READ the" is not eaten', p(`READ: r\nREAD the attached and call me.`).draft === 'READ the attached and call me.');
+    check('a text that opens "READ the…" (no colon) is whole, not parsed', p('READ the attached.\nThanks').read === null);
+    check('"READ:" with no space is not a header', p('READ:x\nHi').read === null);
+    check('leading blank lines before READ are fine', p(`\n\nREAD: r\n${DRAFT}`).read === 'r');
+    check('blank lines between header lines are fine', JSON.stringify(p(`READ: He wants a date.\n\nASSUMED: You can do Thursday.\n\n${DRAFT}`)) === JSON.stringify(want));
+    check('a --- later in the draft stays in the draft', p('READ: r\nabove\n---\nbelow').draft === 'above\n---\nbelow');
+    check('the draft keeps its own indentation and inner blank lines', p('READ: r\n  indented\n\n\nend').draft === '  indented\n\n\nend');
+    check('a header with no draft after it -> whole text', p('READ: r\nASSUMED: a\n---\n  ').read === null);
   }
 
   // ------------------------------------------------------- caching

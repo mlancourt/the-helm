@@ -716,61 +716,52 @@ export function buildDraftMessages(req) {
 }
 
 /**
- * Y8 — the model's output contract:
+ * Y8 — the model's output contract, read separator-agnostic:
  *
  *   READ: <one line>
  *   ASSUMED: <one line>      (optional)
  *   SUBJECT: <line>          (optional, email)
- *   ---
+ *   ---                      (asked for; live Sonnet 5.5 often sends a blank
+ *                             line instead, or nothing at all)
  *   <the draft>
  *
- * Live Sonnet 5.5 sometimes drops the `---` and separates the header from
- * the draft with a blank line instead. So when the text begins with `READ:`
- * and NO line is exactly `---`, the header is every leading line that starts
- * `READ:` / `ASSUMED:` / `SUBJECT:`, and the draft is everything after the
- * first blank line that follows it. A line between the header and that blank
- * line belongs to neither, so that shape falls through rather than lose it.
+ * If the text (after any leading blank lines) starts with `READ: `, the
+ * header is the leading run of `READ: ` / `ASSUMED: ` / `SUBJECT: ` lines —
+ * with any blank or exactly-`---` lines between or after them skipped — and
+ * the draft is everything from the first line that is neither, verbatim.
+ * So `---`, a blank line and a bare single newline all parse the same, and a
+ * `---` later inside the draft stays in the draft.
  *
- * Anything else that does not fit — no READ, a stray line in the header, an
- * empty draft — comes back as the whole text in `draft` with `read: null`.
- * A formatting miss is never a 500: the words are still Matt's to use.
+ * The labels need the colon AND a space: a draft that opens "READY when you
+ * are" or "READ the attached" is never eaten. Text that does not start with
+ * `READ: ` — a preamble, a bare draft — or a header with no draft after it
+ * comes back whole as `draft` with `read: null`. Never a 500 over formatting.
  */
-const HEADER_LINE_RE = /^(READ|ASSUMED|SUBJECT):\s*(.*)$/;
+const HEADER_LINE_RE = /^(READ|ASSUMED|SUBJECT):\s(.*)$/;
+const isSeparator = (line) => !line.trim() || line.trimEnd() === '---';
 
 export function parseDraft(text) {
   const raw = String(text ?? '');
   const whole = { read: null, assumed: null, subject: null, draft: raw.trim() };
   const lines = raw.split(/\r?\n/);
-  const head = { read: null, assumed: null, subject: null };
-  const take = (line) => {
-    const m = line.match(HEADER_LINE_RE);
-    if (!m) return false;
-    const k = m[1].toLowerCase();
-    if (head[k] === null) head[k] = m[2].trim() || null;
-    return true;
-  };
-  const finish = (from) => {
-    const draft = lines.slice(from).join('\n').trim();
-    return head.read && draft ? { ...head, draft } : whole;
-  };
 
-  // 1. The contract: header lines, a line that is exactly `---`, the draft.
-  const rule = lines.findIndex((line) => line.trimEnd() === '---');
-  if (rule !== -1) {
-    for (const line of lines.slice(0, rule)) {
-      if (!line.trim()) continue;
-      if (!take(line)) return whole;
-    }
-    return finish(rule + 1);
-  }
-
-  // 2. No `---`: a header block that starts the text, then a blank line.
-  if (!raw.trimStart().startsWith('READ:')) return whole;
   let i = 0;
   while (i < lines.length && !lines[i].trim()) i++;
-  while (i < lines.length && take(lines[i])) i++;
-  if (i >= lines.length || lines[i].trim()) return whole;
-  return finish(i + 1);
+  const first = (lines[i] || '').match(HEADER_LINE_RE);
+  if (!first || first[1] !== 'READ') return whole;
+
+  const head = { read: null, assumed: null, subject: null };
+  for (; i < lines.length; i++) {
+    const line = lines[i];
+    if (isSeparator(line)) continue;
+    const m = line.match(HEADER_LINE_RE);
+    if (!m) break;
+    const k = m[1].toLowerCase();
+    if (head[k] === null) head[k] = m[2].trim() || null;
+  }
+
+  const draft = lines.slice(i).join('\n').trimEnd();
+  return head.read && draft ? { ...head, draft } : whole;
 }
 
 /** Y7 — the unique bracketed blanks in a draft, inner text, in order. */
