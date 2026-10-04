@@ -404,9 +404,23 @@ export function askSnapshotView(snapshot) {
  * only ever appends board state beneath it.
  */
 export function buildAskSystem({ sysText, snapshot, pinned }) {
-  const parts = [String(sysText || '').trim()];
+  return buildAskSystemBlocks({ sysText, snapshot, pinned })
+    .map((b) => b.text)
+    .join('\n\n');
+}
 
-  parts.push(
+/**
+ * The same system prompt as API blocks, split at the cache breakpoint.
+ *
+ * Block 1 — the vault prompt + the snapshot — is identical for every ask
+ * between two publishes, and carries the ONE `cache_control`. Block 2, the
+ * pinned tile, changes with every Explain, so it sits AFTER the breakpoint:
+ * folded into block 1 (as it was until v1.29.1) it rewrote the whole cached
+ * prefix on every pinned ask and the shared part was never read back.
+ */
+export function buildAskSystemBlocks({ sysText, snapshot, pinned }) {
+  const board = [
+    String(sysText || '').trim(),
     [
       '# Board snapshot',
       'The tiles currently published to The Helm. Business dates are plain YYYY-MM-DD',
@@ -414,21 +428,22 @@ export function buildAskSystem({ sysText, snapshot, pinned }) {
       'Bet grades on the page are a lean, never a settlement.',
       '',
       JSON.stringify(askSnapshotView(snapshot)),
-    ].join('\n')
-  );
+    ].join('\n'),
+  ].join('\n\n');
 
+  const blocks = [{ type: 'text', text: board, cache_control: { type: 'ephemeral' } }];
   if (pinned && pinned.tile_id) {
-    parts.push(
-      [
+    blocks.push({
+      type: 'text',
+      text: [
         '# Pinned tile',
         `The reader opened this from the \`${pinned.tile_id}\` tile and is asking about it.`,
         '',
         JSON.stringify(tileDataForModel(pinned.tile_data, 'pinned tile data')),
-      ].join('\n')
-    );
+      ].join('\n'),
+    });
   }
-
-  return parts.join('\n\n');
+  return blocks;
 }
 
 /** One HTTP call to the model API, bounded by whatever time is left. */
@@ -504,9 +519,9 @@ async function askBackend(env, { system, messages, model }) {
   const body = {
     model,
     max_tokens: ASK_MAX_TOKENS,
-    // One cached block: the system prompt and snapshot are identical across
-    // every ask between two publishes, and only the messages move.
-    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+    // Blocks from buildAskSystemBlocks: the vault prompt + snapshot cached,
+    // the pinned tile (when there is one) after the breakpoint.
+    system,
     messages,
     // A board answer is a short paragraph. Thinking tokens would come out of
     // the same 800-token budget the answer needs, so it is off — and a model
@@ -709,31 +724,53 @@ export function buildDraftMessages(req) {
  *   ---
  *   <the draft>
  *
- * Anything that does not fit — no READ, no `---`, a stray line in the header,
- * an empty draft — comes back as the whole text in `draft` with `read: null`.
+ * Live Sonnet 5.5 sometimes drops the `---` and separates the header from
+ * the draft with a blank line instead. So when the text begins with `READ:`
+ * and NO line is exactly `---`, the header is every leading line that starts
+ * `READ:` / `ASSUMED:` / `SUBJECT:`, and the draft is everything after the
+ * first blank line that follows it. A line between the header and that blank
+ * line belongs to neither, so that shape falls through rather than lose it.
+ *
+ * Anything else that does not fit — no READ, a stray line in the header, an
+ * empty draft — comes back as the whole text in `draft` with `read: null`.
  * A formatting miss is never a 500: the words are still Matt's to use.
  */
+const HEADER_LINE_RE = /^(READ|ASSUMED|SUBJECT):\s*(.*)$/;
+
 export function parseDraft(text) {
   const raw = String(text ?? '');
   const whole = { read: null, assumed: null, subject: null, draft: raw.trim() };
   const lines = raw.split(/\r?\n/);
   const head = { read: null, assumed: null, subject: null };
-
-  let i = 0;
-  for (; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.trimEnd() === '---') break;
-    if (!line.trim()) continue;
-    const m = line.match(/^(READ|ASSUMED|SUBJECT):\s*(.*)$/);
-    if (!m) return whole;
+  const take = (line) => {
+    const m = line.match(HEADER_LINE_RE);
+    if (!m) return false;
     const k = m[1].toLowerCase();
     if (head[k] === null) head[k] = m[2].trim() || null;
-  }
-  if (i >= lines.length || !head.read) return whole;
+    return true;
+  };
+  const finish = (from) => {
+    const draft = lines.slice(from).join('\n').trim();
+    return head.read && draft ? { ...head, draft } : whole;
+  };
 
-  const draft = lines.slice(i + 1).join('\n').trim();
-  if (!draft) return whole;
-  return { ...head, draft };
+  // 1. The contract: header lines, a line that is exactly `---`, the draft.
+  const rule = lines.findIndex((line) => line.trimEnd() === '---');
+  if (rule !== -1) {
+    for (const line of lines.slice(0, rule)) {
+      if (!line.trim()) continue;
+      if (!take(line)) return whole;
+    }
+    return finish(rule + 1);
+  }
+
+  // 2. No `---`: a header block that starts the text, then a blank line.
+  if (!raw.trimStart().startsWith('READ:')) return whole;
+  let i = 0;
+  while (i < lines.length && !lines[i].trim()) i++;
+  while (i < lines.length && take(lines[i])) i++;
+  if (i >= lines.length || lines[i].trim()) return whole;
+  return finish(i + 1);
 }
 
 /** Y7 — the unique bracketed blanks in a draft, inner text, in order. */
@@ -930,7 +967,7 @@ async function handleAsk(request, env) {
 
   const model = askModel(env);
   const out = await askBackend(env, {
-    system: buildAskSystem({ sysText, snapshot, pinned }),
+    system: buildAskSystemBlocks({ sysText, snapshot, pinned }),
     messages: [...normalizeHistory(body.history), { role: 'user', content: q }],
     model,
   });
@@ -945,7 +982,8 @@ async function handleAsk(request, env) {
   // reach a log line.
   console.log(
     `ask ok model=${out.model} q_len=${q.length} pinned=${pinned ? pinned.tile_id : '-'} ` +
-      `in=${out.usage?.input_tokens ?? '?'} cached=${out.usage?.cache_read_input_tokens ?? 0} ` +
+      `in=${out.usage?.input_tokens ?? '?'} cache_write=${out.usage?.cache_creation_input_tokens ?? 0} ` +
+      `cache_read=${out.usage?.cache_read_input_tokens ?? 0} ` +
       `out=${out.usage?.output_tokens ?? '?'} usd=${out.usd}`
   );
 
@@ -993,7 +1031,8 @@ async function handleDraft(request, env) {
     `draft ok model=${out.model} mode=${req.mode} channel=${req.channel} role=${req.to.role} ` +
       `incoming_len=${req.incoming ? req.incoming.length : 0} intent_len=${req.intent ? req.intent.length : 0} ` +
       `turns=${req.history.length} nudge=${req.nudge ? 'y' : 'n'} draft_len=${parsed.draft.length} ` +
-      `in=${out.usage?.input_tokens ?? '?'} cached=${out.usage?.cache_read_input_tokens ?? 0} ` +
+      `in=${out.usage?.input_tokens ?? '?'} cache_write=${out.usage?.cache_creation_input_tokens ?? 0} ` +
+      `cache_read=${out.usage?.cache_read_input_tokens ?? 0} ` +
       `out=${out.usage?.output_tokens ?? '?'} usd=${out.usd}`
   );
 

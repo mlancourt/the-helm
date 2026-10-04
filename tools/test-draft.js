@@ -353,6 +353,70 @@ const REPLY = {
     check('an empty draft after --- -> whole text', p('READ: r\n---\n   ').draft === 'READ: r\n---');
     check('a --- inside the draft stays in the draft', p('READ: r\n---\nabove\n---\nbelow').draft === 'above\n---\nbelow');
     check('null text never throws', p(null).draft === '' && p(undefined).read === null);
+
+    // Live Sonnet 5.5 sometimes drops the `---` for a blank line.
+    const ruled = 'READ: He wants a date.\nASSUMED: You can do Thursday.\nSUBJECT: Thursday\n---\nHi Jeff,\n\nThursday works.\n\nThanks,';
+    const blank = 'READ: He wants a date.\nASSUMED: You can do Thursday.\nSUBJECT: Thursday\n\nHi Jeff,\n\nThursday works.\n\nThanks,';
+    check('the blank-line shape parses to the same object as the --- shape', JSON.stringify(p(blank)) === JSON.stringify(p(ruled)), JSON.stringify(p(blank)));
+    check('and the draft keeps its own blank lines', p(blank).draft === 'Hi Jeff,\n\nThursday works.\n\nThanks,');
+    check('blank-line shape with READ alone', JSON.stringify(p('READ: r\n\nHi')) === JSON.stringify({ read: 'r', assumed: null, subject: null, draft: 'Hi' }));
+    check('leading blank lines before READ are fine', p('\n\nREAD: r\n\nHi').read === 'r');
+    check('CRLF blank-line shape', p('READ: r\r\nASSUMED: a\r\n\r\nHi there').assumed === 'a');
+    const noReadBlank = 'ASSUMED: a\n\nHi Jeff';
+    check('no READ: still returns whole-as-draft', p(noReadBlank).read === null && p(noReadBlank).draft === noReadBlank);
+    const plainText = 'Hi Jeff,\n\nThursday works.';
+    check('a plain draft with no header is whole-as-draft', p(plainText).read === null && p(plainText).draft === plainText);
+    const stray = 'READ: r\nhe wants a date\n\nHi Jeff';
+    check('a stray line between the header and the blank line falls through (no words lost)', p(stray).read === null && p(stray).draft === stray);
+    check('a header with no blank line after it falls through', p('READ: r\nASSUMED: a').read === null);
+    check('a header with nothing after the blank line falls through', p('READ: r\n\n   ').read === null);
+    check('when a --- exists, the --- path still wins', p('READ: r\n\nignored?\n---\nreal draft').read === null &&
+      p('READ: r\n---\nabove\n\nbelow').draft === 'above\n\nbelow');
+  }
+
+  // ------------------------------------------------------- caching
+  console.log('\nprompt caching');
+  {
+    // Two consecutive identical requests. The stub answers the way the API
+    // does when the cache works: the first call WRITES the system prefix,
+    // the second READS it.
+    const SYS_TOKENS = 7000;
+    const env = baseEnv();
+    const calls = stubModelApi((body, n) =>
+      apiOk({
+        usage: n === 1
+          ? { input_tokens: 180, cache_creation_input_tokens: SYS_TOKENS, cache_read_input_tokens: 0, output_tokens: 150 }
+          : { input_tokens: 180, cache_creation_input_tokens: 0, cache_read_input_tokens: SYS_TOKENS, output_tokens: 150 },
+      })
+    );
+    console.log = (...a) => logs.push(a.join(' '));
+    logs.length = 0;
+    const first = await call(worker, env, { body: REPLY });
+    const second = await call(worker, env, { body: REPLY });
+    console.log = realLog;
+
+    const [a, b] = calls.map((c) => c.body);
+    check('the system is an array of ONE text block with cache_control ephemeral', Array.isArray(a.system) && a.system.length === 1 &&
+      a.system[0].type === 'text' && JSON.stringify(a.system[0].cache_control) === '{"type":"ephemeral"}');
+    check('no top-level cache_control competing with it', !('cache_control' in a));
+    check('the cached prefix (model + thinking + system) is byte-identical across the two calls',
+      JSON.stringify([a.model, a.thinking, a.system]) === JSON.stringify([b.model, b.thinking, b.system]));
+    check('the whole request is byte-identical across the two calls', JSON.stringify(a) === JSON.stringify(b));
+
+    const usd1 = first.json?.usd;
+    const usd2 = second.json?.usd;
+    // Sonnet 5.5: $2 in / $10 out; write 1.25x, read 0.1x.
+    const expect1 = (180 * 2 + SYS_TOKENS * 1.25 * 2 + 150 * 10) / 1e6;
+    const expect2 = (180 * 2 + SYS_TOKENS * 0.1 * 2 + 150 * 10) / 1e6;
+    check(`usd prices a cache WRITE at 1.25x (call 1: $${usd1})`, Math.abs(usd1 - expect1) < 1e-6, String(expect1));
+    check(`usd prices a cache READ at 0.1x (call 2: $${usd2})`, Math.abs(usd2 - expect2) < 1e-6, String(expect2));
+    check('so the second identical call costs well under half the first', usd2 < usd1 / 2);
+    realLog(`       stub before/after: $${usd1} -> $${usd2}`);
+
+    const lines = logs.filter((l) => /draft ok/.test(l));
+    check('the log carries all three counters', lines.length === 2 && /in=180 cache_write=7000 cache_read=0 /.test(lines[0]) &&
+      /in=180 cache_write=0 cache_read=7000 /.test(lines[1]), lines.join(' | '));
+    check('and still nothing but lengths and cost', !lines.join('').match(/Jeff|blades|squeegee|confirm/));
   }
 
   // ------------------------------------------------------------ blanks

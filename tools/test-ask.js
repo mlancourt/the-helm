@@ -202,7 +202,8 @@ async function main() {
   check('the key travels as x-api-key', calls[0].headers['x-api-key'] === 'test-key');
   check('max_tokens is the brief\'s 800', sent.max_tokens === 800);
   check('the default model is used', sent.model === 'claude-sonnet-5');
-  check('the system prompt is one cached block', Array.isArray(sent.system) && sent.system[0].cache_control.type === 'ephemeral');
+  check('no pin: the system prompt is one cached block', Array.isArray(sent.system) && sent.system.length === 1 &&
+    sent.system[0].type === 'text' && sent.system[0].cache_control?.type === 'ephemeral');
   check('the snapshot rides in the system prompt', sent.system[0].text.includes('chili'));
   check('history is replayed before the question', sent.messages.length === 3 && sent.messages[0].content === 'hi');
   check('the question is the last message', sent.messages[2].role === 'user' && sent.messages[2].content === 'what is for dinner?');
@@ -221,12 +222,27 @@ async function main() {
   console.log('\nroute — pinned tile (Explain)');
   calls = stubModelApi(() => apiOk());
   await ask(worker, baseEnv(), { q: 'Explain this tile.', tile_id: 'bets_live', tile_data: { tickets: [{ id: 't1', market: 'spread' }] } });
-  check('the pinned tile is pinned into the system prompt', calls[0].body.system[0].text.includes('# Pinned tile'));
-  check('the pinned tile data is sent', calls[0].body.system[0].text.includes('spread'));
+  const pinnedSys = calls[0].body.system;
+  check('the pinned tile rides in a second system block', pinnedSys.length === 2 && pinnedSys[1].text.includes('# Pinned tile'));
+  check('the pinned tile data is sent', pinnedSys[1].text.includes('spread'));
+  check('the pinned block sits AFTER the breakpoint (no cache_control)', pinnedSys[0].cache_control?.type === 'ephemeral' && !('cache_control' in pinnedSys[1]));
+  check('the cached block carries no pin', !pinnedSys[0].text.includes('# Pinned tile'));
+
+  // The caching point of the split: the cached prefix is byte-identical
+  // whether or not, and whatever, a tile is pinned.
+  const envC = baseEnv();
+  calls = stubModelApi(() => apiOk());
+  await ask(worker, envC, { q: 'plain question' });
+  await ask(worker, envC, { q: 'Explain this tile.', tile_id: 'dinner', tile_data: { meal: 'tacos' } });
+  await ask(worker, envC, { q: 'Explain this tile.', tile_id: 'cards', tile_data: { pc: null } });
+  const cachedTexts = calls.map((c) => JSON.stringify(c.body.system[0]));
+  check('the cached system block is byte-identical across unpinned + two different pins', new Set(cachedTexts).size === 1);
+  check('buildAskSystem (the string) still reads as one prompt, pin last', W.buildAskSystem({ sysText: 'x', snapshot: SNAPSHOT, pinned: { tile_id: 'dinner', tile_data: {} } }) ===
+    W.buildAskSystemBlocks({ sysText: 'x', snapshot: SNAPSHOT, pinned: { tile_id: 'dinner', tile_data: {} } }).map((b) => b.text).join('\n\n'));
 
   calls = stubModelApi(() => apiOk());
   await ask(worker, baseEnv(), { q: 'Explain this tile.', tile_id: 'newsstand', tile_data: { cards: 'y'.repeat(9000) } });
-  check('an over-size pinned tile is a note, not 9 KB of payload', calls[0].body.system[0].text.includes('pinned tile data omitted'));
+  check('an over-size pinned tile is a note, not 9 KB of payload', calls[0].body.system[1].text.includes('pinned tile data omitted'));
 
   // -- the route: the cap --------------------------------------------------
   console.log('\nroute — the daily cap');
