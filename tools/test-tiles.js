@@ -2201,6 +2201,80 @@ async function main() {
   }
 
 
+  // -- calendar: today featured + the next day off (v1.32.0, Calendar-Tile-Spec K1–K9)
+  console.log('\ncalendar');
+  const cal = mods.get('calendar');
+  if (cal) {
+    const CAL_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'calendar.js'), 'utf8');
+    const REG_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', '_registry.js'), 'utf8');
+    const CSS_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+    const calDays = [
+      { date: '2026-10-05', events: [{ time_ct: '08:30', title: 'Shop standup', cal: 'wss' }] },
+      { date: '2026-10-06', events: [] },
+    ];
+    const calRender = (data) => { const r = new El('div'); cal.render(r, { band: 'DAILY', status: 'ok', data }); return r; };
+    const hol = (over = {}) => ({ name: 'Thanksgiving', emoji: '🦃', date: '2026-11-26', days_out: 52, ...over });
+
+    // K1 — the nameplate.
+    check('K1: the registry title is 📅 Calendar', /calendar:\s*\{[^}]*title:\s*'📅 Calendar'/.test(REG_SRC));
+
+    // K2 — today, the engine's words verbatim.
+    const full = calRender({ today: { date: '2026-10-05', weekday: 'Monday', label: 'October 5' }, holiday: hol(), days: calDays });
+    check('K2: the weekday is featured', textOf(full.querySelector('.cal-weekday')) === 'Monday');
+    check('K2: the date label is printed verbatim', textOf(full.querySelector('.cal-date')) === 'October 5');
+    check('K2: today sits at the top of the face', full.childNodes[0].classList.contains('cal-today'));
+    const odd = calRender({ today: { date: '2026-10-05', weekday: 'Lundi', label: '5 octobre' }, days: calDays });
+    check('K2: whatever words the engine sends are the words shown', /Lundi/.test(textOf(odd)) && /5 octobre/.test(textOf(odd)));
+    check('K2: the events still render under it', countOf(full, 'cal-event') === 1 && /Shop standup/.test(textOf(full)));
+
+    // K3 — the next day off, one line at the bottom.
+    const foot = full.querySelector('.cal-holiday');
+    check('K3: the countdown reads naturally', !!foot && textOf(foot) === '🦃 Thanksgiving in 52 days', foot && textOf(foot));
+    check('K3: and is the last thing on the face', full.childNodes[full.childNodes.length - 1] === foot);
+    check('K3: its date rides the tooltip, verbatim', foot.getAttribute('title') === '2026-11-26');
+    check('K3: one day out says tomorrow', textOf(calRender({ holiday: hol({ days_out: 1 }), days: calDays }).querySelector('.cal-holiday')) === '🦃 Thanksgiving is tomorrow');
+    check('K3: zero days out says today', textOf(calRender({ holiday: hol({ days_out: 0 }), days: calDays }).querySelector('.cal-holiday')) === '🦃 Thanksgiving is today');
+    check('K3: no emoji, no leading space', textOf(calRender({ holiday: hol({ emoji: '' }), days: calDays }).querySelector('.cal-holiday')) === 'Thanksgiving in 52 days');
+    check('K5: exactly one countdown line', countOf(full, 'cal-holiday') === 1);
+
+    // K7 — no colour at any number: the class set never moves.
+    const clsAt = (n) => calRender({ holiday: hol({ days_out: n }), days: calDays }).querySelector('.cal-holiday').className;
+    check('K7: the countdown wears the same classes at 0, 1, 3, 52 and 300 days', [0, 1, 3, 52, 300].every((n) => clsAt(n) === 'cal-holiday'));
+    const calCss = (CSS_SRC.match(/\.cal-holiday\s*\{[^}]*\}/) || [''])[0];
+    check('K7: and its rule names no tone', !!calCss && !/--(warn|bad|good|brass|info)/.test(calCss), calCss);
+
+    // Older snapshots and hostile shapes: nothing extra, nothing thrown.
+    const old = calRender({ days: calDays });
+    check('an older snapshot draws no header and no countdown', !old.querySelector('.cal-today') && !old.querySelector('.cal-holiday') && countOf(old, 'cal-event') === 1);
+    const badHol = [null, 'Christmas', 7, {}, hol({ name: '' }), hol({ name: 42 }), hol({ days_out: '5' }), hol({ days_out: -1 }), hol({ days_out: 2.5 }), hol({ days_out: null })];
+    let calThrew = null; let calLines = 0;
+    for (const h of badHol) {
+      try { calLines += countOf(calRender({ holiday: h, days: calDays }), 'cal-holiday'); } catch (e) { calThrew = e; }
+    }
+    check('a malformed holiday never throws', !calThrew, calThrew && calThrew.message);
+    check('and never draws a countdown it cannot state', calLines === 0, String(calLines));
+    const badToday = [null, 'Monday', 5, {}, { weekday: 3, label: null }];
+    let tThrew = null; let heads = 0;
+    for (const t of badToday) {
+      try { heads += countOf(calRender({ today: t, days: calDays }), 'cal-today'); } catch (e) { tThrew = e; }
+    }
+    check('a malformed today never throws and draws no header', !tThrew && heads === 0, tThrew ? tThrew.message : String(heads));
+    const halfToday = calRender({ today: { weekday: 'Monday' }, days: calDays });
+    check('a weekday with no label still shows the weekday', textOf(halfToday.querySelector('.cal-weekday')) === 'Monday' && !halfToday.querySelector('.cal-date'));
+    const noDays = calRender({ today: { weekday: 'Monday', label: 'October 5' }, holiday: hol(), days: [] });
+    check('no events: header, "Nothing scheduled.", countdown — in that order',
+      noDays.childNodes.length === 3 && noDays.childNodes[0].classList.contains('cal-today')
+      && /Nothing scheduled/.test(textOf(noDays.childNodes[1])) && noDays.childNodes[2].classList.contains('cal-holiday'));
+    let junkThrew = null;
+    try { calRender({ days: [null, 'x', { date: '2026-10-05', events: [null, 3, { title: 'ok' }] }] }); } catch (e) { junkThrew = e; }
+    check('junk inside days or events never throws', !junkThrew, junkThrew && junkThrew.message);
+
+    // Rule 7 / K2–K3: the module does no calendar arithmetic of its own.
+    check('rule 7: no new Date and no Date.parse in the module', !/new Date\(|Date\.parse/.test(CAL_SRC));
+    check('K2: no month or weekday table in the module', !/\b(January|October|December|Monday|Sunday)\b/.test(CAL_SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')));
+    check('K3: days_out is printed, never counted', !/getTime|86400|getUTCDate|setDate/.test(CAL_SRC));
+  }
+
   // -- dinner: tonight + the week (v1.22.0, Dinner-Tile-Spec D1–D6) ----------
   console.log('\ndinner');
   const din = mods.get('dinner');

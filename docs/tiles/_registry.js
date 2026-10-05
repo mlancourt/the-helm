@@ -23,7 +23,7 @@
  */
 
 export const REGISTRY = {
-  calendar: { band: 'DAILY', position: 10, module: './tiles/calendar.js', title: 'Calendar' },
+  calendar: { band: 'DAILY', position: 10, module: './tiles/calendar.js', title: '📅 Calendar' },
   // The Yeoman (Y1, Y15): band ASK — on demand, no producer, no snapshot
   // entry — but ON the board, because its face is two buttons. Slotted at 15
   // without moving anyone; Matt can move it here.

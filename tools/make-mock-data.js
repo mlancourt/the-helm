@@ -111,6 +111,18 @@ const nowIso = () => new Date().toISOString();
 const agoIso = (mins) => new Date(Date.now() - mins * 60000).toISOString();
 const aheadIso = (mins) => new Date(Date.now() + mins * 60000).toISOString();
 
+/**
+ * 'YYYY-MM-DD' -> {date, weekday, label} the way the engine writes them
+ * ("Monday", "October 5"). Read off the parts with Date.UTC — rule 7.
+ */
+function todayWords(ymd) {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  const weekday = t.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+  const month = t.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+  return { date: ymd, weekday, label: `${month} ${d}` };
+}
+
 const TODAY = ctToday();
 const TOMORROW = addDays(TODAY, 1);
 
@@ -378,7 +390,12 @@ function snapshot() {
       // (see app.js), so the mock lands on the fallback path by construction.
       weather: tile('LIVE', weatherPayload()),
 
+      // v1.32.0 (Calendar-Tile-Spec K2/K3): the engine's words for today and
+      // its count to the next day off. The holiday is invented and floats a
+      // fixed 12 days out, so the mock never goes stale on a real date.
       calendar: tile('DAILY', {
+        today: todayWords(TODAY),
+        holiday: { name: 'Thanksgiving', emoji: '🦃', date: addDays(TODAY, 12), days_out: 12 },
         days: [
           {
             date: TODAY,
