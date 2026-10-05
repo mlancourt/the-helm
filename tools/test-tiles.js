@@ -3495,7 +3495,7 @@ async function main() {
 
   // -- cards: the desk ------------------------------------------------------
   //
-  // Two faces since v1.25.0: 🎯 Watching (payload `data.pc`) and 🎖️ PC
+  // Two faces since v1.25.0: 🎯 Watching (payload `data.pc`) and 🏷️ Selling
   // (payload `data.shop`). The labels and the keys do not match ON PURPOSE —
   // the engine contract kept its keys, the page relabelled the faces to what
   // they are to Matt. The old 🎯 Watch face (`data.watch`) is retired: the
@@ -3714,8 +3714,8 @@ async function main() {
       return r;
     });
 
-    check('two buttons, Watching then PC', labelsOf(root).join('|') === 'Watching|PC', labelsOf(root).join('|'));
-    check('Watching wears 🎯 and PC wears 🎖️', cardBtns(root).map((b) => b.querySelector('.cards-emoji').textContent).join('|') === '🎯|🎖️');
+    check('two buttons, Watching then Selling', labelsOf(root).join('|') === 'Watching|Selling', labelsOf(root).join('|'));
+    check('Watching wears 🎯 and Selling wears 🏷️', cardBtns(root).map((b) => b.querySelector('.cards-emoji').textContent).join('|') === '🎯|🏷️');
     check('both live', countOf(root, 'cards-btn-soon') === 0);
     check('the board carries no listings of its own', countOf(root, 'pc-row') === 0 && countOf(root, 'shop-row') === 0);
     check('one faint line per face', countOf(root, 'tile-foot') === 2, String(countOf(root, 'tile-foot')));
@@ -3760,7 +3760,7 @@ async function main() {
       cards.render(r, cardsTile(deskData({ watch: LEGACY_WATCH })), { id: 'cards', actions: {} });
       return r;
     });
-    check('a populated watch still renders exactly two buttons', cardBtns(legacyBoard).length === 2 && labelsOf(legacyBoard).join('|') === 'Watching|PC');
+    check('a populated watch still renders exactly two buttons', cardBtns(legacyBoard).length === 2 && labelsOf(legacyBoard).join('|') === 'Watching|Selling');
     check('and none of its words reach the board', !/Watch\b|FLAG-ONE|AUCTION-ONE|targets|fresh books/.test(textOf(legacyBoard)), textOf(legacyBoard));
     check('nor its amber dot', countOf(legacyBoard, 'cards-dot') === 0);
     const watchOnly = new El('div');
@@ -3781,7 +3781,7 @@ async function main() {
     } catch (e) { allNullThrew = e; }
     check('all three keys null never throws', !allNullThrew, allNullThrew && allNullThrew.message);
     check('all null is two soon buttons', cardBtns(allNull).length === 2 && countOf(allNull, 'cards-btn-soon') === 2);
-    check('still labelled Watching then PC', labelsOf(allNull).join('|') === 'Watching|PC', labelsOf(allNull).join('|'));
+    check('still labelled Watching then PC', labelsOf(allNull).join('|') === 'Watching|Selling', labelsOf(allNull).join('|'));
     check('both inert', cardBtns(allNull).every((b) => b.getAttribute('disabled') === 'disabled'));
     check('and no faint line under them', countOf(allNull, 'tile-foot') === 0);
     const emptyDesk = new El('div');
@@ -3805,7 +3805,7 @@ async function main() {
     const swept = new El('div');
     cards.render(swept, cardsTile(deskData(), 'stale', null), { id: 'cards', actions: {} });
     // 12:13Z and 12:04Z are 7:13 and 7:04 AM Central.
-    check('with no errors either, it says when each face last swept', swept.querySelector('.cards-warn').getAttribute('title') === 'last sweep: Watching 7:13 AM · PC 7:04 AM', swept.querySelector('.cards-warn').getAttribute('title'));
+    check('with no errors either, it says when each face last swept', swept.querySelector('.cards-warn').getAttribute('title') === 'last sweep: Watching 7:13 AM · Selling 7:04 AM', swept.querySelector('.cards-warn').getAttribute('title'));
     const bare = new El('div');
     cards.render(bare, cardsTile({ pc: {}, shop: {} }, 'stale', null), { id: 'cards', actions: {} });
     check('and with nothing at all, the mark still explains itself', !!bare.querySelector('.cards-warn').getAttribute('title'));
@@ -3852,7 +3852,7 @@ async function main() {
       return a !== -1 && b !== -1 && b > a ? CARDS_SRC.slice(a, b) : '';
     }
 
-    check('the file opens by naming the key/label mismatch', /^\/\*\*[\s\S]{0,400}data\.pc[\s\S]{0,80}Watching[\s\S]{0,120}data\.shop[\s\S]{0,80}PC/.test(CARDS_RAW));
+    check('the file opens by naming the key/label mismatch', /^\/\*\*[\s\S]{0,400}data\.pc[\s\S]{0,80}Watching[\s\S]{0,120}data\.shop[\s\S]{0,80}Selling/.test(CARDS_RAW));
     check('the module never reads data.watch', !/\.watch\b|\[['"]watch['"]\]/.test(CARDS_SRC));
     // The Watch face's machinery is gone from the whole module — not merely
     // absent from one face's region, because it no longer exists to borrow.
@@ -4160,7 +4160,7 @@ async function main() {
       const pcSheet = pcView.sheet;
 
       // -- the board -------------------------------------------------------
-      check('Watching is the first button', labelsOf(pcBoard).join('|') === 'Watching|PC', labelsOf(pcBoard).join('|'));
+      check('Watching is the first button', labelsOf(pcBoard).join('|') === 'Watching|Selling', labelsOf(pcBoard).join('|'));
       check('and it opens its own sheet, titled 🎯 Watching', pcView.panel.last.title === '🎯 Watching', pcView.panel.last.title);
       check('the chip counts arrivals, not finds', pcBoard.querySelector('.cards-count').textContent.startsWith('1'), pcBoard.querySelector('.cards-count').textContent);
       check('the faint line counts the two classes', /79 1\/N/.test(textOf(pcBoard)) && /29 1\/1s/.test(textOf(pcBoard)), textOf(pcBoard));
@@ -4352,14 +4352,14 @@ async function main() {
     check('and it is not the warn amber', !!warnToken && warnToken.trim() !== (pcOneToken || '').trim(), `${warnToken} vs ${pcOneToken}`);
     check('the badge never reaches for --warn', !/\.pc-one\b[^{]*\{[^}]*var\(--warn\)/.test(CARDS_CSS));
 
-    // -- 🎖️ PC (data.shop): Matt's own storefront, and the ruling about age ---
+    // -- 🏷️ Selling (data.shop): Matt's own storefront, and the ruling about age ---
     //
     // PC is neither a gate nor a hunt. Most of what is below is about what
     // must NOT be on the screen: no FMV, no ✓, no MAX, no serial, no grade —
     // and above all NO COLOUR ON THE AGE. Matt owns this board and has ruled
     // that it does not narrate his own shop back at him, so `days_listed` is
     // a plain grey number at three days and at three hundred.
-    console.log('\ncards — 🎖️ PC (data.shop)');
+    console.log('\ncards — 🏷️ Selling (data.shop)');
 
     const shopOpened = [];
     function openShop(over = {}, rest = {}) {
@@ -4379,9 +4379,9 @@ async function main() {
       const shopSheet = shopView.sheet;
 
       // -- the board ---------------------------------------------------------
-      check('PC is the second button', labelsOf(shopBoard).join('|') === 'Watching|PC', labelsOf(shopBoard).join('|'));
+      check('Selling is the second button', labelsOf(shopBoard).join('|') === 'Watching|Selling', labelsOf(shopBoard).join('|'));
       check('it is live, not greyed', !cardBtns(shopBoard)[1].className.includes('cards-btn-soon'));
-      check('and it opens its own sheet, titled 🎖️ PC', shopView.panel.last.title === '🎖️ PC', shopView.panel.last.title);
+      check('and it opens its own sheet, titled 🏷️ Selling', shopView.panel.last.title === '🏷️ Selling', shopView.panel.last.title);
       check('the chip is the engine\'s active count', shopBoard.querySelector('.cards-count').textContent === '4', shopBoard.querySelector('.cards-count').textContent);
       check('the faint line says what is listed', /4 listed/.test(textOf(shopBoard)), textOf(shopBoard));
       check('and what has dropped off', /2 dropped off/.test(textOf(shopBoard)), textOf(shopBoard));
@@ -4396,7 +4396,7 @@ async function main() {
       const noShop = new El('div');
       cards.render(noShop, cardsTile({ watch: null, shop: null, pc: pcPayload() }), { id: 'cards', actions: {} });
       check('shop: null greys the PC button', /soon/.test(cardBtns(noShop)[1].textContent) && cardBtns(noShop)[1].className.includes('cards-btn-soon'));
-      check('still labelled PC', labelsOf(noShop)[1] === 'PC');
+      check('still labelled Selling', labelsOf(noShop)[1] === 'Selling');
       check('and that button is inert', cardBtns(noShop)[1].getAttribute('disabled') === 'disabled');
       check('while Watching stays live', !cardBtns(noShop)[0].className.includes('cards-btn-soon'));
       check('with no PC line under the menu', !/listed/.test(textOf(noShop)));
@@ -4553,7 +4553,7 @@ async function main() {
         cards.render(r, cardsTile(deskData()), { id: 'cards', actions: bothPanel.actions });
         return r;
       });
-      check('two live buttons', labelsOf(both).join('|') === 'Watching|PC' && countOf(both, 'cards-btn-soon') === 0);
+      check('two live buttons', labelsOf(both).join('|') === 'Watching|Selling' && countOf(both, 'cards-btn-soon') === 0);
       withNow(NOW_UTC, () => cardsTap(cardBtns(both)[0]));
       const watchingAgain = bothPanel.last.body;
       check('the Watching sheet is untouched by the PC face', countOf(watchingAgain, 'pc-row') === 5 && countOf(watchingAgain, 'pc-serial') === 5);
@@ -4574,7 +4574,7 @@ async function main() {
 
     // -- the ruling, as a source scan ----------------------------------------
     check('the PC sheet builds its own rows', /function shopRow\(/.test(CARDS_SRC));
-    const SHOP_REGION = faceRegion('PC', 'function planShopItem(', 'function soonButton(');
+    const SHOP_REGION = faceRegion('Selling', 'function planShopItem(', 'function soonButton(');
     check('the PC region is the storefront and nothing else', /function shopBody\(/.test(SHOP_REGION) && !/function pcRow\(/.test(SHOP_REGION) && !/function render\(/.test(SHOP_REGION));
     check('and never borrows the Watching row', SHOP_REGION.length > 500 && !/pcRow|serialBadge|gradeChip/.test(SHOP_REGION), String(SHOP_REGION.length));
     check('nor a countdown', !/msUntil|countdown|endsLine|startClock/.test(SHOP_REGION));

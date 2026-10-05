@@ -42,7 +42,7 @@ export const REGISTRY = {
   bets_live: { band: 'LIVE', position: 90, module: './tiles/bets_live.js', title: 'Open Bets' },
   // The look-back to `bets_live`'s sweat, and directly under it.
   bets_ledger: { band: 'DAILY', position: 100, module: './tiles/bets_ledger.js', title: '📒 The Ledger' },
-  cards: { band: 'HOURLY', position: 110, module: './tiles/cards.js', title: 'Cards' },
+  cards: { band: 'HOURLY', position: 110, module: './tiles/cards.js', title: '🃏 Cards' },
   purser_due: { band: 'DAILY', position: 120, module: './tiles/purser_due.js', title: 'Purser — Due' },
   wss_tape: { band: 'DAILY', position: 130, module: './tiles/wss_tape.js', title: 'Crew Tape' },
   // The mini's own scheduled tasks, between Crew Tape (130) and Ship Status

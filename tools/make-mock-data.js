@@ -678,7 +678,7 @@ function snapshot() {
       }),
 
       /**
-       * The card desk: two faces, 🎯 Watching (`pc`) and 🎖️ PC (`shop`).
+       * The card desk: two faces, 🎯 Watching (`pc`) and 🏷️ Selling (`shop`).
        * Every player, price and seller below is invented; "eBay" is the real
        * service the engine pulls from and is named as such in `sources` and
        * in the footers, which is where the credit belongs. `watch` is null,
@@ -1023,7 +1023,7 @@ function hullPayload() {
  *
  * `watch: null` — the Watch face is retired and the engine publishes null.
  * The payload keys are the engine's: `pc` feeds the face labelled Watching,
- * `shop` feeds the face labelled PC.
+ * `shop` feeds the face labelled Selling (PC until v1.34.0).
  */
 function cardsPayload() {
   return {

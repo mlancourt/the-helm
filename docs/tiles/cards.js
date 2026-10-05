@@ -1,13 +1,14 @@
 /**
  * PAYLOAD KEYS vs PAGE LABELS — READ THIS BEFORE "FIXING" THE MISMATCH.
  * `data.pc` feeds the face labelled 🎯 Watching. `data.shop` feeds the face
- * labelled 🎖️ PC. `data.watch` is ignored entirely. The payload keys are the
+ * labelled 🏷️ Selling (🎖️ PC until v1.34.0 — the name now belongs to the
+ * keeper set, not the storefront). `data.watch` is ignored entirely. The payload keys are the
  * engine's contract and do not change; only the page's labels did (Matt,
  * 2026-09-30). The CSS classes follow the payload keys (`pc-*`, `shop-*`).
  */
 
 /**
- * cards — the trading-card desk. Two faces: 🎯 Watching · 🎖️ PC.
+ * cards — the trading-card desk. Two faces: 🎯 Watching · 🏷️ Selling.
  *
  * A menu tile in the `entertainment` mould: the board carries the buttons and
  * a faint line per live face, and everything with a price on it lives in the
@@ -540,11 +541,12 @@ function pcBody(pc, data, tile) {
   };
 }
 
-// ------------------------------------------------------------ 🎖️ PC (data.shop)
+// ------------------------------------------------------- 🏷️ Selling (data.shop)
 
 /**
- * 🎖️ PC — Matt's OWN eBay storefront, which is his personal collection up
- * for sale. What is up, and what has dropped off.
+ * 🏷️ Selling — Matt's OWN eBay storefront (thelannylp): the cards he is
+ * moving. (Labelled 🎖️ PC v1.25–v1.33; renamed 2026-10-05 when the true PC
+ * — the keepers, not for sale — became its own thing.) What is up, and what has dropped off.
  *
  * WHAT THIS FACE IS NOT. It is not a gate and it is not a hunt. There is no
  * FMV, no percentage, no ✓, no MAX, and unlike Watching there is no serial
@@ -681,7 +683,7 @@ function goneRow(g) {
 }
 
 /**
- * The PC sheet: errors, what is listed, what has dropped off, one footer.
+ * The Selling sheet: errors, what is listed, what has dropped off, one footer.
  *
  * Nothing in here ticks, so — unlike Watching — the builder hands back no
  * teardown. A storefront is a slow-moving thing and a countdown on it would
@@ -698,7 +700,7 @@ function shopBody(shop, data, tile) {
     if (errors.length) {
       body.appendChild(el('p', { cls: 'cards-errors', text: `feed trouble: ${errors.join(' · ')}` }));
     }
-    const warn = staleMark(tile, [['PC', shop]]);
+    const warn = staleMark(tile, [['Selling', shop]]);
     if (warn) body.appendChild(warn);
 
     body.appendChild(sectionHead(`Listed (${listings.length})`));
@@ -762,7 +764,7 @@ function liveButton(face, { chipNode = null, open = null }) {
 
 // Label ≠ key, on purpose — see the note at the top of this file.
 const WATCHING_FACE = { key: 'pc', emoji: '🎯', label: 'Watching', tone: 'pc' };
-const PC_FACE = { key: 'shop', emoji: '🎖️', label: 'PC', tone: 'shop' };
+const SELLING_FACE = { key: 'shop', emoji: '🏷️', label: 'Selling', tone: 'shop' };
 
 /** Is this payload a face the engine has actually lit up? */
 const isFace = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -807,21 +809,21 @@ export function render(root, tile, ctx) {
     );
   }
 
-  // 🎖️ PC (`data.shop`) — second. Its chip is `active`, the engine's own
+  // 🏷️ Selling (`data.shop`) — second. Its chip is `active`, the engine's own
   // count of what is up — a plain number with no decision in it.
   const hasShop = isFace(data.shop);
   const shop = obj(data.shop);
   const shopActive = num(shop.active);
   if (!hasShop) {
-    buttons.push(soonButton(PC_FACE));
+    buttons.push(soonButton(SELLING_FACE));
   } else {
     buttons.push(
-      liveButton(PC_FACE, {
+      liveButton(SELLING_FACE, {
         chipNode:
           shopActive === null
             ? null
             : el('span', { cls: 'cards-count cards-count-shop', text: String(shopActive) }),
-        open: openPanel ? () => openPanel('🎖️ PC', shopBody(shop, data, tile)) : null,
+        open: openPanel ? () => openPanel('🏷️ Selling', shopBody(shop, data, tile)) : null,
       })
     );
   }
@@ -851,6 +853,6 @@ export function render(root, tile, ctx) {
     if (shopBits.length) root.appendChild(el('p', { cls: 'tile-foot', text: shopBits.join(' · ') }));
   }
 
-  const warn = staleMark(tile, [['Watching', data.pc], ['PC', data.shop]]);
+  const warn = staleMark(tile, [['Watching', data.pc], ['Selling', data.shop]]);
   if (warn) root.appendChild(warn);
 }
