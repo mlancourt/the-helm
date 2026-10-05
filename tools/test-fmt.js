@@ -327,6 +327,19 @@ if (!process.env.HELM_TZ_CHILD) {
   eq('nothing to say stays a dash', fmt.signedUnits(null), '—');
   eq('rounding is half-up at the cent', fmt.signedUnits(1.0345), '+1.03u');
 
+  console.log('\nthe Bookie\'s score starts at even (L11, 2026-10-05)');
+  eq('up is signed up, one decimal', fmt.netUnits(13.59), '+13.6u');
+  eq('down carries a real minus', fmt.netUnits(-2.14), '\u22122.1u');
+  eq('zero is even, not +0.0u', fmt.netUnits(0), 'even');
+  eq('so is anything that rounds to zero', fmt.netUnits(-0.04), 'even');
+  eq('a missing score is unknown, never even', fmt.netUnits(null), '—');
+  eq('junk is unknown too', fmt.netUnits('lots'), '—');
+  eq('the chart label drops the unit', fmt.signedOne(7.35), '+7.3');
+  // 1.95 is not exactly representable, so toFixed(1) gives 1.9 — the same
+  // honest rounding as the Ledger's ⬆ 107.3 note (spec, As built).
+  eq('and signs a loss', fmt.signedOne(-1.95), '\u22121.9');
+  eq('and still reads even at zero', fmt.signedOne(0), 'even');
+
   console.log('\nkick times sort by the clock, not by the alphabet');
   // The engine writes '6:05 PM' and the mock writes '15:25'. Sorting either as
   // text puts the evening game before the morning one.

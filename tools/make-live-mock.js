@@ -11,7 +11,7 @@
  * only ever prove they do not crash.
  *
  * The *output* is gitignored (`*.local.*`). Everything invented here — stakes,
- * prices, bankroll, lines — is fake, as always. The schedule is public data.
+ * prices, net units, lines — is fake, as always. The schedule is public data.
  *
  * Lines are chosen near the current score so that a live game produces a mix
  * of COVERING and TRAILING rather than five identical pills.
@@ -167,11 +167,11 @@ async function scoreboard(league, date) {
     run_id: `run-live-${Date.now().toString(36)}`,
     tz: 'America/Chicago',
     _comment:
-      'LIVE VERIFICATION FIXTURE. Real ESPN event ids from a real slate so the graders can be watched against actual games. Stakes, prices, lines and bankroll are invented. Gitignored and regenerated on demand.',
+      'LIVE VERIFICATION FIXTURE. Real ESPN event ids from a real slate so the graders can be watched against actual games. Stakes, prices, lines and net units are invented. Gitignored and regenerated on demand.',
     tiles: {
       bets_live: {
         band: 'DAILY', updated_at: now, status: 'ok', error: null,
-        data: { bankroll_u: 42.5, open_u: tickets.reduce((a, t) => a + t.stake_u, 0), record: '11-9-1', tickets },
+        data: { net_u: 4.5, open_u: tickets.reduce((a, t) => a + t.stake_u, 0), record: '11-9-1', tickets },
       },
       today_games: {
         band: 'LIVE', updated_at: now, status: 'ok', error: null,

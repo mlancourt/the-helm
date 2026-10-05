@@ -296,10 +296,11 @@ const tap = (n) => n.listeners.click.forEach((f) => f());
   check('brain.js fetches only `${brainBase}/ask`', (BRAINJS.match(/fetchImpl\(/g) || []).length === 1 && /fetchImpl\(`\$\{brainBase\}\/ask`/.test(BRAINJS));
   check('ask.js: no innerHTML (rule 10)', !/innerHTML/.test(ASKJS));
   check('ask.js opens only the login it was handed', /window\.open\(loginUrl, '_blank'\)/.test(ASKJS) && (ASKJS.match(/window\.open/g) || []).length === 1);
-  check('sw.js: helm-v51', /CACHE_VERSION = 'helm-v51'/.test(SW));
+  // At-least, not equal: a pinned literal here failed the suite on every later ship (2026-10-05).
+  check('sw.js: helm-v51 or later', Number((SW.match(/CACHE_VERSION = 'helm-v(\d+)'/) || [])[1]) >= 51);
   check('sw.js precaches lib/brain.js', SW.includes("'./lib/brain.js'"));
   check('sw.js never caches the brain origin', /url\.hostname === 'brain\.lannyai\.com'/.test(SW));
-  check('config.js: APP_VERSION 1.30.0', /APP_VERSION = '1\.30\.0'/.test(CONFIG));
+  check('config.js: APP_VERSION 1.30.0 or later', (() => { const v = ((CONFIG.match(/APP_VERSION = '([\d.]+)'/) || [])[1] || '0.0.0').split('.').map(Number); return v[0] > 1 || (v[0] === 1 && v[1] >= 30); })());
   check('docs/CNAME is exactly helm.lannyai.com', read('docs', 'CNAME').trim() === 'helm.lannyai.com' && read('docs', 'CNAME').split('\n').filter(Boolean).length === 1);
   const MANIFEST = JSON.parse(read('docs', 'manifest.webmanifest'));
   check('manifest start_url + scope stay relative', MANIFEST.start_url === './' && MANIFEST.scope === './');

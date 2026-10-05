@@ -291,8 +291,12 @@ const game = (id, state, over = {}) => ({
   check('baseball: Mid inning drops the half, keeps the rest', situationLines(bb({}, 'Mid 5th'))[0] === '1 out · 1st, 3rd');
   check('other sports: nothing', situationLines({ ...fb({}), league: 'basketball/nba' }).length === 0);
 
-  const tile = (tickets) => ({ band: 'DAILY', status: 'ok', updated_at: '2026-10-04T16:00:00Z', error: null, data: { bankroll_u: 100, open_u: 3, record: '1-1', tickets } });
-  const single = (over = {}) => ({ id: 's1', league: 'football/nfl', espn_event_id: 'ev-s', game: 'Lions @ Panthers', kick_ct: '2026-10-04 12:00 PM', market: 'ml', side: 'away', line: null, label: 'DET ML', stake_u: 1, price: -150, class: 'core', sport: '🏈', to_win_u: 0.67, ...over });
+  // The page labels a kick by its day relative to TODAY ('Yesterday 3:05 PM'), so a
+  // fixture pinned to a calendar date goes stale the morning after it was written.
+  // Central today, computed here — test code, not page code (rule 7 is the page's).
+  const PTODAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
+  const tile = (tickets) => ({ band: 'DAILY', status: 'ok', updated_at: `${PTODAY}T16:00:00Z`, error: null, data: { net_u: 0, open_u: 3, record: '1-1', tickets } });
+  const single = (over = {}) => ({ id: 's1', league: 'football/nfl', espn_event_id: 'ev-s', game: 'Lions @ Panthers', kick_ct: `${PTODAY} 12:00 PM`, market: 'ml', side: 'away', line: null, label: 'DET ML', stake_u: 1, price: -150, class: 'core', sport: '🏈', to_win_u: 0.67, ...over });
   const liveCtx = (grades, games) => ({ id: 'bets_live', actions: {}, live: { grades: new Map(grades), games: new Map(games), fetched_at: null, error: null } });
 
   const sRoot = new El('div');
@@ -309,9 +313,9 @@ const game = (id, state, over = {}) => ({
   // ------------------------------------------------------------ the parlay card
   console.log('\nB17/B20 — the parlay card');
   const PG = [
-    { game: 'Lions @ Panthers', league: 'football/nfl', espn_event_id: 'pg1', home: 'CAR', away: 'DET', kick_ct: '2026-10-04 7:20 PM' },
-    { game: 'Broncos @ 49ers', league: 'football/nfl', espn_event_id: 'pg2', home: 'SF', away: 'DEN', kick_ct: '2026-10-04 3:25 PM' },
-    { game: 'Chiefs @ Raiders', league: 'football/nfl', espn_event_id: 'pg3', home: 'LV', away: 'KC', kick_ct: '2026-10-04 3:05 PM' },
+    { game: 'Lions @ Panthers', league: 'football/nfl', espn_event_id: 'pg1', home: 'CAR', away: 'DET', kick_ct: `${PTODAY} 7:20 PM` },
+    { game: 'Broncos @ 49ers', league: 'football/nfl', espn_event_id: 'pg2', home: 'SF', away: 'DEN', kick_ct: `${PTODAY} 3:25 PM` },
+    { game: 'Chiefs @ Raiders', league: 'football/nfl', espn_event_id: 'pg3', home: 'LV', away: 'KC', kick_ct: `${PTODAY} 3:05 PM` },
   ];
   const LEGS = [
     { label: 'Gibbs ATD', market: 'anytime_td', player: 'Gibbs', side: null, line: null },
@@ -320,7 +324,7 @@ const game = (id, state, over = {}) => ({
   ];
   const parlay = (over = {}) => ({
     id: 'pl-1', market: 'parlay', game: '3-leg parlay · 3.18x', label: 'Gibbs ATD + Williams O69.5 + Mahomes O249.5',
-    stake_u: 0.25, price: '3.18x', payout_x: 3.18, to_win_u: 0.55, sport: '🏈', class: 'flier', kick_ct: '2026-10-04 3:05 PM',
+    stake_u: 0.25, price: '3.18x', payout_x: 3.18, to_win_u: 0.55, sport: '🏈', class: 'flier', kick_ct: `${PTODAY} 3:05 PM`,
     league: 'football/nfl', espn_event_id: 'pg1', home: 'CAR', away: 'DET', legs: LEGS, games: PG, ...over,
   });
   const LEG_GRADES = [

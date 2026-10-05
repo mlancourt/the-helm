@@ -885,9 +885,10 @@ live in module memory only — persisting them would mean a phone unlocked hours
 later flashing at a bet that turned in the meantime, which is a notification,
 and this tile is not one. A ticket seen for the first time never pulses.
 
-**The bankroll is a plain number** (B9). No colour, no drawdown, no "slow
-down": the Bookie's charter says scoreboard, not a leash, and the tile does not
-editorialise either.
+**The score is a plain number** (B9) — net units since the slate, signed,
+`even` at zero (since v1.31.0; the 100u starting stack is retired). No colour,
+no drawdown, no "slow down": the Bookie's charter says scoreboard, not a leash,
+and the tile does not editorialise either.
 
 ### The LIVE band
 

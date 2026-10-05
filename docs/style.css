@@ -618,15 +618,16 @@ body {
   align-items: center;
   gap: 8px;
 }
-/* B9, carried over: the bankroll is the score, not a verdict. No colour. */
-.ledger-bankroll {
+/* B9, carried over: the score is a number, not a verdict. No colour —
+   the sign it prints (+/−/even, L11) already says which way. */
+.ledger-net {
   font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
 
-/* L2 — the bankroll curve. Hand-drawn SVG: no chart library anywhere in this
+/* L2 — the net-units curve, drawn from even. Hand-drawn SVG: no chart library anywhere in this
    repo (rule 3), and nothing fetched to draw it (rule 4). */
 .ledger-spark {
   display: block;

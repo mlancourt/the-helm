@@ -135,7 +135,7 @@ function snapshot() {
     tz: 'America/Chicago',
     tiles: {
       bets_live: tile('DAILY', {
-        bankroll_u: 42.5,
+        net_u: 4.5,
         open_u: 6.0,
         record: '11-9-1',
         tickets: [
@@ -1792,9 +1792,10 @@ function cardsPcErrorsSnapshot() {
  * the sign of net-since-slate, and a curve that only ever sat above the line
  * would never exercise the other half of that decision.
  */
+// Net units from even (L11, 2026-10-05) — the slate starts at 0, not 100u.
 const LEDGER_CURVE = [
-  101.72, 102.21, 100.64, 99.18, 98.05, 99.42, 101.1, 103.36,
-  102.48, 104.9, 106.11, 107.35, 105.02, 103.77, 104.58, 104.34,
+  1.72, 2.21, 0.64, -0.82, -1.95, -0.58, 1.1, 3.36,
+  2.48, 4.9, 6.11, 7.35, 5.02, 3.77, 4.58, 4.34,
 ];
 
 function ledgerRec(record, net, staked, roi, winPct) {
@@ -1820,7 +1821,7 @@ function betsLedger() {
     slate_day: slate,
     // The Bookie's ledger line, which is NOT the curve's last point — the two
     // disagree by the gap below, and L10 says the Bookie wins.
-    bankroll_u: 105.24,
+    net_u: 5.24,
     streak: 'L4',
     windows: {
       '7d': { ...ledgerRec('17-19', 0.96, 27.0, 3.6, 47), since: addDays(TODAY, -6) },
@@ -1828,8 +1829,8 @@ function betsLedger() {
       slate: { ...ledgerRec('33-33', 4.34, 46.25, 9.4, 50), since: slate },
     },
     curve,
-    hwm: { d: curve[11].d, u: 107.35 },
-    lwm: { d: curve[4].d, u: 98.05 },
+    hwm: { d: curve[11].d, u: 7.35 },
+    lwm: { d: curve[4].d, u: -1.95 },
     by_sport: [
       { s: '🏈', ...ledgerRec('8-4', 3.21, 9.0, 35.7, 67) },
       { s: '⚾', ...ledgerRec('4-3', 2.01, 5.5, 36.5, 57) },
@@ -1901,15 +1902,15 @@ function betsLedgerThin() {
   return {
     as_of: TODAY,
     slate_day: slate,
-    bankroll_u: 100.4,
+    net_u: 0.4,
     streak: null,
     windows: {
       '7d': { ...ledgerRec('1-1', 0.4, 1.0, null, 50), since: slate },
       slate: { ...ledgerRec('1-1', 0.4, 1.0, null, 50), since: slate },
     },
     curve: [
-      { d: addDays(TODAY, -2), u: 99.5 },
-      { d: addDays(TODAY, -1), u: 100.4 },
+      { d: addDays(TODAY, -2), u: -0.5 },
+      { d: addDays(TODAY, -1), u: 0.4 },
     ],
     hwm: null,
     lwm: null,

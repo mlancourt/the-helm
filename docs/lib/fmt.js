@@ -306,7 +306,7 @@ export function units(n) {
 /**
  * 0.62 -> '0.62u'. Two decimals, always.
  *
- * `units()` rounds to one — right for a bankroll, wrong for a ticket. The
+ * `units()` rounds to one — right for a stake, wrong for a ticket's payout. The
  * Bookie's `to_win_u` is a two-decimal number off a logged price (0.5u at +125
  * is 0.62u), and rounding that to "0.6u" on the board would quietly disagree
  * with the Bet-Log Matt is reading it against. A push must read `0.00u` and
@@ -330,6 +330,29 @@ export function signedUnits(n) {
   if (v === null) return '—';
   if (v === 0) return '0.00u';
   return `${v > 0 ? '+' : '\u2212'}${Math.abs(v).toFixed(2)}u`;
+}
+
+/**
+ * The Bookie's score, one decimal and signed: '+13.6' / '\u22122.1' / 'even'.
+ *
+ * Since Bookie SKILL v1.3.4 (2026-10-05) the score starts at even — net units
+ * since the slate, no 100u starting stack — so the number that matters is its
+ * SIGN, and it is printed with one. Anything that rounds to 0.0 reads 'even':
+ * '+0.0' would claim a direction the score does not have. The minus is U+2212
+ * for the same reason as `signedUnits`.
+ */
+export function signedOne(n) {
+  const v = num(n);
+  if (v === null) return '—';
+  const t = Math.abs(v).toFixed(1);
+  if (t === '0.0') return 'even';
+  return `${v > 0 ? '+' : '\u2212'}${t}`;
+}
+
+/** The same with its unit: '+13.6u' / '\u22122.1u' / 'even' / '—'. */
+export function netUnits(n) {
+  const s = signedOne(n);
+  return s === '—' || s === 'even' ? s : `${s}u`;
 }
 
 /**

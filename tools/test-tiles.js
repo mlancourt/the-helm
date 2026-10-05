@@ -2932,7 +2932,7 @@ async function main() {
     ]);
 
     const mixedRoot = new El('div');
-    bets.render(mixedRoot, betsTile({ bankroll_u: 42.5, open_u: 6, record: '11-9-1', tickets: MIXED, form: FORM }), {
+    bets.render(mixedRoot, betsTile({ net_u: 4.5, open_u: 6, record: '11-9-1', tickets: MIXED, form: FORM }), {
       id: 'bets_live',
       actions: {},
       live: { grades: MIXED_GRADES, games: MIXED_GAMES, fetched_at: '2026-09-18T21:05:00.000Z', error: null },
@@ -2945,8 +2945,15 @@ async function main() {
     check('the rows add up to what the header says (B5)', statValue(mixedRoot, 'lean now') === `+${summed.toFixed(2)}u`, `${statValue(mixedRoot, 'lean now')} vs ${summed}`);
     check('and that is the arithmetic, not just agreement', Math.abs(summed - 0.69) < 1e-9, String(summed));
     check('closed counts the finished games only', statValue(mixedRoot, 'closed') === '+1.07u', statValue(mixedRoot, 'closed'));
-    check('the bankroll stays a plain number (B9)', statValue(mixedRoot, 'bankroll') === '42.5u');
-    check('and wears no colour', statOf(mixedRoot, 'bankroll').className === 'stat');
+    check('the score is net units, signed (L11)', statValue(mixedRoot, 'net') === '+4.5u', statValue(mixedRoot, 'net'));
+    check('and wears no colour (B9)', statOf(mixedRoot, 'net').className === 'stat');
+    const evenRoot = new El('div');
+    bets.render(evenRoot, betsTile({ net_u: 0, open_u: 0, record: '0-0', tickets: [] }), { id: 'bets_live', actions: {} });
+    check('a score of zero reads "even", not "+0.0u"', statValue(evenRoot, 'net') === 'even', statValue(evenRoot, 'net'));
+    const downRoot = new El('div');
+    bets.render(downRoot, betsTile({ net_u: -2.14, open_u: 0, record: '0-1', tickets: [] }), { id: 'bets_live', actions: {} });
+    check('a score below even carries a real minus and still no colour', statValue(downRoot, 'net') === '\u22122.1u' && statOf(downRoot, 'net').className === 'stat', statValue(downRoot, 'net'));
+    check('no "bankroll" stat survives the 100u retirement', !statOf(mixedRoot, 'bankroll'));
     check('nothing on the tile editorialises about it', !/slow down|drawdown|careful/i.test(textOf(mixedRoot)));
 
     // -- B4: the figure per state -------------------------------------------
@@ -3178,7 +3185,7 @@ async function main() {
     // -- degradation ---------------------------------------------------------
     console.log('\nbets_live — no band, no tickets');
     const bare = new El('div');
-    bets.render(bare, betsTile({ bankroll_u: 42.5, open_u: 6, record: '11-9-1', tickets: [tkt({ id: 'bare-1' })] }), { id: 'bets_live', actions: {} });
+    bets.render(bare, betsTile({ net_u: 4.5, open_u: 6, record: '11-9-1', tickets: [tkt({ id: 'bare-1' })] }), { id: 'bets_live', actions: {} });
     check('with no grader running, lean now is a dash', statValue(bare, 'lean now') === '—');
     check('and closed is too', statValue(bare, 'closed') === '—');
     check('the row says it is not graded yet', /not graded yet/.test(textOf(bare)));
@@ -3312,7 +3319,7 @@ async function main() {
     console.log('\nbets_live — B15 guard');
     check('no ESPN win probability anywhere', !/winProbability|win_prob|predictor|probability/i.test(SRC_NC));
     check('no pace or drawdown language', !/\bpace\b|drawdown|on track|projected/i.test(SRC_NC));
-    check('the bankroll stat still wears no tone', /stat\('bankroll', units\(data\.bankroll_u\)\)/.test(SRC_NC));
+    check('the net stat still wears no tone', /stat\('net', netUnits\(data\.net_u\)\)/.test(SRC_NC));
 
     // -- B14: the live pulse -------------------------------------------------
     console.log('\nbets_live — the live pulse (B14)');
@@ -4474,7 +4481,7 @@ async function main() {
   // things are worth more than all the layout assertions put together, and
   // they are the three this block spends most of its length on:
   //
-  //   L2  the last sparkline label is the BOOKIE'S bankroll, not the curve's
+  //   L2  the last sparkline label is the BOOKIE'S net, not the curve's
   //       last point. The curve is the sum of the settled rows; when the two
   //       disagree the Bookie wins, and the label is the one place on the face
   //       where that choice is visible.
@@ -4523,9 +4530,16 @@ async function main() {
 
     const full = openLedger(FULL);
 
-    // -- the face: bankroll and streak ---------------------------------------
-    check('the bankroll is printed to one decimal', textsOf(full.root, 'ledger-bankroll')[0] === '105.2u', textsOf(full.root, 'ledger-bankroll')[0]);
-    check('and carries no colour of its own (B9)', full.root.querySelector('.ledger-bankroll').className === 'ledger-bankroll');
+    // -- the face: net units and streak (L11 — the score starts at even) -----
+    check('the score is net units, signed, one decimal', textsOf(full.root, 'ledger-net')[0] === '+5.2u', textsOf(full.root, 'ledger-net')[0]);
+    check('and carries no colour of its own (B9)', full.root.querySelector('.ledger-net').className === 'ledger-net');
+    check('no bankroll figure is printed anywhere on the face', countOf(full.root, 'ledger-bankroll') === 0);
+    const evenFace = openLedger({ ...FULL, net_u: 0 });
+    check('a score of zero reads "even"', textsOf(evenFace.root, 'ledger-net')[0] === 'even', textsOf(evenFace.root, 'ledger-net')[0]);
+    const nearEven = openLedger({ ...FULL, net_u: 0.04 });
+    check('and so does one that rounds to zero — no "+0.0u"', textsOf(nearEven.root, 'ledger-net')[0] === 'even', textsOf(nearEven.root, 'ledger-net')[0]);
+    const missing = openLedger({ ...FULL, net_u: null });
+    check('a missing score is a dash, never "even"', textsOf(missing.root, 'ledger-net')[0] === '—');
     check('the streak wears the shared chip', countOf(full.root, 'form-streak') === 1);
     check('cold, because the payload says L4', countOf(full.root, 'form-streak-cold') === 1 && /🧊L4/.test(full.root.querySelector('.form-streak').textContent));
     const hot = openLedger({ ...FULL, streak: 'W5' });
@@ -4540,33 +4554,35 @@ async function main() {
     const svg = full.root.querySelector('.ledger-spark');
     check('as an SVG, not a div', svg.tagName.toLowerCase() === 'svg');
     check('with a line and a fill under it', countOf(svg, 'ledger-spark-line') === 1 && countOf(svg, 'ledger-spark-fill') === 1);
-    check('and a dotted 100u baseline', countOf(svg, 'ledger-spark-base') === 1 && /dash/.test(CSS_ALL.match(/\.ledger-spark-base\s*\{[^}]*\}/)[0]));
-    check('the baseline is drawn at 100u, not at the curve floor', (() => {
+    check('and a dotted even baseline', countOf(svg, 'ledger-spark-base') === 1 && /dash/.test(CSS_ALL.match(/\.ledger-spark-base\s*\{[^}]*\}/)[0]));
+    check('the baseline is drawn at even (0u), not at the curve floor', (() => {
       const base = svg.querySelector('.ledger-spark-base');
       const y = Number(base.getAttribute('y1'));
       const pts = FULL.curve.map((p) => p.u);
-      // 100 sits inside this curve's range, so the rule must sit inside the box.
-      return Number.isFinite(y) && y > 0 && y < 56 && Math.min(...pts) < 100 && Math.max(...pts) > 100;
+      // 0 sits inside this curve's range, so the rule must sit inside the box.
+      return Number.isFinite(y) && y > 0 && y < 56 && Math.min(...pts) < 0 && Math.max(...pts) > 0;
     })());
+    check('the module no longer knows a 100u stack (L11)', !/\b100\b/.test(LEDGER_SRC.match(/const BASELINE = [^;]+;/)[0]) && /const BASELINE = 0;/.test(LEDGER_SRC));
     check('the title says what window it covers', /^since 2/.test(svg.querySelector('title').textContent) && /33-33/.test(svg.querySelector('title').textContent), svg.querySelector('title').textContent);
     check('and prints the slate day verbatim', svg.querySelector('title').textContent.includes(FULL.slate_day));
 
-    // THE L2 ASSERTION. The curve ends at 104.34; the Bookie says 105.24. The
+    // THE L2 ASSERTION. The curve ends at +4.34; the Bookie says +5.24. The
     // dot sits where the rows put it and the label says what the Bookie says.
     const sparkLabels = textsOf(svg, 'ledger-spark-label');
     check('the last point is labelled', sparkLabels.length === 3, sparkLabels.join('|'));
-    check('with the BOOKIE’s bankroll', sparkLabels[sparkLabels.length - 1] === '105.2', sparkLabels[sparkLabels.length - 1]);
-    check('and not with the curve’s last point', sparkLabels[sparkLabels.length - 1] !== (104.34).toFixed(1));
+    check('with the BOOKIE’s net, signed', sparkLabels[sparkLabels.length - 1] === '+5.2', sparkLabels[sparkLabels.length - 1]);
+    check('and not with the curve’s last point', sparkLabels[sparkLabels.length - 1] !== '+4.3');
+    check('the marks are signed too', sparkLabels[0] === '⬆ +7.3' && sparkLabels[1] === '⬇ \u22121.9', sparkLabels.slice(0, 2).join('|'));
     check('the high-water mark is marked and labelled', /⬆/.test(sparkLabels[0]), sparkLabels[0]);
     check('the low-water mark too', /⬇/.test(sparkLabels[1]), sparkLabels[1]);
     check('both wear a dot', countOf(svg, 'ledger-spark-mark') === 2);
     check('and the last point wears its own', countOf(svg, 'ledger-spark-now') === 1);
     const noMarks = openLedger({ ...FULL, hwm: null, lwm: null });
     check('no marks published means no marks drawn', countOf(noMarks.root, 'ledger-spark-mark') === 0);
-    check('but the bankroll label survives', textsOf(noMarks.root, 'ledger-spark-label').length === 1);
+    check('but the net label survives', textsOf(noMarks.root, 'ledger-spark-label').length === 1);
 
     check('a curve above the line strokes green', svg.className.includes('ledger-spark-good'), svg.className);
-    const under = openLedger({ ...FULL, curve: FULL.curve.map((p) => ({ ...p, u: p.u - 12 })), bankroll_u: 93.1, hwm: null, lwm: null });
+    const under = openLedger({ ...FULL, curve: FULL.curve.map((p) => ({ ...p, u: p.u - 12 })), net_u: -6.76, hwm: null, lwm: null });
     check('and one below it strokes red', under.root.querySelector('.ledger-spark').className.includes('ledger-spark-bad'));
     const one = openLedger({ ...FULL, curve: [FULL.curve[0]] });
     check('one point is not a line, so nothing is drawn', countOf(one.root, 'ledger-spark') === 0);
@@ -4734,7 +4750,7 @@ async function main() {
     const thin = openLedger(THIN);
     check('a two-point curve still draws a line', countOf(thin.root, 'ledger-spark') === 1);
     check('with no marks it was not given', countOf(thin.root, 'ledger-spark-mark') === 0);
-    check('and the bankroll label alone', textsOf(thin.root, 'ledger-spark-label').join() === '100.4');
+    check('and the net label alone', textsOf(thin.root, 'ledger-spark-label').join() === '+0.4');
     check('two windows render as two cells', countOf(thin.root, 'ledger-win') === 2);
     check('with no ROI, since nothing was staked to have one', countOf(thin.root, 'ledger-win-roi') === 0);
     check('no streak, no chip', countOf(thin.root, 'form-streak') === 0);
@@ -4787,11 +4803,11 @@ async function main() {
     //     one in profit, tone aside. Nothing new appears as the number worsens.
     const deep = openLedger({
       ...FULL,
-      bankroll_u: 61.2,
+      net_u: -34.76,
       streak: 'L11',
       curve: FULL.curve.map((p) => ({ ...p, u: p.u - 40 })),
-      hwm: { d: FULL.hwm.d, u: 67.4 },
-      lwm: { d: FULL.lwm.d, u: 58.1 },
+      hwm: { d: FULL.hwm.d, u: -32.65 },
+      lwm: { d: FULL.lwm.d, u: -41.95 },
       windows: Object.fromEntries(
         Object.entries(FULL.windows).map(([k, w]) => [k, { ...w, net_u: -Math.abs(w.net_u) - 9, roi_pct: -41.2 }])
       ),
@@ -4806,7 +4822,7 @@ async function main() {
     const TONES = /^(ledger-(good|bad|flat)|ledger-spark-(good|bad|flat)|ledger-fill-(good|bad|flat)|form-streak-(hot|cold))$/;
     const strip = (set) => [...set].filter((c) => !TONES.test(c)).sort().join(',');
     check(
-      'a bankroll 40u under water carries exactly the classes a winning one does',
+      'a score 40u under water carries exactly the classes a winning one does',
       strip(classSet(deep.root)) === strip(classSet(full.root)),
       `${strip(classSet(deep.root))}\n    vs ${strip(classSet(full.root))}`
     );
@@ -4816,10 +4832,10 @@ async function main() {
     );
     const BANNED = ['warn', 'ledger-warn', 'ledger-danger', 'danger', 'bad', 'stale', 'ledger-stale', 'ledger-drawdown', 'ledger-tilt', 'ledger-pace', 'ledger-alert', 'cards-warn'];
     for (const cls of BANNED) {
-      check(`no .${cls} anywhere on the tile, at any bankroll`, countOf(deep.root, cls) === 0 && countOf(deep.sheet, cls) === 0 && countOf(full.root, cls) === 0);
+      check(`no .${cls} anywhere on the tile, at any score`, countOf(deep.root, cls) === 0 && countOf(deep.sheet, cls) === 0 && countOf(full.root, cls) === 0);
     }
     check('and nothing editorialises about being down', !/drawdown|tilt|slow down|discipline|careful|cold streak|on pace|chasing/i.test(`${textOf(deep.root)} ${textOf(deep.sheet)}`));
-    check('the bankroll is still a plain number down there', deep.root.querySelector('.ledger-bankroll').className === 'ledger-bankroll' && deep.root.querySelector('.ledger-bankroll').textContent === '61.2u');
+    check('the score is still a plain number down there', deep.root.querySelector('.ledger-net').className === 'ledger-net' && deep.root.querySelector('.ledger-net').textContent === '\u221234.8u', deep.root.querySelector('.ledger-net').textContent);
 
     // (2) at the source. Every class this module emits is either a bare
     //     literal or a template whose ONLY interpolation is `tone(…)` — so
@@ -4835,7 +4851,7 @@ async function main() {
       LEDGER_CLASSES.filter((c) => !/^'[a-z0-9 -]+'$/.test(c) && !/^`[a-z0-9 -]*\$\{tone\([^`]*\)\}`$/.test(c)).join(' | ')
     );
     check('there is exactly one tone function', (LEDGER_SRC.match(/function tone\(/g) || []).length === 1);
-    const TONE_FN = LEDGER_SRC.slice(LEDGER_SRC.indexOf('function tone('), LEDGER_SRC.indexOf('function fixed1('));
+    const TONE_FN = LEDGER_SRC.slice(LEDGER_SRC.indexOf('function tone('), LEDGER_SRC.indexOf('function roiText('));
     check('and it is bounded by the next function', TONE_FN.length > 40 && TONE_FN.length < 400, String(TONE_FN.length));
     check(
       'it compares against zero and nothing else',

@@ -91,6 +91,7 @@ import {
   units,
   exactUnits,
   signedUnits,
+  netUnits,
   odds,
   line,
   ctKick,
@@ -267,9 +268,11 @@ function signedStat(label, value) {
 function headerStats(data, grades, games) {
   const tickets = arr(data.tickets);
   return el('div', { cls: 'bets-stats' }, [
-    // B9: the bankroll is a plain number. No colour, no drawdown, no comment —
+    // B9: the score is a plain number. No colour, no drawdown, no comment —
     // the Bookie's charter says scoreboard, not a leash, and so does this tile.
-    stat('bankroll', units(data.bankroll_u)),
+    // Since 2026-10-05 it is net units from even (no 100u stack), so the sign
+    // printed on it IS the news; the colour stays off (B9 · B22).
+    stat('net', netUnits(data.net_u)),
     stat('open', units(data.open_u)),
     signedStat('lean now', leanUnits(tickets, grades)),
     signedStat('closed', closedUnits(tickets, grades, games)),

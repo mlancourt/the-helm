@@ -20,7 +20,7 @@
  * COLOUR IS THE SIGN OF THE PRINTED NUMBER (L9, and it is the whole ruling).
  * `tone()` below is the ONLY thing in this file that chooses a colour, and it
  * chooses from `> 0` / `< 0` and nothing else. No drawdown shading, no pace,
- * no threshold, no amber: a bankroll that is down is red because the number
+ * no threshold, no amber: a score that is down is red because the number
  * beside it has a minus on it, not because the tile has an opinion about how
  * far down it is. Scoreboard, not a leash — the Bookie's hard rule 3, and the
  * test suite holds it with a class scan, a source scan and a stylesheet scan.
@@ -38,11 +38,16 @@
  */
 
 import { el, svgEl, empty } from '../lib/dom.js';
-import { signedUnits } from '../lib/fmt.js';
+import { signedUnits, signedOne, netUnits } from '../lib/fmt.js';
 import { streakChip } from '../lib/bets.js';
 
-/** The slate's starting bankroll — the curve's own zero line (L2). */
-const BASELINE = 100;
+/**
+ * The slate's starting score — the curve's own zero line (L2). Even: since
+ * Bookie SKILL v1.3.4 (2026-10-05) the score is net units from the slate, and
+ * the 100u starting stack it used to sit on is gone (L11). The baseline stays
+ * a named constant so the geometry below reads as "the even line", not "0".
+ */
+const BASELINE = 0;
 
 const arr = (v) => (Array.isArray(v) ? v : []);
 const str = (v) => (v === null || v === undefined ? '' : String(v));
@@ -75,17 +80,6 @@ function tone(n) {
   return 'flat';
 }
 
-/** 105.24 -> '105.2'. One decimal, always — a bankroll is not a ticket. */
-function fixed1(n) {
-  const v = num(n);
-  return v === null ? '—' : v.toFixed(1);
-}
-
-/** 105.24 -> '105.2u'. */
-function bankrollText(n) {
-  const v = num(n);
-  return v === null ? '—' : `${v.toFixed(1)}u`;
-}
 
 /**
  * 9.4 -> 'ROI +9.4%'. Null -> '' — the caller omits the line entirely rather
@@ -119,14 +113,15 @@ function point(raw) {
 // ------------------------------------------------------------------ the face
 
 /**
- * The header's right-hand side: the Bookie's bankroll and the streak chip.
+ * The header's right-hand side: the Bookie's score and the streak chip.
  *
- * B9 carried over from `bets_live`: the bankroll is a plain number. No colour
- * on it, ever — it is the score, not a verdict.
+ * The score is net units since the slate, signed — '+13.6u', '−2.1u', 'even'
+ * (L11). B9 carried over from `bets_live`: it is a plain number. No colour on
+ * it, ever — the sign says which way; colour would make it a verdict.
  */
 function headLine(data) {
   return el('div', { cls: 'ledger-head' }, [
-    el('span', { cls: 'ledger-bankroll', text: bankrollText(data.bankroll_u) }),
+    el('span', { cls: 'ledger-net', text: netUnits(data.net_u) }),
     streakChip(data.streak),
   ]);
 }
@@ -140,7 +135,7 @@ function headLine(data) {
  * framework behind it.
  *
  * WHY THE LAST LABEL IS NOT THE LAST POINT. The curve is the sum of the
- * settled rows; `bankroll_u` is the Bookie's ledger line. When the two
+ * settled rows; `net_u` is the Bookie's ledger line. When the two
  * disagree the Bookie wins (L10) — so the dot sits where the rows put it and
  * the label says what the Bookie says. The gap between them is shown in full
  * in the sheet footer, and closing it is the Bookie's job, never the page's.
@@ -164,7 +159,7 @@ function sparkline(data, curve) {
   const hwm = point(data.hwm);
   const lwm = point(data.lwm);
 
-  // The range has to hold the curve, the 100u rule and both marks, or a mark
+  // The range has to hold the curve, the even rule and both marks, or a mark
   // ends up drawn outside its own box.
   const vals = pts.map((p) => p.u).concat([BASELINE]);
   if (hwm) vals.push(hwm.u);
@@ -232,31 +227,31 @@ function sparkline(data, curve) {
     const x = markX(hwm);
     const y = yAt(hwm.u);
     kids.push(svgEl('circle', { cls: 'ledger-spark-mark', attrs: { cx: round(x), cy: round(y), r: 2.4 } }));
-    kids.push(label(x, y, `⬆ ${fixed1(hwm.u)}`, true));
+    kids.push(label(x, y, `⬆ ${signedOne(hwm.u)}`, true));
   }
   if (lwm) {
     const x = markX(lwm);
     const y = yAt(lwm.u);
     kids.push(svgEl('circle', { cls: 'ledger-spark-mark', attrs: { cx: round(x), cy: round(y), r: 2.4 } }));
-    kids.push(label(x, y, `⬇ ${fixed1(lwm.u)}`, false));
+    kids.push(label(x, y, `⬇ ${signedOne(lwm.u)}`, false));
   }
 
   const lastX = xAt(pts.length - 1);
   const lastY = yAt(last.u);
   kids.push(svgEl('circle', { cls: 'ledger-spark-now', attrs: { cx: round(lastX), cy: round(lastY), r: 3 } }));
-  kids.push(label(lastX, lastY, fixed1(data.bankroll_u), true));
+  kids.push(label(lastX, lastY, signedOne(data.net_u), true));
 
   return svgEl(
     'svg',
     {
       // The sign of net-since-slate, by way of the one colour function in
-      // the file. Not a threshold: on this chart 100u IS zero.
+      // the file. Not a threshold: the baseline is even (L11).
       cls: `ledger-spark ledger-spark-${tone(last.u - BASELINE)}`,
       attrs: {
         viewBox: `0 0 ${SPARK_W} ${SPARK_H}`,
         preserveAspectRatio: 'none',
         role: 'img',
-        'aria-label': `bankroll since ${str(data.slate_day)}`,
+        'aria-label': `net units since ${str(data.slate_day)}`,
       },
     },
     kids
@@ -327,7 +322,7 @@ function section(title, kids) {
  *
  * The bar is a proportion of the biggest |net| on the board, drawn either side
  * of a centre rule. It is a shape, not a figure: the number is printed beside
- * it, and the bar's only job is to make which sport is eating the bankroll
+ * it, and the bar's only job is to make which sport is eating the score
  * legible at arm's length.
  */
 function sportRow(raw, max) {
