@@ -2,13 +2,16 @@
  * PAYLOAD KEYS vs PAGE LABELS — READ THIS BEFORE "FIXING" THE MISMATCH.
  * `data.pc` feeds the face labelled 🎯 Watching. `data.shop` feeds the face
  * labelled 🏷️ Selling (🎖️ PC until v1.34.0 — the name now belongs to the
- * keeper set, not the storefront). `data.watch` is ignored entirely. The payload keys are the
+ * keeper set, not the storefront). `data.keep` feeds the face labelled 🎖️ PC
+ * (v1.35.0) — the one face whose key and label agree in meaning, if not in
+ * spelling. `data.watch` is ignored entirely. The payload keys are the
  * engine's contract and do not change; only the page's labels did (Matt,
- * 2026-09-30). The CSS classes follow the payload keys (`pc-*`, `shop-*`).
+ * 2026-09-30). The CSS classes follow the payload keys (`pc-*`, `shop-*`,
+ * `keep-*`).
  */
 
 /**
- * cards — the trading-card desk. Two faces: 🎯 Watching · 🏷️ Selling.
+ * cards — the trading-card desk. Three faces: 🎯 Watching · 🏷️ Selling · 🎖️ PC.
  *
  * A menu tile in the `entertainment` mould: the board carries the buttons and
  * a faint line per live face, and everything with a price on it lives in the
@@ -17,19 +20,22 @@
  * The buy-side hunt against the FMV book (the old 🎯 Watch face) is RETIRED
  * (Matt, 2026-09-30). The engine publishes `watch: null` and will keep doing
  * so; a cached snapshot that still carries a populated `watch` renders the
- * identical two buttons, because this module never reads the key.
+ * identical buttons, because this module never reads the key.
  *
- * THE TWO FACES ASK TWO DIFFERENT QUESTIONS, AND NEITHER IS A GATE.
+ * THE THREE FACES ASK THREE DIFFERENT QUESTIONS, AND NONE IS A GATE.
  *
  *   Watching (`data.pc`) asks "does this exist?" — the first-off-the-press
  *   net. There is no matched-grade tape behind a first-of-run card, so there
  *   is no FMV, no percentage and no MAX. Price is Matt's to judge. Its badges
  *   are the SERIAL and the GRADE, and nothing on it is green or ticked.
  *
- *   PC (`data.shop`) asks "what is up, and what has left?" — Matt's own
- *   storefront, which IS his personal collection, currently for sale. No
- *   serial, no grade, and an age that is a number rather than a verdict — see
- *   that section's own header.
+ *   Selling (`data.shop`) asks "what is up, and what has left?" — Matt's own
+ *   storefront. No serial, no grade, and an age that is a number rather than
+ *   a verdict — see that section's own header.
+ *
+ *   PC (`data.keep`) asks "what am I keeping?" — the keepers, NOT for sale.
+ *   Not a gate and not a store: basis and book, printed, and nothing that
+ *   asks him to buy, sell or list anything. See that section's own header.
  *
  * Amber means nothing here. On Watching the one-of-one gold carries the only
  * accent a badge wears, so an auction countdown never goes amber: two
@@ -727,6 +733,133 @@ function shopBody(shop, data, tile) {
   };
 }
 
+// ------------------------------------------------------------ 🎖️ PC (data.keep)
+
+/**
+ * 🎖️ PC — Matt's true personal collection: the keepers. NOT for sale.
+ *
+ * Read off the Breaker's tracker by the engine. A row is a card he owns and
+ * means to keep, what he paid for it (`basis`) and what the Breaker books it
+ * at (`book`). Today those are the same number for every card — the Breaker
+ * books at cost until a comp is written — so the sheet's board line says net
+ * ONLY when the two totals actually differ. `net +$0.00` would be the tile
+ * pretending to know something.
+ *
+ * PC IS NOT A GATE AND NOT A STORE. No FMV, no percentage, no ✓, no MAX, no
+ * floor, no "list it", no countdown. `still_listed` is a faint note that a
+ * delist is owed — muted, uncoloured, no icon, no count on the button, no age.
+ * `item_url` (that listing) is never rendered: the lookup is `search_url`,
+ * and a keeper's own listing is a thing Matt is removing.
+ *
+ * `booked` is a Central `YYYY-MM-DD` and is printed verbatim (rule 7). Order
+ * is the engine's. Nothing here ticks.
+ */
+function planKeeper(raw) {
+  const k = obj(raw);
+  const serial = str(k.serial).trim();
+  // A true one-of-one reads "1/1" — "001/N" is a bookend, and wears ⬥.
+  const parts = serial.split('/').map((p) => p.trim());
+  const oneOfOne = parts.length === 2 && parts.every((p) => p !== '' && Number(p) === 1);
+  const cardNo = str(k.card_no).trim();
+  return {
+    player: str(k.player).trim(),
+    set: [str(k.year).trim(), str(k.set).trim(), cardNo ? (cardNo.startsWith('#') ? cardNo : `#${cardNo}`) : '']
+      .filter(Boolean)
+      .join(' '),
+    // The shape serialBadge reads. Num/den are never derived here: the
+    // engine's serial string is the badge.
+    serial,
+    num: null,
+    den: null,
+    oneOfOne,
+    grade: str(k.grade).trim(),
+    basis: num(k.basis),
+    book: num(k.book),
+    noBook: str(k.book_state).trim() === 'no book',
+    booked: str(k.booked).trim(),
+    stillListed: k.still_listed === true,
+    searchUrl: str(k.search_url),
+  };
+}
+
+/** One keeper. The whole row is the search; there is no listing link. */
+function keeperRow(k) {
+  const marks = [serialBadge(k), gradeChip(k)].filter(Boolean);
+
+  const money = [el('span', { text: `basis ${usd(k.basis)}` }), sep()];
+  // "no book" in place of the figure — never $0.00, which would be a value.
+  money.push(k.noBook ? el('span', { cls: 'keep-nobook', text: 'no book' }) : el('span', { text: `book ${usd(k.book)}` }));
+
+  const foot = [];
+  if (k.booked) foot.push(el('span', { text: `booked ${k.booked}` }));
+  if (k.stillListed) {
+    if (foot.length) foot.push(sep());
+    foot.push(el('span', { cls: 'keep-listed', text: 'still listed' }));
+  }
+
+  const kids = [
+    el('div', { cls: 'cards-main' }, [
+      el('div', { cls: 'keep-player', text: k.player || '(unnamed card)' }),
+      k.set ? el('div', { cls: 'keep-set', text: k.set }) : null,
+      el('div', { cls: 'pc-line' }, [
+        marks.length ? el('div', { cls: 'pc-marks' }, marks) : null,
+        el('div', { cls: 'keep-money' }, money),
+      ]),
+      foot.length ? el('div', { cls: 'keep-foot' }, foot) : null,
+    ]),
+  ];
+
+  const safe = safeUrl(k.searchUrl);
+  if (!safe) return el('div', { cls: 'keep-row' }, kids);
+  return el(
+    'a',
+    { cls: 'keep-row cards-row-link', attrs: { href: safe, target: '_blank', rel: 'noopener noreferrer' } },
+    kids
+  );
+}
+
+/** `+$12.00` / `-$5.00` — the only place a net is spoken, and only when real. */
+const signedUsd = (n) => (n > 0 ? `+${usd(n)}` : usd(n));
+
+/** The PC sheet: errors, one board line, the keepers, one footer. No teardown. */
+function keepBody(keep, data, tile) {
+  const keepers = arr(keep.cards).map(planKeeper);
+  const errors = arr(keep.errors).filter(Boolean).map(String);
+  const total = num(keep.count);
+  const basis = num(keep.basis_total);
+  const book = num(keep.book_total);
+  const noBook = num(keep.no_book);
+
+  return (body) => {
+    if (errors.length) {
+      body.appendChild(el('p', { cls: 'cards-errors', text: `feed trouble: ${errors.join(' · ')}` }));
+    }
+    const warn = staleMark(tile, [['PC', keep]]);
+    if (warn) body.appendChild(warn);
+
+    const line = [];
+    if (total !== null) line.push(`${total} cards`);
+    if (basis !== null) line.push(`basis ${usd(basis)}`);
+    if (book !== null) line.push(`book ${usd(book)}`);
+    if (noBook !== null && noBook > 0) line.push(`${noBook} no book`);
+    if (basis !== null && book !== null) {
+      // Compared in cents, so float dust never prints a net of nothing.
+      const diff = Math.round((book - basis) * 100) / 100;
+      if (diff !== 0) line.push(`net ${signedUsd(diff)}`);
+    }
+    if (line.length) body.appendChild(el('p', { cls: 'keep-board', text: line.join(' · ') }));
+
+    if (!keepers.length) {
+      body.appendChild(empty('No keepers on file.'));
+    } else {
+      body.appendChild(el('div', { cls: 'keep-list' }, keepers.map(keeperRow)));
+    }
+
+    const foot = [str(data.keep_footer).trim(), str(keep.source).trim()].filter(Boolean).join(' · ');
+    if (foot) body.appendChild(el('p', { cls: 'cards-foot', text: foot }));
+  };
+}
+
 // ---------------------------------------------------------------------- tile
 
 /** A button for a face the engine has not lit: visible, inert, wearing "soon". */
@@ -765,6 +898,7 @@ function liveButton(face, { chipNode = null, open = null }) {
 // Label ≠ key, on purpose — see the note at the top of this file.
 const WATCHING_FACE = { key: 'pc', emoji: '🎯', label: 'Watching', tone: 'pc' };
 const SELLING_FACE = { key: 'shop', emoji: '🏷️', label: 'Selling', tone: 'shop' };
+const KEEP_FACE = { key: 'keep', emoji: '🎖️', label: 'PC', tone: 'keep' };
 
 /** Is this payload a face the engine has actually lit up? */
 const isFace = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -828,6 +962,26 @@ export function render(root, tile, ctx) {
     );
   }
 
+  // 🎖️ PC (`data.keep`) — third. Its chip is `count`, the engine's tally of
+  // keepers — a plain number. `keep: null` means the engine could not read
+  // the Breaker's tracker, and the button greys to "soon".
+  const hasKeep = isFace(data.keep);
+  const keep = obj(data.keep);
+  const keepCount = num(keep.count);
+  if (!hasKeep) {
+    buttons.push(soonButton(KEEP_FACE));
+  } else {
+    buttons.push(
+      liveButton(KEEP_FACE, {
+        chipNode:
+          keepCount === null
+            ? null
+            : el('span', { cls: 'cards-count cards-count-keep', text: String(keepCount) }),
+        open: openPanel ? () => openPanel('🎖️ PC', keepBody(keep, data, tile)) : null,
+      })
+    );
+  }
+
   root.appendChild(el('div', { cls: 'cards-menu', attrs: { role: 'group', 'aria-label': 'Cards' } }, buttons));
 
   // One faint line per live face, in the menu's order. Every part is omitted
@@ -853,6 +1007,6 @@ export function render(root, tile, ctx) {
     if (shopBits.length) root.appendChild(el('p', { cls: 'tile-foot', text: shopBits.join(' · ') }));
   }
 
-  const warn = staleMark(tile, [['Watching', data.pc], ['Selling', data.shop]]);
+  const warn = staleMark(tile, [['Watching', data.pc], ['Selling', data.shop], ['PC', data.keep]]);
   if (warn) root.appendChild(warn);
 }

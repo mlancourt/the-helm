@@ -3664,13 +3664,42 @@ async function main() {
     ...rest,
   });
 
-  /** Both faces lit, exactly as the engine publishes today. */
+  /** One invented keeper off the Breaker's tracker. */
+  const keeper = (over = {}) => ({
+    row: 1, sport: 'Football', player: 'Invented Keeper', year: '2023', set: 'Prism Foundry', card_no: '334',
+    serial: '10/25', grade: null, acquired: null, basis: 100, book: 100, book_state: 'booked', booked: null,
+    still_listed: false, item_url: null, search_url: 'https://example.com/mock/keep/search?q=k',
+    ...over,
+  });
+  const KEEPERS = [
+    keeper({ row: 4, player: 'KEEP-ONE', serial: '1/1', grade: 'PSA 9', basis: 420, book: 420, booked: '2026-09-23', search_url: 'https://example.com/mock/keep/search?q=1' }),
+    keeper({ row: 7, player: 'KEEP-TWO', serial: '001/150', grade: 'BGS 9.5', year: '2024', set: 'Ironsides Chrome', card_no: 'IC-21', basis: 85, book: 85, search_url: 'https://example.com/mock/keep/search?q=2' }),
+    keeper({ row: 9, player: 'KEEP-THREE', serial: null, grade: 'PSA 10', basis: 60, book: 60, search_url: 'https://example.com/mock/keep/search?q=3' }),
+    keeper({ row: 12, player: 'KEEP-FOUR', serial: '12/25', basis: 140, book: 140, still_listed: true, item_url: 'https://example.com/mock/keep/item/NEVER-SHOWN', search_url: 'https://example.com/mock/keep/search?q=4' }),
+    keeper({ row: 15, player: 'KEEP-FIVE', serial: '5/50', year: '2021', set: null, card_no: null, basis: null, book: null, book_state: 'no book', search_url: 'https://example.com/mock/keep/search?q=5' }),
+  ];
+  const KEEP_FOOTER = 'Keepers — not for sale. Booked at cost until a comp is written.';
+  const keepPayload = (over = {}) => ({
+    updated_at: '2026-09-20T12:25:00.000Z',
+    count: 5,
+    basis_total: 705,
+    book_total: 705,
+    no_book: 1,
+    source: 'Breaker tracker (test)',
+    cards: KEEPERS,
+    errors: [],
+    ...over,
+  });
+
+  /** Every face lit, exactly as the engine publishes today. */
   const deskData = (rest = {}) => ({
     watch: null,
     pc: pcPayload(),
     pc_footer: PC_FOOTER,
     shop: shopPayload(),
     shop_footer: SHOP_FOOTER,
+    keep: keepPayload(),
+    keep_footer: KEEP_FOOTER,
     sources: { listings: 'eBay Browse API', shop: 'eBay Browse API' },
     ...rest,
   });
@@ -3714,9 +3743,9 @@ async function main() {
       return r;
     });
 
-    check('two buttons, Watching then Selling', labelsOf(root).join('|') === 'Watching|Selling', labelsOf(root).join('|'));
-    check('Watching wears 🎯 and Selling wears 🏷️', cardBtns(root).map((b) => b.querySelector('.cards-emoji').textContent).join('|') === '🎯|🏷️');
-    check('both live', countOf(root, 'cards-btn-soon') === 0);
+    check('three buttons, Watching then Selling then PC', labelsOf(root).join('|') === 'Watching|Selling|PC', labelsOf(root).join('|'));
+    check('Watching wears 🎯, Selling wears 🏷️, PC wears 🎖️', cardBtns(root).map((b) => b.querySelector('.cards-emoji').textContent).join('|') === '🎯|🏷️|🎖️');
+    check('all three live', countOf(root, 'cards-btn-soon') === 0);
     check('the board carries no listings of its own', countOf(root, 'pc-row') === 0 && countOf(root, 'shop-row') === 0);
     check('one faint line per face', countOf(root, 'tile-foot') === 2, String(countOf(root, 'tile-foot')));
     check('in the menu\'s order', /79 1\/N[\s\S]*4 listed/.test(textOf(root)), textOf(root));
@@ -3744,7 +3773,9 @@ async function main() {
         const watching = shape(pnl.last.body);
         cardsTap(cardBtns(r)[1]);
         const pcSheet = shape(pnl.last.body);
-        return { label, board: shape(r), watching, pc: pcSheet, titles: pnl.calls.map((c) => c.title).join('|') };
+        cardsTap(cardBtns(r)[2]);
+        const keepSheet = shape(pnl.last.body);
+        return { label, board: shape(r), watching, pc: pcSheet, keep: keepSheet, titles: pnl.calls.map((c) => c.title).join('|') };
       });
       pnl.close();
       return out;
@@ -3753,19 +3784,20 @@ async function main() {
       check(`${v.label}: the board is identical to watch: null`, v.board === seen[0].board);
       check(`${v.label}: the Watching sheet is identical`, v.watching === seen[0].watching);
       check(`${v.label}: the PC sheet is identical`, v.pc === seen[0].pc);
-      check(`${v.label}: the same two panel titles`, v.titles === seen[0].titles, v.titles);
+      check(`${v.label}: the keepers sheet is identical`, v.keep === seen[0].keep);
+      check(`${v.label}: the same three panel titles`, v.titles === seen[0].titles, v.titles);
     }
     const legacyBoard = withNow(NOW_UTC, () => {
       const r = new El('div');
       cards.render(r, cardsTile(deskData({ watch: LEGACY_WATCH })), { id: 'cards', actions: {} });
       return r;
     });
-    check('a populated watch still renders exactly two buttons', cardBtns(legacyBoard).length === 2 && labelsOf(legacyBoard).join('|') === 'Watching|Selling');
+    check('a populated watch still renders exactly three buttons', cardBtns(legacyBoard).length === 3 && labelsOf(legacyBoard).join('|') === 'Watching|Selling|PC');
     check('and none of its words reach the board', !/Watch\b|FLAG-ONE|AUCTION-ONE|targets|fresh books/.test(textOf(legacyBoard)), textOf(legacyBoard));
     check('nor its amber dot', countOf(legacyBoard, 'cards-dot') === 0);
     const watchOnly = new El('div');
     cards.render(watchOnly, cardsTile({ watch: LEGACY_WATCH, pc: null, shop: null }), { id: 'cards', actions: {} });
-    check('a snapshot with ONLY a populated watch is two soon buttons', countOf(watchOnly, 'cards-btn-soon') === 2 && cardBtns(watchOnly).length === 2);
+    check('a snapshot with ONLY a populated watch is three soon buttons', countOf(watchOnly, 'cards-btn-soon') === 3 && cardBtns(watchOnly).length === 3);
     check('and not a word of the hunt', !/FLAG|AUCTION|targets|feed/.test(textOf(watchOnly)), textOf(watchOnly));
     // Staleness is the tile's and its two faces', never the retired key's.
     const staleWatchErr = new El('div');
@@ -3777,16 +3809,16 @@ async function main() {
     const allNull = new El('div');
     let allNullThrew = null;
     try {
-      cards.render(allNull, cardsTile({ watch: null, shop: null, pc: null }), { id: 'cards', actions: {} });
+      cards.render(allNull, cardsTile({ watch: null, shop: null, pc: null, keep: null }), { id: 'cards', actions: {} });
     } catch (e) { allNullThrew = e; }
-    check('all three keys null never throws', !allNullThrew, allNullThrew && allNullThrew.message);
-    check('all null is two soon buttons', cardBtns(allNull).length === 2 && countOf(allNull, 'cards-btn-soon') === 2);
-    check('still labelled Watching then PC', labelsOf(allNull).join('|') === 'Watching|Selling', labelsOf(allNull).join('|'));
-    check('both inert', cardBtns(allNull).every((b) => b.getAttribute('disabled') === 'disabled'));
+    check('all four keys null never throws', !allNullThrew, allNullThrew && allNullThrew.message);
+    check('all null is three soon buttons', cardBtns(allNull).length === 3 && countOf(allNull, 'cards-btn-soon') === 3);
+    check('still labelled Watching, Selling, PC', labelsOf(allNull).join('|') === 'Watching|Selling|PC', labelsOf(allNull).join('|'));
+    check('all inert', cardBtns(allNull).every((b) => b.getAttribute('disabled') === 'disabled'));
     check('and no faint line under them', countOf(allNull, 'tile-foot') === 0);
     const emptyDesk = new El('div');
     cards.render(emptyDesk, cardsTile({}), { id: 'cards', actions: {} });
-    check('an empty payload is the same two soon buttons', countOf(emptyDesk, 'cards-btn-soon') === 2 && cardBtns(emptyDesk).length === 2);
+    check('an empty payload is the same three soon buttons', countOf(emptyDesk, 'cards-btn-soon') === 3 && cardBtns(emptyDesk).length === 3);
 
     const bad = new El('div');
     cards.render(bad, cardsTile(deskData(), 'error', 'the listing pull failed outright'), { id: 'cards', actions: {} });
@@ -3796,7 +3828,7 @@ async function main() {
     // -- stale: the tile's status, the faces' errors and updated_at -----------
     const staleRoot = new El('div');
     cards.render(staleRoot, cardsTile(deskData(), 'stale', 'the 06:00 sweep did not finish'), { id: 'cards', actions: panel.actions });
-    check('a stale desk still renders its menu', cardBtns(staleRoot).length === 2 && countOf(staleRoot, 'cards-btn-soon') === 0);
+    check('a stale desk still renders its menu', cardBtns(staleRoot).length === 3 && countOf(staleRoot, 'cards-btn-soon') === 0);
     check('with a small warning mark', countOf(staleRoot, 'cards-warn') === 1);
     check('whose tooltip is the tile\'s reason', staleRoot.querySelector('.cards-warn').getAttribute('title') === 'the 06:00 sweep did not finish');
     const faceErrs = new El('div');
@@ -3805,7 +3837,7 @@ async function main() {
     const swept = new El('div');
     cards.render(swept, cardsTile(deskData(), 'stale', null), { id: 'cards', actions: {} });
     // 12:13Z and 12:04Z are 7:13 and 7:04 AM Central.
-    check('with no errors either, it says when each face last swept', swept.querySelector('.cards-warn').getAttribute('title') === 'last sweep: Watching 7:13 AM · Selling 7:04 AM', swept.querySelector('.cards-warn').getAttribute('title'));
+    check('with no errors either, it says when each face last swept', swept.querySelector('.cards-warn').getAttribute('title') === 'last sweep: Watching 7:13 AM · Selling 7:04 AM · PC 7:25 AM', swept.querySelector('.cards-warn').getAttribute('title'));
     const bare = new El('div');
     cards.render(bare, cardsTile({ pc: {}, shop: {} }, 'stale', null), { id: 'cards', actions: {} });
     check('and with nothing at all, the mark still explains itself', !!bare.querySelector('.cards-warn').getAttribute('title'));
@@ -4160,7 +4192,7 @@ async function main() {
       const pcSheet = pcView.sheet;
 
       // -- the board -------------------------------------------------------
-      check('Watching is the first button', labelsOf(pcBoard).join('|') === 'Watching|Selling', labelsOf(pcBoard).join('|'));
+      check('Watching is the first button', labelsOf(pcBoard).join('|') === 'Watching|Selling|PC', labelsOf(pcBoard).join('|'));
       check('and it opens its own sheet, titled 🎯 Watching', pcView.panel.last.title === '🎯 Watching', pcView.panel.last.title);
       check('the chip counts arrivals, not finds', pcBoard.querySelector('.cards-count').textContent.startsWith('1'), pcBoard.querySelector('.cards-count').textContent);
       check('the faint line counts the two classes', /79 1\/N/.test(textOf(pcBoard)) && /29 1\/1s/.test(textOf(pcBoard)), textOf(pcBoard));
@@ -4379,7 +4411,7 @@ async function main() {
       const shopSheet = shopView.sheet;
 
       // -- the board ---------------------------------------------------------
-      check('Selling is the second button', labelsOf(shopBoard).join('|') === 'Watching|Selling', labelsOf(shopBoard).join('|'));
+      check('Selling is the second button', labelsOf(shopBoard).join('|') === 'Watching|Selling|PC', labelsOf(shopBoard).join('|'));
       check('it is live, not greyed', !cardBtns(shopBoard)[1].className.includes('cards-btn-soon'));
       check('and it opens its own sheet, titled 🏷️ Selling', shopView.panel.last.title === '🏷️ Selling', shopView.panel.last.title);
       check('the chip is the engine\'s active count', shopBoard.querySelector('.cards-count').textContent === '4', shopBoard.querySelector('.cards-count').textContent);
@@ -4553,7 +4585,7 @@ async function main() {
         cards.render(r, cardsTile(deskData()), { id: 'cards', actions: bothPanel.actions });
         return r;
       });
-      check('two live buttons', labelsOf(both).join('|') === 'Watching|Selling' && countOf(both, 'cards-btn-soon') === 0);
+      check('three live buttons', labelsOf(both).join('|') === 'Watching|Selling|PC' && countOf(both, 'cards-btn-soon') === 0);
       withNow(NOW_UTC, () => cardsTap(cardBtns(both)[0]));
       const watchingAgain = bothPanel.last.body;
       check('the Watching sheet is untouched by the PC face', countOf(watchingAgain, 'pc-row') === 5 && countOf(watchingAgain, 'pc-serial') === 5);
@@ -4574,7 +4606,7 @@ async function main() {
 
     // -- the ruling, as a source scan ----------------------------------------
     check('the PC sheet builds its own rows', /function shopRow\(/.test(CARDS_SRC));
-    const SHOP_REGION = faceRegion('Selling', 'function planShopItem(', 'function soonButton(');
+    const SHOP_REGION = faceRegion('Selling', 'function planShopItem(', 'function planKeeper(');
     check('the PC region is the storefront and nothing else', /function shopBody\(/.test(SHOP_REGION) && !/function pcRow\(/.test(SHOP_REGION) && !/function render\(/.test(SHOP_REGION));
     check('and never borrows the Watching row', SHOP_REGION.length > 500 && !/pcRow|serialBadge|gradeChip/.test(SHOP_REGION), String(SHOP_REGION.length));
     check('nor a countdown', !/msUntil|countdown|endsLine|startClock/.test(SHOP_REGION));
@@ -4589,6 +4621,151 @@ async function main() {
     // Out of scope by ruling — not "later", not a stub.
     check('the module names no watcher affordance', !/watcher/i.test(CARDS_SRC));
     check('nor a pending-offer one', !/pending_offer|pendingOffer/i.test(CARDS_SRC));
+
+    // -- 🎖️ PC (data.keep): the keepers, NOT for sale ------------------------
+    //
+    // PC is not a gate and not a store. The sheet prints basis and book and
+    // nothing that asks Matt to buy, sell or list anything. `still_listed` is
+    // a faint note that a delist is owed — muted, uncoloured, never a nag —
+    // and `item_url` never reaches the DOM: the lookup is the search.
+    console.log('\ncards — 🎖️ PC (data.keep)');
+
+    const keepOpened = [];
+    function openKeep(over = {}, rest = {}) {
+      for (const v of keepOpened) v.panel.close();
+      const pnl = fakePanel();
+      const board = new El('div');
+      cards.render(board, cardsTile(deskData({ keep: keepPayload(over), ...rest })), { id: 'cards', actions: pnl.actions });
+      cardsTap(cardBtns(board)[2]);
+      const view = { board, panel: pnl, sheet: pnl.last.body, teardown: pnl.last.teardown };
+      keepOpened.push(view);
+      return view;
+    }
+
+    try {
+      const keepView = openKeep();
+      const keepBoard = keepView.board;
+      const keepSheet = keepView.sheet;
+
+      // -- the board ---------------------------------------------------------
+      check('PC is the third button', labelsOf(keepBoard)[2] === 'PC', labelsOf(keepBoard).join('|'));
+      check('wearing 🎖️', cardBtns(keepBoard)[2].querySelector('.cards-emoji').textContent === '🎖️');
+      check('in its own tone', cardBtns(keepBoard)[2].className.includes('cards-btn-keep'), cardBtns(keepBoard)[2].className);
+      const keepChip = cardBtns(keepBoard)[2].querySelector('.cards-count');
+      check('the chip is the engine\'s count, a plain number', !!keepChip && keepChip.textContent === '5' && keepChip.className === 'cards-count cards-count-keep', keepChip && `${keepChip.className} ${keepChip.textContent}`);
+      check('it opens its own sheet, titled 🎖️ PC', keepView.panel.last.title === '🎖️ PC', keepView.panel.last.title);
+      check('and the builder hands back no teardown', keepView.teardown === null);
+      check('the PC sheet starts no clock', timers.live.size === 0, String(timers.live.size));
+      check('nor a visibility listener', docListenerCount('visibilitychange') === 0);
+
+      // -- keep: null ---------------------------------------------------------
+      const noKeep = new El('div');
+      cards.render(noKeep, cardsTile(deskData({ keep: null })), { id: 'cards', actions: {} });
+      check('keep: null greys the PC button to soon', /soon/.test(cardBtns(noKeep)[2].textContent) && cardBtns(noKeep)[2].className.includes('cards-btn-soon'));
+      check('still three buttons, still labelled PC', cardBtns(noKeep).length === 3 && labelsOf(noKeep)[2] === 'PC');
+      check('and that button is inert', cardBtns(noKeep)[2].getAttribute('disabled') === 'disabled');
+      check('while the other two stay live', countOf(noKeep, 'cards-btn-soon') === 1);
+
+      // -- the board line -----------------------------------------------------
+      const boardLine = keepSheet.querySelector('.keep-board');
+      check('the board line, exactly', !!boardLine && boardLine.textContent === '5 cards · basis $705.00 · book $705.00 · 1 no book', boardLine && boardLine.textContent);
+      check('no net line when book equals basis', !/net/.test(boardLine.textContent));
+      const netView = openKeep({ book_total: 755 });
+      const netLine = netView.sheet.querySelector('.keep-board').textContent;
+      check('a net line when book and basis differ', netLine === '5 cards · basis $705.00 · book $755.00 · 1 no book · net +$50.00', netLine);
+      const underView = openKeep({ book_total: 690, no_book: 0 });
+      const underLine = underView.sheet.querySelector('.keep-board').textContent;
+      check('a negative net is signed, and no_book 0 says nothing', underLine === '5 cards · basis $705.00 · book $690.00 · net -$15.00', underLine);
+      const dustView = openKeep({ book_total: 705.0000001 });
+      check('float dust is not a net', !/net/.test(dustView.sheet.querySelector('.keep-board').textContent));
+
+      // -- the rows -------------------------------------------------------------
+      const keepRows = keepSheet.querySelectorAll('.keep-row');
+      check('one row per keeper, in payload order', keepRows.map((r) => r.querySelector('.keep-player').textContent).join('|') === 'KEEP-ONE|KEEP-TWO|KEEP-THREE|KEEP-FOUR|KEEP-FIVE');
+      const sets = keepRows.map((r) => (r.querySelector('.keep-set') || { textContent: '' }).textContent);
+      check('the set line is year set #card', sets[0] === '2023 Prism Foundry #334' && sets[1] === '2024 Ironsides Chrome #IC-21', sets.join('|'));
+      check('missing parts are omitted cleanly — no "null", no stray "#"', sets[4] === '2021', sets[4]);
+      const badgeOf = (r) => r.querySelector('.pc-serial');
+      check('the 1/1 wears the gold badge and ★', badgeOf(keepRows[0]).className.includes('pc-one') && /★/.test(badgeOf(keepRows[0]).textContent) && /1\/1/.test(badgeOf(keepRows[0]).textContent));
+      check('the 001/N is a plain ⬥ serial', !badgeOf(keepRows[1]).className.includes('pc-one') && /⬥/.test(badgeOf(keepRows[1]).textContent) && /001\/150/.test(badgeOf(keepRows[1]).textContent));
+      check('gold on the 1/1 only', countOf(keepSheet, 'pc-one') === 1);
+      check('no badge at all on the null-serial row', !badgeOf(keepRows[2]));
+      check('a grade chip when graded', /PSA 9/.test(keepRows[0].textContent) && !!keepRows[2].querySelector('.pc-grade'));
+      check('and none when not', !keepRows[3].querySelector('.pc-grade'));
+      const moneyOf = (r) => r.querySelector('.keep-money').textContent;
+      check('the money line is basis · book', moneyOf(keepRows[0]) === 'basis $420.00·book $420.00', moneyOf(keepRows[0]));
+      check('no book reads "no book", muted', /no book/.test(moneyOf(keepRows[4])) && !!keepRows[4].querySelector('.keep-nobook'));
+      check('and never a zero for that row', !/\$0\.00|\b0\b/.test(keepRows[4].textContent), keepRows[4].textContent);
+      check('booked prints verbatim', /booked 2026-09-23/.test(keepRows[0].textContent), keepRows[0].textContent);
+      const listed = keepSheet.querySelectorAll('.keep-listed');
+      check('still listed marks exactly one row', listed.length === 1 && /still listed/.test(keepRows[3].textContent));
+      check('carrying no class but its own', listed[0].className === 'keep-listed', listed[0].className);
+      const tokensIn = (sel) => {
+        const re = new RegExp(`${sel.replace('.', '\\.')}(?![\\w-])[^{]*\\{([^}]*)\\}`, 'g');
+        return [...CARDS_CSS.matchAll(re)].flatMap((m) => [...m[1].matchAll(/var\((--[\w-]+)\)/g)].map((v) => v[1]));
+      };
+      const listedTokens = tokensIn('.keep-listed');
+      check('the stylesheet gives still-listed only the muted text colour', listedTokens.length > 0 && listedTokens.every((t) => t === '--text-faint'), listedTokens.join(','));
+      check('and the foot line it sits in is muted too', tokensIn('.keep-foot').every((t) => t === '--text-faint'), tokensIn('.keep-foot').join(','));
+      check('the button carries no listed count', !/listed/.test(cardBtns(keepBoard)[2].textContent));
+      check('every row is a link to its search', keepRows.every((r, i) => r.tagName === 'A' && r.getAttribute('href') === KEEPERS[i].search_url));
+      check('in a new tab, with no handle on this page', keepRows.every((a) => a.getAttribute('target') === '_blank' && /noopener/.test(a.getAttribute('rel') || '')));
+      check('item_url never reaches the DOM', !/NEVER-SHOWN|keep\/item/.test(shape(keepSheet)) && !/NEVER-SHOWN/.test(shape(keepBoard)));
+      const junkKeep = openKeep({ cards: [keeper({ player: 'JUNK', search_url: 'javascript:alert(1)' })] });
+      check('a junk search url is inert, and the row survives', junkKeep.sheet.querySelectorAll('A').length === 0 && /JUNK/.test(textOf(junkKeep.sheet)));
+
+      // -- the footer -----------------------------------------------------------
+      check('one footer: the vault\'s line and the source', countOf(keepSheet, 'cards-foot') === 1 && keepSheet.querySelector('.cards-foot').textContent === `${KEEP_FOOTER} · Breaker tracker (test)`, keepSheet.querySelector('.cards-foot').textContent);
+
+      // -- not a gate, not a store ----------------------------------------------
+      for (const banned of ['cards-fmv', 'cards-fmv-good', 'cards-check', 'cards-chip-max', 'cards-chip-band', 'cards-bookage', 'cards-ends-soon', 'shop-gone-row', 'shop-row']) {
+        check(`no .${banned} anywhere in the PC sheet`, countOf(keepSheet, banned) === 0);
+      }
+      const footText = keepSheet.querySelector('.cards-foot').textContent;
+      const keepText = textOf(keepSheet).replace(footText, '');
+      for (const [label, re] of [['✓', /✓/], ['%', /%/], ['MAX', /\bMAX\b/], ['floor', /floor/i], ['gap', /\bgap\b/i], ['underwater', /underwater/i], ['list it', /list it/i], ['sell', /sell/i]]) {
+        check(`no "${label}" on the PC sheet`, !re.test(keepText), keepText.slice(0, 120));
+      }
+      check('"for sale" only in the footer', !/for sale/i.test(keepText) && /not for sale/.test(footText));
+
+      // -- errors, emptiness, ragged ---------------------------------------------
+      const keepErr = openKeep({ errors: ['tracker row 22 unreadable'] });
+      check('errors are one muted line at the top', countOf(keepErr.sheet, 'cards-errors') === 1 && keepErr.sheet.childNodes[0].className === 'cards-errors');
+      check('and the keepers still render', countOf(keepErr.sheet, 'keep-row') === 5);
+      const emptyKeep = openKeep({ cards: [], count: 0, basis_total: 0, book_total: 0, no_book: 0 });
+      check('an empty PC says so', /No keepers on file/.test(textOf(emptyKeep.sheet)));
+      let raggedThrew = null;
+      let ragged = null;
+      try {
+        ragged = openKeep({ cards: [{}, null, 'nope', { player: 'HALF', basis: 'x' }], count: undefined, basis_total: null, book_total: undefined });
+      } catch (e) { raggedThrew = e; }
+      check('a ragged keep never throws', !raggedThrew, raggedThrew && raggedThrew.message);
+      check('every entry lays out as a row', ragged && countOf(ragged.sheet, 'keep-row') === 4);
+      check('a count that never arrived raises no chip', ragged && !cardBtns(ragged.board)[2].querySelector('.cards-count'));
+      const allKeepText = [keepView, netView, underView, ragged, emptyKeep].map((v) => `${textOf(v.sheet)} ${textOf(v.board)}`).join(' ');
+      check('no "undefined", "NaN" or "null" anywhere on the PC face', !/undefined|NaN|\bnull\b|Invalid Date/.test(allKeepText), (allKeepText.match(/.{0,40}(undefined|NaN|\bnull\b).{0,40}/) || [''])[0]);
+
+      // -- the stale mark, per sheet --------------------------------------------
+      const stalePanel = fakePanel();
+      const staleKeepRoot = new El('div');
+      cards.render(staleKeepRoot, cardsTile(deskData({ keep: keepPayload({ errors: ['tracker locked'] }) }), 'stale', null), { id: 'cards', actions: stalePanel.actions });
+      cardsTap(cardBtns(staleKeepRoot)[2]);
+      check('a stale PC sheet wears the mark, with its own errors', stalePanel.last.body.querySelector('.cards-warn').getAttribute('title') === 'tracker locked');
+      stalePanel.close();
+    } finally {
+      for (const v of keepOpened) v.panel.close();
+    }
+
+    // -- the ruling, as a source scan ------------------------------------------
+    const KEEP_REGION = faceRegion('PC', 'function planKeeper(', 'function soonButton(');
+    check('the PC region builds the keepers', /function keeperRow\(/.test(KEEP_REGION) && /function planKeeper\(/.test(KEEP_REGION) && /function keepBody\(/.test(KEEP_REGION));
+    for (const name of ['listingRow', 'fmvChip', 'shopRow', 'endsLine']) {
+      check(`the PC region never reaches for ${name}`, KEEP_REGION.length > 500 && !new RegExp(`\\b${name}\\b`).test(KEEP_REGION));
+    }
+    check('nor a clock', !/msUntil|countdown|startClock|setInterval/.test(KEEP_REGION));
+    check('nor item_url', !/item_url|itemUrl/.test(KEEP_REGION));
+    check('nor parses booked', !/new Date|Date\.parse/.test(KEEP_REGION));
+    check('the Selling region no longer reaches into the keepers', !/keeperRow|keepBody/.test(SHOP_REGION));
   });
 
   // -- bets_ledger: The Ledger ------------------------------------------------

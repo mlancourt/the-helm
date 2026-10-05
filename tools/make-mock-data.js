@@ -6,6 +6,7 @@
  *   node tools/make-mock-data.js --pending  > docs/mock/pending.json
  *   node tools/make-mock-data.js --espn     > docs/mock/espn-today.json
  *   node tools/make-mock-data.js --cards-stale > docs/mock/cards-stale.json
+ *   node tools/make-mock-data.js --cards-keep-net > docs/mock/cards-keep-net.json
  *   node tools/make-mock-data.js --newsstand-stale > docs/mock/newsstand-stale.json
  *   node tools/make-mock-data.js --events   > two POST /api/event bodies
  *
@@ -1033,7 +1034,63 @@ function cardsPayload() {
       'Active listings and sold-detection. Watchers and pending offers live in the eBay app — see C6.',
     pc: cardsPc(),
     pc_footer: 'No book, no gate — a bookend is one of one by definition. Price is yours to judge.',
+    keep: cardsKeep(),
+    keep_footer: 'Keepers — not for sale. Booked at cost until a comp is written.',
     sources: { listings: 'eBay Browse API', shop: 'eBay Browse API' },
+  };
+}
+
+/**
+ * The PC face's payload — the keepers, off the Breaker's tracker. INVENTED
+ * throughout: no player, set or price here is a card anyone owns.
+ *
+ * Five rows, one per branch: a true 1/1 (gold), a 001/N bookend (⬥), one with
+ * no serial (no badge), one the Breaker has not booked (`no book`, book null
+ * — and basis null too, which is what keeps the totals honest AND equal), and
+ * one still listed (the faint delist note). `basis_total === book_total`, as
+ * the Breaker books at cost today, so the default sheet prints no net line.
+ * `--cards-keep-net` books one card above cost so the net line has a reason.
+ */
+function cardsKeep({ bookedUp = false } = {}) {
+  const search = (q) => `https://example.com/mock/keep/search?q=${encodeURIComponent(q)}`;
+  const cards = [
+    {
+      row: 4, sport: 'Football', player: 'Odessa Thorne', year: '2023', set: 'Prism Foundry Gold Wave', card_no: '334',
+      serial: '1/1', grade: 'PSA 9', acquired: addDays(TODAY, -40), basis: 420, book: 420, book_state: 'booked',
+      booked: addDays(TODAY, -12), still_listed: false, item_url: null, search_url: search('Odessa Thorne Prism Foundry 1/1'),
+    },
+    {
+      row: 7, sport: 'Baseball', player: 'Bram Halvorsen', year: '2024', set: 'Ironsides Chrome Emerald', card_no: 'IC-21',
+      serial: '001/150', grade: 'BGS 9.5', acquired: addDays(TODAY, -90), basis: 85, book: 85, book_state: 'booked',
+      booked: addDays(TODAY, -30), still_listed: false, item_url: null, search_url: search('Bram Halvorsen Ironsides 001/150'),
+    },
+    {
+      row: 9, sport: 'Basketball', player: 'Corwin Ashby', year: '2022', set: 'Lakeshore Rookie Debut', card_no: '18',
+      serial: null, grade: 'PSA 10', acquired: null, basis: 60, book: 60, book_state: 'booked',
+      booked: addDays(TODAY, -5), still_listed: false, item_url: null, search_url: search('Corwin Ashby Lakeshore 18 PSA 10'),
+    },
+    {
+      row: 12, sport: 'Football', player: 'Delphine Okafor', year: '2024', set: 'Northwind Signatures', card_no: '7',
+      serial: '12/25', grade: null, acquired: addDays(TODAY, -14), basis: 140, book: bookedUp ? 190 : 140,
+      book_state: 'booked', booked: addDays(TODAY, -2), still_listed: true,
+      item_url: 'https://example.com/mock/keep/item/NOT-RENDERED', search_url: search('Delphine Okafor Northwind 12/25'),
+    },
+    {
+      row: 15, sport: 'Hockey', player: 'Ezra Lindqvist', year: '2021', set: 'Glacier Parallels', card_no: null,
+      serial: '5/50', grade: null, acquired: null, basis: null, book: null, book_state: 'no book',
+      booked: null, still_listed: false, item_url: null, search_url: search('Ezra Lindqvist Glacier 5/50'),
+    },
+  ];
+  const sum = (k) => Math.round(cards.reduce((t, c) => t + (c[k] || 0), 0) * 100) / 100;
+  return {
+    updated_at: agoIso(25),
+    count: cards.length,
+    basis_total: sum('basis'),
+    book_total: sum('book'),
+    no_book: cards.filter((c) => c.book_state === 'no book').length,
+    source: 'Breaker tracker (mock)',
+    cards,
+    errors: [],
   };
 }
 
@@ -1745,6 +1802,8 @@ function cardsStaleSnapshot() {
   const snap = snapshot();
   const data = cardsPayload();
   data.pc.errors = ['eBay Browse API: 3 of 121 player searches rate-limited (429)'];
+  // The Breaker's tracker could not be read: the PC button greys to "soon".
+  data.keep = null;
   snap.tiles.cards = {
     band: 'HOURLY',
     updated_at: agoIso(96),
@@ -1786,6 +1845,15 @@ function cardsNoPcSnapshot() {
   const snap = snapshot();
   const data = cardsPayload();
   data.pc = null;
+  snap.tiles.cards = { band: 'HOURLY', updated_at: agoIso(18), status: 'ok', error: null, data };
+  return snap;
+}
+
+/** One keeper booked above cost, so the PC sheet's net line has a reason to print. */
+function cardsKeepNetSnapshot() {
+  const snap = snapshot();
+  const data = cardsPayload();
+  data.keep = cardsKeep({ bookedUp: true });
   snap.tiles.cards = { band: 'HOURLY', updated_at: agoIso(18), status: 'ok', error: null, data };
   return snap;
 }
@@ -2366,6 +2434,7 @@ const MODES = [
   ['--cards-no-shop', () => cardsNoShopSnapshot()],
   ['--cards-shop-empty', () => cardsShopEmptySnapshot()],
   ['--cards-pc-errors', () => cardsPcErrorsSnapshot()],
+  ['--cards-keep-net', () => cardsKeepNetSnapshot()],
   ['--newsstand-stale', () => newsstandStaleSnapshot()],
   // The Ledger with almost nothing settled: every optional block absent.
   ['--ledger-thin', () => ledgerThinSnapshot()],
