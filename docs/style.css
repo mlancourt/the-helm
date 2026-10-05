@@ -1876,6 +1876,26 @@ body {
 .rem-title { font-size: 13.5px; color: var(--text); word-break: break-word; }
 .rem-meta { margin-top: 2px; font-size: 11px; color: var(--text-faint); }
 .rem-side { display: flex; gap: 5px; align-items: center; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+/* v1.33.0 — the face is today + tomorrow; the rest waits behind one quiet toggle. */
+.rem-later-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  margin-top: 10px;
+  padding: 4px 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  text-align: left;
+}
+.rem-later-toggle::after { content: '▸'; margin-left: 5px; color: var(--text-faint); }
+.rem-later-toggle[aria-expanded="true"]::after { content: '▾'; }
+.rem-later .rem-heading:first-child { margin-top: 6px; }
 
 /* ------------------------------------------------------------ ship status */
 

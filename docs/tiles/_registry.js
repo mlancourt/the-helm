@@ -28,7 +28,7 @@ export const REGISTRY = {
   // entry — but ON the board, because its face is two buttons. Slotted at 15
   // without moving anyone; Matt can move it here.
   yeoman: { band: 'ASK', position: 15, module: './tiles/yeoman.js', title: '✍️ Yeoman' },
-  reminders: { band: 'DAILY', position: 20, module: './tiles/reminders.js', title: 'Reminders' },
+  reminders: { band: 'DAILY', position: 20, module: './tiles/reminders.js', title: '📋 Reminders' },
   // The morning brief, straight under Reminders and above Dinner. Slotted in
   // at 25 without touching a single other number — which is what the tens
   // were for (ruling, 2026-09-20).

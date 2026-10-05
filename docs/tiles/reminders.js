@@ -14,6 +14,11 @@
  * `overdue` is the engine's call and outranks the sign of `days`: a reminder due
  * at 09:00 this morning is `days: 0` and `overdue: true`, and belongs at the top
  * with the rest of the misses, not under "due today".
+ *
+ * v1.33.0 (Matt, 2026-10-05): the face is NOW — overdue, today, tomorrow.
+ * Everything further out, and everything undated, sits behind one "Later"
+ * toggle. The split reads the engine's `days`, so this page still counts
+ * nothing. A miss is never hidden: overdue outranks the window, always.
  */
 
 import { el, empty, pill } from '../lib/dom.js';
@@ -94,11 +99,41 @@ function itemRow(item) {
   ]);
 }
 
-const GROUPS = [
-  { rank: 0, label: 'Overdue' },
-  { rank: 1, label: 'Coming up' },
-  { rank: 2, label: 'No date' },
+/**
+ * On the face: every miss, plus anything due today or tomorrow (`days` 0/1).
+ * Behind the toggle: dated two days out or more, and the undated tail.
+ */
+function isNow(item) {
+  if (bucket(item) === 0) return true;
+  return typeof item.days === 'number' && item.days <= 1;
+}
+
+const NOW_GROUPS = [
+  { label: 'Overdue', test: (i) => bucket(i) === 0 },
+  { label: 'Today & tomorrow', test: (i) => bucket(i) === 1 },
 ];
+const LATER_GROUPS = [
+  { label: 'Coming up', test: (i) => bucket(i) === 1 },
+  { label: 'No date', test: (i) => bucket(i) === 2 },
+];
+
+/**
+ * Open/closed survives the five-minute data refresh: the board re-renders the
+ * tile, and a list Matt is reading must not snap shut under his thumb. Module
+ * state, page lifetime only — a reload starts closed.
+ */
+let laterOpen = false;
+
+function groups(list, defs) {
+  const out = [];
+  for (const g of defs) {
+    const inGroup = list.filter(g.test);
+    if (!inGroup.length) continue;
+    out.push(el('h4', { cls: 'rem-heading', text: g.label }));
+    out.push(el('div', { cls: 'rem-group' }, inGroup.map(itemRow)));
+  }
+  return out;
+}
 
 export function render(el_, tile) {
   const data = tile.data && typeof tile.data === 'object' && !Array.isArray(tile.data) ? tile.data : {};
@@ -110,12 +145,31 @@ export function render(el_, tile) {
   }
 
   const sorted = [...items].sort(compare);
+  const now = sorted.filter(isNow);
+  const later = sorted.filter((i) => !isNow(i));
 
-  for (const group of GROUPS) {
-    const inGroup = sorted.filter((i) => bucket(i) === group.rank);
-    if (!inGroup.length) continue;
-    el_.appendChild(el('h4', { cls: 'rem-heading', text: group.label }));
-    el_.appendChild(el('div', { cls: 'rem-group' }, inGroup.map(itemRow)));
+  if (now.length) {
+    for (const node of groups(now, NOW_GROUPS)) el_.appendChild(node);
+  } else {
+    el_.appendChild(empty('Nothing due today or tomorrow.'));
+  }
+
+  if (later.length) {
+    const panel = el('div', { cls: `rem-later${laterOpen ? '' : ' hidden'}` }, groups(later, LATER_GROUPS));
+    const toggle = el('button', {
+      cls: 'rem-later-toggle',
+      text: `Later · ${later.length}`,
+      attrs: { type: 'button', 'aria-expanded': laterOpen ? 'true' : 'false' },
+      on: {
+        click: (e) => {
+          if (e && e.stopPropagation) e.stopPropagation();
+          laterOpen = panel.classList.toggle('hidden') === false;
+          toggle.setAttribute('aria-expanded', laterOpen ? 'true' : 'false');
+        },
+      },
+    });
+    el_.appendChild(toggle);
+    el_.appendChild(panel);
   }
 
   // Counts come from the engine; they are reported, not recomputed, so a

@@ -2198,6 +2198,48 @@ async function main() {
     rem.render(root4, { band: 'DAILY', status: 'ok', data: { items: [{}, null, { title: 'ok' }] } }, { id: 'reminders', actions: {} });
     check('items with no fields at all still render', root4.querySelectorAll('.rem-row').length === 2);
     check('a titleless item is labelled, not blank', /\(untitled\)/.test(root4.textContent));
+
+    // v1.33.0 (Matt, 2026-10-05): the face is overdue + today + tomorrow; the
+    // rest waits behind one "Later" toggle. Same seven items as above.
+    const REM_REG = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', '_registry.js'), 'utf8');
+    const REM_SRC = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'reminders.js'), 'utf8');
+    check('nameplate carries the checklist emoji', /reminders:\s*\{[^}]*title:\s*'📋 Reminders'/.test(REM_REG));
+    const REM_CODE = REM_SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    check('the split counts nothing itself (no Date in the module code)', !/new Date|Date\.now/.test(REM_CODE));
+
+    const remTap = (btn) => btn.listeners.click[0]({ stopPropagation() {} });
+    const r5 = new El('div');
+    rem.render(r5, { band: 'DAILY', status: 'ok', data: { items, count: 7 } }, { id: 'reminders', actions: {} });
+    const later5 = r5.querySelector('.rem-later');
+    const toggle5 = r5.querySelector('.rem-later-toggle');
+    const tucked = later5.querySelectorAll('.rem-title').map((n) => n.textContent);
+    const shown = r5.querySelectorAll('.rem-title').map((n) => n.textContent).filter((t) => !tucked.includes(t));
+    check('the face shows overdue, today and tomorrow only', shown.join(' | ') === 'badly overdue | missed this morning | today later | tomorrow', shown.join(' | '));
+    check('two days out and undated wait behind the toggle', tucked.join(' | ') === 'next week | undated flagged | undated plain', tucked.join(' | '));
+    check('the later panel starts closed', later5.classList.contains('hidden'));
+    check('the toggle names the count', toggle5 && toggle5.textContent === 'Later · 3', toggle5 && toggle5.textContent);
+    check('and starts collapsed for assistive tech', toggle5.getAttribute('aria-expanded') === 'false');
+    check('the dated face group is titled today & tomorrow', r5.querySelectorAll('.rem-heading').map((n) => n.textContent).slice(0, 2).join('|') === 'Overdue|Today & tomorrow');
+    remTap(toggle5);
+    check('a tap opens it', !later5.classList.contains('hidden') && toggle5.getAttribute('aria-expanded') === 'true');
+
+    // Open survives the five-minute re-render…
+    const r6 = new El('div');
+    rem.render(r6, { band: 'DAILY', status: 'ok', data: { items } }, { id: 'reminders', actions: {} });
+    check('open state survives a data refresh', !r6.querySelector('.rem-later').classList.contains('hidden'));
+    remTap(r6.querySelector('.rem-later-toggle'));
+    check('and a second tap closes it', r6.querySelector('.rem-later').classList.contains('hidden'));
+
+    // A miss is never tucked away, even with a far-off `days`-less shape.
+    const r7 = new El('div');
+    rem.render(r7, { band: 'DAILY', status: 'ok', data: { items: items.filter((i) => i.overdue) } }, { id: 'reminders', actions: {} });
+    check('all-overdue: no toggle at all', !r7.querySelector('.rem-later-toggle'));
+
+    // Nothing near, something far: the face says so and the toggle is there.
+    const r8 = new El('div');
+    rem.render(r8, { band: 'DAILY', status: 'ok', data: { items: items.filter((i) => i.days === 7 || i.days === null) } }, { id: 'reminders', actions: {} });
+    check('nothing near says so', /Nothing due today or tomorrow/.test(r8.textContent));
+    check('and still offers the later list', r8.querySelector('.rem-later-toggle').textContent === 'Later · 3');
   }
 
 
