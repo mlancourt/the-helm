@@ -243,6 +243,77 @@ export function normalizeEvent(event, league = '') {
     home: sideOf(comp.competitors, 'home'),
     away: sideOf(comp.competitors, 'away'),
     situation: situationOf(comp),
+    odds: oddsOf(comp),
+  };
+}
+
+/**
+ * The pre-game board, as ESPN carries it (Today's Games spec O1/O2) — `null`
+ * when the key is absent, which is a game whose book has not opened and every
+ * game ESPN has already archived. ONE provider is sent (DraftKings, verified
+ * on the 10/6 NFL · MLB · MLS · EPL · La Liga · Serie A · UCL · UEL
+ * scoreboards) and this reads only `odds[0]`.
+ *
+ * Verified shape, identical across sports:
+ *
+ *   moneyline.{home,away,draw}.{open,close}.odds        "-121"
+ *   pointSpread.{home,away}.{open,close}.{line,odds}    "-1.5", "+169"
+ *   total.{over,under}.{open,close}.{line,odds}         "o7.5", "-118"
+ *
+ * plus ESPN's own one-liners `details` ("DAL -9.5") and `overUnder` (47.5),
+ * which are kept as the fallback for an older payload that carries only
+ * those. `draw` exists for soccer and nowhere else. Every value is a STRING
+ * and stays one — these are prices, read as text, never summed; the tile
+ * parses a line only to say which side covered, and does that itself.
+ *
+ * `close` is the current number (ESPN's name for "latest", not "final") and
+ * `open` is where the book opened; the tile shows the first and uses the
+ * second only to say the line moved. Facts only — nothing here says what a
+ * number means.
+ */
+function oddsOf(comp) {
+  const o = arr(comp?.odds)[0];
+  if (!o || typeof o !== 'object') return null;
+
+  const str = (v) => (v === null || v === undefined ? '' : String(v).trim());
+  // "o7.5" / "u7.5" -> "7.5": the letter is the side, which the key already says.
+  const lineOf = (v) => str(v).replace(/^[ou](?=[\d.+-])/i, '');
+  const leg = (node, when) => {
+    const n = node && typeof node === 'object' ? node[when] : null;
+    if (!n || typeof n !== 'object') return null;
+    return { line: lineOf(n.line), price: str(n.odds) };
+  };
+  const side = (node, when) => ({ home: leg(node?.home, when), away: leg(node?.away, when) });
+  const ml = (node, when) => ({
+    home: leg(node?.home, when)?.price || '',
+    away: leg(node?.away, when)?.price || '',
+    draw: leg(node?.draw, when)?.price || '',
+  });
+  const total = (node, when) => {
+    const over = leg(node?.over, when);
+    const under = leg(node?.under, when);
+    return { line: over?.line || under?.line || '', over: over?.price || '', under: under?.price || '' };
+  };
+
+  const cur = {
+    spread: side(o.pointSpread, 'close'),
+    moneyline: ml(o.moneyline, 'close'),
+    total: total(o.total, 'close'),
+  };
+  // Older payloads: flat numbers, no open/close. Fill only what is missing.
+  if (!cur.moneyline.home && o.homeTeamOdds?.moneyLine != null) cur.moneyline.home = str(o.homeTeamOdds.moneyLine);
+  if (!cur.moneyline.away && o.awayTeamOdds?.moneyLine != null) cur.moneyline.away = str(o.awayTeamOdds.moneyLine);
+  if (!cur.total.line && o.overUnder != null) cur.total.line = str(o.overUnder);
+
+  return {
+    provider: str(o.provider?.name),
+    details: str(o.details),
+    ...cur,
+    open: {
+      spread: side(o.pointSpread, 'open'),
+      moneyline: ml(o.moneyline, 'open'),
+      total: total(o.total, 'open'),
+    },
   };
 }
 

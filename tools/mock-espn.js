@@ -243,7 +243,7 @@ const STATUS = {
  * One event in ESPN's shape. Scores are STRINGS, as ESPN sends them; that is
  * gotcha #1 in live/espn.js and the mock must not paper over it.
  */
-function event({ id, date, away, home, state, shortDetail, period = 0, clock = '0:00', venue, broadcasts = [], geo = [], situation = null }) {
+function event({ id, date, away, home, state, shortDetail, period = 0, clock = '0:00', venue, broadcasts = [], geo = [], situation = null, odds = null }) {
   const side = (t, homeAway) => {
     const c = {
       id: `${id}-${homeAway}`,
@@ -280,6 +280,9 @@ function event({ id, date, away, home, state, shortDetail, period = 0, clock = '
         geoBroadcasts: geo,
         // B21: only a live game carries one, and `possession` is a TEAM id.
         ...(situation ? { situation } : {}),
+        // O1: ESPN sends ONE provider's board as `odds[0]`; absent when the
+        // book never opened (and on every game ESPN has archived).
+        ...(odds ? { odds: [odds] } : {}),
       },
     ],
     status: { period, displayClock: clock, type: st },
@@ -288,6 +291,56 @@ function event({ id, date, away, home, state, shortDetail, period = 0, clock = '
 
 const tv = (name, market) => ({ type: { shortName: 'TV' }, market: { type: market }, media: { shortName: name } });
 const stream = (name, market) => ({ type: { shortName: 'STREAMING' }, market: { type: market }, media: { shortName: name } });
+
+/**
+ * One DraftKings board in ESPN's shape (Today's Games O1/O2), verified on the
+ * 2026-10-06 NFL · MLB · EPL · La Liga · Serie A · UCL · UEL scoreboards —
+ * identical across sports; soccer adds `draw`. Every value is a STRING, as
+ * ESPN sends it, and the total lines carry their `o`/`u` prefix.
+ *
+ *   odds({ spread: ['-1.5', '+150', '+1.5', '-180'], total: ['8.5', '-110', '-110'],
+ *          ml: ['-130', '+110'], open: { spread: […], total: […] } })
+ *
+ * `spread` is [homeLine, homePrice, awayLine, awayPrice]; `total` is
+ * [line, overPrice, underPrice]; `ml` is [home, away] or [home, away, draw].
+ * `open` reuses the first two shapes; when omitted, open === close.
+ */
+function odds({ spread, total, ml, open = {}, provider = 'DraftKings' }) {
+  const leg = (line, price) => ({ line, odds: price });
+  const sp = (s) => (s ? { home: leg(s[0], s[1]), away: leg(s[2], s[3]) } : null);
+  const tt = (t) => (t ? { over: leg(`o${t[0]}`, t[1]), under: leg(`u${t[0]}`, t[2]) } : null);
+  const both = (make, close, openV) => {
+    const c = make(close);
+    const o = make(openV || close);
+    if (!c) return undefined;
+    const out = {};
+    for (const k of Object.keys(c)) out[k] = { open: o[k], close: c[k] };
+    return out;
+  };
+  const mlObj = (m) => {
+    if (!m) return undefined;
+    const out = { home: { open: { odds: m[0] }, close: { odds: m[0] } }, away: { open: { odds: m[1] }, close: { odds: m[1] } } };
+    if (m[2]) out.draw = { open: { odds: m[2] }, close: { odds: m[2] } };
+    return out;
+  };
+  const favHome = spread && Number(spread[0]) <= Number(spread[2]);
+  const o = {
+    provider: { id: '2000', name: provider, priority: 1 },
+    details: spread ? `${favHome ? 'HOME' : 'AWAY'} ${favHome ? spread[0] : spread[2]}` : '',
+    overUnder: total ? Number(total[0]) : undefined,
+    spread: spread ? Number(favHome ? spread[0] : spread[2]) : undefined,
+    // The flat legacy fields: ESPN now sends these empty beside the objects.
+    homeTeamOdds: { favorite: !!favHome, underdog: !favHome, moneyLine: undefined, spreadOdds: undefined },
+    awayTeamOdds: { favorite: !favHome, underdog: !!favHome, moneyLine: undefined, spreadOdds: undefined },
+  };
+  const ps = both(sp, spread, open.spread);
+  if (ps) o.pointSpread = { displayName: 'Spread', shortDisplayName: 'Spread', ...ps };
+  const tot = both(tt, total, open.total);
+  if (tot) o.total = { displayName: 'Total', shortDisplayName: 'Total', ...tot };
+  const m = mlObj(ml);
+  if (m) o.moneyline = { displayName: 'Moneyline', shortDisplayName: 'ML', ...m };
+  return o;
+}
 
 /**
  * `{leagues: {<slug>: [event]}, summaries: {}}` — what docs/mock/espn-today.json
@@ -330,6 +383,9 @@ function slate(todayCt, nextCt, afterCt) {
           // The same two names again, which is how ESPN really does it — the
           // normalizer must dedupe rather than print each twice.
           geo: [tv('FS1', 'National'), stream('CreamCity.TV', 'Home')],
+          // O4: a live game shows the pre-game board as it closed — no result,
+          // no movement note (opened where it closed).
+          odds: odds({ spread: ['-1.5', '+140', '+1.5', '-165'], total: ['8', '-105', '-115'], ml: ['-150', '+130'] }),
         }),
         // final, and not his: an unmapped national stream plus the AWAY team's
         // own regional feed.
@@ -345,6 +401,9 @@ function slate(todayCt, nextCt, afterCt) {
             { market: 'away', names: ['Herons.TV'] },
           ],
           geo: [stream('MLB.TV', 'National'), stream('Herons.TV', 'Away')],
+          // O4: a final says what the game did to the number. FIS -1.5 lost
+          // 5–6, so the Herons covered; 11 runs clears 8.5, so Over.
+          odds: odds({ spread: ['-1.5', '+150', '+1.5', '-180'], total: ['8.5', '-110', '-110'], ml: ['-130', '+110'] }),
         }),
         // still to come: mapped national, and somebody else's regional.
         event({
@@ -359,6 +418,15 @@ function slate(todayCt, nextCt, afterCt) {
             { market: 'away', names: ['Foremen Sports Net'] },
           ],
           geo: [stream('Peacock', 'National'), tv('Foremen Sports Net', 'Away')],
+          // O5: the book moved. The favourite flipped (home opened +1.5, now
+          // -1.5) and the total came down half a run — both say where they
+          // opened. The moneyline moved too and deliberately says nothing.
+          odds: odds({
+            spread: ['-1.5', '+165', '+1.5', '-200'],
+            total: ['7.5', '-110', '-110'],
+            ml: ['-125', '+105'],
+            open: { spread: ['+1.5', '-190', '-1.5', '+160'], total: ['8', '-110', '-110'] },
+          }),
         }),
       ],
 
@@ -372,6 +440,8 @@ function slate(todayCt, nextCt, afterCt) {
           home: { abbr: 'RVB', name: 'Riverbend FC', short: 'Riverbend', score: 0 },
           broadcasts: [{ market: 'national', names: ['MLS Season Pass'] }],
           geo: [stream('MLS Season Pass', 'National')],
+          // Soccer: a three-way moneyline with a Draw, and a goal line.
+          odds: odds({ spread: ['-0.5', '-105', '+0.5', '-115'], total: ['2.5', '-115', '-105'], ml: ['+115', '+230', '+240'] }),
         }),
         // No broadcasts key at all — the honest "no listing" case, and the one
         // a tile that assumes the key exists falls over on.
@@ -450,6 +520,8 @@ function slate(todayCt, nextCt, afterCt) {
             { market: 'home', names: ['CreamCity.TV'] },
           ],
           geo: [tv('FS1', 'National'), stream('CreamCity.TV', 'Home')],
+          // O7: tomorrow's rows carry the board too — same row builder.
+          odds: odds({ spread: ['-1.5', '+120', '+1.5', '-140'], total: ['9', '-110', '-110'], ml: ['-170', '+145'] }),
         }),
         // Listed before the 18:40 game on purpose: sorting by kick is the
         // sheet's job on this path too.

@@ -1005,6 +1005,23 @@ body {
 .tg-chip-regional,
 .tg-chip-none { background: var(--bg-chip); color: var(--text-faint); border-style: dashed; }
 
+/* The board (Today's Games O3) — three quiet chips under a game: spread,
+   total, moneyline. Plain and tabular; a book has no tone. A final's chip
+   carries its result as text, never as a colour. */
+.tg-odds { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.tg-odd {
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--line-soft);
+  background: var(--bg-chip);
+  color: var(--text-dim);
+  font-size: 10.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tg-game-post .tg-odd { color: var(--text-faint); }
+
 .tg-warn { margin: 0 0 10px; font-size: 11.5px; color: var(--warn); }
 
 /* ---------------------------------------------------------------- weather

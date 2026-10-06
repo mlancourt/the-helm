@@ -1784,6 +1784,96 @@ async function main() {
     check('a postponed game says postponed, not a kick time', /Postponed/.test(textOf(deadPanel.last.body)));
     check('and is not counted as live', countOf(deadRoot, 'tg-dot') === 0);
 
+    // -- the board (v1.2, spec O1–O9) ------------------------------------------
+    //
+    // The odds object ESPN already sends in the scoreboard call, carried by the
+    // normalizer as `game.odds` and printed under each row as three chips.
+    // The mock boards below are the committed fake slate through the REAL
+    // normalizer, so these cover live/espn.js's oddsOf() as well as the tile.
+    console.log('\ntoday_games — the board (odds)');
+    {
+      const { oddsChips } = tg;
+      const mlb = RAW.leagues['baseball/mlb'].map((e) => normalizeEvent(e, 'baseball/mlb'));
+      const live = mlb[0]; // LKL @ CCN, in
+      const fin = mlb[1]; // HRN 6 – 5 FIS, post
+      const pre = mlb[2]; // GCF @ CVD, pre, the book moved
+      const mls = normalizeEvent(RAW.leagues['soccer/usa.1'][0], 'soccer/usa.1');
+      const noBook = normalizeEvent(RAW.leagues['soccer/usa.1'][1], 'soccer/usa.1');
+
+      // (O2) the normalizer
+      check('oddsChips is exported for the harness', typeof oddsChips === 'function');
+      check('the normalizer carries odds off competitions[0].odds[0]', fin.odds && fin.odds.provider === 'DraftKings');
+      check('a game ESPN sent no odds for carries null, not {}', noBook.odds === null);
+      check('prices stay strings, as ESPN sent them', fin.odds.moneyline.home === '-130' && typeof fin.odds.moneyline.home === 'string');
+      check('the total line loses its o/u letter', fin.odds.total.line === '8.5' && fin.odds.total.over === '-110');
+      check('open and close are both carried', pre.odds.open.spread.home.line === '+1.5' && pre.odds.spread.home.line === '-1.5');
+      check('a two-way book has an empty draw, not undefined', fin.odds.moneyline.draw === '' && mls.odds.moneyline.draw === '+240');
+
+      // (O3) three chips, in order, away-first ML
+      const texts = (g) => oddsChips(g).map((c) => c.text);
+      const kinds = (g) => oddsChips(g).map((c) => c.kind).join();
+      check('three chips: spread, total, moneyline', kinds(live) === 'spread,total,ml', kinds(live));
+      check('the spread chip names the favourite, its line and price', texts(live)[0] === 'CCN -1.5 +140', texts(live)[0]);
+      check('the total chip is O/U line over/under', texts(live)[1] === 'O/U 8 -105/-115', texts(live)[1]);
+      check('the moneyline reads away first, like the matchup', texts(live)[2] === 'LKL +130 · CCN -150', texts(live)[2]);
+      check('soccer carries the draw in the middle', texts(mls)[2] === 'CHS +230 · Draw +240 · RVB +115', texts(mls)[2]);
+      check('and a goal line as its spread', texts(mls)[0] === 'RVB -0.5 -105', texts(mls)[0]);
+
+      // (O4) a final says what the game did to the number
+      check('a final spread says who covered', texts(fin)[0] === 'FIS -1.5 +150 · HRN covered', texts(fin)[0]);
+      check('a final total says Over or Under', texts(fin)[1] === 'O/U 8.5 -110/-110 · Over', texts(fin)[1]);
+      check('the moneyline on a final says nothing extra — the score already does', texts(fin)[2] === 'HRN +110 · FIS -130', texts(fin)[2]);
+      check('a live game shows the board with no result on it', !/covered|Over|Under|push/.test(texts(live).join(' ')));
+      {
+        const push = JSON.parse(JSON.stringify(fin));
+        push.home.score = 5; push.away.score = 6; // FIS -1.5: 5 - 6 - 1.5 = -2.5 → HRN covers; make it a push
+        push.odds.spread.home.line = '+1'; push.odds.spread.away.line = '-1';
+        push.odds.total.line = '11';
+        check('a push is a push, on the spread', /· push$/.test(texts(push)[0]), texts(push)[0]);
+        check('and on the total', texts(push)[1] === 'O/U 11 -110/-110 · push', texts(push)[1]);
+        check('the away favourite is named on its own chip', /^HRN -1 /.test(texts(push)[0]), texts(push)[0]);
+      }
+
+      // (O5) movement on spread and total, never on the moneyline
+      check('a moved spread says where it opened', texts(pre)[0] === 'CVD -1.5 +165 · was +1.5', texts(pre)[0]);
+      check('a moved total says where it opened', texts(pre)[1] === 'O/U 7.5 -110/-110 · was 8', texts(pre)[1]);
+      check('the moneyline moved too and says nothing', texts(pre)[2] === 'GCF +105 · CVD -125', texts(pre)[2]);
+      check('an unmoved line carries no note', !/was/.test(texts(live).join(' ')));
+
+      // (O6) absence is not news
+      check('no odds → no chips', oddsChips(noBook).length === 0);
+      check('a dead game shows no board', oddsChips(normalizeEvent(dead, 'baseball/mlb')).length === 0);
+      check('null, undefined and junk never throw', oddsChips(null).length === 0 && oddsChips({ odds: 'x' }).length === 0 && oddsChips({ odds: { spread: 7, total: null, moneyline: [] } }).length === 0);
+      {
+        const legacy = { ...pre, odds: { provider: 'X', details: 'CVD -1.5', spread: {}, moneyline: {}, total: { line: '8.5', over: '', under: '' }, open: {} } };
+        check('an older flat payload prints ESPN one-liners verbatim', texts(legacy).join(' | ') === 'CVD -1.5 | O/U 8.5', texts(legacy).join(' | '));
+      }
+
+      // in the DOM
+      const oddsPanel = fakePanel();
+      const oddsRoot = new El('div');
+      tg.render(oddsRoot, { band: 'LIVE', status: 'ok', data: payload }, { id: 'today_games', actions: oddsPanel.actions, live: liveFor(ALL) });
+      tap(tgBtns(oddsRoot)[0]); // MLB
+      const oRows = oddsPanel.last.body.querySelectorAll('.tg-game');
+      check('every MLB row wears an odds row', oRows.every((r) => r.querySelectorAll('.tg-odds').length === 1));
+      check('with three chips each', oRows.every((r) => r.querySelectorAll('.tg-odd').length === 3));
+      check('the odds row sits under the watch chips, not beside the status', oRows[2].querySelector('.tg-game-main').querySelectorAll('.tg-odds').length === 1 && oRows[2].querySelector('.tg-side').querySelectorAll('.tg-odds').length === 0);
+      check('chips are classed by market', oRows[0].querySelectorAll('.tg-odd-spread').length === 1 && oRows[0].querySelectorAll('.tg-odd-total').length === 1 && oRows[0].querySelectorAll('.tg-odd-ml').length === 1);
+      check('nothing on the board reads undefined or null', !/undefined|null|NaN/.test(textOf(oddsPanel.last.body)));
+      tap(tgBtns(oddsRoot)[1]); // MLS
+      const mRows = oddsPanel.last.body.querySelectorAll('.tg-game');
+      check('a game with no book has no odds row at all', mRows[1].querySelectorAll('.tg-odds').length === 0);
+      check('while its neighbour does', mRows[0].querySelectorAll('.tg-odd').length === 3);
+      // O8: the face is untouched.
+      check('no odds anywhere on the face', countOf(oddsRoot, 'tg-odd') === 0 && !/O\/U/.test(textOf(oddsRoot)));
+      // The board has no tone: a chip is never coloured by its number.
+      const css = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8');
+      const oddsCss = css.slice(css.indexOf('.tg-odds {'), css.indexOf('.tg-warn {'));
+      check('the odds stylesheet block exists', oddsCss.length > 100);
+      check('and names no tone token', !/--good|--bad|--warn|--brass/.test(oddsCss), oddsCss);
+      check('the module never sets innerHTML', !/innerHTML/.test(fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'today_games.js'), 'utf8')));
+    }
+
 
     // -- tomorrow (v1.1) -----------------------------------------------------
     //
@@ -1922,6 +2012,10 @@ async function main() {
         );
         check('every row is a pre row showing its Central kick', mlbRows.map((r) => r.querySelector('.tg-status').textContent).join() === '1:10 PM,6:40 PM',
           mlbRows.map((r) => r.querySelector('.tg-status').textContent).join());
+        // O7: the same row builder, so tomorrow carries the board where ESPN has one.
+        check('a tomorrow game with a book wears its odds row', mlbRows[1].querySelectorAll('.tg-odd').map((n) => n.textContent).join(' | ') === 'CCN -1.5 +120 | O/U 9 -110/-110 | GCF +145 · CCN -170',
+          mlbRows[1].querySelectorAll('.tg-odd').map((n) => n.textContent).join(' | '));
+        check('and one without has none', mlbRows[0].querySelectorAll('.tg-odds').length === 0);
 
         // Watch chips: identical rules, including the regional verdict.
         const chips = mlbRows.map((r) => r.querySelectorAll('.tg-chip').map((c) => c.textContent));

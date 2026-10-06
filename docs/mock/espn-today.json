@@ -1,19 +1,19 @@
 {
   "_comment": "INVENTED ESPN SLATE for ?mock=1. Real league slugs and response shapes; every team, score, channel and event id is fake. Regenerate with: node tools/make-mock-data.js --espn > docs/mock/espn-today.json",
-  "date_ct": "2026-10-05",
-  "date_next_ct": "2026-10-06",
+  "date_ct": "2026-10-06",
+  "date_next_ct": "2026-10-07",
   "leagues": {
     "baseball/mlb": [
       {
         "id": "401998201",
         "uid": "s:1~l:1~e:401998201",
-        "date": "2026-10-06T00:10:00.000Z",
+        "date": "2026-10-07T00:10:00.000Z",
         "name": "Lakeshore Loons at Cream City Nine",
         "shortName": "LKL @ CCN",
         "competitions": [
           {
             "id": "401998201",
-            "date": "2026-10-06T00:10:00.000Z",
+            "date": "2026-10-07T00:10:00.000Z",
             "venue": {
               "fullName": "Cream City Yard",
               "address": {
@@ -166,6 +166,94 @@
                   "shortName": "CreamCity.TV"
                 }
               }
+            ],
+            "odds": [
+              {
+                "provider": {
+                  "id": "2000",
+                  "name": "DraftKings",
+                  "priority": 1
+                },
+                "details": "HOME -1.5",
+                "overUnder": 8,
+                "spread": -1.5,
+                "homeTeamOdds": {
+                  "favorite": true,
+                  "underdog": false
+                },
+                "awayTeamOdds": {
+                  "favorite": false,
+                  "underdog": true
+                },
+                "pointSpread": {
+                  "displayName": "Spread",
+                  "shortDisplayName": "Spread",
+                  "home": {
+                    "open": {
+                      "line": "-1.5",
+                      "odds": "+140"
+                    },
+                    "close": {
+                      "line": "-1.5",
+                      "odds": "+140"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "line": "+1.5",
+                      "odds": "-165"
+                    },
+                    "close": {
+                      "line": "+1.5",
+                      "odds": "-165"
+                    }
+                  }
+                },
+                "total": {
+                  "displayName": "Total",
+                  "shortDisplayName": "Total",
+                  "over": {
+                    "open": {
+                      "line": "o8",
+                      "odds": "-105"
+                    },
+                    "close": {
+                      "line": "o8",
+                      "odds": "-105"
+                    }
+                  },
+                  "under": {
+                    "open": {
+                      "line": "u8",
+                      "odds": "-115"
+                    },
+                    "close": {
+                      "line": "u8",
+                      "odds": "-115"
+                    }
+                  }
+                },
+                "moneyline": {
+                  "displayName": "Moneyline",
+                  "shortDisplayName": "ML",
+                  "home": {
+                    "open": {
+                      "odds": "-150"
+                    },
+                    "close": {
+                      "odds": "-150"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "odds": "+130"
+                    },
+                    "close": {
+                      "odds": "+130"
+                    }
+                  }
+                }
+              }
             ]
           }
         ],
@@ -184,13 +272,13 @@
       {
         "id": "401998202",
         "uid": "s:1~l:1~e:401998202",
-        "date": "2026-10-05T18:10:00.000Z",
+        "date": "2026-10-06T18:10:00.000Z",
         "name": "Harbor Herons at Foundry Ironsides",
         "shortName": "HRN @ FIS",
         "competitions": [
           {
             "id": "401998202",
-            "date": "2026-10-05T18:10:00.000Z",
+            "date": "2026-10-06T18:10:00.000Z",
             "venue": {
               "fullName": "Foundry Field",
               "address": {
@@ -365,6 +453,94 @@
                   "shortName": "Herons.TV"
                 }
               }
+            ],
+            "odds": [
+              {
+                "provider": {
+                  "id": "2000",
+                  "name": "DraftKings",
+                  "priority": 1
+                },
+                "details": "HOME -1.5",
+                "overUnder": 8.5,
+                "spread": -1.5,
+                "homeTeamOdds": {
+                  "favorite": true,
+                  "underdog": false
+                },
+                "awayTeamOdds": {
+                  "favorite": false,
+                  "underdog": true
+                },
+                "pointSpread": {
+                  "displayName": "Spread",
+                  "shortDisplayName": "Spread",
+                  "home": {
+                    "open": {
+                      "line": "-1.5",
+                      "odds": "+150"
+                    },
+                    "close": {
+                      "line": "-1.5",
+                      "odds": "+150"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "line": "+1.5",
+                      "odds": "-180"
+                    },
+                    "close": {
+                      "line": "+1.5",
+                      "odds": "-180"
+                    }
+                  }
+                },
+                "total": {
+                  "displayName": "Total",
+                  "shortDisplayName": "Total",
+                  "over": {
+                    "open": {
+                      "line": "o8.5",
+                      "odds": "-110"
+                    },
+                    "close": {
+                      "line": "o8.5",
+                      "odds": "-110"
+                    }
+                  },
+                  "under": {
+                    "open": {
+                      "line": "u8.5",
+                      "odds": "-110"
+                    },
+                    "close": {
+                      "line": "u8.5",
+                      "odds": "-110"
+                    }
+                  }
+                },
+                "moneyline": {
+                  "displayName": "Moneyline",
+                  "shortDisplayName": "ML",
+                  "home": {
+                    "open": {
+                      "odds": "-130"
+                    },
+                    "close": {
+                      "odds": "-130"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "odds": "+110"
+                    },
+                    "close": {
+                      "odds": "+110"
+                    }
+                  }
+                }
+              }
             ]
           }
         ],
@@ -383,13 +559,13 @@
       {
         "id": "401998203",
         "uid": "s:1~l:1~e:401998203",
-        "date": "2026-10-06T02:40:00.000Z",
+        "date": "2026-10-07T02:40:00.000Z",
         "name": "Granite City Foremen at Cedar Valley Drays",
         "shortName": "GCF @ CVD",
         "competitions": [
           {
             "id": "401998203",
-            "date": "2026-10-06T02:40:00.000Z",
+            "date": "2026-10-07T02:40:00.000Z",
             "venue": {
               "fullName": "Drayworks Park",
               "address": {
@@ -468,6 +644,94 @@
                   "shortName": "Foremen Sports Net"
                 }
               }
+            ],
+            "odds": [
+              {
+                "provider": {
+                  "id": "2000",
+                  "name": "DraftKings",
+                  "priority": 1
+                },
+                "details": "HOME -1.5",
+                "overUnder": 7.5,
+                "spread": -1.5,
+                "homeTeamOdds": {
+                  "favorite": true,
+                  "underdog": false
+                },
+                "awayTeamOdds": {
+                  "favorite": false,
+                  "underdog": true
+                },
+                "pointSpread": {
+                  "displayName": "Spread",
+                  "shortDisplayName": "Spread",
+                  "home": {
+                    "open": {
+                      "line": "+1.5",
+                      "odds": "-190"
+                    },
+                    "close": {
+                      "line": "-1.5",
+                      "odds": "+165"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "line": "-1.5",
+                      "odds": "+160"
+                    },
+                    "close": {
+                      "line": "+1.5",
+                      "odds": "-200"
+                    }
+                  }
+                },
+                "total": {
+                  "displayName": "Total",
+                  "shortDisplayName": "Total",
+                  "over": {
+                    "open": {
+                      "line": "o8",
+                      "odds": "-110"
+                    },
+                    "close": {
+                      "line": "o7.5",
+                      "odds": "-110"
+                    }
+                  },
+                  "under": {
+                    "open": {
+                      "line": "u8",
+                      "odds": "-110"
+                    },
+                    "close": {
+                      "line": "u7.5",
+                      "odds": "-110"
+                    }
+                  }
+                },
+                "moneyline": {
+                  "displayName": "Moneyline",
+                  "shortDisplayName": "ML",
+                  "home": {
+                    "open": {
+                      "odds": "-125"
+                    },
+                    "close": {
+                      "odds": "-125"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "odds": "+105"
+                    },
+                    "close": {
+                      "odds": "+105"
+                    }
+                  }
+                }
+              }
             ]
           }
         ],
@@ -488,13 +752,13 @@
       {
         "id": "742118",
         "uid": "s:1~l:1~e:742118",
-        "date": "2026-10-06T00:30:00.000Z",
+        "date": "2026-10-07T00:30:00.000Z",
         "name": "Cross Harbor SC at Riverbend FC",
         "shortName": "CHS @ RVB",
         "competitions": [
           {
             "id": "742118",
-            "date": "2026-10-06T00:30:00.000Z",
+            "date": "2026-10-07T00:30:00.000Z",
             "venue": {
               "fullName": "Riverbend Grounds",
               "address": {
@@ -556,6 +820,102 @@
                   "shortName": "MLS Season Pass"
                 }
               }
+            ],
+            "odds": [
+              {
+                "provider": {
+                  "id": "2000",
+                  "name": "DraftKings",
+                  "priority": 1
+                },
+                "details": "HOME -0.5",
+                "overUnder": 2.5,
+                "spread": -0.5,
+                "homeTeamOdds": {
+                  "favorite": true,
+                  "underdog": false
+                },
+                "awayTeamOdds": {
+                  "favorite": false,
+                  "underdog": true
+                },
+                "pointSpread": {
+                  "displayName": "Spread",
+                  "shortDisplayName": "Spread",
+                  "home": {
+                    "open": {
+                      "line": "-0.5",
+                      "odds": "-105"
+                    },
+                    "close": {
+                      "line": "-0.5",
+                      "odds": "-105"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "line": "+0.5",
+                      "odds": "-115"
+                    },
+                    "close": {
+                      "line": "+0.5",
+                      "odds": "-115"
+                    }
+                  }
+                },
+                "total": {
+                  "displayName": "Total",
+                  "shortDisplayName": "Total",
+                  "over": {
+                    "open": {
+                      "line": "o2.5",
+                      "odds": "-115"
+                    },
+                    "close": {
+                      "line": "o2.5",
+                      "odds": "-115"
+                    }
+                  },
+                  "under": {
+                    "open": {
+                      "line": "u2.5",
+                      "odds": "-105"
+                    },
+                    "close": {
+                      "line": "u2.5",
+                      "odds": "-105"
+                    }
+                  }
+                },
+                "moneyline": {
+                  "displayName": "Moneyline",
+                  "shortDisplayName": "ML",
+                  "home": {
+                    "open": {
+                      "odds": "+115"
+                    },
+                    "close": {
+                      "odds": "+115"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "odds": "+230"
+                    },
+                    "close": {
+                      "odds": "+230"
+                    }
+                  },
+                  "draw": {
+                    "open": {
+                      "odds": "+240"
+                    },
+                    "close": {
+                      "odds": "+240"
+                    }
+                  }
+                }
+              }
             ]
           }
         ],
@@ -574,13 +934,13 @@
       {
         "id": "742119",
         "uid": "s:1~l:1~e:742119",
-        "date": "2026-10-06T01:00:00.000Z",
+        "date": "2026-10-07T01:00:00.000Z",
         "name": "North Pike Sentinels at Slack Water United",
         "shortName": "NPS @ SWU",
         "competitions": [
           {
             "id": "742119",
-            "date": "2026-10-06T01:00:00.000Z",
+            "date": "2026-10-07T01:00:00.000Z",
             "venue": {
               "fullName": "Pike Street Stadium",
               "address": {
@@ -643,13 +1003,13 @@
       {
         "id": "401990501",
         "uid": "s:1~l:1~e:401990501",
-        "date": "2026-10-05T17:00:00.000Z",
+        "date": "2026-10-06T17:00:00.000Z",
         "name": "Harbor Kestrels at Foundry Ironsides",
         "shortName": "HRK @ FDI",
         "competitions": [
           {
             "id": "401990501",
-            "date": "2026-10-05T17:00:00.000Z",
+            "date": "2026-10-06T17:00:00.000Z",
             "venue": {
               "fullName": "Harbor Field",
               "address": {
@@ -754,13 +1114,13 @@
       {
         "id": "401990502",
         "uid": "s:1~l:1~e:401990502",
-        "date": "2026-10-06T00:20:00.000Z",
+        "date": "2026-10-07T00:20:00.000Z",
         "name": "North Pike Sentinels at Lakeshore Loons",
         "shortName": "NPS @ LKL",
         "competitions": [
           {
             "id": "401990502",
-            "date": "2026-10-06T00:20:00.000Z",
+            "date": "2026-10-07T00:20:00.000Z",
             "venue": {
               "fullName": "Pike Bowl",
               "address": {
@@ -821,13 +1181,13 @@
       {
         "id": "401990503",
         "uid": "s:1~l:1~e:401990503",
-        "date": "2026-10-05T17:00:00.000Z",
+        "date": "2026-10-06T17:00:00.000Z",
         "name": "Granite City Foremen at Cedar Valley Drays",
         "shortName": "GCF @ CVD",
         "competitions": [
           {
             "id": "401990503",
-            "date": "2026-10-05T17:00:00.000Z",
+            "date": "2026-10-06T17:00:00.000Z",
             "venue": {
               "fullName": "Drayworks Stadium",
               "address": {
@@ -937,13 +1297,13 @@
       {
         "id": "731447",
         "uid": "s:1~l:1~e:731447",
-        "date": "2026-10-05T19:00:00.000Z",
+        "date": "2026-10-06T19:00:00.000Z",
         "name": "Almendro CF at Val de Mar",
         "shortName": "ALM @ VDM",
         "competitions": [
           {
             "id": "731447",
-            "date": "2026-10-05T19:00:00.000Z",
+            "date": "2026-10-06T19:00:00.000Z",
             "venue": {
               "fullName": "Estadio Inventado",
               "address": {
@@ -1037,13 +1397,13 @@
       {
         "id": "731448",
         "uid": "s:1~l:1~e:731448",
-        "date": "2026-10-05T14:00:00.000Z",
+        "date": "2026-10-06T14:00:00.000Z",
         "name": "Puerto Faro at Montaraz",
         "shortName": "PTF @ MNT",
         "competitions": [
           {
             "id": "731448",
-            "date": "2026-10-05T14:00:00.000Z",
+            "date": "2026-10-06T14:00:00.000Z",
             "venue": {
               "fullName": "Campo del Faro",
               "address": {
@@ -1146,13 +1506,13 @@
       {
         "id": "401998211",
         "uid": "s:1~l:1~e:401998211",
-        "date": "2026-10-06T23:40:00.000Z",
+        "date": "2026-10-07T23:40:00.000Z",
         "name": "Granite City Foremen at Cream City Nine",
         "shortName": "GCF @ CCN",
         "competitions": [
           {
             "id": "401998211",
-            "date": "2026-10-06T23:40:00.000Z",
+            "date": "2026-10-07T23:40:00.000Z",
             "venue": {
               "fullName": "Cream City Yard",
               "address": {
@@ -1231,6 +1591,94 @@
                   "shortName": "CreamCity.TV"
                 }
               }
+            ],
+            "odds": [
+              {
+                "provider": {
+                  "id": "2000",
+                  "name": "DraftKings",
+                  "priority": 1
+                },
+                "details": "HOME -1.5",
+                "overUnder": 9,
+                "spread": -1.5,
+                "homeTeamOdds": {
+                  "favorite": true,
+                  "underdog": false
+                },
+                "awayTeamOdds": {
+                  "favorite": false,
+                  "underdog": true
+                },
+                "pointSpread": {
+                  "displayName": "Spread",
+                  "shortDisplayName": "Spread",
+                  "home": {
+                    "open": {
+                      "line": "-1.5",
+                      "odds": "+120"
+                    },
+                    "close": {
+                      "line": "-1.5",
+                      "odds": "+120"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "line": "+1.5",
+                      "odds": "-140"
+                    },
+                    "close": {
+                      "line": "+1.5",
+                      "odds": "-140"
+                    }
+                  }
+                },
+                "total": {
+                  "displayName": "Total",
+                  "shortDisplayName": "Total",
+                  "over": {
+                    "open": {
+                      "line": "o9",
+                      "odds": "-110"
+                    },
+                    "close": {
+                      "line": "o9",
+                      "odds": "-110"
+                    }
+                  },
+                  "under": {
+                    "open": {
+                      "line": "u9",
+                      "odds": "-110"
+                    },
+                    "close": {
+                      "line": "u9",
+                      "odds": "-110"
+                    }
+                  }
+                },
+                "moneyline": {
+                  "displayName": "Moneyline",
+                  "shortDisplayName": "ML",
+                  "home": {
+                    "open": {
+                      "odds": "-170"
+                    },
+                    "close": {
+                      "odds": "-170"
+                    }
+                  },
+                  "away": {
+                    "open": {
+                      "odds": "+145"
+                    },
+                    "close": {
+                      "odds": "+145"
+                    }
+                  }
+                }
+              }
             ]
           }
         ],
@@ -1249,13 +1697,13 @@
       {
         "id": "401998212",
         "uid": "s:1~l:1~e:401998212",
-        "date": "2026-10-06T18:10:00.000Z",
+        "date": "2026-10-07T18:10:00.000Z",
         "name": "Lakeshore Loons at Foundry Ironsides",
         "shortName": "LKL @ FIS",
         "competitions": [
           {
             "id": "401998212",
-            "date": "2026-10-06T18:10:00.000Z",
+            "date": "2026-10-07T18:10:00.000Z",
             "venue": {
               "fullName": "Foundry Field",
               "address": {
@@ -1335,13 +1783,13 @@
       {
         "id": "401998213",
         "uid": "s:1~l:1~e:401998213",
-        "date": "2026-10-08T00:05:00.000Z",
+        "date": "2026-10-09T00:05:00.000Z",
         "name": "Harbor Herons at Cedar Valley Drays",
         "shortName": "HRN @ CVD",
         "competitions": [
           {
             "id": "401998213",
-            "date": "2026-10-08T00:05:00.000Z",
+            "date": "2026-10-09T00:05:00.000Z",
             "venue": {
               "fullName": "Drayworks Park",
               "address": {
@@ -1423,13 +1871,13 @@
       {
         "id": "742131",
         "uid": "s:1~l:1~e:742131",
-        "date": "2026-10-07T00:30:00.000Z",
+        "date": "2026-10-08T00:30:00.000Z",
         "name": "Riverbend FC at Slack Water United",
         "shortName": "RVB @ SWU",
         "competitions": [
           {
             "id": "742131",
-            "date": "2026-10-07T00:30:00.000Z",
+            "date": "2026-10-08T00:30:00.000Z",
             "venue": {
               "fullName": "Pike Street Stadium",
               "address": {
@@ -1493,13 +1941,13 @@
       {
         "id": "731461",
         "uid": "s:1~l:1~e:731461",
-        "date": "2026-10-06T19:00:00.000Z",
+        "date": "2026-10-07T19:00:00.000Z",
         "name": "Montaraz at Almendro CF",
         "shortName": "MNT @ ALM",
         "competitions": [
           {
             "id": "731461",
-            "date": "2026-10-06T19:00:00.000Z",
+            "date": "2026-10-07T19:00:00.000Z",
             "venue": {
               "fullName": "Estadio Inventado",
               "address": {

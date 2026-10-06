@@ -55,9 +55,20 @@
  * off `event.date`, so it goes through `ctTime`, which parses it and formats
  * it in Central.
  *
- * RULE 10: every team name, status string and broadcast name is ESPN's text
- * and lands via textContent. There are no links: broadcast names are channel
- * names, not URLs, and inventing one would be guessing.
+ * THE BOARD (v1.2, 2026-10-06, spec O1–O9). Under each game, one row of three
+ * chips — spread · total · moneyline — off the odds object ESPN already sends
+ * in the SAME scoreboard call (DraftKings; one book across all eight leagues,
+ * so the numbers compare). No new origin, no key, no extra request: the
+ * normalizer in live/espn.js carries it as `game.odds` and this module prints
+ * it. A final adds what the game did to the number (`covered` / `Over` /
+ * `push`); a moved spread or total says where it opened (`was -8.5`). No odds
+ * → no row, exactly as with the watch chips. Prices are strings and stay
+ * strings; the only number parsed here is a LINE, and only to say which side
+ * of it the final landed on. The Bookie grades tickets; this is the slate.
+ *
+ * RULE 10: every team name, status string, broadcast name and price is ESPN's
+ * text and lands via textContent. There are no links: broadcast names are
+ * channel names, not URLs, and inventing one would be guessing.
  */
 
 import { el, empty, clear } from '../lib/dom.js';
@@ -149,6 +160,117 @@ export function watchChips(game, watchMap, localTeams, slug) {
   return out;
 }
 
+// --------------------------------------------------------------------- odds
+
+/**
+ * The one number this module parses: a line like "-9.5", "+1.5", "47.5" or
+ * "2.5" -> a finite number, or null for anything else ("EVEN", "", "PK").
+ * Prices are never parsed — they are printed as ESPN wrote them.
+ */
+function lineNum(v) {
+  const s = str(v).trim().replace(/^[ou](?=[\d.+-])/i, '').replace('−', '-');
+  if (!/^[+-]?\d+(\.\d+)?$/.test(s)) return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** "DAL -9.5 -110" — abbr, line, price; each part only when present. */
+function join(...parts) {
+  return parts.filter((p) => p !== null && p !== undefined && String(p) !== '').join(' ');
+}
+
+/**
+ * One game's odds chips: `[{text, kind}]` — spread, total, moneyline, in that
+ * order (Today's Games spec O3). `kind` is a class name only.
+ *
+ * PRE: the current line. IN: the same line — ESPN carries DraftKings's
+ * pre-game board, not a live one, and the tile does not pretend otherwise.
+ * POST (O4): the line plus what happened to it — `· HRN covered`, `· Over`,
+ * `· push` — from the final score against the closing line. That is the one
+ * piece of arithmetic in this module, and it is arithmetic on two facts the
+ * row already shows, not a grade: the Bookie settles tickets, this says
+ * which side of a number the game landed on.
+ *
+ * MOVEMENT (O5): when the book opened at a different spread or total, the
+ * chip says `· was -8.5`. The moneyline gets no movement note — a price moves
+ * every hour and the noise would drown the signal.
+ *
+ * A game with no odds returns [] and the row draws nothing (O6). A dead game
+ * (postponed, cancelled) returns [] too — there is no number to land on.
+ */
+export function oddsChips(game) {
+  const odds = obj(game?.odds);
+  if (!game || game.dead || !Object.keys(odds).length) return [];
+
+  const home = obj(game.home);
+  const away = obj(game.away);
+  const ha = str(home.abbr) || str(home.short) || 'H';
+  const aa = str(away.abbr) || str(away.short) || 'A';
+  const final = game.state === 'post' && game.completed !== false;
+  const hs = Number(home.score) || 0;
+  const as = Number(away.score) || 0;
+
+  const out = [];
+
+  // -- spread: the favourite's side (negative line); home when neither is. --
+  const sp = obj(odds.spread);
+  const spHome = obj(sp.home);
+  const spAway = obj(sp.away);
+  const hLine = lineNum(spHome.line);
+  const aLine = lineNum(spAway.line);
+  let spreadText = '';
+  if (hLine !== null || aLine !== null) {
+    const favHome = aLine === null || (hLine !== null && hLine <= aLine);
+    const fav = favHome ? spHome : spAway;
+    spreadText = join(favHome ? ha : aa, str(fav.line), str(fav.price));
+    const openLeg = obj(obj(obj(odds.open).spread)[favHome ? 'home' : 'away']);
+    const openLine = lineNum(openLeg.line);
+    const curLine = favHome ? hLine : aLine;
+    if (final && hLine !== null) {
+      // Home covers when its margin beats its own line: margin + line > 0.
+      const edge = hs - as + hLine;
+      spreadText += edge === 0 ? ' · push' : ` · ${edge > 0 ? ha : aa} covered`;
+    } else if (final && aLine !== null) {
+      const edge = as - hs + aLine;
+      spreadText += edge === 0 ? ' · push' : ` · ${edge > 0 ? aa : ha} covered`;
+    } else if (openLine !== null && curLine !== null && openLine !== curLine) {
+      spreadText += ` · was ${str(openLeg.line)}`;
+    }
+  } else if (str(odds.details)) {
+    // An older payload: ESPN's own one-liner ("DAL -9.5"), verbatim.
+    spreadText = str(odds.details);
+  }
+  if (spreadText) out.push({ text: spreadText, kind: 'spread' });
+
+  // -- total ---------------------------------------------------------------
+  const tot = obj(odds.total);
+  const tLine = str(tot.line);
+  if (tLine) {
+    const prices = str(tot.over) && str(tot.under) ? `${str(tot.over)}/${str(tot.under)}` : str(tot.over) || str(tot.under);
+    let totalText = join(`O/U ${tLine}`, prices);
+    const n = lineNum(tLine);
+    const openN = lineNum(obj(obj(odds.open).total).line);
+    if (final && n !== null) {
+      const sum = hs + as;
+      totalText += sum === n ? ' · push' : ` · ${sum > n ? 'Over' : 'Under'}`;
+    } else if (openN !== null && n !== null && openN !== n) {
+      totalText += ` · was ${str(obj(obj(odds.open).total).line)}`;
+    }
+    out.push({ text: totalText, kind: 'total' });
+  }
+
+  // -- moneyline: away first, the way the matchup reads; Draw in the middle
+  //    when the book offers one (soccer). --------------------------------------
+  const ml = obj(odds.moneyline);
+  const legs = [];
+  if (str(ml.away)) legs.push(`${aa} ${str(ml.away)}`);
+  if (str(ml.draw)) legs.push(`Draw ${str(ml.draw)}`);
+  if (str(ml.home)) legs.push(`${ha} ${str(ml.home)}`);
+  if (legs.length) out.push({ text: legs.join(' · '), kind: 'ml' });
+
+  return out;
+}
+
 // -------------------------------------------------------------------- slate
 
 /**
@@ -214,6 +336,7 @@ function statusOf(game) {
 function gameRow(game, data, slug) {
   const status = statusOf(game);
   const chips = watchChips(game, data.watch_map, data.local_teams, slug);
+  const odds = oddsChips(game);
 
   return el('div', { cls: `tg-game tg-game-${status.tone}` }, [
     el('div', { cls: 'tg-game-main' }, [
@@ -223,6 +346,14 @@ function gameRow(game, data, slug) {
             'div',
             { cls: 'tg-watch' },
             chips.map((c) => el('span', { cls: `tg-chip tg-chip-${c.kind}`, text: c.text }))
+          )
+        : null,
+      // The board (O3). Same rule as the watch row: no odds, no row.
+      odds.length
+        ? el(
+            'div',
+            { cls: 'tg-odds' },
+            odds.map((c) => el('span', { cls: `tg-odd tg-odd-${c.kind}`, text: c.text }))
           )
         : null,
     ]),
