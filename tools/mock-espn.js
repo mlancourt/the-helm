@@ -578,7 +578,21 @@ function slate(todayCt, nextCt, afterCt) {
     // Only the parlay games carry summaries. The single mock tickets name
     // events this slate does not hold, and "no ESPN event matched" is the
     // honest answer for them.
-    summaries: parlaySummaries(),
+    summaries: {
+      ...parlaySummaries(),
+      // S2: the MLS game in progress — goals and cards, in ESPN's keyEvents
+      // shape (verified 10/6 on a finished EPL summary). The substitution and
+      // the kickoff are there so the filter has something to drop.
+      742119: {
+        keyEvents: [
+          { type: { text: 'Kickoff' }, clock: { displayValue: "0'" }, period: { number: 1 }, text: 'First Half begins.' },
+          { type: { text: 'Goal' }, clock: { displayValue: "23'" }, period: { number: 1 }, team: { displayName: 'North Pike Sentinels' }, text: 'Goal! North Pike Sentinels 1, Slack Water United 0. Tomas Ferrer (North Pike Sentinels) header.', participants: [{ athlete: { displayName: 'Tomas Ferrer' } }], scoringPlay: true },
+          { type: { text: 'Yellow Card' }, clock: { displayValue: "41'" }, period: { number: 1 }, team: { displayName: 'Slack Water United' }, text: 'Ike Bramble (Slack Water United) is shown the yellow card for a bad foul.', participants: [{ athlete: { displayName: 'Ike Bramble' } }] },
+          { type: { text: 'Substitution' }, clock: { displayValue: "46'" }, period: { number: 2 }, team: { displayName: 'Slack Water United' }, text: 'Substitution, Slack Water United.', participants: [{ athlete: { displayName: 'A Sub' } }, { athlete: { displayName: 'B Out' } }] },
+          { type: { text: 'Goal' }, clock: { displayValue: "58'" }, period: { number: 2 }, team: { displayName: 'Slack Water United' }, text: 'Goal! North Pike Sentinels 1, Slack Water United 1. Pell Okafor (Slack Water United) right footed shot.', participants: [{ athlete: { displayName: 'Pell Okafor' } }], scoringPlay: true },
+        ],
+      },
+    },
   };
 }
 

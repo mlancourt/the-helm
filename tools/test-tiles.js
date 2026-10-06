@@ -1874,6 +1874,182 @@ async function main() {
       check('the module never sets innerHTML', !/innerHTML/.test(fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'today_games.js'), 'utf8')));
     }
 
+    // -- the ticket mark (v1.3, spec T1–T3) ------------------------------------
+    console.log('\ntoday_games — the ticket mark');
+    {
+      const { ticketedGames } = tg;
+      const snap = (tickets) => ({ tiles: { bets_live: { data: { tickets } } } });
+      check('ticketedGames is exported for the harness', typeof ticketedGames === 'function');
+      check('no snapshot → an empty map, not a throw', ticketedGames(null).size === 0 && ticketedGames({}).size === 0 && ticketedGames({ tiles: { bets_live: null } }).size === 0);
+      const m = ticketedGames(snap([
+        { id: 't1', espn_event_id: '401998201', label: 'CCN -1.5' },
+        { id: 't2', espn_event_id: 401998201, label: 'O8' },
+        { id: 'p1', market: 'parlay', espn_event_id: 'ignored', games: [{ espn_event_id: '742118' }, { espn_event_id: '' }, { espn_event_id: '401998203' }], label: '3-leg parlay' },
+        { id: 'junk' },
+        'not a ticket',
+      ]));
+      check('a single is keyed by its espn_event_id, as a string', m.get('401998201')?.length === 2, JSON.stringify([...m]));
+      check('two tickets on one game keep both labels', m.get('401998201')?.join() === 'CCN -1.5,O8');
+      check('a parlay names each of its games, not its own id', m.has('742118') && m.has('401998203') && !m.has('ignored'));
+      check('a blank id is skipped, junk is skipped', !m.has('') && m.size === 3);
+
+      const tkPanel = fakePanel();
+      const tkRoot = new El('div');
+      tg.render(tkRoot, { band: 'LIVE', status: 'ok', data: payload }, {
+        id: 'today_games',
+        actions: tkPanel.actions,
+        live: liveFor(ALL),
+        snapshot: snap([{ id: 't1', espn_event_id: '401998201', label: 'CCN -1.5' }, { id: 'p1', games: [{ espn_event_id: '401998211' }], label: 'parlay' }]),
+      });
+      check('T3: nothing on the face', countOf(tkRoot, 'tg-ticket') === 0);
+      tap(tgBtns(tkRoot)[0]); // MLB
+      const tkRows = tkPanel.last.body.querySelectorAll('.tg-game');
+      const marks = (r) => r.querySelectorAll('.tg-ticket');
+      check('the ticketed game wears one glyph', marks(tkRows[1]).length === 1 && marks(tkRows[1])[0].textContent === '🎟️');
+      check('its labels ride the tooltip', marks(tkRows[1])[0].getAttribute('title') === 'CCN -1.5');
+      check('and an aria-label says what it means', marks(tkRows[1])[0].getAttribute('aria-label') === 'ticket on this game');
+      check('the other rows wear none', marks(tkRows[0]).length === 0 && marks(tkRows[2]).length === 0);
+      check('the matchup text still reads as the matchup', /Loons @ Nine$/.test(tkRows[1].querySelector('.tg-matchup').textContent));
+      // no snapshot at all: no marks, no throw
+      const bare = new El('div');
+      const barePanel = fakePanel();
+      tg.render(bare, { band: 'LIVE', status: 'ok', data: payload }, { id: 'today_games', actions: barePanel.actions, live: liveFor(ALL) });
+      tap(tgBtns(bare)[0]);
+      check('no snapshot → no marks anywhere', countOf(barePanel.last.body, 'tg-ticket') === 0);
+    }
+
+    // -- the fold (v1.3, spec S1–S6) --------------------------------------------
+    console.log('\ntoday_games — the fold');
+    {
+      const { storyRows, lineScore, boardRows } = tg;
+      const mlb = RAW.leagues['baseball/mlb'].map((e) => normalizeEvent(e, 'baseball/mlb'));
+      const live = mlb[0];
+      const fin = mlb[1];
+      const pre = mlb[2];
+      const mls = RAW.leagues['soccer/usa.1'].map((e) => normalizeEvent(e, 'soccer/usa.1'));
+      const mlsLive = mls[1];
+
+      // pure helpers
+      const ls = lineScore(fin);
+      check('a final carries a line score', ls && ls.innings.length === 9 && ls.away.total === 6 && ls.home.total === 5, JSON.stringify(ls));
+      check('innings are labelled 1..n', ls.innings.join() === '1,2,3,4,5,6,7,8,9');
+      check('runs come off the game, not a fetch', ls.away.runs.join() === '2,0,0,3,0,0,1,0,0');
+      const lsLive = lineScore(live);
+      check('a live game pads the unplayed innings with null, never 0', lsLive.innings.length === 7 && lsLive.home.runs[6] === 0 && lsLive.away.runs.length === 7);
+      check('a pre game has no line score', lineScore(pre) === null);
+      check('soccer has no line score', lineScore(mlsLive) === null);
+      check('junk never throws', lineScore(null) === null && lineScore({}) === null);
+
+      const mock = RAW.summaries['742119'];
+      const story = storyRows(mock);
+      check('keyEvents are filtered to goals and cards', story.length === 3, JSON.stringify(story));
+      check('a goal reads clock, glyph, type, scorer, team', story[0].when === "23'" && story[0].text === '⚽ Goal · Tomas Ferrer (North Pike Sentinels)', story[0].text);
+      check('a yellow card wears its glyph', story[1].text.startsWith('🟨 Yellow Card · Ike Bramble'), story[1].text);
+      check('the substitution and the kickoff are dropped', !story.some((r) => /Substitution|Kickoff/.test(r.text)));
+      const nfl = storyRows({ scoringPlays: [{ text: 'Bijan Robinson 59 Yd Rush (Nick Folk Kick)', period: { number: 1 }, clock: { displayValue: '13:34' }, team: { abbreviation: 'ATL' }, awayScore: 7, homeScore: 0 }, { text: '' }] });
+      check('scoring plays read quarter, clock, team, text, score', nfl.length === 1 && nfl[0].when === 'Q1 13:34' && nfl[0].team === 'ATL' && nfl[0].score === '7–0', JSON.stringify(nfl));
+      check('plays win over keyEvents when both exist', storyRows({ scoringPlays: nfl.length ? [{ text: 'x' }] : [], keyEvents: mock.keyEvents })[0].text === 'x');
+      check('an empty or junk summary is no rows', storyRows(null).length === 0 && storyRows({}).length === 0 && storyRows({ keyEvents: 'x', scoringPlays: 5 }).length === 0);
+
+      const br = boardRows(pre);
+      check('the board lists spread (both sides), total, moneyline', br.map((r) => r.market).join('|') === 'Spread CVD|Spread GCF|Total|Moneyline', br.map((r) => r.market).join('|'));
+      check('open and now are both carried', br[0].open === '+1.5 -190' && br[0].now === '-1.5 +165', JSON.stringify(br[0]));
+      check('the total carries its prices', br[2].now === '7.5 -110/-110' && br[2].open === '8 -110/-110');
+      check('the moneyline reads away-first', br[3].now === 'GCF +105 · CVD -125');
+      check('no odds → no board rows', boardRows(mlsLive).length === 0 && boardRows(null).length === 0);
+
+      // in the DOM: the fold opens under the row and fetches once
+      const calls = [];
+      let settleSummary = null;
+      const fetchSummary = (league, id) => {
+        calls.push(`${league}|${id}`);
+        return new Promise((resolve) => { settleSummary = resolve; });
+      };
+      const fPanel = fakePanel();
+      const fRoot = new El('div');
+      tg.render(fRoot, { band: 'LIVE', status: 'ok', data: payload }, {
+        id: 'today_games',
+        actions: { ...fPanel.actions, fetchSummary },
+        live: liveFor(ALL),
+      });
+      tap(tgBtns(fRoot)[0]); // MLB
+      const items = fPanel.last.body.querySelectorAll('.tg-item');
+      const rows = fPanel.last.body.querySelectorAll('.tg-game');
+      check('every row sits in its own item', items.length === 3 && rows.length === 3);
+      check('a row is a button', rows.every((r) => r.getAttribute('role') === 'button' && r.getAttribute('aria-expanded') === 'false'));
+      check('nothing is folded open on arrival', countOf(fPanel.last.body, 'tg-fold') === 0);
+
+      tap(rows[0]); // the final
+      check('a tap opens a fold under that row', items[0].querySelectorAll('.tg-fold').length === 1 && countOf(fPanel.last.body, 'tg-fold') === 1);
+      check('and marks the row expanded', rows[0].getAttribute('aria-expanded') === 'true');
+      const fold0 = items[0].querySelector('.tg-fold');
+      check('⚾ a final shows its line score', fold0.querySelectorAll('.tg-ls').length === 1);
+      check('with the innings across the top', fold0.querySelector('.tg-ls-innings').querySelectorAll('.tg-ls-cell').map((c) => c.textContent).join() === ',1,2,3,4,5,6,7,8,9,R');
+      check('and a row per side ending in its runs', fold0.querySelectorAll('.tg-ls-row')[1].querySelectorAll('.tg-ls-cell').map((c) => c.textContent).join() === 'HRN,2,0,0,3,0,0,1,0,0,6');
+      check('⚾ never fetches a summary', calls.length === 0, calls.join());
+      check('the board shows the line without an open column when nothing moved', fold0.querySelectorAll('.tg-board').length === 1 && fold0.querySelectorAll('.tg-board-open').length === 0);
+      check('the venue is on the fold', /Foundry Field/.test(textOf(fold0)));
+      tap(rows[0]);
+      check('a second tap closes it', items[0].querySelectorAll('.tg-fold').length === 0 && rows[0].getAttribute('aria-expanded') === 'false');
+
+      tap(rows[2]); // pre, the book moved
+      const fold2 = items[2].querySelector('.tg-fold');
+      check('a pre game has no line score and no story', fold2.querySelectorAll('.tg-ls').length === 0 && fold2.querySelectorAll('.tg-story').length === 0);
+      check('a pre game fetches nothing', calls.length === 0);
+      check('a moved board shows open → now', fold2.querySelectorAll('.tg-board-open').length === 5 && fold2.querySelector('.tg-board-head').querySelectorAll('span').map((s) => s.textContent).join('|') === '|open|now');
+      check('the opening line is on the row', fold2.querySelectorAll('.tg-board-row')[1].querySelectorAll('span').map((s) => s.textContent).join('|') === 'Spread CVD|+1.5 -190|-1.5 +165');
+
+      // soccer: the story fetch
+      tap(tgBtns(fRoot)[1]); // MLS
+      const mItems = fPanel.last.body.querySelectorAll('.tg-item');
+      const mRows = fPanel.last.body.querySelectorAll('.tg-game');
+      tap(mRows[1]); // live, no odds
+      const mFold = mItems[1].querySelector('.tg-fold');
+      check('⚽ a live game fetches its summary once, by league and id', calls.join() === 'soccer/usa.1|742119', calls.join());
+      check('and says so while it waits', /Fetching the story/.test(textOf(mFold)));
+      check('a game with no odds draws no board', mFold.querySelectorAll('.tg-board').length === 0);
+      settleSummary(mock);
+      await new Promise((r) => setTimeout(r, 0));
+      const plays = mFold.querySelectorAll('.tg-play');
+      check('the goals and cards arrive as rows', plays.length === 3, String(plays.length));
+      check("the first reads 23' · ⚽ Goal · scorer (team)", plays[0].textContent === "23'⚽ Goal · Tomas Ferrer (North Pike Sentinels)", plays[0].textContent);
+      check('no loading line is left behind', !/Fetching/.test(textOf(mFold)));
+      check('nothing in the fold reads undefined or null', !/undefined|null|NaN/.test(textOf(fPanel.last.body)));
+
+      // a failed summary says so; a closed fold ignores a late arrival
+      const calls2 = [];
+      const fPanel2 = fakePanel();
+      const fRoot2 = new El('div');
+      let reject2 = null;
+      tg.render(fRoot2, { band: 'LIVE', status: 'ok', data: payload }, {
+        id: 'today_games',
+        actions: { ...fPanel2.actions, fetchSummary: (l, id) => { calls2.push(id); return new Promise((_, rej) => { reject2 = rej; }); } },
+        live: liveFor(ALL),
+      });
+      tap(tgBtns(fRoot2)[1]);
+      const r2 = fPanel2.last.body.querySelectorAll('.tg-game');
+      const i2 = fPanel2.last.body.querySelectorAll('.tg-item');
+      tap(r2[1]);
+      const f2 = i2[1].querySelector('.tg-fold');
+      reject2(new Error('espn http 500'));
+      await new Promise((r) => setTimeout(r, 0));
+      check('a failed summary is said, not blank', /story unavailable/.test(textOf(f2)), textOf(f2));
+      check('and the raw error stays off the fold', !/http 500/.test(textOf(f2)));
+      tap(r2[1]); // close
+      tap(r2[1]); // reopen → second fetch
+      const f2b = i2[1].querySelector('.tg-fold');
+      tap(r2[1]); // close while in flight
+      reject2(new Error('late'));
+      await new Promise((r) => setTimeout(r, 0));
+      check('reopening fetches again (the story moves while a game is live)', calls2.length === 2);
+      check('a late answer never paints into a closed fold', f2b.querySelectorAll('.tg-play').length === 0 && !/story unavailable/.test(textOf(f2b)));
+
+      // the tile never starts a clock for a fold, and rule 10 holds
+      const srcRaw = fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'today_games.js'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      check('still no timers anywhere in the module', !/setInterval|setTimeout/.test(srcRaw));
+      check('the fold stylesheet names no tone token', !/--good|--bad|--warn|--brass/.test((() => { const c = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8'); return c.slice(c.indexOf('.tg-ticket {'), c.indexOf('.tg-warn {')); })()));
+    }
+
 
     // -- tomorrow (v1.1) -----------------------------------------------------
     //

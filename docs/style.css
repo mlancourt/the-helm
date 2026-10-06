@@ -1022,6 +1022,46 @@ body {
 }
 .tg-game-post .tg-odd { color: var(--text-faint); }
 
+/* The ticket mark (T2): a glyph before the matchup, nothing else. */
+.tg-ticket { margin-right: 5px; font-size: 12px; }
+
+/* The fold (S1): the row is the control, the fold opens under it. */
+.tg-item { border-bottom: 1px solid var(--line-soft); }
+.tg-item:last-child { border-bottom: 0; }
+.tg-item > .tg-game { border-bottom: 0; cursor: pointer; }
+.tg-item > .tg-game[aria-expanded="true"] { background: color-mix(in srgb, var(--text) 3%, transparent); }
+.tg-fold {
+  padding: 4px 0 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tg-fold-muted { margin: 0; font-size: 11.5px; color: var(--text-faint); }
+
+/* Line score (⚾): innings across, two team rows, runs at the end. */
+.tg-ls { display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; font-variant-numeric: tabular-nums; overflow-x: auto; }
+.tg-ls-row { display: flex; gap: 2px; }
+.tg-ls-cell { min-width: 18px; text-align: center; color: var(--text-dim); }
+.tg-ls-head { min-width: 34px; text-align: left; color: var(--text); font-weight: 600; }
+.tg-ls-total { min-width: 26px; font-weight: 600; color: var(--text); border-left: 1px solid var(--line-soft); }
+.tg-ls-innings .tg-ls-cell { color: var(--text-faint); font-size: 10.5px; }
+
+/* The story: plays or goals, one line each. */
+.tg-story { display: flex; flex-direction: column; gap: 4px; }
+.tg-play { display: flex; gap: 6px; align-items: baseline; font-size: 11.5px; color: var(--text-dim); }
+.tg-play-when { min-width: 52px; color: var(--text-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tg-play-team { font-weight: 600; color: var(--text); }
+.tg-play-text { flex: 1; min-width: 0; }
+.tg-play-score { color: var(--text-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* The board, open → now. No tone — a line is a number. */
+.tg-board { display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.tg-board-row { display: flex; gap: 10px; }
+.tg-board-market { min-width: 92px; color: var(--text-dim); }
+.tg-board-open { min-width: 84px; color: var(--text-faint); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--text-faint) 50%, transparent); }
+.tg-board-now { color: var(--text); }
+.tg-board-head span { color: var(--text-faint); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; }
+
 .tg-warn { margin: 0 0 10px; font-size: 11.5px; color: var(--warn); }
 
 /* ---------------------------------------------------------------- weather

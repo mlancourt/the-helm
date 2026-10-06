@@ -15,7 +15,7 @@
 import { apiBase, BRAIN_BASE, STALE_AFTER_MS, DATA_REFRESH_MS, APP_VERSION_LABEL } from './config.js';
 import { REGISTRY } from './tiles/_registry.js';
 import { createLiveBand, createWeatherBand } from './live/band.js';
-import { normalizeEvent, fetchScoreboard as realFetchScoreboard, compactCtDate } from './live/espn.js';
+import { normalizeEvent, fetchScoreboard as realFetchScoreboard, fetchSummary as realFetchSummary, compactCtDate } from './live/espn.js';
 import { el, clear, empty, genericCard, pill } from './lib/dom.js';
 import { ago, ctTime } from './lib/fmt.js';
 import { subheadText } from './lib/header.js';
@@ -323,6 +323,14 @@ const actions = {
    * `?mock=1` still reaches no origin at all.
    */
   fetchScoreboard: MOCK_ESPN ? mockEspn.fetchScoreboard : realFetchScoreboard,
+
+  /**
+   * One summary call, on demand — a `today_games` fold opening on a game
+   * that has started (S3). Same reasoning as the line above: a tap, not a
+   * clock, so it is not the band's; routed through here so `?mock=1` reaches
+   * no origin.
+   */
+  fetchSummary: MOCK_ESPN ? mockEspn.fetchSummary : realFetchSummary,
 
   openAsk(tileId, data) {
     openSheet();

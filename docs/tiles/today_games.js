@@ -66,14 +66,34 @@
  * strings; the only number parsed here is a LINE, and only to say which side
  * of it the final landed on. The Bookie grades tickets; this is the slate.
  *
- * RULE 10: every team name, status string, broadcast name and price is ESPN's
- * text and lands via textContent. There are no links: broadcast names are
- * channel names, not URLs, and inventing one would be guessing.
+ * THE TICKET MARK (v1.3, 2026-10-06, spec T1–T3). A 🎟️ before the matchup on
+ * any game the Bookie holds a ticket on — read off the SNAPSHOT's `bets_live`
+ * tickets (singles by `espn_event_id`, parlays by each `games[].espn_event_id`),
+ * never off the band's grades: the mark says "you have action here", not how
+ * it is going, and it costs no fetch. One glyph however many tickets; the
+ * labels ride the tooltip.
+ *
+ * THE FOLD (v1.3, spec S1–S6). Tap a row and it opens IN PLACE under itself —
+ * not a second panel, because the shared panel replaces its body and losing
+ * the league sheet to read one game is worse than a taller row. Inside, each
+ * block only when there is something to put in it: ⚾ the line score (off the
+ * game's own `linescores` — no fetch; MLB summaries carry no scoring plays at
+ * all, verified 10/6), 🏈 the scoring plays, ⚽ goals and cards (ESPN's
+ * `keyEvents`, filtered — substitutions and kick-offs are not a story), then
+ * the board as it opened and as it stands. The one fetch is the summary, and
+ * only for a game that is in|post and not baseball: a pre-game summary has
+ * nothing in it. Goes through `ctx.actions.fetchSummary` so `?mock=1` reaches
+ * no origin. The sheet is built once when opened (the shell's panel is static
+ * behind the ticking board), so a fold's plays are as of the tap.
+ *
+ * RULE 10: every team name, status string, broadcast name, price and play is
+ * ESPN's text and lands via textContent. There are no links: broadcast names
+ * are channel names, not URLs, and inventing one would be guessing.
  */
 
 import { el, empty, clear } from '../lib/dom.js';
 import { ctTime, prettyDate } from '../lib/fmt.js';
-import { compactCtDate, onCtDate, fetchScoreboard as realFetchScoreboard } from '../live/espn.js';
+import { compactCtDate, onCtDate, fetchScoreboard as realFetchScoreboard, fetchSummary as realFetchSummary } from '../live/espn.js';
 
 /** A plain object, or {} — the payload is untrusted in shape as well as text. */
 function obj(v) {
@@ -271,6 +291,151 @@ export function oddsChips(game) {
   return out;
 }
 
+// ------------------------------------------------------------------ tickets
+
+/**
+ * The ESPN event ids the Bookie currently holds a ticket on, with the ticket
+ * labels per id (T1): `Map<id, string[]>`. Read off the snapshot's `bets_live`
+ * payload — a single names one game, a parlay names each of its `games[]`.
+ * An empty map when the tile or its tickets are absent. No fetch, no grade.
+ */
+export function ticketedGames(snapshot) {
+  const out = new Map();
+  const tickets = obj(obj(obj(obj(snapshot).tiles).bets_live).data).tickets;
+  for (const raw of Array.isArray(tickets) ? tickets : []) {
+    const t = obj(raw);
+    const label = str(t.label) || str(t.game) || 'ticket';
+    const ids = [];
+    if (Array.isArray(t.games) && t.games.length) {
+      for (const g of t.games) ids.push(str(obj(g).espn_event_id));
+    } else {
+      ids.push(str(t.espn_event_id));
+    }
+    for (const id of ids) {
+      if (!id) continue;
+      if (!out.has(id)) out.set(id, []);
+      out.get(id).push(label);
+    }
+  }
+  return out;
+}
+
+// -------------------------------------------------------------------- story
+
+/** `[{clock, team, text, score}]` off a football-style `scoringPlays[]`. */
+function scoringRows(plays) {
+  const out = [];
+  for (const raw of Array.isArray(plays) ? plays : []) {
+    const p = obj(raw);
+    const text = str(p.text).trim();
+    if (!text) continue;
+    const period = Number(obj(p.period).number) || 0;
+    const clock = str(obj(p.clock).displayValue);
+    const when = [period ? `Q${period}` : '', clock].filter(Boolean).join(' ');
+    const a = Number(p.awayScore);
+    const h = Number(p.homeScore);
+    out.push({
+      when,
+      team: str(obj(p.team).abbreviation),
+      text,
+      score: Number.isFinite(a) && Number.isFinite(h) ? `${a}–${h}` : '',
+    });
+  }
+  return out;
+}
+
+/**
+ * Goals and cards off a soccer `keyEvents[]` — the events that change the
+ * match, nothing else. Verified 10/6 on a finished EPL summary: `type.text`
+ * is "Goal" / "Own Goal" / "Penalty - Scored" / "Yellow Card" / "Red Card" /
+ * "Substitution" / "Kickoff" / "Halftime" …; `clock.displayValue` is "45'+3'";
+ * the scorer is `participants[0].athlete.displayName`; `team.displayName`.
+ */
+function keyEventRows(events) {
+  const out = [];
+  for (const raw of Array.isArray(events) ? events : []) {
+    const e = obj(raw);
+    const type = str(obj(e.type).text);
+    if (!/goal|card|penalty/i.test(type)) continue;
+    const glyph = /red|second yellow/i.test(type) ? '🟥' : /yellow/i.test(type) ? '🟨' : /miss|saved/i.test(type) ? '❌' : '⚽';
+    const who = str(obj(obj(Array.isArray(e.participants) ? e.participants[0] : null).athlete).displayName);
+    const team = str(obj(e.team).displayName);
+    out.push({
+      when: str(obj(e.clock).displayValue),
+      team: '',
+      text: [glyph, type, who ? `· ${who}` : '', team ? `(${team})` : ''].filter(Boolean).join(' '),
+      score: '',
+    });
+  }
+  return out;
+}
+
+/**
+ * The story of a game as rows, from whatever ESPN told: scoring plays first
+ * (football), else goals and cards (soccer), else nothing. Exported for the
+ * harness. Pure.
+ */
+export function storyRows(summary) {
+  const s = obj(summary);
+  const plays = scoringRows(s.scoringPlays);
+  if (plays.length) return plays;
+  return keyEventRows(s.keyEvents);
+}
+
+/**
+ * The line score, when the game carries one: `{innings:[…], away:{abbr,
+ * runs:[…], total}, home:{…}}`, or null for a game with no per-period
+ * numbers (every pre-game and all of soccer — espn.js leaves those []).
+ * Baseball's whole story is in here, so ⚾ never fetches a summary.
+ */
+export function lineScore(game) {
+  const a = obj(obj(game).away);
+  const h = obj(obj(game).home);
+  const ar = Array.isArray(a.linescores) ? a.linescores.map((v) => Number(v) || 0) : [];
+  const hr = Array.isArray(h.linescores) ? h.linescores.map((v) => Number(v) || 0) : [];
+  const n = Math.max(ar.length, hr.length);
+  if (!n) return null;
+  const pad = (arr) => arr.concat(Array(n - arr.length).fill(null));
+  return {
+    innings: Array.from({ length: n }, (_, i) => String(i + 1)),
+    away: { abbr: str(a.abbr) || 'A', runs: pad(ar), total: Number(a.score) || 0 },
+    home: { abbr: str(h.abbr) || 'H', runs: pad(hr), total: Number(h.score) || 0 },
+  };
+}
+
+/**
+ * The board as it opened and as it stands — `[{market, open, now}]`, rows only
+ * for markets ESPN sent. Exported for the harness. Pure.
+ */
+export function boardRows(game) {
+  const odds = obj(obj(game).odds);
+  if (!Object.keys(odds).length) return [];
+  const home = obj(obj(game).home);
+  const away = obj(obj(game).away);
+  const ha = str(home.abbr) || 'H';
+  const aa = str(away.abbr) || 'A';
+  const open = obj(odds.open);
+  const leg = (l) => join(str(obj(l).line), str(obj(l).price));
+  const out = [];
+  const sp = obj(odds.spread);
+  const spo = obj(open.spread);
+  if (str(obj(sp.home).line) || str(obj(sp.away).line)) {
+    out.push({ market: `Spread ${ha}`, open: leg(spo.home), now: leg(sp.home) });
+    out.push({ market: `Spread ${aa}`, open: leg(spo.away), now: leg(sp.away) });
+  }
+  const tot = obj(odds.total);
+  const toto = obj(open.total);
+  if (str(tot.line)) {
+    const t = (x) => (str(x.line) ? join(str(x.line), str(x.over) && str(x.under) ? `${str(x.over)}/${str(x.under)}` : '') : '');
+    out.push({ market: 'Total', open: t(toto), now: t(tot) });
+  }
+  const ml = obj(odds.moneyline);
+  const mlo = obj(open.moneyline);
+  const mlLine = (m) => [str(m.away) ? `${aa} ${str(m.away)}` : '', str(m.draw) ? `Draw ${str(m.draw)}` : '', str(m.home) ? `${ha} ${str(m.home)}` : ''].filter(Boolean).join(' · ');
+  if (mlLine(ml)) out.push({ market: 'Moneyline', open: mlLine(mlo), now: mlLine(ml) });
+  return out;
+}
+
 // -------------------------------------------------------------------- slate
 
 /**
@@ -333,14 +498,21 @@ function statusOf(game) {
  * is forty rows of nothing. Absence is not news — the same standing ruling
  * that keeps `purser_due` silent on an empty stack.
  */
-function gameRow(game, data, slug) {
+function gameRow(game, data, slug, aux = {}) {
   const status = statusOf(game);
   const chips = watchChips(game, data.watch_map, data.local_teams, slug);
   const odds = oddsChips(game);
+  const labels = aux.tickets instanceof Map ? aux.tickets.get(str(obj(game).id)) : null;
 
-  return el('div', { cls: `tg-game tg-game-${status.tone}` }, [
+  const row = el('div', { cls: `tg-game tg-game-${status.tone}` }, [
     el('div', { cls: 'tg-game-main' }, [
-      el('div', { cls: 'tg-matchup', text: matchupText(game) }),
+      el('div', { cls: 'tg-matchup' }, [
+        // T2: one glyph however many tickets; the labels ride the tooltip.
+        labels && labels.length
+          ? el('span', { cls: 'tg-ticket', attrs: { title: labels.join(' · '), 'aria-label': 'ticket on this game' }, text: '🎟️' })
+          : null,
+        el('span', { text: matchupText(game) }),
+      ]),
       chips.length
         ? el(
             'div',
@@ -359,10 +531,150 @@ function gameRow(game, data, slug) {
     ]),
     el('div', { cls: 'tg-side' }, [el('span', { cls: `tg-status tg-status-${status.tone}`, text: status.text })]),
   ]);
+
+  // S1: the row is the control; the fold lives in a wrapper under it so the
+  // row's flex layout is untouched and the fold spans the full width.
+  const wrap = el('div', { cls: 'tg-item' }, [row]);
+  row.setAttribute('role', 'button');
+  row.setAttribute('tabindex', '0');
+  row.setAttribute('aria-expanded', 'false');
+  let fold = null;
+  let cancel = null;
+  const toggle = (e) => {
+    e.stopPropagation();
+    if (fold) {
+      if (cancel) cancel();
+      cancel = null;
+      wrap.removeChild(fold);
+      fold = null;
+      row.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    fold = el('div', { cls: 'tg-fold' });
+    wrap.appendChild(fold);
+    row.setAttribute('aria-expanded', 'true');
+    cancel = paintFold(fold, game, aux.fetchSummary);
+  };
+  row.addEventListener('click', toggle);
+  row.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') toggle(e);
+  });
+  return wrap;
+}
+
+/**
+ * Fill a fold (S2). Returns a cancel function for a summary still in flight.
+ *
+ * Order: the line score (⚾, no fetch) · the story (🏈 plays / ⚽ goals and
+ * cards, one summary fetch for a game that has started) · the board, open →
+ * now · the venue. A block with nothing in it is not drawn; a fold with
+ * nothing at all says so once.
+ */
+function paintFold(fold, game, fetchSummary) {
+  const g = obj(game);
+  let cancelled = false;
+  let drew = false;
+
+  const ls = lineScore(g);
+  if (ls) {
+    drew = true;
+    const cell = (text, cls) => el('span', { cls: `tg-ls-cell${cls ? ` ${cls}` : ''}`, text });
+    const line = (side, head) =>
+      el('div', { cls: 'tg-ls-row' }, [
+        cell(head, 'tg-ls-head'),
+        ...side.runs.map((r) => cell(r === null ? '' : String(r))),
+        cell(String(side.total), 'tg-ls-total'),
+      ]);
+    fold.appendChild(
+      el('div', { cls: 'tg-ls', attrs: { role: 'table', 'aria-label': 'line score' } }, [
+        el('div', { cls: 'tg-ls-row tg-ls-innings' }, [cell('', 'tg-ls-head'), ...ls.innings.map((i) => cell(i)), cell('R', 'tg-ls-total')]),
+        line(ls.away, ls.away.abbr),
+        line(ls.home, ls.home.abbr),
+      ])
+    );
+  }
+
+  // The story. Baseball's is the line score above; nothing to fetch.
+  const league = str(g.league);
+  const wantsStory = !g.dead && (g.state === 'in' || g.state === 'post') && !/baseball/i.test(league) && typeof fetchSummary === 'function';
+  let storyEl = null;
+  if (wantsStory) {
+    drew = true;
+    storyEl = el('div', { cls: 'tg-story' }, [el('p', { cls: 'tg-loading', text: 'Fetching the story…' })]);
+    fold.appendChild(storyEl);
+    // Called NOW, not on a later microtask: the fetch is the point of the tap.
+    // A fetcher that throws synchronously lands on the same catch as one that
+    // rejects.
+    let pending;
+    try {
+      pending = Promise.resolve(fetchSummary(league, str(g.id)));
+    } catch (e) {
+      pending = Promise.reject(e);
+    }
+    pending
+      .then((summary) => {
+        if (cancelled) return;
+        clear(storyEl);
+        const rows = storyRows(summary);
+        if (!rows.length) {
+          storyEl.appendChild(el('p', { cls: 'tg-fold-muted', text: g.state === 'in' ? 'Nothing on the sheet yet.' : 'No plays on the sheet.' }));
+          return;
+        }
+        for (const r of rows) {
+          storyEl.appendChild(
+            el('div', { cls: 'tg-play' }, [
+              el('span', { cls: 'tg-play-when', text: r.when }),
+              r.team ? el('span', { cls: 'tg-play-team', text: r.team }) : null,
+              el('span', { cls: 'tg-play-text', text: r.text }),
+              r.score ? el('span', { cls: 'tg-play-score', text: r.score }) : null,
+            ])
+          );
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clear(storyEl);
+        storyEl.appendChild(el('p', { cls: 'tg-warn', text: 'story unavailable — the summary did not load.' }));
+      });
+  }
+
+  const board = boardRows(g);
+  if (board.length) {
+    drew = true;
+    const anyOpen = board.some((r) => r.open && r.open !== r.now);
+    fold.appendChild(
+      el('div', { cls: 'tg-board', attrs: { role: 'table', 'aria-label': 'the board' } }, [
+        el('div', { cls: 'tg-board-row tg-board-head' }, [
+          el('span', { cls: 'tg-board-market', text: '' }),
+          anyOpen ? el('span', { cls: 'tg-board-open', text: 'open' }) : null,
+          el('span', { cls: 'tg-board-now', text: anyOpen ? 'now' : 'line' }),
+        ]),
+        ...board.map((r) =>
+          el('div', { cls: 'tg-board-row' }, [
+            el('span', { cls: 'tg-board-market', text: r.market }),
+            anyOpen ? el('span', { cls: 'tg-board-open', text: r.open || '—' }) : null,
+            el('span', { cls: 'tg-board-now', text: r.now || '—' }),
+          ])
+        ),
+      ])
+    );
+  }
+
+  const venue = str(g.venue);
+  if (venue) {
+    drew = true;
+    fold.appendChild(el('p', { cls: 'tg-fold-muted', text: venue }));
+  }
+
+  if (!drew) fold.appendChild(el('p', { cls: 'tg-fold-muted', text: 'Nothing more on this one.' }));
+
+  return () => {
+    cancelled = true;
+  };
 }
 
 /** The sheet body for one league. */
-function leagueBody(league, entry, data) {
+function leagueBody(league, entry, data, aux) {
   const games = sortByKick(entry.games);
   return (body) => {
     if (!entry.ok) {
@@ -374,7 +686,7 @@ function leagueBody(league, entry, data) {
       body.appendChild(empty(`No ${league.label} games today.`));
       return;
     }
-    body.appendChild(el('div', { cls: 'tg-list' }, games.map((g) => gameRow(g, data, league.slug))));
+    body.appendChild(el('div', { cls: 'tg-list' }, games.map((g) => gameRow(g, data, league.slug, aux))));
   };
 }
 
@@ -398,7 +710,7 @@ function leagueBody(league, entry, data) {
  * clear — that is the point of this sheet — but a fetch in flight when the
  * sheet closes must not paint into a body the shell has moved on from.
  */
-function tomorrowBody(leagues, data, dateCt, fetchBoard) {
+function tomorrowBody(leagues, data, dateCt, fetchBoard, aux) {
   const compact = compactCtDate(dateCt);
 
   return (body) => {
@@ -418,7 +730,7 @@ function tomorrowBody(leagues, data, dateCt, fetchBoard) {
       .then((rows) => {
         if (cancelled) return;
         clear(body);
-        paintTomorrow(body, rows, data);
+        paintTomorrow(body, rows, data, aux);
       })
       .catch(() => {
         if (cancelled) return;
@@ -432,7 +744,7 @@ function tomorrowBody(leagues, data, dateCt, fetchBoard) {
   };
 }
 
-function paintTomorrow(body, rows, data) {
+function paintTomorrow(body, rows, data, aux) {
   const failed = rows.filter((r) => !r.ok);
   for (const r of failed) {
     body.appendChild(el('p', { cls: 'tg-warn', text: `${r.league.label} feed unavailable.` }));
@@ -442,7 +754,7 @@ function paintTomorrow(body, rows, data) {
   for (const r of playing) {
     body.appendChild(el('h3', { cls: 'tg-league-head', text: leagueTitle(r.league) }));
     body.appendChild(
-      el('div', { cls: 'tg-list' }, sortByKick(r.games).map((g) => gameRow(g, data, r.league.slug)))
+      el('div', { cls: 'tg-list' }, sortByKick(r.games).map((g) => gameRow(g, data, r.league.slug, aux)))
     );
   }
 
@@ -465,6 +777,14 @@ export function render(root, tile, ctx) {
   // the band may not have run yet, and the header must still be honest.
   const dateCt = str(data.date_ct) || str(ctx?.live?.today?.date_ct);
   const byLeague = ctx?.live?.today?.leagues || null;
+
+  // What every row needs beyond its game: the Bookie's tickets by event id
+  // (T1, off the snapshot) and the one fetch a fold may make (S3). Both are
+  // resolved here, once, so the row builder stays a function of its inputs.
+  const aux = {
+    tickets: ticketedGames(ctx?.snapshot),
+    fetchSummary: typeof ctx?.actions?.fetchSummary === 'function' ? ctx.actions.fetchSummary : realFetchSummary,
+  };
 
   const buttons = leagues.map((league) => {
     const entry = byLeague ? byLeague.get(league.slug) : null;
@@ -489,7 +809,7 @@ export function render(root, tile, ctx) {
     }
 
     const title = `${leagueTitle(league)}${dateCt ? ` · ${prettyDate(dateCt)}` : ''}`;
-    const build = leagueBody(league, entry || { games: [], ok: true }, data);
+    const build = leagueBody(league, entry || { games: [], ok: true }, data, aux);
 
     return el(
       'button',
@@ -537,7 +857,7 @@ export function render(root, tile, ctx) {
     const fetchBoard =
       typeof ctx?.actions?.fetchScoreboard === 'function' ? ctx.actions.fetchScoreboard : realFetchScoreboard;
     const tomorrowTitle = `Tomorrow · ${prettyDate(nextCt)}`;
-    const build = tomorrowBody(leagues, data, nextCt, fetchBoard);
+    const build = tomorrowBody(leagues, data, nextCt, fetchBoard, aux);
 
     root.appendChild(
       el('button', {
