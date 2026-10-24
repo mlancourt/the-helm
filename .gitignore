@@ -9,3 +9,4 @@ node_modules/
 .claude/
 anthropic-key
 brain-off
+top-system*.txt

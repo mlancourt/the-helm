@@ -6,6 +6,7 @@
  *   /api/ask   NEVER cached — answers are one-shot and can contain anything
  *   /api/draft NEVER cached (Yeoman Y13) — a pasted message and its draft
  *              live in the sheet's memory and nowhere else
+ *   /api/top   NEVER cached — the Worker's KV is the Top Stories cache (N14)
  *   ESPN       NEVER cached — a stale score is worse than no score
  *   *.weather.gov  NEVER cached (Weather spec, W3) — a cached forecast is a
  *              stale forecast, and the RIDGE radar loop is a 1 MB GIF that
@@ -14,7 +15,7 @@
  * Bump CACHE_VERSION to evict the old shell on deploy.
  */
 
-const CACHE_VERSION = 'helm-v58';
+const CACHE_VERSION = 'helm-v59';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -101,7 +102,8 @@ self.addEventListener('fetch', (e) => {
     url.hostname.endsWith('weather.gov') ||
     url.hostname === 'brain.lannyai.com' ||
     url.pathname.endsWith('/api/ask') ||
-    url.pathname.endsWith('/api/draft')
+    url.pathname.endsWith('/api/draft') ||
+    url.pathname.endsWith('/api/top')
   )
     return;
 

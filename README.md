@@ -190,6 +190,7 @@ npx wrangler secret put ANTHROPIC_API_KEY     # required for /ask — never reac
 npx wrangler secret put ASK_DAILY_CAP_USD     # optional — default 3.00
 npx wrangler secret put ASK_MODEL             # optional — default claude-sonnet-5
 npx wrangler secret put DRAFT_MODEL           # optional — default claude-sonnet-5-5 (the Yeoman)
+npx wrangler secret put TOP_DAILY_CAP_USD     # optional — default 0.50 (Newsstand Top Stories)
 ```
 
 ### 3. Deploy the Worker
@@ -269,6 +270,21 @@ curl -X PUT "$HELM/api/admin/draft-system" \
 `GET /api/health` reports `draft_sys_bytes` — 0 until it is loaded, and
 `/api/draft` answers `503 no_system` until then.
 
+The Newsstand's Top Stories taste prompt (vault `Newsstand-Top-Prompt-v1`,
+loaded by `Scripts/load-top-system.sh`) is the same shape again, **never
+committed**:
+
+```bash
+curl -X PUT "$HELM/api/admin/top-system" \
+  -H "X-Admin-Secret: $ADMIN_SECRET" \
+  --data-binary @top-system.txt      # gitignored
+```
+
+Until it is loaded, `POST /api/top` answers 200 with the cached list (or
+`{cards:[]}`) and `error: "ranker: no system prompt installed"`. Smoke (N16):
+`GET /api/top` → 204 · `POST /api/top {}` → ten rows, `fresh:true` · `GET` → the
+ten · `POST {}` again → `fresh:false`.
+
 ---
 
 ## API
@@ -282,15 +298,18 @@ CORS allows `https://helm.lannyai.com`, `https://mlancourt.github.io` and `http:
 | `GET /api/data` | token | `{me, snapshot, pending}` |
 | `POST /api/event` | token | validate, stamp `{id, ts, actor}`, store; returns 201 + the stored event |
 | `DELETE /api/event/:id` | token | withdraw ONE still-pending event, only if `actor` matches. 404 once drained |
-| `GET /api/health` | token | `{published_at, pending_count, ask_today_usd, ask_cap_usd, draft_sys_bytes}` |
+| `GET /api/health` | token | `{published_at, pending_count, ask_today_usd, ask_cap_usd, draft_sys_bytes, top_today_usd, top_cap_usd}` |
 | `POST /api/ask` | token | `{q, tile_id?, tile_data?, history?}` → `{answer, mode:"snapshot", usd}`. See [Ask](#ask) |
 | `POST /api/draft` | token | the Yeoman: `{mode, channel, to:{name, role, context?}, incoming?, intent?, nudge?, history? ≤10, calendar?}` → `{read, assumed, subject, draft, blanks, usd, mode:"draft"}`. Same daily cap as `/ask`; nothing from the body is stored or logged |
+| `GET /api/top` | token | Newsstand 🔥 Top Stories (N14): KV `top:latest` as stored, or **204** when nothing is ranked yet. Never calls the model |
+| `POST /api/top` | token | `{force?: bool}` → `{ranked_at, as_of, model, usd, fresh, capped, error, cards:[≤10 × {rank, score, …card}]}`. Re-ranks (Sonnet 5.5 scores, code ranks — N13) only when there is no cache, `force:true`, or the cache is > 6 h old AND the snapshot's `newsstand.data.as_of` is newer; otherwise the cache with `fresh:false`. Over `TOP_DAILY_CAP_USD` (or the shared ask cap) → the cache with `capped:true`; a model/shape failure (after one retry) → the cache with `error:"ranker: …"`. **Never a 5xx** for ranker trouble |
 | `POST /api/admin/publish` | secret | body = full snapshot; must parse and carry `schema` |
 | `GET /api/admin/events` | secret | every pending event, oldest first |
 | `POST /api/admin/events/ack` | secret | `{ids:[…]}` — deletes exactly those keys |
 | `POST /api/admin/tokens` | secret | replace the token map |
 | `PUT /api/admin/ask-system` | secret | body = text → `ask:sys` |
 | `PUT /api/admin/draft-system` | secret | body = text → `draft:sys` (the Yeoman's prompt + Voice Book) |
+| `PUT /api/admin/top-system` | secret | body = text → `top:sys` (the Top Stories taste prompt); returns `{stored, bytes}` |
 
 Error bodies are always `{error:true, reason, detail?}`. Reasons in use:
 `unauthorized`, `bad_json`, `bad_shape`, `bad_type`, `bad_payload`, `bad_id`,
@@ -322,6 +341,9 @@ pending and never renders a submitted write as applied.
 | `ask:cap:<YYYY-MM-DD>` | `{usd, calls}` — UTC day, expires after 14 days; `/ask` AND `/draft` spend |
 | `ask:sys` | the `/ask` system prompt text |
 | `draft:sys` | the Yeoman's system prompt + Voice Book |
+| `top:sys` | the Newsstand Top Stories taste prompt |
+| `top:latest` | the ranked ten — `{ranked_at, as_of, model, usd, fresh, capped, error, cards}` |
+| `top:cap:<YYYY-MM-DD>` | `{usd, calls}` — the Top Stories line, UTC day, capped by `TOP_DAILY_CAP_USD` (0.50); every ranking also spends `ask:cap` |
 
 **One KV key per event, never a single array key.** KV has no atomic append, so
 an array would silently drop writes whenever two events raced. The test suite
@@ -517,6 +539,15 @@ is remembered: the sheet is transient, so there is no per-viewer state to keep.
 
 Any tile can use it: `ctx.actions.openPanel(title, build)`, where `build(body)`
 fills a cleared body. A builder that throws greys the panel, not the board.
+
+**🔥 Top Stories (N11–N16, v1.38.0).** Above the grid, a full-width hero shows
+the #1 of the Worker's ranked ten (`ctx.actions.top()` → `GET /api/top`) with
+its source, age chip and a `10`; no list → no hero, grid untouched. Its brass
+pill counts URLs not in the device's last-seen set
+(`helm.newsstand.lastOpened.top`, an array of URLs; baselined on first sight).
+The sheet paints the cached ten at once, POSTs `{}` and swaps in a `fresh:true`
+answer in place; ↻ POSTs `{force:true}`. `capped`/`error` is one muted footer
+line. `?mock=1` serves `docs/mock/top.json` (`make-mock-data.js --top`).
 
 ### Entertainment — a menu that remembers
 

@@ -12,6 +12,8 @@
  *   ASK_MODEL          optional — default the newest Sonnet-class model
  *   ASK_DAILY_CAP_USD  optional — default 3.00 (shared by /ask and /draft)
  *   DRAFT_MODEL        optional — default claude-sonnet-5-5 (the Yeoman)
+ *   TOP_DAILY_CAP_USD  optional — default 0.50 (Newsstand Top Stories, N14;
+ *                      a ranking also spends against ASK_DAILY_CAP_USD)
  *
  * Most of this file is private to the Worker; the handful of pure helpers the
  * /ask path is built from are exported so tools/test-ask.js can unit-test them
@@ -83,6 +85,33 @@ const DRAFT_NUDGES = ['shorter', 'warmer', 'firmer', 'more casual', 're-roll'];
  * `[sic]` and `[1]` do not.
  */
 const BLANK_RE = /\[[A-Z][A-Z0-9 #\/-]*\]/g;
+
+// ---- /top (Newsstand Top Stories, N11–N16) ----------------------------------
+
+/** N11 — Matt's call: Sonnet 5.5. */
+const TOP_MODEL = 'claude-sonnet-5-5';
+/** ~200 `{"i":n,"s":n}` pairs is ~2k tokens; the headroom is for a chatty miss. */
+const TOP_MAX_TOKENS = 4096;
+/** Per attempt. 200 scores do not fit /ask's 25 s on a slow afternoon. */
+const TOP_TIMEOUT_MS = 60_000;
+/** N14 — a cache younger than this is never re-ranked without `force`. */
+const TOP_STALE_MS = 6 * 60 * 60 * 1000;
+/** N14. Override with secret TOP_DAILY_CAP_USD. */
+const DEFAULT_TOP_CAP_USD = 0.5;
+/** N13 — the ranking constants. */
+const TOP_N = 10;
+const TOP_HALF_LIFE_H = 36;
+const TOP_NULL_AGE_H = 72;
+const TOP_DUP_JACCARD = 0.6;
+const TOP_DUP_BUMP = 10;
+const TOP_SPORTS_MAX = 3;
+/** N13 — exactly these. Cards is a hobby, not sports, and is never capped. */
+const TOP_SPORTS = new Set(['Local Sports', 'Soccer', 'Betting']);
+/** Title words too common to say two headlines are the same story. */
+const TOP_STOPWORDS = new Set(
+  ('a an and are as at be by for from has have he her his in into is it its new of on or over says she ' +
+    'that the their they this to up was were what when who will with after about vs').split(' ')
+);
 
 // ------------------------------------------------------------------ helpers
 
@@ -819,6 +848,237 @@ async function draftBackend(env, { system, messages, model }) {
   return { text, usage: data.usage || null, model: data.model || model, usd: estimateUsd(data.model || model, data.usage) };
 }
 
+// ------------------------------------------------------- /top (Top Stories)
+//
+// N11–N16. Curation returns for ONE face: the model scores the snapshot's raw
+// newsstand cards, this file ranks them, and KV `top:latest` holds the ten.
+// The seventeen category menus never see a model (N1 stands for them).
+
+function topCapUsd(env) {
+  const n = Number(env.TOP_DAILY_CAP_USD);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_TOP_CAP_USD;
+}
+
+async function topSpendToday(env) {
+  const raw = await env.HELM_KV.get(`top:cap:${utcDay()}`);
+  if (!raw) return { usd: 0, calls: 0 };
+  try {
+    const v = JSON.parse(raw);
+    return { usd: Number(v.usd) || 0, calls: Number(v.calls) || 0 };
+  } catch {
+    return { usd: 0, calls: 0 };
+  }
+}
+
+/**
+ * The `top` line, and the shared counter too: rule 11 is one cap for every
+ * model call the Worker makes, so a ranking spends against /ask's $3 as well
+ * as against its own $0.50.
+ */
+async function recordTopSpend(env, usd) {
+  const current = await topSpendToday(env);
+  const next = {
+    usd: Math.round((current.usd + (Number(usd) || 0)) * 1e6) / 1e6,
+    calls: current.calls + 1,
+  };
+  await env.HELM_KV.put(`top:cap:${utcDay()}`, JSON.stringify(next), { expirationTtl: 60 * 60 * 24 * 14 });
+  await recordAskSpend(env, usd);
+}
+
+/** N13 — hours since `published_at`; no stamp (or a broken one) is 72 h. */
+export function topAgeHours(publishedAt, nowMs) {
+  const t = typeof publishedAt === 'string' ? Date.parse(publishedAt) : NaN;
+  if (!Number.isFinite(t)) return TOP_NULL_AGE_H;
+  return Math.max(0, (nowMs - t) / 3_600_000);
+}
+
+/** N12 — what the model sees. No url: fewer tokens, nothing to leak. */
+export function topModelInput(cards, nowMs) {
+  return cards.map((c, i) => ({
+    i,
+    title: typeof c.title === 'string' ? c.title : '',
+    synopsis: typeof c.synopsis === 'string' ? c.synopsis : null,
+    source: typeof c.source === 'string' ? c.source : null,
+    category: typeof c.category === 'string' ? c.category : null,
+    age_h: Math.round(topAgeHours(c.published_at, nowMs) * 10) / 10,
+  }));
+}
+
+/**
+ * N12 — the model's answer -> {scores: number[n]} or {reason}. Every index
+ * 0..n-1 exactly once, every score 0..100. A fence or a sentence around the
+ * array is forgiven; anything inside it that is not the contract is not.
+ */
+export function parseTopScores(text, n) {
+  const raw = String(text ?? '');
+  const a = raw.indexOf('[');
+  const b = raw.lastIndexOf(']');
+  if (a < 0 || b < a) return { reason: 'no JSON array in the answer' };
+  let arr;
+  try {
+    arr = JSON.parse(raw.slice(a, b + 1));
+  } catch {
+    return { reason: 'answer is not valid JSON' };
+  }
+  if (!Array.isArray(arr)) return { reason: 'answer is not an array' };
+  if (arr.length !== n) return { reason: `expected ${n} scores, got ${arr.length}` };
+  const scores = new Array(n).fill(null);
+  for (const row of arr) {
+    if (!isObj(row) || !Number.isInteger(row.i) || row.i < 0 || row.i >= n) return { reason: 'bad index' };
+    if (typeof row.s !== 'number' || !Number.isFinite(row.s) || row.s < 0 || row.s > 100) return { reason: 'bad score' };
+    if (scores[row.i] !== null) return { reason: `index ${row.i} scored twice` };
+    scores[row.i] = row.s;
+  }
+  return { scores };
+}
+
+/** N13 — lowercase, punctuation out, stopwords out: the words a headline is about. */
+export function titleTokens(title) {
+  const words = String(title ?? '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter((w) => w && !TOP_STOPWORDS.has(w));
+  return new Set(words);
+}
+
+export function jaccard(a, b) {
+  if (!a.size || !b.size) return 0;
+  let inter = 0;
+  for (const w of a) if (b.has(w)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
+const sameSource = (a, b) => String(a.source ?? '').trim().toLowerCase() === String(b.source ?? '').trim().toLowerCase();
+
+/**
+ * N13 — rank in code, after the model. Deterministic: the same cards and the
+ * same scores always give the same ten.
+ *
+ *   rank_score = s × 0.5^(age_h / 36)
+ *   +10 once when another SOURCE ran the same story (token Jaccard ≥ 0.6);
+ *       the lower-ranked twin is then dropped
+ *   at most 3 sports (Local Sports · Soccer · Betting) — the cap goes soft
+ *       only when non-sports run out, never fewer than 10 when 10 exist
+ *   ties -> newer published_at
+ *
+ * Returns up to ten `{rank, score, ...card}`, in rank order.
+ */
+export function rankTop(cards, scores, nowMs) {
+  const items = cards.map((card, i) => {
+    const pub = typeof card.published_at === 'string' ? Date.parse(card.published_at) : NaN;
+    return {
+      card,
+      i,
+      pub: Number.isFinite(pub) ? pub : -Infinity,
+      tokens: titleTokens(card.title),
+      score: scores[i] * 0.5 ** (topAgeHours(card.published_at, nowMs) / TOP_HALF_LIFE_H),
+    };
+  });
+
+  const twin = (x, y) => !sameSource(x.card, y.card) && jaccard(x.tokens, y.tokens) >= TOP_DUP_JACCARD;
+  // Bumps are decided against the unbumped field, so the order cards are
+  // visited in can never change who gets one.
+  const bumped = items.map((x) => items.some((y) => y !== x && twin(x, y)));
+  items.forEach((x, k) => {
+    if (bumped[k]) x.score += TOP_DUP_BUMP;
+  });
+
+  items.sort((x, y) => y.score - x.score || y.pub - x.pub || x.i - y.i);
+
+  const kept = [];
+  for (const x of items) if (!kept.some((y) => twin(x, y))) kept.push(x);
+
+  const seated = [];
+  const overflow = [];
+  let sports = 0;
+  for (const x of kept) {
+    if (seated.length === TOP_N) break;
+    if (TOP_SPORTS.has(x.card.category)) {
+      if (sports >= TOP_SPORTS_MAX) {
+        overflow.push(x);
+        continue;
+      }
+      sports++;
+    }
+    seated.push(x);
+  }
+  for (const x of overflow) {
+    if (seated.length === TOP_N) break;
+    seated.push(x);
+  }
+  seated.sort((x, y) => y.score - x.score || y.pub - x.pub || x.i - y.i);
+
+  return seated.map((x, k) => ({ rank: k + 1, score: Math.round(x.score * 10) / 10, ...x.card }));
+}
+
+/** The ask that rides under the vault's taste prompt. Plumbing, not taste. */
+function topUserTurn(input) {
+  return [
+    `Score each of these ${input.length} stories 0–100 for how much Matt would want it in his Top 10 today.`,
+    'Reply with JSON only — an array with every `i` exactly once and nothing else:',
+    '[{"i":0,"s":72},{"i":1,"s":15}, …]',
+    '',
+    JSON.stringify(input),
+  ].join('\n');
+}
+
+/**
+ * One scoring call. Same Sonnet 5.5 shape as draftBackend: thinking off the
+ * 5.5 way plus the refusal fallback, retried bare if either is refused.
+ * Returns {text, usd, usage, model} or {fail, detail}. A reply that cost
+ * money carries its `usd` even when it is unusable, so the cap sees it.
+ */
+async function topBackend(env, { system, user }) {
+  const key = env.ANTHROPIC_API_KEY;
+  if (!key) return { fail: 'no_key' };
+  const deadline = Date.now() + TOP_TIMEOUT_MS;
+  const plain = {
+    model: TOP_MODEL,
+    max_tokens: TOP_MAX_TOKENS,
+    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+    messages: [{ role: 'user', content: user }],
+  };
+  const tuned = { ...plain, thinking: { type: 'between_tools' }, fallbacks: 'default' };
+  let res = await callModelApi(key, tuned, deadline - Date.now(), { 'anthropic-beta': DRAFT_FALLBACK_BETA });
+  if (res.status === 400 && /thinking|fallback|between_tools|beta/i.test(res.text || '')) {
+    res = await callModelApi(key, plain, deadline - Date.now());
+  }
+  const read = readModelResponse(res);
+  if (read.fail) return read;
+  const data = read.data;
+  const model = data.model || TOP_MODEL;
+  return { text: answerText(data), usage: data.usage || null, model, usd: estimateUsd(model, data.usage) };
+}
+
+async function readTopCache(env) {
+  const raw = await env.HELM_KV.get('top:latest');
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw);
+    return isObj(v) && Array.isArray(v.cards) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The cache, or the empty list a 204 would have meant, wearing flags. */
+function topFallback(cache, flags) {
+  const base = cache || { ranked_at: null, as_of: null, model: null, usd: 0, cards: [] };
+  return { ...base, fresh: false, capped: false, error: null, ...flags };
+}
+
+/** N14 — re-rank only when it can change something. */
+export function topNeedsRank(cache, asOf, force, nowMs) {
+  if (!cache || force) return true;
+  const ranked = Date.parse(cache.ranked_at);
+  if (Number.isFinite(ranked) && nowMs - ranked <= TOP_STALE_MS) return false;
+  const board = Date.parse(asOf);
+  if (!Number.isFinite(board)) return false;
+  const cached = Date.parse(cache.as_of);
+  return !Number.isFinite(cached) || board > cached;
+}
+
 // ------------------------------------------------------------------ routes
 
 async function handleGetData(request, env, caller) {
@@ -900,6 +1160,7 @@ async function handleHealth(request, env) {
   }
   const keys = await listEventKeys(env);
   const spend = await askSpendToday(env);
+  const topSpend = await topSpendToday(env);
   // Bytes, never text: the Yeoman's prompt carries Matt's own messages as
   // voice samples, so health says only whether it is there.
   const draftSys = await env.HELM_KV.get('draft:sys');
@@ -909,6 +1170,8 @@ async function handleHealth(request, env) {
     ask_today_usd: Number(spend.usd.toFixed(4)),
     ask_cap_usd: askCapUsd(env),
     draft_sys_bytes: draftSys ? byteLen(draftSys) : 0,
+    top_today_usd: Number(topSpend.usd.toFixed(4)),
+    top_cap_usd: topCapUsd(env),
   });
 }
 
@@ -1038,6 +1301,107 @@ async function handleDraft(request, env) {
   });
 }
 
+/** N14 — the cache, instantly; no model call, ever. 204 when nothing is ranked yet. */
+async function handleGetTop(request, env) {
+  const cache = await readTopCache(env);
+  if (!cache) return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store', ...corsHeaders(request) } });
+  return json(request, cache);
+}
+
+/**
+ * N14 — re-rank when it can change something, else hand back the cache.
+ * Every failure is a 200 with the last good list and a reason: the ranker
+ * having a bad day never becomes an error face (N15).
+ */
+async function handlePostTop(request, env) {
+  const r = await readTextCapped(request, MAX_EVENT_BYTES);
+  if (r.tooBig) return err(request, 413, 'too_large', 'top body too large');
+  // An empty body reads as `{}` — the page's plain open-the-sheet POST.
+  let body = {};
+  if (r.text.trim()) {
+    try {
+      body = JSON.parse(r.text);
+    } catch {
+      return err(request, 400, 'bad_json', 'body must be valid JSON');
+    }
+  }
+  const force = isObj(body) && body.force === true;
+
+  const now = Date.now();
+  const cache = await readTopCache(env);
+
+  let snapshot = null;
+  const rawSnapshot = await env.HELM_KV.get('snapshot');
+  if (rawSnapshot) {
+    try {
+      snapshot = JSON.parse(rawSnapshot);
+    } catch {
+      snapshot = null;
+    }
+  }
+  const news = snapshot?.tiles?.newsstand?.data;
+  const asOf = isObj(news) && typeof news.as_of === 'string' ? news.as_of : null;
+  const cards = (isObj(news) && Array.isArray(news.cards) ? news.cards : []).filter(isObj);
+
+  if (!topNeedsRank(cache, asOf, force, now)) return json(request, topFallback(cache, {}));
+
+  const [topSpend, askSpend] = await Promise.all([topSpendToday(env), askSpendToday(env)]);
+  if (topSpend.usd >= topCapUsd(env) || askSpend.usd >= askCapUsd(env)) {
+    return json(request, topFallback(cache, { capped: true }));
+  }
+
+  if (!cards.length) return json(request, topFallback(cache, { error: 'ranker: no newsstand cards on the board' }));
+  const sysText = await env.HELM_KV.get('top:sys');
+  if (!sysText || !sysText.trim()) return json(request, topFallback(cache, { error: 'ranker: no system prompt installed' }));
+
+  const input = topModelInput(cards, now);
+  const call = { system: sysText.trim(), user: topUserTurn(input) };
+  let usd = 0;
+  let reason = null;
+  let scores = null;
+  let model = TOP_MODEL;
+  let usage = null;
+  // N12 — one retry, then fail closed.
+  for (let attempt = 0; attempt < 2 && !scores; attempt++) {
+    const out = await topBackend(env, call);
+    if (out.fail) {
+      reason = out.fail === 'upstream' && out.detail ? out.detail : out.fail;
+      if (out.fail === 'no_key') break;
+      continue;
+    }
+    usd += out.usd;
+    model = out.model;
+    usage = out.usage;
+    const parsed = parseTopScores(out.text, cards.length);
+    if (parsed.scores) scores = parsed.scores;
+    else reason = parsed.reason;
+  }
+  usd = Math.round(usd * 1e6) / 1e6;
+  if (usd > 0) await recordTopSpend(env, usd);
+
+  // Counts and cost only — never a headline.
+  console.log(
+    `top ${scores ? 'ok' : 'fail'} model=${model} cards=${cards.length} force=${force ? 'y' : 'n'} ` +
+      `in=${usage?.input_tokens ?? '?'} cache_write=${usage?.cache_creation_input_tokens ?? 0} ` +
+      `cache_read=${usage?.cache_read_input_tokens ?? 0} out=${usage?.output_tokens ?? '?'} usd=${usd}`
+  );
+
+  if (!scores) return json(request, topFallback(cache, { error: `ranker: ${reason || 'unknown failure'}` }));
+
+  const latest = {
+    ranked_at: new Date(now).toISOString(),
+    as_of: asOf,
+    model,
+    usd,
+    fresh: true,
+    capped: false,
+    error: null,
+    cards: rankTop(cards, scores, now),
+  };
+  await env.HELM_KV.put('top:latest', JSON.stringify(latest));
+  return json(request, latest);
+}
+
 // ------------------------------------------------------------ admin routes
 
 async function handleAdminPublish(request, env) {
@@ -1126,6 +1490,15 @@ async function handleAdminDraftSystem(request, env) {
   return json(request, { stored: true, bytes: byteLen(r.text) });
 }
 
+/** N12 — the taste prompt (vault `Newsstand-Top-Prompt-v1`) -> `top:sys`. */
+async function handleAdminTopSystem(request, env) {
+  const r = await readTextCapped(request, MAX_ASK_SYSTEM_BYTES);
+  if (r.tooBig) return err(request, 413, 'too_large', 'top-system text too large');
+  if (!r.text || !r.text.trim()) return err(request, 400, 'empty', 'body must be non-empty text');
+  await env.HELM_KV.put('top:sys', r.text);
+  return json(request, { stored: true, bytes: byteLen(r.text) });
+}
+
 // ------------------------------------------------------------------ router
 
 export default {
@@ -1150,6 +1523,7 @@ export default {
         if (path === '/api/admin/tokens' && method === 'POST') return handleAdminTokens(request, env);
         if (path === '/api/admin/ask-system' && method === 'PUT') return handleAdminAskSystem(request, env);
         if (path === '/api/admin/draft-system' && method === 'PUT') return handleAdminDraftSystem(request, env);
+        if (path === '/api/admin/top-system' && method === 'PUT') return handleAdminTopSystem(request, env);
         return err(request, 404, 'no_route', `${method} ${path}`);
       }
 
@@ -1163,6 +1537,8 @@ export default {
         if (path === '/api/health' && method === 'GET') return handleHealth(request, env);
         if (path === '/api/ask' && method === 'POST') return handleAsk(request, env);
         if (path === '/api/draft' && method === 'POST') return handleDraft(request, env);
+        if (path === '/api/top' && method === 'GET') return handleGetTop(request, env);
+        if (path === '/api/top' && method === 'POST') return handlePostTop(request, env);
 
         const del = path.match(/^\/api\/event\/(.+)$/);
         if (del && method === 'DELETE') return handleDeleteEvent(request, env, caller, del[1]);

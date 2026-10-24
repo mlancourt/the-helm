@@ -1602,6 +1602,58 @@ body {
   text-transform: uppercase;
 }
 
+/* 🔥 Top Stories (N15): the one full-width block above the grid. Same chip
+   surface as the buttons; the pill is the only accent. */
+.top-hero { margin-bottom: 8px; }
+.top-hero-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--bg-chip);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.top-hero-btn:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.top-hero-head { display: flex; align-items: center; gap: 6px; }
+.top-hero-label { font-size: 11.5px; font-weight: 600; color: var(--text-dim); }
+.top-hero-count {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.top-hero-title {
+  font-size: 14px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.top-row { display: flex; gap: 10px; align-items: baseline; }
+.top-rank {
+  min-width: 1.4em;
+  text-align: right;
+  color: var(--text-faint);
+  font-family: var(--mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+}
+.top-row-main { min-width: 0; flex: 1; }
+.top-foot { display: flex; align-items: center; gap: 8px; }
+.top-refresh { margin-left: auto; font-size: 14px; }
+.top-spin { display: inline-block; }
+.top-spin.spinning { animation: top-spin 0.9s linear infinite; }
+@keyframes top-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .top-spin.spinning { animation: none; opacity: 0.5; } }
+.top-note { color: var(--text-faint); }
+
 .news { display: flex; flex-direction: column; }
 .news-card { padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
 .news-card:last-child { border-bottom: 0; }

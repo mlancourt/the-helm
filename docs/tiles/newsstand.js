@@ -434,6 +434,9 @@ export function render(el_, tile, ctx) {
     return;
   }
 
+  // 🔥 Top Stories leads the card when the Worker has a list (N15).
+  el_.appendChild(topHero(ctx));
+
   const groups = groupByCategory(cards, fromMemory ? lastGood.by_category : data.by_category);
 
   if (!degraded && live.length) {
@@ -489,4 +492,249 @@ export function render(el_, tile, ctx) {
 /** Test seam: drop the module's memory of the last good paper. */
 export function _resetMemory() {
   lastGood = null;
+  lastTop = null;
+}
+
+// ---------------------------------------------------------- 🔥 Top Stories
+
+/*
+ * N11–N16 (2026-10-24). One face where a model has touched the paper: the
+ * Worker scores the snapshot's raw cards with Sonnet 5.5 and ranks them in
+ * code; KV `top:latest` holds the ten. This module only shows what came back.
+ *
+ *   - The hero sits ABOVE the category grid and is drawn only when the Worker
+ *     has a list. 204 / empty / a failed fetch -> no hero, and the grid is
+ *     exactly what it was before this face existed.
+ *   - The pill is N10's, keyed by URL rather than by time: the list is a
+ *     ranking, so "new" is a story that was not in the ten last seen on this
+ *     device. First sight baselines silently; nothing new is no pill.
+ *   - Opening the sheet shows the cached rows at once and POSTs {} — the
+ *     Worker decides whether a re-rank is due (N14). Fresh rows swap in under
+ *     the reader's thumb; ↻ POSTs {force: true}.
+ *   - Ranker trouble (`capped`, `error`) is one muted line in the sheet's
+ *     footer. Never an error face, never the shell's red line.
+ */
+
+/** The URLs of the ten last seen on this device (N15) — an array, not a stamp. */
+const LS_TOP = 'helm.newsstand.lastOpened.top';
+
+/** The last list this page load drew, so a re-render paints before its GET lands. */
+let lastTop = null;
+
+/** A Set of seen URLs, or null when nothing (usable) is stored — that means baseline. */
+function readSeenTop() {
+  try {
+    const raw = globalThis.localStorage?.getItem(LS_TOP);
+    if (!raw) return null;
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? new Set(v.filter((u) => typeof u === 'string')) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSeenTop(urls) {
+  try {
+    globalThis.localStorage?.setItem(LS_TOP, JSON.stringify(urls));
+  } catch {
+    /* no storage: no pill on this device */
+  }
+}
+
+/** The ten as the Worker sent them, objects only. */
+function topCards(top) {
+  return arr(top && top.cards).filter((c) => c && typeof c === 'object' && !Array.isArray(c));
+}
+
+const topUrls = (cards) => cards.map((c) => str(c.url)).filter(Boolean);
+
+/** 'claude-sonnet-5-5' -> 'Sonnet 5.5'. An id it cannot read is printed as sent. */
+function modelLabel(id) {
+  const m = str(id).match(/^claude-([a-z]+)-(\d+(?:-\d+)*)$/);
+  if (!m) return str(id);
+  return `${m[1][0].toUpperCase()}${m[1].slice(1)} ${m[2].replace(/-/g, '.')}`;
+}
+
+/** The sheet footer's note when the ranker could not do its job, or ''. */
+function topTrouble(top) {
+  if (top && top.capped === true) return "over today's cap — showing the last list";
+  if (top && top.error) return 'ranker failed — showing the last list';
+  return '';
+}
+
+function topRow(c, fresh) {
+  const age = ageChip(c.published_at);
+  const source = str(c.source).trim();
+  const meta = [];
+  if (fresh) meta.push(el('span', { cls: 'news-new-mark', text: 'new' }));
+  if (source) meta.push(el('span', { cls: 'news-source', text: source }));
+  if (age) meta.push(el('span', { cls: 'news-age', text: age, attrs: { title: str(c.published_at) } }));
+  return el('div', { cls: 'news-card top-row' }, [
+    el('span', { cls: 'top-rank', text: str(c.rank) }),
+    el('div', { cls: 'top-row-main' }, [
+      extLink(c.url, str(c.title).trim() || '(untitled)', 'news-title'),
+      meta.length ? el('div', { cls: 'news-meta' }, meta) : null,
+    ]),
+  ]);
+}
+
+/**
+ * The sheet. `seen` is the set as it stood when the hero drew, so the rows
+ * marked new are exactly the ones the pill counted — including rows that
+ * swap in after the POST.
+ */
+function topSheet(top, seen, ctx, onList) {
+  return (body) => {
+    let closed = false;
+    let current = top;
+    const list = el('div', { cls: 'news top-list' });
+    const stamp = el('span', { cls: 'top-stamp' });
+    const spin = el('span', { cls: 'top-spin', attrs: { 'aria-hidden': 'true' }, text: '↻' });
+    const note = el('p', { cls: 'tile-foot top-note hidden' });
+
+    const paint = (t, trouble) => {
+      const cards = topCards(t);
+      const scroller = body;
+      const keep = scroller.scrollTop;
+      list.textContent = '';
+      for (const c of cards) list.appendChild(topRow(c, !!seen && !seen.has(str(c.url))));
+      scroller.scrollTop = keep;
+      const bits = [];
+      if (t && t.ranked_at) bits.push(`ranked ${ago(t.ranked_at)}`);
+      if (t && t.model) bits.push(modelLabel(t.model));
+      stamp.textContent = bits.join(' · ');
+      note.textContent = trouble;
+      note.classList.toggle('hidden', !trouble);
+    };
+
+    const ask = async (payload) => {
+      let res = null;
+      try {
+        res = await ctx.actions.top(payload);
+      } catch {
+        res = { error: 'unreachable' };
+      }
+      if (closed) return;
+      if (res && res.fresh === true && topCards(res).length) {
+        current = res;
+        onList(res);
+        paint(res, '');
+      } else {
+        paint(current, topTrouble(res));
+      }
+    };
+
+    const refresh = el(
+      'button',
+      {
+        cls: 'link-btn top-refresh',
+        attrs: { type: 'button', 'aria-label': 'Re-rank now' },
+        on: {
+          click: async (e) => {
+            e.stopPropagation();
+            if (refresh.disabled) return;
+            refresh.disabled = true;
+            spin.classList.add('spinning');
+            await ask({ force: true });
+            refresh.disabled = false;
+            spin.classList.remove('spinning');
+          },
+        },
+      },
+      [spin]
+    );
+
+    body.appendChild(list);
+    body.appendChild(el('p', { cls: 'tile-foot top-foot' }, [stamp, refresh]));
+    body.appendChild(note);
+    paint(top, '');
+    // N14 decides; the cached rows are already on screen.
+    ask({});
+    return () => {
+      closed = true;
+    };
+  };
+}
+
+/**
+ * Fills `hero` from a /api/top answer, or hides it. Drawn from scratch each
+ * time, so the 5-minute re-render and a fresh POST both land here.
+ */
+function paintHero(hero, top, ctx) {
+  hero.textContent = '';
+  const cards = topCards(top);
+  if (!cards.length) {
+    hero.classList.add('hidden');
+    return;
+  }
+  hero.classList.remove('hidden');
+
+  const urls = topUrls(cards);
+  let seen = readSeenTop();
+  if (!seen) {
+    // First sight on this device: baseline, quietly (N10's rule).
+    writeSeenTop(urls);
+    seen = new Set(urls);
+  }
+  const fresh = urls.filter((u) => !seen.has(u)).length;
+  const pill = fresh > 0 ? el('span', { cls: 'news-menu-new', text: String(fresh) }) : null;
+
+  const lead = cards[0];
+  const age = ageChip(lead.published_at);
+  const source = str(lead.source).trim();
+  const meta = [];
+  if (source) meta.push(el('span', { cls: 'news-source', text: source }));
+  if (age) meta.push(el('span', { cls: 'news-age', text: age, attrs: { title: str(lead.published_at) } }));
+
+  const btn = el(
+    'button',
+    {
+      cls: 'top-hero-btn',
+      attrs: { type: 'button' },
+      on: {
+        click: (e) => {
+          e.stopPropagation();
+          const open = ctx && ctx.actions && ctx.actions.openPanel;
+          if (typeof open !== 'function') return;
+          const onList = (t) => {
+            lastTop = t;
+            writeSeenTop(topUrls(topCards(t)));
+            paintHero(hero, t, ctx);
+          };
+          open('🔥 Top Stories', topSheet(top, seen, ctx, onList));
+          // Seen: these ten, now. The pill goes on the spot.
+          writeSeenTop(urls);
+          if (pill) pill.classList.add('hidden');
+        },
+      },
+    },
+    [
+      el('div', { cls: 'top-hero-head' }, [
+        el('span', { cls: 'top-hero-label', text: '🔥 Top Stories' }),
+        pill,
+        el('span', { cls: 'top-hero-count', text: String(cards.length) }),
+      ]),
+      el('span', { cls: 'top-hero-title', text: str(lead.title).trim() || '(untitled)' }),
+      meta.length ? el('span', { cls: 'news-meta' }, meta) : null,
+    ]
+  );
+  hero.appendChild(btn);
+}
+
+/** The hero slot: painted from memory now, then from the Worker's cache. */
+function topHero(ctx) {
+  const hero = el('div', { cls: 'top-hero hidden' });
+  const get = ctx && ctx.actions && ctx.actions.top;
+  if (typeof get !== 'function') return hero;
+  if (lastTop) paintHero(hero, lastTop, ctx);
+  Promise.resolve()
+    .then(() => get())
+    .then((t) => {
+      lastTop = topCards(t).length ? t : null;
+      paintHero(hero, t, ctx);
+    })
+    .catch(() => {
+      // Unreachable: keep whatever the last list was, or no hero at all.
+    });
+  return hero;
 }

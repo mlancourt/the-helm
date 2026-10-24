@@ -8,6 +8,7 @@
  *   node tools/make-mock-data.js --cards-stale > docs/mock/cards-stale.json
  *   node tools/make-mock-data.js --cards-keep-net > docs/mock/cards-keep-net.json
  *   node tools/make-mock-data.js --newsstand-stale > docs/mock/newsstand-stale.json
+ *   node tools/make-mock-data.js --top > docs/mock/top.json
  *   node tools/make-mock-data.js --events   > two POST /api/event bodies
  *
  * The `--espn` slate is the other half of `today_games`: that tile's games all
@@ -2425,6 +2426,37 @@ function watchBillPayload() {
   };
 }
 
+/**
+ * `top:latest` as the Worker would hold it (Newsstand N14) — for `?mock=1`'s
+ * 🔥 Top Stories hero and sheet. Not a snapshot: the Worker owns this key.
+ * Ten of the mock paper's own cards, at most three sports (N13), scores
+ * falling; no model touched it. Deterministic.
+ */
+function mockTopLatest() {
+  const SPORTS = new Set(['Local Sports', 'Soccer', 'Betting']);
+  const picked = [];
+  let sports = 0;
+  for (const c of newsstandPayload().cards) {
+    if (picked.length === 10) break;
+    if (!c.url || !c.category) continue;
+    if (SPORTS.has(c.category)) {
+      if (sports === 3) continue;
+      sports++;
+    }
+    picked.push(c);
+  }
+  return {
+    ranked_at: agoIso(3 * 60),
+    as_of: agoIso(20),
+    model: 'claude-sonnet-5-5',
+    usd: 0.0712,
+    fresh: true,
+    capped: false,
+    error: null,
+    cards: picked.map((c, k) => ({ rank: k + 1, score: Math.round((92 - k * 6.5) * 10) / 10, ...c })),
+  };
+}
+
 const MODES = [
   ['--events', () => mockEvents()],
   ['--pending', () => mockPending()],
@@ -2436,6 +2468,8 @@ const MODES = [
   ['--cards-pc-errors', () => cardsPcErrorsSnapshot()],
   ['--cards-keep-net', () => cardsKeepNetSnapshot()],
   ['--newsstand-stale', () => newsstandStaleSnapshot()],
+  // Not a snapshot: the Worker's `top:latest`, for ?mock=1's Top Stories.
+  ['--top', () => mockTopLatest()],
   // The Ledger with almost nothing settled: every optional block absent.
   ['--ledger-thin', () => ledgerThinSnapshot()],
   // The morning brief's other five faces. The default snapshot carries the

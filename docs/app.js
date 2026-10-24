@@ -308,6 +308,17 @@ const actions = {
   },
 
   /**
+   * Newsstand 🔥 Top Stories (N14). No body: GET /api/top, the Worker's
+   * cache — null on 204. A body: POST /api/top, which re-ranks only when the
+   * Worker says it is due, or on `{force: true}`. Never cached by the SW.
+   */
+  async top(body) {
+    if (MOCK) return mockTop(body);
+    if (body === undefined) return api('/api/top');
+    return api('/api/top', { method: 'POST', body });
+  },
+
+  /**
    * A tile asking for the detail sheet. It hands over a title and a builder
    * and never touches the sheet itself — Ask's body stays Ask's.
    */
@@ -357,6 +368,26 @@ function mockDraft(req) {
     mode: 'draft',
   };
   return new Promise((resolve) => setTimeout(() => resolve(answer), 450));
+}
+
+/**
+ * `?mock=1`'s /api/top: docs/mock/top.json (invented by make-mock-data.js
+ * --top). A plain POST answers `fresh:false` like a warm cache; a forced one
+ * comes back re-stamped `fresh:true`, so ↻ can be watched swapping rows.
+ */
+async function mockTop(body) {
+  let top = null;
+  try {
+    const res = await fetch('./mock/top.json', { cache: 'no-store' });
+    if (res.ok) top = await res.json();
+  } catch {
+    /* no mock list: the hero hides itself */
+  }
+  if (!top || body === undefined) return top;
+  if (!body.force) return { ...top, fresh: false };
+  return new Promise((resolve) =>
+    setTimeout(() => resolve({ ...top, ranked_at: new Date().toISOString(), fresh: true, cards: [...top.cards].reverse().map((c, k) => ({ ...c, rank: k + 1 })) }), 900)
+  );
 }
 
 // -------------------------------------------------------------------- load

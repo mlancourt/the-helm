@@ -604,6 +604,211 @@ async function main() {
     // about the tile surviving that — and about the three things the payload
     // grew: `by_category`, `published_at`, and `sources`.
     //
+    // -- 🔥 Top Stories (N11–N16, spec Test 12) -------------------------------
+    //
+    // The hero leads the card when GET /api/top has a list and is absent
+    // otherwise; the sheet paints the cache, then swaps in a fresh POST; ↻
+    // forces; the pill is URLs not in the device's last-seen set.
+    console.log('\nnewsstand — 🔥 Top Stories (N15)');
+    {
+      const LS_TOP = 'helm.newsstand.lastOpened.top';
+      // Keyed, unlike fakeStorage: the category stamps live under their own
+      // key beside the seen set, and the two must not overwrite each other.
+      const keyedStore = (seed) => {
+        const m = new Map(seed === undefined ? [] : [[LS_TOP, JSON.stringify(seed)]]);
+        return {
+          getItem: (k) => (m.has(k) ? m.get(k) : null),
+          setItem: (k, v) => m.set(k, String(v)),
+          get parsed() { return m.has(LS_TOP) ? JSON.parse(m.get(LS_TOP)) : null; },
+        };
+      };
+      const flush = () => new Promise((r) => setTimeout(r, 0));
+      // withStorage restores on return; the hero paints after its GET lands.
+      const withStore = async (storage, fn) => {
+        const had = Object.prototype.hasOwnProperty.call(global, 'localStorage');
+        const prev = global.localStorage;
+        global.localStorage = storage;
+        try { return await fn(); } finally {
+          if (had) global.localStorage = prev; else delete global.localStorage;
+        }
+      };
+      const topCard = (i, over = {}) => ({
+        rank: i + 1, score: 90 - i, title: `Top headline ${i}`, synopsis: null, source: `Fictional Wire ${i}`,
+        url: `https://example.com/top/${i}`, lens: null, category: 'Tech', emoji: '💻',
+        published_at: new Date(Date.now() - (i + 1) * 3600e3).toISOString(), ...over,
+      });
+      const topList = (cards, extra = {}) => ({
+        ranked_at: new Date(Date.now() - 3 * 3600e3).toISOString(), as_of: new Date().toISOString(),
+        model: 'claude-sonnet-5-5', usd: 0.07, fresh: true, capped: false, error: null, cards, ...extra,
+      });
+      const ten = Array.from({ length: 10 }, (_, i) => topCard(i));
+      const gridCards = [{ title: 'G1', source: 's', url: 'https://example.com/g1', category: 'Tech', emoji: '💻' }];
+      /** A fake actions.top: GET answers `get`; each POST is recorded and answered by `post(body)`. */
+      const topActions = (panel, get, post = () => ({ ...get, fresh: false })) => {
+        const posts = [];
+        let gets = 0;
+        return {
+          posts,
+          get gets() { return gets; },
+          actions: {
+            ...panel.actions,
+            async top(body) {
+              if (body === undefined) { gets++; return get; }
+              posts.push(body);
+              return typeof post === 'function' ? post(body) : post;
+            },
+          },
+        };
+      };
+      const heroOf = (root) => root.querySelector('.top-hero-btn');
+
+      news._resetMemory();
+      // 204 -> the shell's api() answers null: no hero, grid exactly as before.
+      const r0 = new El('div');
+      const a0 = topActions(fakePanel(), null);
+      await withStore(keyedStore(), async () => { news.render(r0, newsTile(gridCards), { id: 'newsstand', actions: a0.actions }); await flush(); });
+      check('GET /api/top 204 -> no hero', !heroOf(r0) && a0.gets === 1);
+      check('and the category grid still renders', btnsOf(r0).length === 1);
+      const rE = new El('div');
+      await withStore(keyedStore(), async () => {
+        news.render(rE, newsTile(gridCards), { id: 'newsstand', actions: { async top() { throw new Error('offline'); } } });
+        await flush();
+      });
+      check('a failed GET -> no hero, grid intact, no error text', !heroOf(rE) && btnsOf(rE).length === 1 && !/offline|error/i.test(textOf(rE)));
+      const rEmpty = new El('div');
+      await withStore(keyedStore(), async () => { news.render(rEmpty, newsTile(gridCards), { id: 'newsstand', actions: topActions(fakePanel(), topList([])).actions }); await flush(); });
+      check('an empty list -> no hero', !heroOf(rEmpty));
+      const rOld = new El('div');
+      news.render(rOld, newsTile(gridCards), { id: 'newsstand', actions: {} });
+      check('a shell with no top action -> no hero, nothing thrown', !heroOf(rOld) && btnsOf(rOld).length === 1);
+
+      // Ten rows -> the hero.
+      const store = keyedStore();
+      const p1 = fakePanel();
+      const a1 = topActions(p1, topList(ten));
+      const r1 = new El('div');
+      await withStore(store, async () => { news.render(r1, newsTile(gridCards), { id: 'newsstand', actions: a1.actions }); await flush(); });
+      const hero = heroOf(r1);
+      check('ten rows -> the hero', !!hero);
+      check('the hero sits above the category grid', r1.childNodes[0].classList.contains('top-hero') && !!r1.childNodes[0].querySelector('.top-hero-btn'));
+      check('it is labelled 🔥 Top Stories', hero && hero.querySelector('.top-hero-label').textContent === '🔥 Top Stories');
+      check('it shows the rank-1 headline', hero && hero.querySelector('.top-hero-title').textContent === 'Top headline 0');
+      check('its source', hero && /Fictional Wire 0/.test(hero.querySelector('.news-meta').textContent));
+      check('its age chip', hero && hero.querySelector('.news-age').textContent === '1h');
+      check('and the count chip 10', hero && hero.querySelector('.top-hero-count').textContent === '10');
+      check('first sight baselines silently: no pill', hero && !hero.querySelector('.news-menu-new'));
+      check('the baseline is the URL set, not a stamp', Array.isArray(store.parsed) && store.parsed.length === 10 && store.parsed[0] === ten[0].url, JSON.stringify(store.parsed));
+      check('it is stored under helm.newsstand.lastOpened.top', /lastOpened\.top'/.test(fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'newsstand.js'), 'utf8')) && LS_TOP);
+
+      // Two new URLs in the list -> pill 2.
+      news._resetMemory();
+      const two = [topCard(20), ...ten.slice(0, 8), topCard(21)].map((c, k) => ({ ...c, rank: k + 1 }));
+      const p2 = fakePanel();
+      let resolvePost;
+      const fresher = topList([topCard(30), ...two.slice(0, 9)].map((c, k) => ({ ...c, rank: k + 1 })), { ranked_at: new Date().toISOString() });
+      const a2 = topActions(p2, topList(two), () => new Promise((r) => { resolvePost = () => r(fresher); }));
+      const r2 = new El('div');
+      await withStore(store, async () => { news.render(r2, newsTile(gridCards), { id: 'newsstand', actions: a2.actions }); await flush(); });
+      const pill = heroOf(r2).querySelector('.news-menu-new');
+      check('pill = URLs not in the last-seen set', pill && pill.textContent === '2', pill && pill.textContent);
+
+      // Open the sheet: cached rows at once, then the POST {}.
+      await withStore(store, async () => { tap(heroOf(r2)); await flush(); });
+      const sheet = p2.last.body;
+      check('the sheet is titled 🔥 Top Stories', p2.last.title === '🔥 Top Stories');
+      check('cached rows paint immediately', countOf(sheet, 'top-row') === 10 && sheet.querySelector('.news-title').textContent === 'Top headline 20');
+      check('in rank order with the numeral', sheet.querySelectorAll('.top-rank').map((n) => n.textContent).join() === '1,2,3,4,5,6,7,8,9,10');
+      check('titles are links that open a new tab', sheet.querySelectorAll('A').every((a) => a.getAttribute('target') === '_blank') && sheet.querySelectorAll('A').length === 10);
+      check('each row carries source and age', countOf(sheet, 'news-source') === 10 && countOf(sheet, 'news-age') === 10);
+      check('rows not in the last-seen set wear new', countOf(sheet, 'news-new-mark') === 2);
+      check('opening POSTs {} (no force)', a2.posts.length === 1 && JSON.stringify(a2.posts[0]) === '{}');
+      check('the pill hides on the spot', pill.classList.contains('hidden'));
+      check('the current URLs are stored as seen', store.parsed.includes(topCard(20).url) && store.parsed.includes(topCard(21).url));
+      check('the footer reads "ranked 3h ago · Sonnet 5.5"', sheet.querySelector('.top-stamp').textContent === 'ranked 3h ago · Sonnet 5.5', sheet.querySelector('.top-stamp').textContent);
+      check('and carries ↻', /↻/.test(sheet.querySelector('.top-refresh').textContent));
+
+      // The POST resolves fresh -> rows swap in place.
+      sheet.scrollTop = 120;
+      resolvePost();
+      await flush();
+      check('fresh:true swaps the rows in place', sheet.querySelector('.news-title').textContent === 'Top headline 30' && countOf(sheet, 'top-row') === 10);
+      check('the scroll position is kept', sheet.scrollTop === 120);
+      check('the footer re-stamps', /^ranked just now/.test(sheet.querySelector('.top-stamp').textContent));
+      check('no trouble line on a clean answer', sheet.querySelector('.top-note').classList.contains('hidden'));
+      check('the hero repaints to the new #1', heroOf(r2).querySelector('.top-hero-title').textContent === 'Top headline 30');
+
+      // ↻ -> POST {force:true}, spinning until it resolves.
+      let resolveForce;
+      const a3 = topActions(fakePanel(), topList(ten), (body) => (body.force
+        ? new Promise((r) => { resolveForce = () => r(topList(ten, { capped: true, fresh: false })); })
+        : { ...topList(ten), fresh: false }));
+      const r3 = new El('div');
+      news._resetMemory();
+      const opened = [];
+      const acts3 = { ...a3.actions, openPanel(title, build) { const body = new El('div'); build(body); opened.push(body); } };
+      await withStore(keyedStore(), async () => { news.render(r3, newsTile(gridCards), { id: 'newsstand', actions: acts3 }); await flush(); tap(heroOf(r3)); await flush(); });
+      const s3 = opened[0];
+      check('a fresh:false answer changes nothing and says nothing', a3.posts.length === 1 && countOf(s3, 'top-row') === 10 && s3.querySelector('.top-note').classList.contains('hidden'));
+      const refresh = s3.querySelector('.top-refresh');
+      const clicked = refresh.listeners.click[0]({ stopPropagation() {} });
+      await flush();
+      check('↻ POSTs {force:true}', a3.posts.length === 2 && a3.posts[1].force === true);
+      check('the glyph spins while it waits', s3.querySelector('.top-spin').classList.contains('spinning') && refresh.disabled === true);
+      refresh.listeners.click[0]({ stopPropagation() {} });
+      check('a second tap while spinning sends nothing', a3.posts.length === 2);
+      resolveForce();
+      await clicked;
+      check('the spin stops when it resolves', !s3.querySelector('.top-spin').classList.contains('spinning') && refresh.disabled === false);
+      const note = s3.querySelector('.top-note');
+      check('capped -> one muted footer line', !note.classList.contains('hidden') && note.textContent === "over today's cap — showing the last list", note.textContent);
+      check('and the last list stays on screen', countOf(s3, 'top-row') === 10);
+      check('it is a tile-foot line, never the red error face', note.classList.contains('tile-foot') && countOf(s3, 'card-error') === 0);
+
+      // error -> its own muted line; a throw reads the same.
+      const errActs = topActions(fakePanel(), topList(ten), () => ({ ...topList(ten), fresh: false, error: 'ranker: bad index' }));
+      const opened2 = [];
+      const r4 = new El('div');
+      news._resetMemory();
+      await withStore(keyedStore(), async () => {
+        news.render(r4, newsTile(gridCards), { id: 'newsstand', actions: { ...errActs.actions, openPanel(t, b) { const body = new El('div'); b(body); opened2.push(body); } } });
+        await flush(); tap(heroOf(r4)); await flush();
+      });
+      check('error -> "ranker failed — showing the last list"', opened2[0].querySelector('.top-note').textContent === 'ranker failed — showing the last list');
+      check('the raw ranker reason never reaches the page', !/bad index/.test(textOf(opened2[0])));
+      check('the hero carries no trouble at all', !/ranker|cap/.test(textOf(r4.querySelector('.top-hero'))));
+
+      // A late answer after the sheet closed paints nothing.
+      let late;
+      const lateActs = topActions(fakePanel(), topList(ten), () => new Promise((r) => { late = () => r(topList([topCard(40)])); }));
+      const lp = fakePanel();
+      const r5 = new El('div');
+      news._resetMemory();
+      await withStore(keyedStore(), async () => {
+        news.render(r5, newsTile(gridCards), { id: 'newsstand', actions: { ...lateActs.actions, openPanel: lp.actions.openPanel } });
+        await flush(); tap(heroOf(r5)); await flush();
+      });
+      lp.close();
+      late();
+      await flush();
+      check('a POST landing after close paints nothing', !/Top headline 40/.test(textOf(lp.last.body)));
+
+      // Stored junk is re-baselined, blocked storage stays quiet.
+      const junk = keyedStore({ not: 'an array' });
+      const r6 = new El('div');
+      news._resetMemory();
+      await withStore(junk, async () => { news.render(r6, newsTile(gridCards), { id: 'newsstand', actions: topActions(fakePanel(), topList(ten)).actions }); await flush(); });
+      check('a non-array seen set is re-baselined, no pill', !heroOf(r6).querySelector('.news-menu-new') && Array.isArray(junk.parsed));
+      let threw = null;
+      const r7 = new El('div');
+      news._resetMemory();
+      try {
+        await withStore(fakeStorage(null, { broken: true }), async () => { news.render(r7, newsTile(gridCards), { id: 'newsstand', actions: topActions(fakePanel(), topList(ten)).actions }); await flush(); });
+      } catch (e) { threw = e; }
+      check('blocked storage never throws and shows no pill', !threw && heroOf(r7) && !heroOf(r7).querySelector('.news-menu-new'));
+      check('the module never uses innerHTML', !/innerHTML/.test(fs.readFileSync(path.join(__dirname, '..', 'docs', 'tiles', 'newsstand.js'), 'utf8')));
+      news._resetMemory();
+    }
+
     // Every headline, source and URL here is invented (rule 1).
     console.log('\nnewsstand — raw RSS v2');
 
