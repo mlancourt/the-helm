@@ -358,6 +358,12 @@ console.log('\nsubhead never contains me.name');
   check('it is a woff2', /^wOF2/.test(Buffer.from(b64, 'base64').subarray(0, 4).toString('latin1')));
   check('the face declares a fallback-friendly display', /font-display:\s*swap/.test(faces[0] || ''));
   check('the wordmark names a system fallback after it', /\.wordmark\s*\{[\s\S]*?font-family:[^;]*sans-serif/.test(CSS));
+  // WT15: the face reaches one card title — Wren's — and it still names a
+  // system fallback, so a corrupt blob leaves her title readable.
+  check(
+    "Wren's title is set in 'Helm Display' with a sans-serif fallback",
+    /\.card\[data-tile="yeoman"\] \.card-title\s*\{[^}]*font-family:\s*'Helm Display',[^;]*sans-serif/.test(CSS)
+  );
   check('the face is not applied to body text', !/^\s*(html, body|body)\s*\{[^}]*Helm Display/m.test(CSS));
 
   check('index.html links nothing off-origin', !/<link[^>]+href=["']https?:/i.test(HTML));
@@ -388,7 +394,7 @@ console.log('\nsubhead never contains me.name');
     const REG = read('docs', 'tiles', '_registry.js');
 
     const ORDER = [
-      'calendar', 'yeoman', 'reminders', 'captains_log', 'dinner', 'weather', 'newsstand',
+      'yeoman', 'calendar', 'reminders', 'captains_log', 'dinner', 'weather', 'newsstand',
       'entertainment', 'local_events', 'today_games', 'bets_live', 'bets_ledger',
       'cards', 'purser_due', 'wss_tape', 'watch_bill', 'ship_status',
     ];
@@ -398,8 +404,10 @@ console.log('\nsubhead never contains me.name');
     // moved — which is the whole reason the grid was renumbered in tens rather
     // than one-per-tile. Asserted as what it is: an insert, not a renumber.
     // The Yeoman (2026-10-04) is the third, at 15 between calendar and
-    // reminders — band ASK, on the board anyway (Y1, Y15).
-    const INSERTS = { yeoman: 15, captains_log: 25, watch_bill: 135 };
+    // reminders — band ASK, on the board anyway (Y1, Y15). Wren moved it to 5
+    // on 2026-10-25 (WT13): the first insert to LEAD the board, so it has no
+    // left neighbour and only needs the next tile on a ten above it.
+    const INSERTS = { yeoman: 5, captains_log: 25, watch_bill: 135 };
 
     // -- the registry ------------------------------------------------------
     const onBoard = Object.entries(REGISTRY)
@@ -427,9 +435,9 @@ console.log('\nsubhead never contains me.name');
         // them. Index arithmetic would only hold for the first insert — the
         // second (watch_bill, 2026-09-24) shifts every index after the first.
         REGISTRY[id].position === pos &&
-          REGISTRY[ORDER[i - 1]].position % 10 === 0 &&
+          (i === 0 || REGISTRY[ORDER[i - 1]].position % 10 === 0) &&
           REGISTRY[ORDER[i + 1]].position % 10 === 0 &&
-          REGISTRY[ORDER[i - 1]].position < pos &&
+          (i === 0 || REGISTRY[ORDER[i - 1]].position < pos) &&
           pos < REGISTRY[ORDER[i + 1]].position,
         `${REGISTRY[ORDER[i - 1]]?.position} ${REGISTRY[id]?.position} ${REGISTRY[ORDER[i + 1]]?.position}`
       );
@@ -503,6 +511,16 @@ console.log('\nsubhead never contains me.name');
       titles().join(' | ') === ORDER.map((id) => REGISTRY[id].title).join(' | '),
       titles().join(' | ')
     );
+    {
+      // WT14: every card the shell builds carries its own id as data-tile.
+      const cards = grids[0].childNodes;
+      check(
+        'every built card carries data-tile equal to its id',
+        cards.length === ORDER.length && cards.every((c, i) => c.getAttribute('data-tile') === ORDER[i]),
+        cards.map((c) => c.getAttribute('data-tile')).join(' ')
+      );
+      check('and Wren’s card leads the board', cards[0].getAttribute('data-tile') === 'yeoman');
+    }
     check('ask is in the snapshot and NOT on the board', !!shellState.snapshot.tiles.ask && !titles().includes('Ask'));
 
     // -- rule 9, still true in one grid -------------------------------------
@@ -550,7 +568,8 @@ console.log('\nsubhead never contains me.name');
     }
     check(
       'a missing tile says so',
-      /Not in this snapshot\./.test(boardEl.querySelectorAll('.grid')[0].childNodes[0].textContent)
+      // by id, not index 0 — Wren leads the board now and an ASK tile is never "missing"
+      /Not in this snapshot\./.test(boardEl.querySelectorAll('.grid')[0].childNodes[ORDER.indexOf('calendar')].textContent)
     );
 
     // The tile teardown seam, run for real: what the last board started is

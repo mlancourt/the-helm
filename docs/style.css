@@ -15,14 +15,16 @@
    raw, so it costs less than the icons and arrives with the stylesheet, which
    means no flash of a substituted wordmark on one bar of LTE.
 
-   It carries NINETEEN characters and no more — T h e H l m v, a space, a full
-   stop and the ten digits. Enough for "The Helm" and a version string, nothing
-   else. Every other glyph falls through to the system stack mid-word, which is
-   why this face is set on the wordmark alone and must never reach body text.
-   (The digits are currently unused; see .version-chip below for why.) */
+   It carries TWENTY-THREE characters and no more — T h e H l m v, a space, a
+   full stop, the ten digits, and W R E N (v1.40.0, WT15). Enough for "The
+   Helm", a version string and one card title — Wren's, set uppercase — and
+   nothing else. Every other glyph falls through to the system stack mid-word,
+   which is why this face reaches the wordmark and that one title alone and
+   must never reach body text. (The digits are currently unused; see
+   .version-chip below for why.) */
 @font-face {
   font-family: 'Helm Display';
-  src: url(data:font/woff2;base64,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) format('woff2');
+  src: url(data:font/woff2;base64,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) format('woff2');
   font-weight: 600;
   font-style: normal;
   /* swap, not block: if the blob is ever corrupted the wordmark must still
@@ -44,6 +46,9 @@
   --text-faint: #69645b;
 
   --brass: #ff8c1a;
+  /* Wren's lamp (WT14) — Seattle Seahawks Action Green. Her card and her
+     sheet only: every use sits under [data-tile="yeoman"] (test-wren scans it). */
+  --wren: #69be28;
   --good: #7dc98f;
   --warn: #e6c25a;
   --bad: #ef5a4e;
@@ -231,7 +236,11 @@ body {
 @media (min-width: 1040px) { .grid { grid-template-columns: repeat(3, 1fr); } }
 
 /* The marquee tile keeps the full width wherever it can. */
-@media (min-width: 640px) { .grid > .card:first-child:nth-last-child(1) { grid-column: 1 / -1; } }
+@media (min-width: 640px) {
+  .grid > .card:first-child:nth-last-child(1) { grid-column: 1 / -1; }
+  /* Wren takes the whole row on the wide grids (WT16); the phone is one column already. */
+  .card[data-tile="yeoman"] { grid-column: 1 / -1; }
+}
 
 /* ------------------------------------------------------------------- card */
 
@@ -271,7 +280,7 @@ body {
 
 .card-title {
   margin: 0;
-  /* the wordmark's fallback stack — NOT 'Helm Display' (19-glyph subset, wordmark only; rule 4) */
+  /* the wordmark's fallback stack — NOT 'Helm Display' (23-glyph subset: the wordmark and Wren's title only) */
   font-family: 'Avenir Next Condensed', 'Helvetica Neue Condensed', 'Roboto Condensed', 'Segoe UI Semibold', -apple-system, sans-serif;
   font-size: 15px;
   font-weight: 600;
@@ -293,6 +302,25 @@ body {
   position: relative;
   top: -1px;
 }
+
+/* Wren's card (WT14/WT15) — the ONE deliberate exception to Night Watch's
+   "the title is the one warm thing": every other card keeps brass and the
+   condensed system stack; she wears her own lamp and the ship's wordmark
+   face, because she is the ship's voice. Kept singular on purpose — a second
+   tile asking for its own colour gets no. */
+.card[data-tile="yeoman"] {
+  border-color: color-mix(in srgb, var(--wren) 45%, var(--line-soft));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--wren) 22%, transparent), 0 0 22px color-mix(in srgb, var(--wren) 16%, transparent);
+}
+.card[data-tile="yeoman"] .card-head::after { background: color-mix(in srgb, var(--wren) 55%, var(--line)); }
+.card[data-tile="yeoman"] .card-title {
+  /* 'Helm Display' carries W R E N for exactly this title (docs/fonts/README.md) */
+  font-family: 'Helm Display', 'Avenir Next Condensed', 'Helvetica Neue Condensed', 'Roboto Condensed', 'Segoe UI Semibold', -apple-system, sans-serif;
+  font-size: 17px;
+  letter-spacing: 0.2em;
+  color: var(--wren);
+}
+.card[data-tile="yeoman"] .card-title::before { background: var(--wren); }
 
 .card-head-right { display: flex; align-items: center; gap: 6px; }
 
@@ -2801,6 +2829,14 @@ a.wb-doc:hover { text-decoration: underline; }
   background: none; color: var(--text-dim); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .wren-tab[aria-selected="true"] { color: var(--brass); border-bottom-color: var(--brass); }
+/* her lamp, in her card and in the panel she opened (app.js tags the panel) */
+.card[data-tile="yeoman"] .wren-badge {
+  background: color-mix(in srgb, var(--wren) 14%, var(--bg-raise)); color: var(--wren);
+  border-color: color-mix(in srgb, var(--wren) 45%, var(--bg-raise));
+}
+.card[data-tile="yeoman"] .yeo-face-btn { color: var(--wren); border-color: color-mix(in srgb, var(--wren) 45%, var(--line)); }
+.panel[data-tile="yeoman"] .wren-tab[aria-selected="true"] { color: var(--wren); border-bottom-color: var(--wren); }
+.panel[data-tile="yeoman"] .btn-send { background: var(--wren); border-color: color-mix(in srgb, var(--wren) 60%, var(--bg)); }
 .wren-title { margin: 0 0 6px; font-size: 15px; }
 .wren-head { margin: 12px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
 .wren-source { margin: 12px 0 0; font: 11px/1.4 ui-monospace, Menlo, monospace; color: var(--text-faint); word-break: break-all; }

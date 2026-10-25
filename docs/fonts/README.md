@@ -14,8 +14,11 @@ at runtime; these two files are provenance and licence, not assets.
 ## Rebuilding the subset
 
 The upstream file is a variable font. It is instanced to one weight, then cut
-down to the nineteen characters the wordmark and a version string can ever
-need (`The Helm v0123456789.`), which is what keeps it at ~1.8 KB, not 220 KB.
+down to the twenty-three characters the wordmark, a version string and Wren's
+card title can ever need (`The Helm v0123456789.WREN` — W R E N added in
+v1.40.0, WT15; her title is `Wren` set uppercase), which is what keeps it at
+~2 KB, not 220 KB. The face reaches the wordmark and that one title, never
+body text.
 
 ```sh
 python3 -m venv /tmp/helmfont && /tmp/helmfont/bin/pip install fonttools brotli
@@ -23,7 +26,7 @@ curl -sSL -o /tmp/bsd.ttf \
   'https://raw.githubusercontent.com/google/fonts/main/ofl/bigshouldersdisplay/BigShouldersDisplay%5Bwght%5D.ttf'
 /tmp/helmfont/bin/fonttools varLib.instancer /tmp/bsd.ttf wght=600 -o /tmp/bsd-600.ttf
 /tmp/helmfont/bin/pyftsubset /tmp/bsd-600.ttf \
-  --text='The Helm v0123456789.' \
+  --text='The Helm v0123456789.WREN' \
   --layout-features='' --no-hinting --desubroutinize \
   --drop-tables+=DSIG,GSUB,GPOS,GDEF,MVAR,STAT,FFTM,gasp \
   --name-IDs=1,2,3,6 --notdef-outline \

@@ -23,12 +23,13 @@
  */
 
 export const REGISTRY = {
-  calendar: { band: 'DAILY', position: 10, module: './tiles/calendar.js', title: '📅 Calendar' },
   // Wren (Wren-Tile-Spec WT1): the id stays `yeoman` — plumbing — and the
-  // label is hers. Band ASK and position 15 are unchanged; the engine now
-  // publishes `tiles.yeoman` (her brief + questions, H9 waived — WT3), and the
-  // Yeoman's drafter lives on inside her sheet as the Draft face.
-  yeoman: { band: 'ASK', position: 15, module: './tiles/yeoman.js', title: 'Wren' },
+  // label is hers. Band ASK; the engine publishes `tiles.yeoman` (her brief +
+  // questions, H9 waived — WT3), and the Yeoman's drafter lives on inside her
+  // sheet as the Draft face. Position 5 (WT13, 2026-10-25): first on the
+  // board, above Calendar — her brief is the one thing the Helm is opened for.
+  yeoman: { band: 'ASK', position: 5, module: './tiles/yeoman.js', title: 'Wren' },
+  calendar: { band: 'DAILY', position: 10, module: './tiles/calendar.js', title: '📅 Calendar' },
   reminders: { band: 'DAILY', position: 20, module: './tiles/reminders.js', title: '📋 Reminders' },
   // The morning brief, straight under Reminders and above Dinner. Slotted in
   // at 25 without touching a single other number — which is what the tens

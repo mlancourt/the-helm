@@ -147,7 +147,7 @@ function fill(f, { name = 'Jeff', role = 'customer', context = 'waiting on a squ
     const e = REGISTRY.yeoman;
     check('registered', !!e);
     check('band ASK', e?.band === 'ASK');
-    check('position 15', e?.position === 15);
+    check('position 5 — first on the board (WT13)', e?.position === 5);
     check('module ./tiles/yeoman.js', e?.module === './tiles/yeoman.js');
     check('titled Wren (Wren-Tile-Spec WT1 — the id stays yeoman)', e?.title === 'Wren');
     const snap = JSON.parse(read('docs', 'mock', 'helm-data.json'));

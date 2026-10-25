@@ -324,8 +324,8 @@ const actions = {
    * A tile asking for the detail sheet. It hands over a title and a builder
    * and never touches the sheet itself — Ask's body stays Ask's.
    */
-  openPanel(title, build) {
-    openPanel(title, build);
+  openPanel(title, build, tileId) {
+    openPanel(title, build, tileId);
   },
 
   /**
@@ -480,6 +480,11 @@ function ownsErrorLine(id) {
   return !!ns && ns.ownsErrorLine === true;
 }
 
+/** The shared actions, with openPanel tagged by the tile that asked (WT14). */
+function tileActions(id) {
+  return { ...actions, openPanel: (title, build) => openPanel(title, build, id) };
+}
+
 function tileCard(id, entry, tile) {
   // An ASK-band tile with no snapshot entry renders from nothing rather than
   // as rule 9's "missing". The Yeoman now has a producer (Wren, WT3), so this
@@ -489,7 +494,9 @@ function tileCard(id, entry, tile) {
   const status = tile?.status || (tile ? 'ok' : 'missing');
   const degraded = status === 'error' || status === 'stale' || status === 'missing';
 
-  const card = el('section', { cls: `card ${degraded ? 'card-degraded' : ''}`.trim() });
+  // `data-tile` is the one per-tile hook the stylesheet gets (WT14); only
+  // Wren's card reads it today.
+  const card = el('section', { cls: `card ${degraded ? 'card-degraded' : ''}`.trim(), attrs: { 'data-tile': id } });
 
   const head = el('div', { cls: 'card-head' }, [
     el('h2', { cls: 'card-title', text: title }),
@@ -531,7 +538,7 @@ function tileCard(id, entry, tile) {
     const mod = modules.get(id);
     try {
       if (mod) {
-        const teardown = mod(body, tile, { id, title, snapshot: state.snapshot, pending: state.pending, actions, live: state.live, weather: state.weather });
+        const teardown = mod(body, tile, { id, title, snapshot: state.snapshot, pending: state.pending, actions: tileActions(id), live: state.live, weather: state.weather });
         // A tile that started a clock hands back its teardown (bets_live's
         // graded-ago stamp); renderAll runs every one before the next board.
         if (typeof teardown === 'function') (state.tileTeardowns ||= []).push(teardown);
@@ -871,8 +878,13 @@ function closeAll() {
  * see `tearDownPanel` — and the one already in flight is always run first, so
  * opening a second sheet can never leave the first one's clock behind.
  */
-function openPanel(title, build) {
+function openPanel(title, build, tileId) {
   tearDownPanel();
+  // The panel wears the opening tile's id, as its card does (WT14) — Wren's
+  // sheet is the one stylesheet scope that reads it. No id, no attribute.
+  const panel = document.getElementById('panel');
+  if (tileId) panel.setAttribute('data-tile', String(tileId));
+  else panel.removeAttribute('data-tile');
   const body = document.getElementById('panel-body');
   clear(body);
   document.getElementById('panel-title').textContent = String(title || '');
@@ -1027,7 +1039,7 @@ function openFromQuery() {
   let tile = state.snapshot?.tiles?.[id] || null;
   if (!tile && entry?.band === 'ASK') tile = { band: 'ASK', status: 'ok', error: null, data: null };
   try {
-    ns.openSheet(tile, { id, title: entry?.title || id, snapshot: state.snapshot, pending: state.pending, actions, live: state.live, weather: state.weather });
+    ns.openSheet(tile, { id, title: entry?.title || id, snapshot: state.snapshot, pending: state.pending, actions: tileActions(id), live: state.live, weather: state.weather });
   } catch {
     /* rule 8: a sheet that will not open leaves the board as it was */
   }

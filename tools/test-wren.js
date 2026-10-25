@@ -137,7 +137,7 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
   {
     const e = REGISTRY.yeoman;
     check('the id stays yeoman, titled Wren', e?.title === 'Wren');
-    check('band and position unchanged (ASK, 15)', e?.band === 'ASK' && e?.position === 15);
+    check('band ASK, position 5 — first on the board (WT13)', e?.band === 'ASK' && e?.position === 5);
     check('same module', e?.module === './tiles/yeoman.js');
     check('no tile id "wren" was added', !('wren' in REGISTRY));
   }
@@ -416,15 +416,16 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
       const opens = [];
       const moduleNs = new Map([['yeoman', { openSheet: (tile, ctx) => opens.push({ tile, ctx }) }], ['dinner', {}]]);
       const state = { snapshot: snapshot || { tiles: { yeoman: tileOf({ brief: BRIEF, questions: QUESTIONS }) } }, pending: [], live: null, weather: null };
-      const fn = new Function('params', 'history', 'location', 'moduleNs', 'REGISTRY', 'state', 'actions', `${fnSrc}\nreturn openFromQuery;`)(
-        params, { replaceState: (_a, _b, u) => replaced.push(u) }, { pathname: '/', hash: '' }, moduleNs, REGISTRY, state, { tag: 'actions' }
+      const fn = new Function('params', 'history', 'location', 'moduleNs', 'REGISTRY', 'state', 'tileActions', `${fnSrc}\nreturn openFromQuery;`)(
+        // v1.40.0: the sheet gets the per-tile actions (openPanel tags the panel, WT14)
+        params, { replaceState: (_a, _b, u) => replaced.push(u) }, { pathname: '/', hash: '' }, moduleNs, REGISTRY, state, (id) => ({ tag: 'actions', id })
       );
       fn();
       return { opens, replaced };
     };
     const a = run('?tile=yeoman');
     check('opens the yeoman sheet once', a.opens.length === 1);
-    check('with its snapshot tile and the registry title', a.opens[0]?.tile?.data?.brief?.title === BRIEF.title && a.opens[0]?.ctx?.title === 'Wren' && a.opens[0]?.ctx?.actions?.tag === 'actions');
+    check('with its snapshot tile and the registry title', a.opens[0]?.tile?.data?.brief?.title === BRIEF.title && a.opens[0]?.ctx?.title === 'Wren' && a.opens[0]?.ctx?.actions?.tag === 'actions' && a.opens[0]?.ctx?.actions?.id === 'yeoman');
     check('and strips the param', a.replaced.join() === '/');
     const b = run('?mock=1&tile=yeoman');
     check('other params survive', b.replaced.join() === '/?mock=1' && b.opens.length === 1);
@@ -447,8 +448,8 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
   {
     check('submitEvent takes {quiet} and then repaints the header only', /async submitEvent\(event, \{ quiet = false \} = \{\}\)[\s\S]*?if \(quiet\) renderHeader\(\);\s*else renderAll\(\);/.test(APP));
     check('withdrawEvent takes {quiet} too', /async withdrawEvent\(id, \{ quiet = false \} = \{\}\)[\s\S]*?if \(quiet\) renderHeader\(\);\s*else renderAll\(\);/.test(APP));
-    check('APP_VERSION 1.39.0', /APP_VERSION = '1\.39\.0'/.test(CONFIG));
-    check('CACHE_VERSION helm-v60', /CACHE_VERSION = 'helm-v60'/.test(SW));
+    check('APP_VERSION 1.40.0', /APP_VERSION = '1\.40\.0'/.test(CONFIG));
+    check('CACHE_VERSION helm-v61', /CACHE_VERSION = 'helm-v61'/.test(SW));
     check('/api/ask, /api/draft and the brain still bypass the cache', /url\.hostname === 'brain\.lannyai\.com'/.test(SW) && /endsWith\('\/api\/ask'\)/.test(SW) && /endsWith\('\/api\/draft'\)/.test(SW));
     const mock = JSON.parse(read('docs', 'mock', 'helm-data.json'));
     const m = mock.tiles.yeoman;
@@ -458,6 +459,30 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
     const h = harness();
     Y.render(h.face, m, h.ctx);
     check('and renders', !!one(h.face, '.wren-opening') && one(h.face, '.wren-badge')?.textContent === `${m.data.questions.length} questions`);
+  }
+
+  // -- her lamp stays hers (WT14) ---------------------------------------------------
+  console.log('\nthe peacock pass: --wren is scoped to her card and her sheet (WT14)');
+  {
+    const CSS = fs.readFileSync(path.join(__dirname, '..', 'docs', 'style.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    // Innermost rule blocks only — a selector can never span a brace, so a
+    // rule inside @media is read with its own selector, not the query's.
+    const rules = [...CSS.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ sel: m[1].trim(), body: m[2] }));
+    const uses = rules.filter((r) => /--wren\b/.test(r.body));
+    const stray = uses.filter((r) => !(r.sel === ':root' || r.sel.split(',').every((p) => p.includes('[data-tile="yeoman"]'))));
+    check(
+      'every --wren use is the :root declaration or under [data-tile="yeoman"]',
+      uses.length >= 6 && stray.length === 0,
+      stray.map((r) => r.sel).join(' | ') || `${uses.length} uses`
+    );
+    const base = rules.find((r) => r.sel === '.card-title');
+    const before = rules.find((r) => r.sel === '.card-title::before');
+    check(
+      '.card-title outside her scope still resolves to --brass',
+      !!base && /color:\s*var\(--brass\)/.test(base.body) && !!before && /background:\s*var\(--brass\)/.test(before.body) && !/Helm Display/.test(base.body)
+    );
+    const APP = fs.readFileSync(path.join(__dirname, '..', 'docs', 'app.js'), 'utf8');
+    check('the shell tags the panel with the tile that opened it', /panel\.setAttribute\('data-tile'/.test(APP) && /tileActions\(id\)/.test(APP));
   }
 
   // -- the Worker's closed list ----------------------------------------------------
