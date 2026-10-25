@@ -40,7 +40,8 @@ Wrapped as vault `06-AI-Stack/Scripts/brain.sh on|off|status`.
 ## Routes
 
 - `GET /health` → `{ok, mode:"vault", host, ts, spend_today_usd, cap_usd}`
-- `POST /ask` `{q, history?, tile_id?, tile_data?}` → `{answer, mode:"vault", usd, files_read[], ms}`
+- `POST /ask` `{q, history?, tile_id?, tile_data?, persona?}` → `{answer, mode:"vault", usd, files_read[], ms}`
+  - `persona`: absent or `"helm"` = the Helm's prompt, unchanged; `"wren"` = Wren's pin (`buildWrenSystem()` — her SKILL sections by heading, Learnings, comms profile, newest brief, dossier names, the WT8 preamble; no hub/About-Matt/Crew Routing/board). Anything else → `400 bad_persona`. Same tools, cap, mutex; the audit line records `persona`.
 - Failures are `{reason}`: `brain_off` / `busy` / `no_key` / `no_system` (503) · `cap` (429) · `timeout` (504, 90 s wall clock) · `upstream` (502) · `bad_json` / `bad_shape` (400) · `too_large` (413, 128 KB body) · `not_found` (404).
 - One ask at a time; a second waits up to 20 s, then `503 busy`. A 12-turn run returns its partial answer + `(stopped at the 12-turn limit.)`.
 

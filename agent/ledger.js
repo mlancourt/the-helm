@@ -65,6 +65,7 @@ export function auditLine(r) {
   return {
     ts: r.ts || new Date().toISOString(),
     question_hash: r.question_hash,
+    persona: r.persona === 'wren' ? 'wren' : 'helm',
     files_read: Array.isArray(r.files_read) ? r.files_read.slice() : [],
     grep_count: r.grep_count | 0,
     list_count: r.list_count | 0,

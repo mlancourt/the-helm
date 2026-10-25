@@ -2779,6 +2779,41 @@ a.wb-doc:hover { text-decoration: underline; }
 .yeo-hand a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .yeo-copy-buf { position: fixed; top: 0; left: -9999px; opacity: 0; }
 
+/* Wren (WT2): her face over the Yeoman's buttons, and a four-tab sheet. The
+   badge counts open questions only; a stale brief greys, nothing else tints. */
+.wren-badge {
+  float: right; margin: 0 0 6px 8px; cursor: pointer; font-family: inherit;
+  background: color-mix(in srgb, var(--brass) 14%, var(--bg-raise)); color: var(--brass);
+  border-color: color-mix(in srgb, var(--brass) 45%, var(--bg-raise));
+}
+.wren-face { margin-bottom: 10px; }
+.wren-opening { margin: 0 0 6px; font-size: 14px; line-height: 1.4; }
+.wren-attn, .wren-list { margin: 0 0 6px; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; }
+.wren-line { font-size: 13px; line-height: 1.4; color: var(--text-dim); white-space: pre-line; word-break: break-word; }
+.wren-line strong, .wren-opening strong { color: var(--text); font-weight: 650; }
+.wren-more { font-size: 12.5px; }
+.wren-stale { opacity: 0.6; }
+.wren-stale-line { margin: 0 0 6px; font-size: 12px; color: var(--text-faint); }
+
+.wren-tabs { display: flex; gap: 4px; margin-bottom: 10px; border-bottom: 1px solid var(--line-soft); }
+.wren-tab {
+  flex: 1 1 0; min-height: 36px; padding: 6px 4px; border: 0; border-bottom: 2px solid transparent;
+  background: none; color: var(--text-dim); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.wren-tab[aria-selected="true"] { color: var(--brass); border-bottom-color: var(--brass); }
+.wren-title { margin: 0 0 6px; font-size: 15px; }
+.wren-head { margin: 12px 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+.wren-source { margin: 12px 0 0; font: 11px/1.4 ui-monospace, Menlo, monospace; color: var(--text-faint); word-break: break-all; }
+
+.wren-qs { display: flex; flex-direction: column; gap: 10px; }
+.wren-q { display: flex; flex-direction: column; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line-soft); }
+.wren-q-date { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.wren-q-text { margin: 0; font-size: 14px; line-height: 1.4; }
+.wren-pending, .wren-note { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.wren-said { font-size: 12.5px; color: var(--text-dim); white-space: pre-wrap; word-break: break-word; }
+.wren-tap { align-self: flex-start; }
+.wren-note { padding: 6px 0; }
+
 /* ------------------------------------------------------------------- cards
 
    The trading-card desk. A two-button menu on the board — 🎯 Watching

@@ -4,6 +4,57 @@
   "run_id": "run-mock-muws2p4i",
   "tz": "America/Chicago",
   "tiles": {
+    "yeoman": {
+      "band": "DAILY",
+      "updated_at": "2026-10-06T21:48:07.699Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "brief": {
+          "path": "06-AI-Stack/Wren/Briefs/2026-10/2026-10-06 0449 - Brief.md",
+          "date": "2026-10-06",
+          "generated_at": "2026-10-06T21:48:07.699Z",
+          "title": "Wren — mock morning, 4:52 CDT",
+          "opening": "Quiet-ish morning. Two things worth a minute; the rest can wait.",
+          "attention": [
+            "**Pat Example (Acme Rentals) — fishing for a discount.** Third order this month, third ask. Hold price, offer free delivery. → draft ready",
+            "**Riverbend Supply — the invoice is late again.** Nothing for you to do yet; I’d leave it until Friday.",
+            "**Lee Sample — wants a date for the demo.** → your call: Tuesday or Thursday",
+            "**A fourth line** that only the sheet shows."
+          ],
+          "people": [
+            "**Aunt Example** — another joke about the weather. She likes hearing about the girls."
+          ],
+          "record": [
+            "The parts order shipped; tracking is in the thread."
+          ],
+          "question_lines": [
+            "Weekends: one morning sweep, or leave them quiet?"
+          ],
+          "extra": [
+            {
+              "title": "For the crew",
+              "lines": [
+                "**Mission Control → the Architect** — an invented mismatch.\n> paste this block"
+              ]
+            }
+          ],
+          "stale": false
+        },
+        "questions": [
+          {
+            "qid": "3fa1c92b0e",
+            "date": "2026-10-06",
+            "text": "Weekends: one morning sweep, or leave them quiet? (re: cadence)"
+          },
+          {
+            "qid": "9b2e4d1c07",
+            "date": "2026-10-06",
+            "text": "Aunt Example — a nudge when it’s been a few weeks, or leave her to you? (re: Aunt Example)"
+          }
+        ]
+      }
+    },
     "bets_live": {
       "band": "DAILY",
       "updated_at": "2026-10-06T14:32:32.946Z",

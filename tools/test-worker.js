@@ -114,6 +114,9 @@ async function main() {
     ['mileage non-integer', { type: 'mileage', payload: { odometer: 74812.5, kind: 'business' } }, 'bad_payload'],
     ['mileage bad kind', { type: 'mileage', payload: { odometer: 74812, kind: 'joyride' } }, 'bad_payload'],
     ['build_request no payload', { type: 'build_request' }, 'bad_payload'],
+    ['wren_answer bad qid', { type: 'wren_answer', payload: { qid: 'XYZ', question: 'q?', answer: 'a' } }, 'bad_payload'],
+    ['wren_answer long answer', { type: 'wren_answer', payload: { qid: '0123456789', question: 'q?', answer: 'x'.repeat(2001) } }, 'bad_payload'],
+    ['wren_note empty', { type: 'wren_note', payload: { text: '' } }, 'bad_payload'],
   ];
   for (const [name, body, reason] of bad) {
     const r = await call('POST', '/api/event', { token: TOK_OWNER, body });

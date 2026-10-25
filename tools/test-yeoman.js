@@ -109,8 +109,11 @@ function harness({ answer = () => FIXTURE } = {}) {
 async function openSheet(Y, which = 'Reply', opts) {
   const h = harness(opts);
   Y.render(h.face, undefined, h.ctx);
-  tap(byText(h.face, 'button', which));
+  // v1.39.0: the Yeoman's sheet is Wren's Draft face. The card's Draft
+  // button opens it in Reply; "New message" is the in-sheet New segment.
+  tap(byText(h.face, 'button', 'Draft'));
   const s = h.panel.body;
+  if (which === 'New message') tap(byText(s, 'button', 'New'));
   const f = {
     name: one(s, '.yeo-name'),
     role: one(s, '.yeo-role'),
@@ -146,9 +149,9 @@ function fill(f, { name = 'Jeff', role = 'customer', context = 'waiting on a squ
     check('band ASK', e?.band === 'ASK');
     check('position 15', e?.position === 15);
     check('module ./tiles/yeoman.js', e?.module === './tiles/yeoman.js');
-    check('titled Yeoman', /Yeoman/.test(e?.title || ''));
+    check('titled Wren (Wren-Tile-Spec WT1 — the id stays yeoman)', e?.title === 'Wren');
     const snap = JSON.parse(read('docs', 'mock', 'helm-data.json'));
-    check('the mock snapshot has NO yeoman entry (no producer)', !('yeoman' in (snap.tiles || {})));
+    check('the mock snapshot carries a yeoman entry (Wren producer, WT3)', 'yeoman' in (snap.tiles || {}));
   }
 
   // -- face ---------------------------------------------------------------
@@ -162,17 +165,17 @@ function fill(f, { name = 'Jeff', role = 'customer', context = 'waiting on a squ
       threw = e;
     }
     check('render with no snapshot tile does not throw', !threw, threw && threw.message);
-    check('one muted line', one(h.face, '.yeo-line')?.textContent === 'paste a message, get your reply');
+    check('one muted line', one(h.face, '.yeo-line')?.textContent === 'No brief this morning.');
     const buttons = h.face.querySelectorAll('button').map((b) => b.textContent);
-    check('two buttons: Reply / New message', buttons.join('|') === 'Reply|New message', buttons.join('|'));
+    check('two buttons: Talk / Draft (WT2)', buttons.join('|') === 'Talk|Draft', buttons.join('|'));
 
     const a = harness();
     const b = harness();
     Y.render(a.face, null, a.ctx);
     Y.render(b.face, { data: { anything: 'at all' }, status: 'error', error: 'boom' }, b.ctx);
-    check('the face never reads `tile`', a.face.textContent === b.face.textContent &&
+    check('a tile with no brief renders the same face as no tile', a.face.textContent === b.face.textContent &&
       a.face.querySelectorAll('button').length === b.face.querySelectorAll('button').length);
-    check('the sheet opens through the shared panel, titled by the shell', (tap(byText(a.face, 'button', 'Reply')), a.panel.title === '✍️ Yeoman'));
+    check('the sheet opens through the shared panel, titled by the shell', (tap(byText(a.face, 'button', 'Draft')), a.panel.title === '✍️ Yeoman'));
   }
 
   // -- controls -------------------------------------------------------------

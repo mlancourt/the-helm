@@ -7,12 +7,12 @@
  * Cloudflare Access (OTP, Matt's email), never directly.
  *
  *   GET  /health → {ok, mode:"vault", host, ts, spend_today_usd, cap_usd}
- *   POST /ask    {q, history?, tile_id?, tile_data?}
+ *   POST /ask    {q, history?, tile_id?, tile_data?, persona?: "helm"|"wren"}
  *                → {answer, mode:"vault", usd, files_read[], ms}
  *
  * Failures are `{reason}` JSON, the Worker's vocabulary: 503 brain_off ·
  * 503 busy · 503 no_key · 503 no_system · 429 cap · 504 timeout · 502 upstream ·
- * 400 bad_json/bad_shape · 413 too_large · 404 not_found.
+ * 400 bad_json/bad_shape/bad_persona · 413 too_large · 404 not_found.
  *
  * Nothing here logs a question, an answer or a grep pattern — lengths, counts,
  * paths read and money only.
@@ -23,7 +23,7 @@ import os from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { vaultRoot } from './vault.js';
 import { TILE_ID_RE } from './snapshot.js';
-import { buildSystemPrompt } from './prompt.js';
+import { buildSystemPrompt, buildWrenSystem, PERSONAS } from './prompt.js';
 import { runAsk, DEFAULT_MODEL, ASK_TIMEOUT_MS } from './brain.js';
 import { capUsd, readSpend, recordSpend, appendAudit, questionHash, brainOff, readApiKey } from './ledger.js';
 
@@ -163,6 +163,9 @@ export function createApp(deps = {}) {
       if (typeof body.tile_id !== 'string' || !TILE_ID_RE.test(body.tile_id)) return send(req, res, 400, { reason: 'bad_shape', detail: 'tile_id must be a tile id' });
       pinned = { tile_id: body.tile_id, tile_data: body.tile_data ?? null };
     }
+    // WT7: absent = "helm" = the A6 prompt, byte for byte.
+    const persona = body.persona === undefined || body.persona === null ? 'helm' : body.persona;
+    if (!PERSONAS.includes(persona)) return send(req, res, 400, { reason: 'bad_persona' });
     const history = normalizeHistory(body.history);
     const qh = questionHash(q);
 
@@ -174,7 +177,7 @@ export function createApp(deps = {}) {
       const spend = await readSpend(env, now());
       const cap = capUsd(env);
       if (spend.usd >= cap) {
-        await appendAudit({ question_hash: qh, outcome: 'cap', ms: Date.now() - started }, env);
+        await appendAudit({ question_hash: qh, persona, outcome: 'cap', ms: Date.now() - started }, env);
         log(`ask cap q_len=${q.length} spent=${spend.usd} cap=${cap}`);
         return send(req, res, 429, { reason: 'cap' });
       }
@@ -182,7 +185,7 @@ export function createApp(deps = {}) {
       const apiKey = readApiKey(env);
       if (!apiKey) return send(req, res, 503, { reason: 'no_key' });
 
-      const built = await buildSystemPrompt(vault, { pinned });
+      const built = persona === 'wren' ? await buildWrenSystem(vault) : await buildSystemPrompt(vault, { pinned });
       if (built.error) return send(req, res, 503, { reason: 'no_system' });
 
       const sdk = await loadSdk();
@@ -193,6 +196,7 @@ export function createApp(deps = {}) {
       await appendAudit(
         {
           question_hash: qh,
+          persona,
           files_read: out.stats.files_read,
           grep_count: out.stats.grep_count,
           list_count: out.stats.list_count,
@@ -206,7 +210,7 @@ export function createApp(deps = {}) {
         env
       );
       log(
-        `ask ${out.outcome} model=${model} q_len=${q.length} hist=${history.length} pinned=${pinned ? pinned.tile_id : '-'} ` +
+        `ask ${out.outcome} persona=${persona} model=${model} q_len=${q.length} hist=${history.length} pinned=${pinned ? pinned.tile_id : '-'} ` +
           `files=${out.stats.files_read.length} greps=${out.stats.grep_count} lists=${out.stats.list_count} turns=${out.turns} ` +
           `in=${out.tokens_in} out=${out.tokens_out} usd=${out.usd} ms=${ms}`
       );
@@ -217,7 +221,7 @@ export function createApp(deps = {}) {
     } catch (e) {
       log(`ask error q_len=${q.length} ${String(e?.name || 'Error')}`);
       try {
-        await appendAudit({ question_hash: qh, outcome: 'error', ms: Date.now() - started }, env);
+        await appendAudit({ question_hash: qh, persona, outcome: 'error', ms: Date.now() - started }, env);
       } catch {
         /* the log dir is gone — the answer still says so */
       }

@@ -24,10 +24,11 @@
 
 export const REGISTRY = {
   calendar: { band: 'DAILY', position: 10, module: './tiles/calendar.js', title: '📅 Calendar' },
-  // The Yeoman (Y1, Y15): band ASK — on demand, no producer, no snapshot
-  // entry — but ON the board, because its face is two buttons. Slotted at 15
-  // without moving anyone; Matt can move it here.
-  yeoman: { band: 'ASK', position: 15, module: './tiles/yeoman.js', title: '✍️ Yeoman' },
+  // Wren (Wren-Tile-Spec WT1): the id stays `yeoman` — plumbing — and the
+  // label is hers. Band ASK and position 15 are unchanged; the engine now
+  // publishes `tiles.yeoman` (her brief + questions, H9 waived — WT3), and the
+  // Yeoman's drafter lives on inside her sheet as the Draft face.
+  yeoman: { band: 'ASK', position: 15, module: './tiles/yeoman.js', title: 'Wren' },
   reminders: { band: 'DAILY', position: 20, module: './tiles/reminders.js', title: '📋 Reminders' },
   // The morning brief, straight under Reminders and above Dinner. Slotted in
   // at 25 without touching a single other number — which is what the tens

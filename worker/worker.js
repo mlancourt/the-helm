@@ -238,7 +238,7 @@ function adminOk(request, env) {
 // ----------------------------------------------------------- event contract
 
 /**
- * Exactly these four types. Anything else is a 400 with a reason.
+ * Exactly these six types. Anything else is a 400 with a reason.
  * Each validator returns null (ok) or a human reason string.
  */
 const EVENT_VALIDATORS = {
@@ -273,9 +273,36 @@ const EVENT_VALIDATORS = {
     }
     return null;
   },
+  // Wren (vault Wren-Tile-Spec WT10/WT11): her questions answered and notes to her, from the Helm's
+  // Wren face. Proposals like every other event — the engine lands them in Wren/State/ on its drain.
+  wren_answer(p) {
+    if (!isObj(p)) return 'payload must be an object';
+    if (typeof p.qid !== 'string' || !WREN_QID_RE.test(p.qid)) return 'payload.qid must be 10 lowercase hex characters';
+    if (!boundedText(p.question, WREN_QUESTION_MAX)) return `payload.question must be a non-empty string (max ${WREN_QUESTION_MAX})`;
+    if (!boundedText(p.answer, WREN_TEXT_MAX)) return `payload.answer must be a non-empty string (max ${WREN_TEXT_MAX})`;
+    return null;
+  },
+  wren_note(p) {
+    if (!isObj(p)) return 'payload must be an object';
+    if (!boundedText(p.text, WREN_TEXT_MAX)) return `payload.text must be a non-empty string (max ${WREN_TEXT_MAX})`;
+    return null;
+  },
 };
 
+const WREN_QID_RE = /^[0-9a-f]{10}$/;
+const WREN_QUESTION_MAX = 500;
+const WREN_TEXT_MAX = 2000;
+function boundedText(v, max) {
+  return typeof v === 'string' && v.trim().length > 0 && v.length <= max;
+}
+
 const EVENT_TYPES = Object.keys(EVENT_VALIDATORS);
+
+/** One event's shape check, exported for tools/test-wren.js: null = ok, else the 400 reason. */
+export function eventShapeError(type, payload) {
+  const v = Object.hasOwn(EVENT_VALIDATORS, type) ? EVENT_VALIDATORS[type] : null;
+  return v ? v(payload) : `type must be one of: ${EVENT_TYPES.join(', ')}`;
+}
 
 // ------------------------------------------------------------- KV: events
 

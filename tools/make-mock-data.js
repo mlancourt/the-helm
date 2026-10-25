@@ -141,6 +141,38 @@ function tile(band, data, status = 'ok', updatedAt = nowIso()) {
   return { band, updated_at: updatedAt, status, error: null, data };
 }
 
+/**
+ * Wren (Wren-Tile-Spec WT3/WT12): the brief + her open questions, the shape
+ * the engine's `wren()` publishes. Every person, company and line below is
+ * invented (rule 1). Bold markers are left in, as the engine leaves them.
+ */
+function wrenTile() {
+  return tile('DAILY', {
+    brief: {
+      path: `06-AI-Stack/Wren/Briefs/${TODAY.slice(0, 7)}/${TODAY} 0449 - Brief.md`,
+      date: TODAY,
+      generated_at: nowIso(),
+      title: 'Wren — mock morning, 4:52 CDT',
+      opening: 'Quiet-ish morning. Two things worth a minute; the rest can wait.',
+      attention: [
+        '**Pat Example (Acme Rentals) — fishing for a discount.** Third order this month, third ask. Hold price, offer free delivery. → draft ready',
+        '**Riverbend Supply — the invoice is late again.** Nothing for you to do yet; I’d leave it until Friday.',
+        '**Lee Sample — wants a date for the demo.** → your call: Tuesday or Thursday',
+        '**A fourth line** that only the sheet shows.',
+      ],
+      people: ['**Aunt Example** — another joke about the weather. She likes hearing about the girls.'],
+      record: ['The parts order shipped; tracking is in the thread.'],
+      question_lines: ['Weekends: one morning sweep, or leave them quiet?'],
+      extra: [{ title: 'For the crew', lines: ['**Mission Control → the Architect** — an invented mismatch.\n> paste this block'] }],
+      stale: false,
+    },
+    questions: [
+      { qid: '3fa1c92b0e', date: TODAY, text: 'Weekends: one morning sweep, or leave them quiet? (re: cadence)' },
+      { qid: '9b2e4d1c07', date: TODAY, text: 'Aunt Example — a nudge when it’s been a few weeks, or leave her to you? (re: Aunt Example)' },
+    ],
+  });
+}
+
 function snapshot() {
   return {
     schema: 1,
@@ -148,6 +180,7 @@ function snapshot() {
     run_id: `run-mock-${Date.now().toString(36)}`,
     tz: 'America/Chicago',
     tiles: {
+      yeoman: wrenTile(),
       bets_live: tile('DAILY', {
         net_u: 4.5,
         open_u: 6.0,

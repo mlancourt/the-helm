@@ -529,12 +529,24 @@ console.log('\nsubhead never contains me.name');
     check('a snapshot with one tile still renders the whole board', titles().length === ORDER.length, String(titles().length));
     check('and the missing ones keep their slots, greyed', titles().join(' | ') === ORDER.map((id) => REGISTRY[id].title).join(' | '));
     {
-      // The Yeoman has no snapshot entry, ever — and is not "missing".
+      // The NO-ENTRY case only (v1.39.0): Wren's producer normally publishes
+      // tiles.yeoman, but a snapshot written before it — or a run that skipped
+      // it — must still get the ASK stand-in rather than rule 9's "missing".
       const grid = boardEl.querySelectorAll('.grid')[0];
       const yeo = grid.childNodes[ORDER.indexOf('yeoman')];
       check('an ASK-band tile with no snapshot entry is not greyed', !yeo.classList.contains('card-degraded'), yeo.className);
       check('and does not say "Not in this snapshot."', !/Not in this snapshot\./.test(yeo.textContent));
       check('and carries no missing pill', yeo.querySelectorAll('.pill').length === 0);
+    }
+    {
+      // With an entry, the entry is what renders — so a stale one greys (rule 8).
+      shellState.snapshot = { ...thin, tiles: { ...thin.tiles, yeoman: { ...tile('DAILY'), status: 'stale', error: 'invented stale brief' } } };
+      renderAll();
+      const yeo = boardEl.querySelectorAll('.grid')[0].childNodes[ORDER.indexOf('yeoman')];
+      check('a yeoman snapshot entry is used, not the stand-in: stale greys', yeo.classList.contains('card-degraded'), yeo.className);
+      check('and carries its own stale pill and error line', yeo.querySelectorAll('.pill').some((n) => n.textContent === 'stale') && /invented stale brief/.test(yeo.textContent));
+      shellState.snapshot = thin;
+      renderAll();
     }
     check(
       'a missing tile says so',

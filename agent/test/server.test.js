@@ -84,7 +84,7 @@ test('POST /ask → vault answer with files_read; audit line has no question tex
     const lines = readAudit(V);
     assert.equal(lines.length, 1);
     const a = lines[0];
-    assert.deepEqual(Object.keys(a), ['ts', 'question_hash', 'files_read', 'grep_count', 'list_count', 'turns', 'tokens_in', 'tokens_out', 'usd', 'ms', 'outcome']);
+    assert.deepEqual(Object.keys(a), ['ts', 'question_hash', 'persona', 'files_read', 'grep_count', 'list_count', 'turns', 'tokens_in', 'tokens_out', 'usd', 'ms', 'outcome']);
     assert.match(a.question_hash, /^[0-9a-f]{12}$/);
     assert.deepEqual(a.files_read, [path.join('Notes', 'hello.md')]);
     assert.equal(a.grep_count, 1);

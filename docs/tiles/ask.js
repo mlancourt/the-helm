@@ -30,7 +30,7 @@ const MAX_TURNS = 10;
  * An unmapped reason falls through to the Worker's own message, which is
  * already short and human.
  */
-const FAILURES = {
+export const FAILURES = {
   cap: ['The day\u2019s ask budget is spent. It resets at midnight.', 'cap'],
   signin: ['The brain wants you to sign in. Tap \u201csign in\u201d, enter the code, then ask again.', 'sign in'],
   timeout: ['The model did not answer in time. Worth another go.', 'slow'],

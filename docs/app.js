@@ -263,26 +263,28 @@ function readCachedSnapshot() {
 // ------------------------------------------------------------------ actions
 
 const actions = {
-  async submitEvent(event) {
+  /**
+   * `{quiet: true}` repaints the header's pending chip and leaves the board
+   * alone — renderAll() closes every sheet, and Wren's Questions and Talk
+   * faces file their events from inside one (WT10).
+   */
+  async submitEvent(event, { quiet = false } = {}) {
     if (MOCK) {
       // Mock mode has no Worker. Say so rather than pretending it landed.
       throw new Error('mock mode — events are not sent');
     }
     const stored = await api('/api/event', { method: 'POST', body: event });
     state.pending = [...state.pending, stored];
-    renderAll();
+    if (quiet) renderHeader();
+    else renderAll();
     return stored;
   },
 
-  async withdrawEvent(id) {
-    if (MOCK) {
-      state.pending = state.pending.filter((e) => e.id !== id);
-      renderAll();
-      return;
-    }
-    await api(`/api/event/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  async withdrawEvent(id, { quiet = false } = {}) {
+    if (!MOCK) await api(`/api/event/${encodeURIComponent(id)}`, { method: 'DELETE' });
     state.pending = state.pending.filter((e) => e.id !== id);
-    renderAll();
+    if (quiet) renderHeader();
+    else renderAll();
   },
 
   /**
@@ -479,8 +481,9 @@ function ownsErrorLine(id) {
 }
 
 function tileCard(id, entry, tile) {
-  // An ASK-band tile is on demand: no producer, no snapshot entry (Yeoman
-  // Y15). Its face renders from nothing rather than as rule 9's "missing".
+  // An ASK-band tile with no snapshot entry renders from nothing rather than
+  // as rule 9's "missing". The Yeoman now has a producer (Wren, WT3), so this
+  // only covers a snapshot the engine wrote before it — or a run it skipped.
   if (!tile && entry?.band === 'ASK') tile = { band: 'ASK', status: 'ok', error: null, data: null };
   const title = entry?.title || id;
   const status = tile?.status || (tile ? 'ok' : 'missing');
@@ -1005,6 +1008,31 @@ function startLiveBand() {
   weatherBand.start(() => state.snapshot);
 }
 
+/**
+ * `?tile=<id>` (Wren-Tile-Spec WT5 — the brief's push lands here): open that
+ * card's sheet once on load, then strip the param so a reload does not reopen
+ * it. Plain https query, no scheme; only a module that exports `openSheet`
+ * has a sheet to open, and anything else is ignored.
+ */
+function openFromQuery() {
+  const id = params.get('tile');
+  if (id === null) return;
+  params.delete('tile');
+  const qs = params.toString();
+  history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
+  if (!/^[a-z0-9_]{1,40}$/.test(id) || id === 'ask') return;
+  const ns = moduleNs.get(id);
+  if (!ns || typeof ns.openSheet !== 'function') return;
+  const entry = REGISTRY[id];
+  let tile = state.snapshot?.tiles?.[id] || null;
+  if (!tile && entry?.band === 'ASK') tile = { band: 'ASK', status: 'ok', error: null, data: null };
+  try {
+    ns.openSheet(tile, { id, title: entry?.title || id, snapshot: state.snapshot, pending: state.pending, actions, live: state.live, weather: state.weather });
+  } catch {
+    /* rule 8: a sheet that will not open leaves the board as it was */
+  }
+}
+
 async function boot() {
   renderVersion();
   trackViewport();
@@ -1021,6 +1049,7 @@ async function boot() {
   document.getElementById('refresh-btn')?.addEventListener('click', refreshAll);
   await refresh();
   startLiveBand();
+  openFromQuery();
 
   // Foreground refresh only — a backgrounded phone should not poll.
   setInterval(() => {
