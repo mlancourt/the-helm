@@ -24,13 +24,17 @@ const path = require('node:path');
 
 let pass = 0;
 const failures = [];
+// A46 (2026-10-30): with HELM_SNAPSHOT the file is Matt's real data, so a FAIL line never
+// carries its detail — the header's "pass/fail and node counts, never content" promise
+// held for ok lines only until now (45 FAILs printed bankroll, bill amounts, brief text).
+const REAL = !!process.env.HELM_SNAPSHOT;
 function check(name, cond, detail) {
   if (cond) {
     pass++;
     console.log(`  ok   ${name}`);
   } else {
     failures.push(name);
-    console.log(`  FAIL ${name}${detail ? ` — ${detail}` : ''}`);
+    console.log(`  FAIL ${name}${detail && !REAL ? ` — ${detail}` : REAL && detail ? ' — (detail withheld: real snapshot)' : ''}`);
   }
 }
 
@@ -148,6 +152,10 @@ async function main() {
   const snapPath = process.env.HELM_SNAPSHOT || path.join(__dirname, '..', 'docs', 'mock', 'helm-data.json');
   const snapshot = JSON.parse(fs.readFileSync(snapPath, 'utf8'));
   console.log(`snapshot: ${process.env.HELM_SNAPSHOT ? 'REAL (content not printed)' : 'mock'}\n`);
+  // A46: the three value-asserting sections (ledger, due stack, brief) are written against the
+  // mock fixture's numbers and strings. In REAL mode they still read the fixture — the real
+  // snapshot gets the shape/survival checks above and nothing that would print its values.
+  const fixture = REAL ? JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'helm-data.json'), 'utf8')) : snapshot;
 
   const mods = new Map();
   for (const { id, file } of ids) mods.set(id, await import('../docs/' + file));
@@ -5270,7 +5278,7 @@ async function main() {
     const thinSnap = JSON.parse(
       fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'ledger-thin.json'), 'utf8')
     );
-    const FULL = snapshot.tiles?.bets_ledger?.data;
+    const FULL = fixture.tiles?.bets_ledger?.data;   // A46: mock-value assertions read the fixture in both modes
     const THIN = thinSnap.tiles?.bets_ledger?.data;
 
     const ledgerTile = (data) => ({ band: 'DAILY', status: 'ok', data });
@@ -5758,7 +5766,7 @@ async function main() {
       return out;
     }
 
-    const FULL = snapshot.tiles?.purser_due?.data;
+    const FULL = fixture.tiles?.purser_due?.data;   // A46: mock-value assertions read the fixture in both modes
     check('the mock snapshot carries a due stack to render', !!FULL && Array.isArray(FULL.items) && FULL.items.length > 3);
 
     // -- the face -------------------------------------------------------------
@@ -6087,7 +6095,7 @@ async function main() {
     const CLOG_CSS =
       cOpen !== -1 && cNext > cOpen ? CSS_ALL.slice(cOpen, cNext).replace(/\/\*[\s\S]*?\*\//g, '') : '';
 
-    const FULL = snapshot.tiles?.captains_log?.data;
+    const FULL = fixture.tiles?.captains_log?.data;   // A46: mock-value assertions read the fixture in both modes
     const clogTile = (data, over = {}) => ({ band: 'DAILY', status: 'ok', error: null, data, ...over });
 
     const drawClog = (data, over = {}) => {
