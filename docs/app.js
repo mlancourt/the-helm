@@ -493,10 +493,14 @@ function tileCard(id, entry, tile) {
   const title = entry?.title || id;
   const status = tile?.status || (tile ? 'ok' : 'missing');
   const degraded = status === 'error' || status === 'stale' || status === 'missing';
+  // A module may ask for the grey without a status of its own — Wren gone
+  // silent (WT18) is healthy data about an unhealthy pass. Exactly true; the
+  // status pill stays the status's.
+  const greyed = degraded || moduleNs.get(id)?.greys?.(tile) === true;
 
   // `data-tile` is the one per-tile hook the stylesheet gets (WT14); only
   // Wren's card reads it today.
-  const card = el('section', { cls: `card ${degraded ? 'card-degraded' : ''}`.trim(), attrs: { 'data-tile': id } });
+  const card = el('section', { cls: `card ${greyed ? 'card-degraded' : ''}`.trim(), attrs: { 'data-tile': id } });
 
   const head = el('div', { cls: 'card-head' }, [
     el('h2', { cls: 'card-title', text: title }),

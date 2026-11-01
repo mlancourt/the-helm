@@ -1,5 +1,5 @@
 /**
- * yeoman — Wren's face (vault spec `Wren-Tile-Spec.md` v1.0, WT1–WT12), with
+ * yeoman — Wren's face (vault spec `Wren-Tile-Spec.md` v1.2, WT1–WT19), with
  * the Yeoman's drafter inside it as her hand (`Yeoman-Tile-Spec.md`, Y1–Y19).
  *
  * WT1 — the id stays `yeoman`; the label is hers. The card shows her brief's
@@ -12,6 +12,15 @@
  * WT3 — the brief and the questions ride the snapshot (`tiles.yeoman.data`,
  * written by the engine's `wren()` producer). Names appear: H9 is waived for
  * this tile. `brief: null` is a quiet morning, not an error.
+ *
+ * WT17–WT19 — the face stays current. Her quiet passes write no brief, so the
+ * engine also publishes `pass` (the footprint off her cursor) and two flags,
+ * and this module picks a face off the FLAGS alone: `brief.carried` (a pass
+ * has run since the brief was written — its opening leaves the face, one
+ * muted line says when) and `pass.silent` (no pass for too long — one amber
+ * line, and the card greys through the shell's `greys` seam). Every label in
+ * those lines is the engine's, printed verbatim; the page reckons no time
+ * and composes no age (WT19).
  *
  * WT4/WT10 — the page writes nothing but proposals. An answer is a
  * `wren_answer` event and a note is a `wren_note` event, both pending (rule 5)
@@ -94,13 +103,25 @@ const stop = (e) => {
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
 };
 
+const label = (v) => (typeof v === 'string' && v.trim() ? v : null);
+
 function wrenData(tile) {
   const data = tile && isObj(tile.data) ? tile.data : null;
   const brief = data && isObj(data.brief) ? data.brief : null;
+  const pass = data && isObj(data.pass) ? data.pass : null;
   const questions = data && Array.isArray(data.questions)
     ? data.questions.filter((q) => isObj(q) && typeof q.qid === 'string' && typeof q.text === 'string' && q.text.trim())
     : [];
-  return { data, brief, questions };
+  return { data, brief, questions, pass };
+}
+
+/**
+ * Shell seam (WT18): a silent Wren greys her card with rule 8's degraded
+ * treatment — the shell owns the card, so it asks. Exactly `true` or nothing.
+ */
+export function greys(tile) {
+  const { pass } = wrenData(tile);
+  return !!pass && pass.silent === true;
 }
 
 /**
@@ -127,7 +148,9 @@ export function openSheet(tile, ctx, tab = 'brief') {
 }
 
 export function render(root, tile, ctx) {
-  const { brief, questions } = wrenData(tile);
+  const { brief, questions, pass } = wrenData(tile);
+  const checked = pass ? label(pass.last_label) : null;
+  const silent = !!pass && pass.silent === true;
   const open = (tab) => (e) => {
     stop(e);
     openSheet(tile, ctx, tab);
@@ -144,16 +167,33 @@ export function render(root, tile, ctx) {
     );
   }
 
+  // Silent leads, whatever the brief: the one line that says she has gone quiet.
+  if (silent && checked) root.appendChild(el('p', { cls: 'wren-silent-line', text: `Wren hasn’t checked in since ${checked}` }));
+
   if (brief) {
-    const wrap = el('div', { cls: `wren-face${brief.stale ? ' wren-stale' : ''}` });
-    if (brief.stale) wrap.appendChild(el('p', { cls: 'wren-stale-line', text: `brief from ${String(brief.date || 'an earlier day')} — not this morning’s` }));
-    if (typeof brief.opening === 'string' && brief.opening.trim()) wrap.appendChild(rich('p', 'wren-opening', brief.opening));
+    // Silent renders the brief below as carried (WT18).
+    const carried = brief.carried === true || silent;
+    const when = label(brief.when_label);
+    const wrap = el('div', { cls: `wren-face${carried ? ' wren-carried' : ''}` });
+    if (carried && when) {
+      wrap.appendChild(el('p', { cls: 'wren-carried-line', text: checked ? `Nothing new since ${when} · checked ${checked}` : `Nothing new since ${when}` }));
+    }
+    if (!carried && typeof brief.opening === 'string' && brief.opening.trim()) wrap.appendChild(rich('p', 'wren-opening', brief.opening));
     const attn = lines(brief.attention).slice(0, 3);
-    if (attn.length) wrap.appendChild(el('ul', { cls: 'wren-attn' }, attn.map((t) => rich('li', 'wren-line', t))));
+    // The chip is the first word of the engine's label — a weekday or a month, never an age (WT19).
+    const chip = carried && when ? when.split(' ')[0] : null;
+    if (attn.length) {
+      wrap.appendChild(
+        el('ul', { cls: 'wren-attn' }, attn.map((t) => {
+          if (!chip) return rich('li', 'wren-line', t);
+          return el('li', { cls: 'wren-line' }, [el('span', { cls: 'wren-chip', text: chip }), rich('span', 'wren-line-text', t)]);
+        }))
+      );
+    }
     wrap.appendChild(el('button', { cls: 'link-btn wren-more', text: 'more ▸', attrs: { type: 'button' }, on: { click: open('brief') } }));
     root.appendChild(wrap);
-  } else {
-    root.appendChild(el('p', { cls: 'yeo-line', text: 'No brief this morning.' }));
+  } else if (!silent || !checked) {
+    root.appendChild(el('p', { cls: 'yeo-line', text: checked && !silent ? `Nothing new · checked ${checked}` : 'No brief yet.' }));
   }
 
   root.appendChild(
@@ -212,11 +252,10 @@ function buildWren(body, tile, ctx, startTab) {
 
 function briefPane(pane, brief) {
   if (!brief) {
-    pane.appendChild(el('p', { cls: 'empty', text: 'No brief this morning.' }));
+    pane.appendChild(el('p', { cls: 'empty', text: 'No brief yet.' }));
     return;
   }
-  const wrap = el('div', { cls: `wren-brief${brief.stale ? ' wren-stale' : ''}` });
-  if (brief.stale) wrap.appendChild(el('p', { cls: 'wren-stale-line', text: `brief from ${String(brief.date || 'an earlier day')} — not this morning’s` }));
+  const wrap = el('div', { cls: 'wren-brief' });
   if (typeof brief.title === 'string' && brief.title) wrap.appendChild(el('h3', { cls: 'wren-title', text: brief.title }));
   if (typeof brief.opening === 'string' && brief.opening.trim()) wrap.appendChild(rich('p', 'wren-opening', brief.opening));
   const extra = Array.isArray(brief.extra)

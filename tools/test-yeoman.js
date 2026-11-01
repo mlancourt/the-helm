@@ -165,7 +165,7 @@ function fill(f, { name = 'Jeff', role = 'customer', context = 'waiting on a squ
       threw = e;
     }
     check('render with no snapshot tile does not throw', !threw, threw && threw.message);
-    check('one muted line', one(h.face, '.yeo-line')?.textContent === 'No brief this morning.');
+    check('one muted line', one(h.face, '.yeo-line')?.textContent === 'No brief yet.');
     const buttons = h.face.querySelectorAll('button').map((b) => b.textContent);
     check('two buttons: Talk / Draft (WT2)', buttons.join('|') === 'Talk|Draft', buttons.join('|'));
 

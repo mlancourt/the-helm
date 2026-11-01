@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * The Helm — Wren tile tests (vault spec `Wren-Tile-Spec.md` v1.0, WT1–WT12).
+ * The Helm — Wren tile tests (vault spec `Wren-Tile-Spec.md` v1.2, WT1–WT19).
  * Node, zero deps, no browser.
  *
  *   node tools/test-wren.js
@@ -13,7 +13,9 @@
  *
  *   WT2  the face: opening, ≤ 3 attention lines, more ▸, a badge that counts
  *        OPEN QUESTIONS and nothing else; no brief → one muted line
- *   rule 8  a stale brief greys, with its own date, verbatim
+ *   WT18 three faces off the engine's flags — current, carried, silent — and
+ *        the two no-brief lines; the silent card greys through `greys`
+ *   WT19 no age composed: the labels are the engine's, verbatim
  *   WT10 the two event shapes, pending + the undo valve, and "Send as note"
  *        filing Matt's words, never hers
  *   WT9  Talk asks the brain as persona "wren" and the chip says which brain
@@ -46,6 +48,7 @@ const CODE = SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^[ \t]*\/\/.*$/gm, ''
 const APP = read('docs', 'app.js');
 const SW = read('docs', 'sw.js');
 const CONFIG = read('docs', 'config.js');
+const CSS_TOP = read('docs', 'style.css').replace(/\/\*[\s\S]*?\*\//g, '');
 
 const nav = { onLine: true, clipboard: null };
 Object.defineProperty(globalThis, 'navigator', { value: nav, configurable: true, writable: true });
@@ -78,8 +81,10 @@ const BRIEF = {
   record: ['Parts shipped.'],
   question_lines: ['Weekends?'],
   extra: [{ title: 'For the crew', lines: ['**MC → the Architect** — invented.\n> paste block'] }],
-  stale: false,
+  when_label: 'Mon 4:52 AM',
+  carried: false,
 };
+const PASS = { last_at: '2026-10-27T09:52:10Z', last_label: 'Mon 4:52 AM', silent: false };
 const QUESTIONS = [
   { qid: '3fa1c92b0e', date: '2026-10-25', text: 'Weekends: one morning sweep, or leave them quiet? (re: cadence)' },
   { qid: '0ddfa170fc', date: '2026-10-26', text: 'Aunt Example — a nudge, or leave her to you? (re: Aunt Example)' },
@@ -160,7 +165,7 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
     check('nothing on the face counts anything else', !/\b4\b/.test(h.face.textContent));
     const buttons = h.face.querySelectorAll('.yeo-face-btn').map((b) => b.textContent);
     check('Talk / Draft still on the face', buttons.join('|') === 'Talk|Draft', buttons.join('|'));
-    check('not greyed when fresh', !one(h.face, '.wren-stale'));
+    check('not greyed when current', Y.greys(tileOf({ brief: BRIEF, questions: QUESTIONS, pass: PASS })) === false);
 
     const one1 = harness();
     Y.render(one1.face, tileOf({ brief: BRIEF, questions: QUESTIONS.slice(0, 1) }), one1.ctx);
@@ -180,10 +185,10 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
     check('the badge opens the Questions tab', tabBtn(q.panel.body, 'Questions')?.getAttribute('aria-selected') === 'true');
   }
 
-  // -- face, without a brief / stale ----------------------------------------------
-  console.log('\nno brief, and a stale one (rule 8)');
+  // -- face, without a brief -----------------------------------------------------
+  console.log('\nno brief (WT18)');
   {
-    for (const [label, t] of [['tile undefined', undefined], ['tile null', null], ['brief null', tileOf({ brief: null, questions: [] })], ['data junk', tileOf('nope')]]) {
+    for (const [label, t] of [['tile undefined', undefined], ['tile null', null], ['brief null, no pass', tileOf({ brief: null, questions: [] })], ['brief null, pass never ran', tileOf({ brief: null, questions: [], pass: { last_at: null, last_label: null, silent: true } })], ['data junk', tileOf('nope')]]) {
       const h = harness();
       let threw = null;
       try {
@@ -192,19 +197,79 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
         threw = e;
       }
       check(`${label}: renders, no throw`, !threw, threw && threw.message);
-      check(`${label}: one muted line "No brief this morning."`, h.face.querySelectorAll('.yeo-line').map((n) => n.textContent).join('|') === 'No brief this morning.');
+      check(`${label}: one muted line "No brief yet."`, h.face.querySelectorAll('.yeo-line').map((n) => n.textContent).join('|') === 'No brief yet.');
       check(`${label}: Talk + Draft offered`, h.face.querySelectorAll('button').map((b) => b.textContent).join('|') === 'Talk|Draft');
     }
+    const quiet = harness();
+    Y.render(quiet.face, tileOf({ brief: null, questions: [], pass: { last_at: '2026-11-01T10:39:00Z', last_label: 'Sun 4:39 AM', silent: false } }), quiet.ctx);
+    check('brief null + a pass → "Nothing new · checked {last_label}"', quiet.face.querySelectorAll('.yeo-line').map((n) => n.textContent).join('|') === 'Nothing new · checked Sun 4:39 AM');
+    check('and no amber, no grey', !one(quiet.face, '.wren-silent-line') && Y.greys(tileOf({ brief: null, pass: { last_label: 'Sun 4:39 AM', silent: false } })) === false);
     const qOnly = harness();
     Y.render(qOnly.face, tileOf({ brief: null, questions: QUESTIONS }), qOnly.ctx);
     check('no brief but open questions → the badge still shows', one(qOnly.face, '.wren-badge')?.textContent === '2 questions');
+  }
 
-    const st = harness();
-    Y.render(st.face, tileOf({ brief: { ...BRIEF, stale: true, date: '2026-10-24' }, questions: [] }), st.ctx);
-    check('a stale brief greys its face', !!one(st.face, '.wren-stale'));
-    check('and says its own date, verbatim', one(st.face, '.wren-stale-line')?.textContent === 'brief from 2026-10-24 — not this morning’s');
-    tap(one(st.face, '.wren-more'));
-    check('the Brief tab greys too', !!one(pane(st.panel.body, 'brief'), '.wren-stale'));
+  // -- the three faces (WT18) ----------------------------------------------------------
+  console.log('\ncurrent · carried · silent — chosen by the flags (WT18)');
+  {
+    const cur = harness();
+    Y.render(cur.face, tileOf({ brief: BRIEF, questions: [], pass: PASS }), cur.ctx);
+    check('current: the opening leads', cur.face.querySelectorAll('p')[0]?.classList.contains('wren-opening'));
+    check('current: no carried line, no chips, no amber', !one(cur.face, '.wren-carried-line') && !one(cur.face, '.wren-chip') && !one(cur.face, '.wren-silent-line'));
+
+    const CARRIED = { ...BRIEF, when_label: 'Fri 2:30 PM', carried: true };
+    const LATER = { last_at: '2026-11-01T10:39:00Z', last_label: 'Sun 4:39 AM', silent: false };
+    const ca = harness();
+    Y.render(ca.face, tileOf({ brief: CARRIED, questions: QUESTIONS, pass: LATER }), ca.ctx);
+    check('carried: the opening leaves the face', !one(ca.face, '.wren-opening') && !/Quiet-ish morning/.test(ca.face.textContent));
+    const lead = one(ca.face, '.wren-carried-line');
+    check('carried: the lead line, verbatim labels', lead?.textContent === 'Nothing new since Fri 2:30 PM · checked Sun 4:39 AM', lead?.textContent);
+    check('carried: it leads the brief', one(ca.face, '.wren-face')?.childNodes[0] === lead);
+    const lis = ca.face.querySelectorAll('.wren-attn').flatMap((u) => u.querySelectorAll('li'));
+    check('carried: still three attention lines', lis.length === 3, String(lis.length));
+    check('carried: each wears a chip = the first word of when_label', lis.every((li) => li.querySelector('.wren-chip')?.textContent === 'Fri'));
+    check('carried: the chip leads the line, the line stays whole', lis[0].childNodes[0]?.classList.contains('wren-chip') && lis[0].textContent === 'FriPat (Acme) — fishing for a discount. Hold price.');
+    check('carried: bold survives inside a chipped line', lis[0].querySelectorAll('strong').map((n) => n.textContent).join('|') === 'Pat (Acme) — fishing for a discount.');
+    check('carried: no amber, no grey', !one(ca.face, '.wren-silent-line') && Y.greys(tileOf({ brief: CARRIED, pass: LATER })) === false);
+    check('carried: badge + Talk/Draft untouched', one(ca.face, '.wren-badge')?.textContent === '2 questions' && ca.face.querySelectorAll('.yeo-face-btn').map((b) => b.textContent).join('|') === 'Talk|Draft');
+    const old = harness();
+    Y.render(old.face, tileOf({ brief: { ...CARRIED, when_label: 'Oct 30, 4:39 AM' }, questions: [], pass: LATER }), old.ctx);
+    check('carried, older than six days: the chip is the month, as given', old.face.querySelectorAll('.wren-chip').every((c) => c.textContent === 'Oct'));
+    tap(one(ca.face, '.wren-more'));
+    const bp = pane(ca.panel.body, 'brief');
+    check('carried: the Brief tab still shows the opening', one(bp, '.wren-opening')?.textContent === 'Quiet-ish morning. Two things worth a minute.');
+    check('carried: the Brief tab carries no chip and no lead line', !one(bp, '.wren-chip') && !one(bp, '.wren-carried-line'));
+
+    const SILENT = { last_at: '2026-10-30T19:30:00Z', last_label: 'Fri 2:30 PM', silent: true };
+    for (const [label, brief] of [['current brief', BRIEF], ['carried brief', CARRIED], ['no brief', null]]) {
+      const si = harness();
+      const t = tileOf({ brief, questions: [], pass: SILENT });
+      Y.render(si.face, t, si.ctx);
+      const amber = one(si.face, '.wren-silent-line');
+      check(`silent, ${label}: the amber line leads`, amber?.textContent === 'Wren hasn’t checked in since Fri 2:30 PM' && si.face.childNodes[0] === amber, amber?.textContent);
+      check(`silent, ${label}: the card greys`, Y.greys(t) === true);
+      check(`silent, ${label}: no opening on the face`, !one(si.face, '.wren-opening'));
+      if (!brief) check('silent, no brief: the amber line alone, no muted line', !one(si.face, '.yeo-line'));
+    }
+    const siCur = harness();
+    Y.render(siCur.face, tileOf({ brief: BRIEF, questions: [], pass: SILENT }), siCur.ctx);
+    check('silent: a current-flagged brief still renders as carried', one(siCur.face, '.wren-carried-line')?.textContent === 'Nothing new since Mon 4:52 AM · checked Fri 2:30 PM' && one(siCur.face, '.wren-chip')?.textContent === 'Mon');
+
+    check('greys is exactly true or false — a truthy silent is not silent', Y.greys(tileOf({ brief: null, pass: { silent: 'yes' } })) === false && Y.greys(undefined) === false && Y.greys(tileOf('junk')) === false);
+
+    check('stylesheet: the amber line is the warn tone, mixed, no new colour', /\.wren-silent-line\s*\{[^}]*color:\s*var\(--warn\)[^}]*color-mix\(in srgb, var\(--warn\)/.test(CSS_TOP) && !/\.wren-(silent-line|carried-line|chip)\s*\{[^}]*#[0-9a-f]{3,8}/i.test(CSS_TOP));
+    check('stylesheet: the chip and the carried line carry no tone', !/\.wren-(carried-line|chip)\s*\{[^}]*var\(--(warn|bad|good|wren)\)/.test(CSS_TOP));
+    check('shell: tileCard greys a card whose module says greys(tile) === true', /const greyed = degraded \|\| moduleNs\.get\(id\)\?\.greys\?\.\(tile\) === true;/.test(APP) && /cls: `card \$\{greyed \? 'card-degraded' : ''\}`/.test(APP));
+    check('shell: the status pill stays the status\u2019s own', /degraded \? pill\(status/.test(APP));
+  }
+
+  // -- WT19 + the retired field ---------------------------------------------------
+  console.log('\nno age, no "still", no stale (WT19)');
+  {
+    check('source scan: `stale` is gone from the module', !/stale/i.test(SRC));
+    check('source scan: rule 7 — no new Date / Date.parse / Date.now', !/new Date\b|Date\.(parse|now)|performance\.now/.test(CODE));
+    check('source scan: no composed age copy — no "day ", "still", "ago"', !/day |\bstill\b|\bago\b/i.test(CODE.replace(/'Talk'|'Draft'/g, '')));
+    check('source scan: the face reads carried / silent, nothing else of time', !/generated_at|last_at/.test(CODE));
   }
 
   // -- the sheet + the Brief tab -------------------------------------------------
@@ -448,8 +513,8 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
   {
     check('submitEvent takes {quiet} and then repaints the header only', /async submitEvent\(event, \{ quiet = false \} = \{\}\)[\s\S]*?if \(quiet\) renderHeader\(\);\s*else renderAll\(\);/.test(APP));
     check('withdrawEvent takes {quiet} too', /async withdrawEvent\(id, \{ quiet = false \} = \{\}\)[\s\S]*?if \(quiet\) renderHeader\(\);\s*else renderAll\(\);/.test(APP));
-    check('APP_VERSION 1.40.0', /APP_VERSION = '1\.40\.0'/.test(CONFIG));
-    check('CACHE_VERSION helm-v61', /CACHE_VERSION = 'helm-v61'/.test(SW));
+    check('APP_VERSION 1.41.0', /APP_VERSION = '1\.41\.0'/.test(CONFIG));
+    check('CACHE_VERSION helm-v62', /CACHE_VERSION = 'helm-v62'/.test(SW));
     check('/api/ask, /api/draft and the brain still bypass the cache', /url\.hostname === 'brain\.lannyai\.com'/.test(SW) && /endsWith\('\/api\/ask'\)/.test(SW) && /endsWith\('\/api\/draft'\)/.test(SW));
     const mock = JSON.parse(read('docs', 'mock', 'helm-data.json'));
     const m = mock.tiles.yeoman;
@@ -458,7 +523,8 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
     check('the payload carries lines, never a count (W1)', !Object.keys(m.data).some((k) => /count|total|n_/.test(k)) && !Object.keys(m.data.brief).some((k) => /count|total|items$/.test(k)));
     const h = harness();
     Y.render(h.face, m, h.ctx);
-    check('and renders', !!one(h.face, '.wren-opening') && one(h.face, '.wren-badge')?.textContent === `${m.data.questions.length} questions`);
+    check('the mock is carried, so ?mock=1 shows the carried face', m.data.brief.carried === true && m.data.pass?.silent === false && typeof m.data.pass?.last_label === 'string' && typeof m.data.brief.when_label === 'string' && !('stale' in m.data.brief));
+    check('and renders it', !!one(h.face, '.wren-carried-line') && !one(h.face, '.wren-opening') && one(h.face, '.wren-badge')?.textContent === `${m.data.questions.length} questions`);
   }
 
   // -- her lamp stays hers (WT14) ---------------------------------------------------

@@ -146,12 +146,32 @@ function tile(band, data, status = 'ok', updatedAt = nowIso()) {
  * the engine's `wren()` publishes. Every person, company and line below is
  * invented (rule 1). Bold markers are left in, as the engine leaves them.
  */
+/** The engine's `_wren_label()` (WT17): `Sun 4:39 AM` inside six days, else `Oct 30, 4:39 AM`, Central. */
+function wrenLabel(t) {
+  const hm = t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' });
+  const head = Date.now() - t.getTime() <= 6 * 86400e3
+    ? t.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/Chicago' })
+    : `${t.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Chicago' })},`;
+  return `${head} ${hm}`;
+}
+
+/**
+ * v1.2 (WT17/WT18): the mock is CARRIED — the brief was written 14 h ago and
+ * a quiet pass ran an hour ago — so `?mock=1` shows the face Matt sees on a
+ * weekend evening. `--wren-current` / `--wren-silent` flip it.
+ */
 function wrenTile() {
+  const face = process.argv.includes('--wren-silent') ? 'silent' : process.argv.includes('--wren-current') ? 'current' : 'carried';
+  const born = new Date(Date.now() - (face === 'current' ? 1 : 14) * 3600e3);
+  const last = new Date(Date.now() - (face === 'silent' ? 20 : 1) * 3600e3);
   return tile('DAILY', {
+    pass: { last_at: last.toISOString().replace(/\.\d{3}Z$/, 'Z'), last_label: wrenLabel(last), silent: face === 'silent' },
     brief: {
       path: `06-AI-Stack/Wren/Briefs/${TODAY.slice(0, 7)}/${TODAY} 0449 - Brief.md`,
       date: TODAY,
-      generated_at: nowIso(),
+      generated_at: born.toISOString().replace(/\.\d{3}Z$/, 'Z'),
+      when_label: wrenLabel(born),
+      carried: face !== 'current',
       title: 'Wren — mock morning, 4:52 CDT',
       opening: 'Quiet-ish morning. Two things worth a minute; the rest can wait.',
       attention: [
@@ -164,7 +184,6 @@ function wrenTile() {
       record: ['The parts order shipped; tracking is in the thread.'],
       question_lines: ['Weekends: one morning sweep, or leave them quiet?'],
       extra: [{ title: 'For the crew', lines: ['**Mission Control → the Architect** — an invented mismatch.\n> paste this block'] }],
-      stale: false,
     },
     questions: [
       { qid: '3fa1c92b0e', date: TODAY, text: 'Weekends: one morning sweep, or leave them quiet? (re: cadence)' },

@@ -6,14 +6,21 @@
   "tiles": {
     "yeoman": {
       "band": "DAILY",
-      "updated_at": "2026-10-06T21:48:07.699Z",
+      "updated_at": "2026-11-01T16:42:43.295Z",
       "status": "ok",
       "error": null,
       "data": {
+        "pass": {
+          "last_at": "2026-11-01T15:42:43Z",
+          "last_label": "Sun 9:42 AM",
+          "silent": false
+        },
         "brief": {
-          "path": "06-AI-Stack/Wren/Briefs/2026-10/2026-10-06 0449 - Brief.md",
-          "date": "2026-10-06",
-          "generated_at": "2026-10-06T21:48:07.699Z",
+          "path": "06-AI-Stack/Wren/Briefs/2026-11/2026-11-01 0449 - Brief.md",
+          "date": "2026-11-01",
+          "generated_at": "2026-11-01T02:42:43Z",
+          "when_label": "Sat 9:42 PM",
+          "carried": true,
           "title": "Wren — mock morning, 4:52 CDT",
           "opening": "Quiet-ish morning. Two things worth a minute; the rest can wait.",
           "attention": [
@@ -38,18 +45,17 @@
                 "**Mission Control → the Architect** — an invented mismatch.\n> paste this block"
               ]
             }
-          ],
-          "stale": false
+          ]
         },
         "questions": [
           {
             "qid": "3fa1c92b0e",
-            "date": "2026-10-06",
+            "date": "2026-11-01",
             "text": "Weekends: one morning sweep, or leave them quiet? (re: cadence)"
           },
           {
             "qid": "9b2e4d1c07",
-            "date": "2026-10-06",
+            "date": "2026-11-01",
             "text": "Aunt Example — a nudge when it’s been a few weeks, or leave her to you? (re: Aunt Example)"
           }
         ]
