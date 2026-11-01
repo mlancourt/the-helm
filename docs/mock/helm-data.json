@@ -1361,8 +1361,151 @@
                 "headline_exact": true
               }
             ]
+          },
+          {
+            "id": "ship-state",
+            "title": "Ship State",
+            "kind": "state",
+            "emitted": true,
+            "items": [
+              {
+                "ordinal": null,
+                "emoji": "⏰",
+                "headline": "Roster",
+                "body": "11/11 due since Sun 06:00 fired (mock-sweep ×5 · mock-landing · mock-hub-sync · mock-settle · mock-planner) · missed: none · next due: mock-sweep 09:30",
+                "tag": null,
+                "resolved": false,
+                "headline_exact": true
+              },
+              {
+                "ordinal": null,
+                "emoji": "🛰️",
+                "headline": "Traces",
+                "body": "mock-tripwire 05:45 ✓ · Helm engine 05:49 ✓",
+                "tag": null,
+                "resolved": false,
+                "headline_exact": true
+              },
+              {
+                "ordinal": null,
+                "emoji": "🚨",
+                "headline": "Tripwire",
+                "body": "CLEAR (mail · ledger · signatures · chat · calendar)",
+                "tag": null,
+                "resolved": false,
+                "headline_exact": true
+              },
+              {
+                "ordinal": null,
+                "emoji": "📬",
+                "headline": "Crew mail",
+                "body": "to-architect 1 open (oldest \"an invented subject line\", 2 bd) · 0 read-not-closed",
+                "tag": null,
+                "resolved": false,
+                "headline_exact": true
+              },
+              {
+                "ordinal": null,
+                "emoji": "📡",
+                "headline": "Field notes",
+                "body": "1 waiting · oldest Fri (1 bd)",
+                "tag": null,
+                "resolved": false,
+                "headline_exact": true
+              },
+              {
+                "ordinal": null,
+                "emoji": "📋",
+                "headline": "Open items",
+                "body": "≥ 2 bd without motion: none · proposals 0 open",
+                "tag": null,
+                "resolved": false,
+                "headline_exact": true
+              },
+              {
+                "ordinal": null,
+                "emoji": "📄",
+                "headline": "Archivist",
+                "body": "last unattended sweep Sun: 2 filed · 0 held · inbox 0 waiting",
+                "tag": null,
+                "resolved": false,
+                "headline_exact": true
+              },
+              {
+                "ordinal": null,
+                "emoji": "🗂️",
+                "headline": "Held",
+                "body": "none",
+                "tag": null,
+                "resolved": false,
+                "headline_exact": true
+              },
+              {
+                "ordinal": null,
+                "emoji": "🧭",
+                "headline": "Helm",
+                "body": "17 tiles @ run-mock 05:49 · stale: none · error: none",
+                "tag": null,
+                "resolved": false,
+                "headline_exact": true
+              }
+            ]
           }
         ],
+        "ship_state": {
+          "rows": [
+            {
+              "emoji": "⏰",
+              "label": "Roster",
+              "value": "11/11 due since Sun 06:00 fired (mock-sweep ×5 · mock-landing · mock-hub-sync · mock-settle · mock-planner) · missed: none · next due: mock-sweep 09:30"
+            },
+            {
+              "emoji": "🛰️",
+              "label": "Traces",
+              "value": "mock-tripwire 05:45 ✓ · Helm engine 05:49 ✓"
+            },
+            {
+              "emoji": "🚨",
+              "label": "Tripwire",
+              "value": "CLEAR (mail · ledger · signatures · chat · calendar)"
+            },
+            {
+              "emoji": "📬",
+              "label": "Crew mail",
+              "value": "to-architect 1 open (oldest \"an invented subject line\", 2 bd) · 0 read-not-closed"
+            },
+            {
+              "emoji": "📡",
+              "label": "Field notes",
+              "value": "1 waiting · oldest Fri (1 bd)"
+            },
+            {
+              "emoji": "📋",
+              "label": "Open items",
+              "value": "≥ 2 bd without motion: none · proposals 0 open"
+            },
+            {
+              "emoji": "📄",
+              "label": "Archivist",
+              "value": "last unattended sweep Sun: 2 filed · 0 held · inbox 0 waiting"
+            },
+            {
+              "emoji": "🗂️",
+              "label": "Held",
+              "value": "none"
+            },
+            {
+              "emoji": "🧭",
+              "label": "Helm",
+              "value": "17 tiles @ run-mock 05:49 · stale: none · error: none"
+            }
+          ],
+          "quiet_day": false
+        },
+        "freshness": {
+          "state": "today",
+          "label": null
+        },
         "omitted": [],
         "footer": "Generated by Captain's Log — Tuesday 10/6, 06:02 fire · framework v2.9 · 75th consecutive morning",
         "source": "02-Personal/Daily/2026-10/2026-10-06-Brief.md"

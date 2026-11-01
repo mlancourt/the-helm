@@ -62,6 +62,25 @@
  * RULE 10: this is the longest untrusted string on the board and it quotes
  * real email text. Every headline, body, title and footer lands via
  * textContent, through `el()`.
+ *
+ * SHIP STATE IS THE FACE (spec C13, v1.42.0). Since Captain's Log SKILL v3.1
+ * every brief carries a `## Ship State` block — nine fixed status rows — and
+ * the engine publishes it as `ship_state: {rows: [{label, emoji, value}],
+ * quiet_day}`. When it is there, the face is those rows, every one of them,
+ * in payload order (a tenth row the SKILL grows is drawn too), each value the
+ * Log's own string: one line, cut by CSS with an ellipsis if it will not fit,
+ * the whole of it in the sheet. Never rewritten, never coloured — a Tripwire
+ * row that is not CLEAR is the Log's alarm in the Log's words. Under them,
+ * one dim line says whether the brief has narrative today (each section's
+ * title and live count, its menu chips by the rules above) or `quiet day`.
+ * A snapshot without `ship_state` keeps the old face exactly.
+ *
+ * FRESHNESS (spec C7, v1.7). The engine owns the clock and publishes
+ * `freshness: {state, label}`: `today`; `waiting` (before 06:30, yesterday's
+ * brief, a dim label, NO amber); `fired_no_brief` / `not_fired` (amber, the
+ * engine's label verbatim plus the shown brief's own date). A snapshot with
+ * no `freshness` falls back to the old union of `status: stale` and
+ * `is_today: false`.
  */
 
 import { el, empty } from '../lib/dom.js';
@@ -128,7 +147,15 @@ function menusOf(section) {
  * costs Matt his morning.
  */
 function notToday(tile, data) {
+  const f = obj(data.freshness);
+  if (f) return str(f.state) === 'fired_no_brief' || str(f.state) === 'not_fired';
   return str(tile && tile.status) === 'stale' || data.is_today === false;
+}
+
+/** C7: before 06:30 the engine shows yesterday's, labelled, and nothing is amber. */
+function waiting(data) {
+  const f = obj(data.freshness);
+  return !!f && str(f.state) === 'waiting';
 }
 
 // ------------------------------------------------------------------ the face
@@ -150,13 +177,78 @@ function stampText(data) {
   return [day, clock].filter(Boolean).join(' · ');
 }
 
-/** Hard point 2: the face carries its own date, and says the date is not today's. */
+/**
+ * Hard point 2: the face carries its own date, and says the date is not today's.
+ * With `freshness` the words are the engine's label (C7 — it knows whether the
+ * Log fired); without it, the old line.
+ */
 function notTodayLine(data) {
   const when = [str(data.weekday), str(data.brief_date)].filter(Boolean).join(' ');
+  const label = str(obj(data.freshness) && data.freshness.label);
+  const text = label
+    ? (when ? `${label} · showing ${when}` : label)
+    : (when ? `${when} — not today's brief` : "not today's brief");
   return el('div', { cls: 'clog-not-today' }, [
     el('span', { cls: 'clog-not-today-mark', attrs: { 'aria-hidden': 'true' }, text: '⚠︎' }),
-    el('span', { text: when ? `${when} — not today's brief` : "not today's brief" }),
+    el('span', { text }),
   ]);
+}
+
+/** C7 before 06:30: yesterday's brief, its date, the engine's label. Dim, never amber. */
+function waitingLine(data) {
+  const when = [str(data.weekday), str(data.brief_date)].filter(Boolean).join(' ');
+  const label = str(data.freshness.label);
+  return el('div', { cls: 'clog-waiting', text: [when, label].filter(Boolean).join(' · ') });
+}
+
+// ------------------------------------------------------------- ship state
+
+/** The rows, or null when this snapshot predates C13 (the old face then runs). */
+function shipRows(data) {
+  const ship = obj(data.ship_state);
+  if (!ship) return null;
+  const rows = arr(ship.rows).map(obj).filter(Boolean);
+  return rows.length ? rows : null;
+}
+
+/**
+ * One status row: emoji, label, value — the Log's strings, nothing composed.
+ * The value is ONE line on the face (CSS ellipsis, never a rewrite); its whole
+ * text rides in `title` and in the sheet. No class here depends on the value.
+ */
+function shipRow(row) {
+  const value = str(row.value);
+  return el('div', { cls: 'clog-ship-row' }, [
+    el('span', { cls: 'clog-emoji', attrs: { 'aria-hidden': 'true' }, text: str(row.emoji) }),
+    el('span', { cls: 'clog-ship-label', text: str(row.label) }),
+    ' ', // so a screen reader (and a copy) reads "Roster 11/11", not "Roster11/11"
+    el('span', { cls: 'clog-ship-value', text: value, attrs: value ? { title: value } : undefined }),
+  ]);
+}
+
+/**
+ * The narrative's presence, as one dim line under the rows: each non-status
+ * section with live items, by its own title and live count, wearing its menu
+ * chips (C8's rules, unchanged) — or `quiet day` when the brief says so.
+ * Nothing when there is nothing; an all-resolved section is not news.
+ */
+function narrativeLine(data) {
+  if (obj(data.ship_state) && data.ship_state.quiet_day === true) {
+    return el('div', { cls: 'clog-narrative', text: 'quiet day' });
+  }
+  const parts = [];
+  for (const sec of arr(data.sections)) {
+    const s = obj(sec);
+    if (!s || str(s.kind) === 'state') continue;
+    const live = liveItems(s);
+    if (!live.length) continue;
+    if (parts.length) parts.push(el('span', { cls: 'clog-narrative-sep', attrs: { 'aria-hidden': 'true' }, text: '·' }));
+    parts.push(el('span', { cls: 'clog-narrative-sec', text: `${str(s.title) || str(s.id) || 'Section'} ${live.length}` }));
+    for (const menu of menusOf(s)) parts.push(el('span', { cls: 'clog-menu', text: menu }));
+  }
+  if (!parts.length) return null;
+  parts.push(el('span', { cls: 'clog-narrative-go', attrs: { 'aria-hidden': 'true' }, text: '→' }));
+  return el('div', { cls: 'clog-narrative' }, parts);
 }
 
 /**
@@ -281,6 +373,25 @@ function sheetEntry(item) {
   ]);
 }
 
+/** Ship State in full: every row, label then the whole value, wrapping. */
+function shipSheet(data, rows) {
+  const sec = arr(data.sections).map(obj).find((s) => s && str(s.kind) === 'state');
+  const title = str(sec && sec.title) || 'Ship State';
+  return el('div', { cls: 'clog-sheet-sec clog-ship-sheet' }, [
+    el('h3', { cls: 'clog-sec-title', text: title }),
+    ...rows.map((r) =>
+      el('div', { cls: 'clog-ship-entry' }, [
+        el('span', { cls: 'clog-emoji', attrs: { 'aria-hidden': 'true' }, text: str(r.emoji) }),
+        el('div', { cls: 'clog-ship-entry-text' }, [
+          el('span', { cls: 'clog-ship-label', text: str(r.label) }),
+          ' ',
+          el('span', { cls: 'clog-ship-full', text: str(r.value) }),
+        ]),
+      ])
+    ),
+  ]);
+}
+
 function sheetSection(section) {
   const s = obj(section) || {};
   const items = arr(s.items);
@@ -299,9 +410,16 @@ function sheetSection(section) {
  */
 function sheetBody(data) {
   return (body) => {
+    // C13: status first, then the narrative in payload order. With
+    // `ship_state` the rows come from it (full values, wrapping); without it,
+    // any `kind: "state"` section is simply moved to the top.
+    const sections = arr(data.sections);
+    const isState = (s) => str(obj(s) && s.kind) === 'state';
+    const rows = shipRows(data);
     const parts = [
       metaLine(data),
-      ...arr(data.sections).map(sheetSection),
+      ...(rows ? [shipSheet(data, rows)] : sections.filter(isState).map(sheetSection)),
+      ...sections.filter((s) => !isState(s)).map(sheetSection),
       ...arr(data.omitted).map(omittedLine),
     ].filter(Boolean);
     for (const p of parts) body.appendChild(p);
@@ -336,14 +454,24 @@ export function render(root, tile, ctx) {
   const stamp = stampText(data);
   if (stamp) face.appendChild(el('div', { cls: 'clog-stamp', text: stamp }));
   if (stale) face.appendChild(notTodayLine(data));
+  else if (waiting(data)) face.appendChild(waitingLine(data));
 
-  // Payload order throughout. The framework decides what leads the brief and
-  // the page does not get a vote.
-  for (const s of arr(data.sections)) {
-    const node = faceSection(s);
-    if (node) face.appendChild(node);
+  const rows = shipRows(data);
+  if (rows) {
+    // C13: the status rows ARE the face, then one line for the narrative.
+    // No omitted lines here — the sheet still lists them (C11).
+    face.appendChild(el('div', { cls: 'clog-ship' }, rows.map(shipRow)));
+    const narrative = narrativeLine(data);
+    if (narrative) face.appendChild(narrative);
+  } else {
+    // Payload order throughout. The framework decides what leads the brief and
+    // the page does not get a vote.
+    for (const s of arr(data.sections)) {
+      const node = faceSection(s);
+      if (node) face.appendChild(node);
+    }
+    for (const o of arr(data.omitted)) face.appendChild(omittedLine(o));
   }
-  for (const o of arr(data.omitted)) face.appendChild(omittedLine(o));
 
   // Nothing arrived at all — the 06:02 fire did not happen, or the payload is
   // a shape this module cannot lay out. The shell has already printed the

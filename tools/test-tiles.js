@@ -6095,7 +6095,16 @@ async function main() {
     const CLOG_CSS =
       cOpen !== -1 && cNext > cOpen ? CSS_ALL.slice(cOpen, cNext).replace(/\/\*[\s\S]*?\*\//g, '') : '';
 
-    const FULL = fixture.tiles?.captains_log?.data;   // A46: mock-value assertions read the fixture in both modes
+    // A46: mock-value assertions read the fixture in both modes.
+    // SHIP is the brief as the engine publishes it since v1.42.0 (C13: Ship
+    // State is the face). FULL is the same brief with the status block taken
+    // off — the PRE-C13 face an older snapshot still gets — and every check
+    // written before C13 keeps running against it unchanged.
+    const SHIP = fixture.tiles?.captains_log?.data;
+    const FULL = SHIP && (() => {
+      const { ship_state, freshness, ...rest } = SHIP;
+      return { ...rest, sections: (SHIP.sections || []).filter((x) => x.kind !== 'state') };
+    })();
     const clogTile = (data, over = {}) => ({ band: 'DAILY', status: 'ok', error: null, data, ...over });
 
     const drawClog = (data, over = {}) => {
@@ -6389,7 +6398,12 @@ async function main() {
       textOf(staleRoot.querySelector('.clog-not-today'))
     );
     check('and the weekday with it', /Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday/.test(textOf(staleRoot.querySelector('.clog-not-today'))));
-    check('the items still render', countOf(staleRoot, 'clog-item') > 0);
+    check('the Ship State rows still render', countOf(staleRoot, 'clog-ship-row') === 9, String(countOf(staleRoot, 'clog-ship-row')));
+    check(
+      "C7: the amber line is the engine's label, then the date it is showing",
+      textOf(staleRoot.querySelector('.clog-not-today')) === `⚠︎Log didn't fire today · showing ${staleTile.data.weekday} ${staleTile.data.brief_date}`,
+      textOf(staleRoot.querySelector('.clog-not-today'))
+    );
     check('the stale line is the one amber thing in the block', /\.clog-not-today\b[^{]*\{[^}]*var\(--warn\)/.test(CLOG_CSS));
     // The engine's own reason line is the SHELL's to print, for every tile
     // alike — so this module must not claim it.
@@ -6402,6 +6416,114 @@ async function main() {
     const byFlag = drawClog({ ...FULL, is_today: false });
     check('and is_today alone is enough', countOf(byFlag, 'clog-not-today') === 1);
     check("today's brief says nothing about it", countOf(board, 'clog-not-today') === 0 && countOf(board, 'clog-face-stale') === 0);
+
+    // -- C13: Ship State is the face ------------------------------------------
+    //
+    // Nine status rows, the Log's own strings, one line each; the narrative is
+    // one dim line under them; the sheet is status-first. No colour on a row,
+    // no class chosen by a value, nothing rewritten.
+    console.log('\ncaptains_log — C13 Ship State + C7 freshness');
+    const SHIP_ROWS = (SHIP && SHIP.ship_state && SHIP.ship_state.rows) || [];
+    check('the mock brief carries nine status rows', SHIP_ROWS.length === 9, String(SHIP_ROWS.length));
+    check('and the ship-state section, kind state, in sections[]', !!(SHIP && SHIP.sections.find((x) => x.id === 'ship-state' && x.kind === 'state')));
+    const shipBoard = drawClog(SHIP || {});
+    check('the face is the nine rows', countOf(shipBoard, 'clog-ship-row') === 9, String(countOf(shipBoard, 'clog-ship-row')));
+    check('in payload order, labels verbatim',
+      clogTexts(shipBoard, 'clog-ship-label').join('|') === SHIP_ROWS.map((r) => r.label).join('|'),
+      clogTexts(shipBoard, 'clog-ship-label').join('|'));
+    check('each value is the Log\'s string, whole in the DOM (the cut is CSS)',
+      clogTexts(shipBoard, 'clog-ship-value').join('|') === SHIP_ROWS.map((r) => r.value).join('|'));
+    check('and its full text rides in the title',
+      shipBoard.querySelectorAll('.clog-ship-value').every((n, i) => n.getAttribute('title') === SHIP_ROWS[i].value));
+    check('the emoji is drawn, aria-hidden', clogTexts(shipBoard.querySelector('.clog-ship'), 'clog-emoji').join('') === SHIP_ROWS.map((r) => r.emoji).join(''));
+    check('one line: nowrap + ellipsis on the value', /\.clog-ship-value\b[^{]*\{[^}]*white-space:\s*nowrap[^}]*text-overflow:\s*ellipsis/.test(CLOG_CSS));
+    check('no old section frames on the C13 face', countOf(shipBoard, 'clog-sec') === 0 && countOf(shipBoard, 'clog-item') === 0);
+    check('no omitted lines on the C13 face', countOf(drawClog({ ...SHIP, omitted: [{ id: 'x', title: 'X' }] }), 'clog-omitted') === 0);
+    // The narrative line: each non-state section's own title + its live count + its menus.
+    check(
+      'the narrative is one dim line: title, live count, the menus',
+      clogTexts(shipBoard, 'clog-narrative-sec').join(' | ') === "Architect's Note 2 | On Your Radar Today 5",
+      clogTexts(shipBoard, 'clog-narrative-sec').join(' | ')
+    );
+    check('exactly one narrative line, and it is last',
+      countOf(shipBoard, 'clog-narrative') === 1 && shipBoard.querySelector('.clog-face').childNodes.slice(-1)[0].classList.contains('clog-narrative'));
+    check('its chips are the brief\'s menus, deduped per section',
+      clogTexts(shipBoard.querySelector('.clog-narrative'), 'clog-menu').join(' | ') === 'act / defer / drop | act / defer / drop | act / drop',
+      clogTexts(shipBoard.querySelector('.clog-narrative'), 'clog-menu').join(' | '));
+    check('the status rows never count as narrative', !/Ship State/.test(textOf(shipBoard.querySelector('.clog-narrative'))));
+    const allResolved = drawClog({ ...SHIP, sections: SHIP.sections.map((x) => (x.kind === 'state' ? x : { ...x, items: x.items.map((i) => ({ ...i, resolved: true })) })) });
+    check('no live narrative → no narrative line', countOf(allResolved, 'clog-narrative') === 0);
+    // Values carry no opinion: a Tripwire that is not CLEAR renders the identical class set.
+    const alarm = drawClog({ ...SHIP, ship_state: { ...SHIP.ship_state, rows: SHIP_ROWS.map((r) => (r.label === 'Tripwire' ? { ...r, value: '🚨 1 hit — an invented send in a window' } : r)) } });
+    check('a Tripwire alarm row: same classes as CLEAR (no colour the page chose)', clogClasses(alarm).join('|') === clogClasses(shipBoard).join('|'));
+    check('and its words are printed as given', textOf(alarm).includes('🚨 1 hit — an invented send in a window'));
+    check('no tone token in the Ship State styles',
+      !/var\(--(warn|good|bad|info)\)/.test((CLOG_CSS.match(/\.clog-(ship|narrative|waiting)[^{]*\{[^}]*\}/g) || []).join('\n')));
+    check('no text-transform on the Log\'s words',
+      !/text-transform/.test((CLOG_CSS.match(/\.clog-(ship|narrative|waiting)[^{]*\{[^}]*\}/g) || []).join('\n')));
+    check('the module chooses no class from a value', !/cls:\s*`[^`]*\$\{[^}]*value/.test(CLOG_SRC));
+    // A tenth row the SKILL grows is drawn, and a row with no label still renders.
+    const ten = drawClog({ ...SHIP, ship_state: { ...SHIP.ship_state, rows: [...SHIP_ROWS, { label: 'Lab', emoji: '🧪', value: 'a tenth row' }, { label: null, emoji: null, value: 'an unshaped row' }] } });
+    check('a tenth (and eleventh) row is drawn, not dropped', countOf(ten, 'clog-ship-row') === 11 && /a tenth row/.test(textOf(ten)) && /an unshaped row/.test(textOf(ten)));
+    // Hostile shapes: never throws.
+    let shipThrew = null;
+    try {
+      for (const bad of [{ rows: 'x' }, { rows: [null, 3, 'x', {}] }, [], 'x', { rows: [] }]) drawClog({ ...SHIP, ship_state: bad });
+    } catch (e) { shipThrew = e; }
+    check('hostile ship_state shapes do not throw', !shipThrew, String(shipThrew));
+    check('an empty rows[] falls back to the pre-C13 face', countOf(drawClog({ ...SHIP, ship_state: { rows: [], quiet_day: false } }), 'clog-sec') > 0);
+
+    // Quiet day.
+    const quietSnap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'clog-quiet.json'), 'utf8'));
+    const quiet = openClog(quietSnap.tiles.captains_log.data);
+    check('quiet day: nine rows', countOf(quiet.root, 'clog-ship-row') === 9);
+    check('and the narrative line reads exactly "quiet day"', clogTexts(quiet.root, 'clog-narrative').join('') === 'quiet day', clogTexts(quiet.root, 'clog-narrative').join(''));
+    check('no omitted lines on the quiet face', countOf(quiet.root, 'clog-omitted') === 0);
+    check('the quiet sheet still lists both omitted sections', countOf(quiet.sheet, 'clog-omitted') === 2);
+    quiet.panel.close();
+
+    // The sheet, status first.
+    const shipOpen = openClog(SHIP || {});
+    const sheetKids = shipOpen.sheet.childNodes;
+    check('sheet: the run line, then Ship State', sheetKids[0].classList.contains('clog-meta') && sheetKids[1].classList.contains('clog-ship-sheet'));
+    check('every row in full, wrapping', clogTexts(shipOpen.sheet, 'clog-ship-full').join('|') === SHIP_ROWS.map((r) => r.value).join('|'));
+    check('then the narrative sections, in payload order',
+      clogTexts(shipOpen.sheet, 'clog-sec-title').join(' | ') === "Ship State | Architect's Note | On Your Radar Today",
+      clogTexts(shipOpen.sheet, 'clog-sec-title').join(' | '));
+    check('Ship State appears once, not twice', clogTexts(shipOpen.sheet, 'clog-sec-title').filter((t) => t === 'Ship State').length === 1);
+    check('the footer is still last', sheetKids.slice(-1)[0].classList.contains('clog-footer'));
+    check('live_count is printed, status rows not in it', /· 7 items/.test(textOf(shipOpen.sheet)));
+    shipOpen.panel.close();
+    const legacyState = openClog({ ...FULL, sections: [...FULL.sections, SHIP.sections.find((x) => x.kind === 'state')] });
+    check('no ship_state but a state section → it still leads the sheet', legacyState.sheet.childNodes[1].textContent.startsWith('Ship State'));
+    legacyState.panel.close();
+
+    // C7: the four freshness faces, each off the engine's label.
+    check('today: no amber, no waiting line', countOf(shipBoard, 'clog-not-today') === 0 && countOf(shipBoard, 'clog-waiting') === 0 && countOf(shipBoard, 'clog-face-stale') === 0);
+    const waitSnap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'clog-waiting.json'), 'utf8'));
+    const waitRoot = new El('div');
+    clog.render(waitRoot, waitSnap.tiles.captains_log, { id: 'captains_log', actions: {} });
+    const wd = waitSnap.tiles.captains_log.data;
+    check('before 06:30 (status ok, is_today false): NO amber', countOf(waitRoot, 'clog-not-today') === 0 && countOf(waitRoot, 'clog-face-stale') === 0);
+    check("  a dim line: the date it shows · waiting for today's",
+      clogTexts(waitRoot, 'clog-waiting').join('') === `${wd.weekday} ${wd.brief_date} · waiting for today's`,
+      clogTexts(waitRoot, 'clog-waiting').join(''));
+    check('  the waiting line carries no warn tone', !/\.clog-waiting\b[^{]*\{[^}]*var\(--warn\)/.test(CLOG_CSS));
+    check('  yesterday\'s Ship State still shows', countOf(waitRoot, 'clog-ship-row') === 9);
+    const firedSnap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'clog-fired.json'), 'utf8'));
+    const firedRoot = new El('div');
+    clog.render(firedRoot, firedSnap.tiles.captains_log, { id: 'captains_log', actions: {} });
+    const fd = firedSnap.tiles.captains_log.data;
+    check('fired, no brief: amber',
+      countOf(firedRoot, 'clog-not-today') === 1 && countOf(firedRoot, 'clog-face-stale') === 1);
+    check("  'Log fired 06:04 — brief not written · showing {weekday} {date}'",
+      textOf(firedRoot.querySelector('.clog-not-today')) === `⚠︎Log fired 06:04 — brief not written · showing ${fd.weekday} ${fd.brief_date}`,
+      textOf(firedRoot.querySelector('.clog-not-today')));
+    check("didn't fire: amber, its own label (the stale fixture)", /Log didn't fire today/.test(textOf(staleRoot)));
+    check('the two amber labels differ', textOf(firedRoot.querySelector('.clog-not-today')) !== textOf(staleRoot.querySelector('.clog-not-today')));
+    // freshness rules over the old union: a mismatch-stale tile showing TODAY's brief is not "not today's".
+    check('freshness today + status stale (a C2 mismatch) → no not-today line', countOf(drawClog(SHIP, { status: 'stale' }), 'clog-not-today') === 0);
+    check('the module never decides freshness itself (no 06:30, no hour)', !/06:30|6:30|getHours|\bhour\b/.test(CLOG_SRC));
 
     // -- omitted, and error ---------------------------------------------------
     const omitSnap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'docs', 'mock', 'clog-omitted.json'), 'utf8'));

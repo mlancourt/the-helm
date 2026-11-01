@@ -1457,12 +1457,38 @@ body {
 .clog-more { font-size: 11.5px; color: var(--text-dim); margin-top: 1px; }
 .clog-omitted { font-size: 11.5px; color: var(--text-faint); }
 
+/* C13 — Ship State, the face. The Log's own rows, verbatim: no tone token, no
+   text-transform, nothing chosen by a value. A value too long for the line is
+   cut by an ellipsis (never rewritten); the sheet has all of it. */
+.clog-ship { display: flex; flex-direction: column; gap: 5px; }
+.clog-ship-row { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.clog-ship-label { flex: 0 0 auto; font-size: 12.5px; font-weight: 650; color: var(--text); }
+.clog-ship-row .clog-ship-label { min-width: 6.4em; }
+/* width 0 + grow: a nowrap value must contribute NOTHING to the card's
+   min-content, or the grid column (and the whole board) widens to fit it. */
+.clog-ship-value {
+  flex: 1 1 0; width: 0; min-width: 0;
+  font-size: 13px; line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.clog-face-stale .clog-ship-value { color: var(--text-dim); }
+/* The narrative's presence, one dim line; the menu chips are the shared ones. */
+.clog-narrative {
+  display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 4px 6px;
+  font-size: 11.5px; color: var(--text-faint);
+}
+.clog-waiting { font-size: 11.5px; color: var(--text-faint); }
+
 /* -- the brief in full -------------------------------------------------- */
 
 .clog-meta { margin: 0 0 16px; font-size: 11.5px; color: var(--text-dim); }
 .clog-sheet-sec { margin-bottom: 18px; }
 .clog-sheet-sec .clog-sec-title { margin-bottom: 9px; }
 .clog-entry { margin-bottom: 14px; }
+.clog-ship-entry { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.clog-ship-entry-text { min-width: 0; font-size: 13px; line-height: 1.45; }
+.clog-ship-entry-text .clog-ship-label { margin-right: 6px; }
+.clog-ship-full { color: var(--text-dim); }
 .clog-entry:last-child { margin-bottom: 0; }
 .clog-entry-head { display: flex; align-items: baseline; gap: 8px; }
 .clog-entry-title { min-width: 0; }

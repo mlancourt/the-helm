@@ -513,8 +513,10 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
   {
     check('submitEvent takes {quiet} and then repaints the header only', /async submitEvent\(event, \{ quiet = false \} = \{\}\)[\s\S]*?if \(quiet\) renderHeader\(\);\s*else renderAll\(\);/.test(APP));
     check('withdrawEvent takes {quiet} too', /async withdrawEvent\(id, \{ quiet = false \} = \{\}\)[\s\S]*?if \(quiet\) renderHeader\(\);\s*else renderAll\(\);/.test(APP));
-    check('APP_VERSION 1.41.0', /APP_VERSION = '1\.41\.0'/.test(CONFIG));
-    check('CACHE_VERSION helm-v62', /CACHE_VERSION = 'helm-v62'/.test(SW));
+    // At-least, not equal (the test-brain pattern): a later ship must not fail Wren's suite.
+    const ver = ((CONFIG.match(/APP_VERSION = '(\d+)\.(\d+)\.(\d+)'/) || []).slice(1).map(Number));
+    check('APP_VERSION at least 1.41.0', ver.length === 3 && (ver[0] > 1 || (ver[0] === 1 && ver[1] >= 41)), ver.join('.'));
+    check('CACHE_VERSION at least helm-v62', Number((SW.match(/CACHE_VERSION = 'helm-v(\d+)'/) || [])[1]) >= 62);
     check('/api/ask, /api/draft and the brain still bypass the cache', /url\.hostname === 'brain\.lannyai\.com'/.test(SW) && /endsWith\('\/api\/ask'\)/.test(SW) && /endsWith\('\/api\/draft'\)/.test(SW));
     const mock = JSON.parse(read('docs', 'mock', 'helm-data.json'));
     const m = mock.tiles.yeoman;
