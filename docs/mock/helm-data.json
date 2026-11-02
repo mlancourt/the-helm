@@ -1897,6 +1897,3174 @@
         "source": "mock generator (applied lines only)"
       }
     },
+    "wss_traffic": {
+      "band": "DAILY",
+      "updated_at": "2026-11-02T20:14:48.481Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "status": "ok",
+        "generated_at": "2026-11-02T06:17:03-06:00",
+        "run_today": "2026-11-02",
+        "latest": {
+          "ga4": {
+            "date": "2026-11-01",
+            "pulled_at": "2026-11-02T20:14:48.481Z",
+            "final": false,
+            "sessions": {
+              "value": 87,
+              "dod": -9,
+              "baseline": 131,
+              "ratio": 0.66
+            },
+            "users": {
+              "value": 106,
+              "dod": -1,
+              "baseline": 112,
+              "ratio": 0.95
+            },
+            "leads": {
+              "value": 3,
+              "dod": 2,
+              "baseline": 1,
+              "ratio": null
+            },
+            "carts": {
+              "value": 1,
+              "dod": 0,
+              "baseline": 1,
+              "ratio": 1
+            },
+            "purchases": {
+              "value": 1,
+              "dod": 0,
+              "baseline": null,
+              "ratio": null
+            },
+            "checkouts": {
+              "value": 1,
+              "dod": 0,
+              "baseline": null,
+              "ratio": null
+            },
+            "channels": {
+              "Organic Search": 80,
+              "Direct": 22,
+              "Paid Search": 14,
+              "Referral": 4
+            }
+          },
+          "gsc": {
+            "date": "2026-10-30",
+            "pulled_at": "2026-11-02T20:14:48.481Z",
+            "clicks": {
+              "value": 27,
+              "dod": -21,
+              "baseline": 49,
+              "ratio": 0.55
+            },
+            "impressions": {
+              "value": 2210,
+              "dod": 12,
+              "baseline": 2210,
+              "ratio": 1
+            },
+            "ctr": {
+              "value": 2.3,
+              "dod": 0.1,
+              "baseline": 2.3,
+              "ratio": 1
+            },
+            "position": {
+              "value": 11.2,
+              "dod": 1.4,
+              "baseline": 8,
+              "ratio": 1.4
+            }
+          },
+          "cf": {
+            "date": "2026-11-01",
+            "pulled_at": "2026-11-02T20:14:48.481Z",
+            "day_basis": "UTC",
+            "requests": {
+              "value": 5400,
+              "dod": 0,
+              "baseline": null,
+              "ratio": null
+            },
+            "page_views": {
+              "value": 980,
+              "dod": 0,
+              "baseline": null,
+              "ratio": null
+            },
+            "err5xx_pct": {
+              "value": 0,
+              "dod": 0,
+              "baseline": null,
+              "ratio": null
+            },
+            "threats": {
+              "value": 0,
+              "dod": 0,
+              "baseline": null,
+              "ratio": null
+            }
+          }
+        },
+        "days": [
+          {
+            "date": "2026-11-01",
+            "ga4": {
+              "date": "2026-11-01",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": false,
+              "sessions": {
+                "value": 87,
+                "dod": -9,
+                "baseline": 131,
+                "ratio": 0.66
+              },
+              "users": {
+                "value": 106,
+                "dod": -1,
+                "baseline": 112,
+                "ratio": 0.95
+              },
+              "leads": {
+                "value": 3,
+                "dod": 2,
+                "baseline": 1,
+                "ratio": null
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 1
+              },
+              "purchases": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 80,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": null,
+            "cf": {
+              "date": "2026-11-01",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5400,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 980,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-31",
+            "ga4": {
+              "date": "2026-10-31",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": false,
+              "sessions": {
+                "value": 128,
+                "dod": -4,
+                "baseline": 131,
+                "ratio": 0.98
+              },
+              "users": {
+                "value": 114,
+                "dod": 0,
+                "baseline": 112,
+                "ratio": 1.02
+              },
+              "leads": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 2,
+                "ratio": 0.5
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 1
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 88,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": null,
+            "cf": {
+              "date": "2026-10-31",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5670,
+                "dod": 270,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1025,
+                "dod": 45,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-30",
+            "ga4": {
+              "date": "2026-10-30",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 114,
+                "dod": 5,
+                "baseline": 131,
+                "ratio": 0.87
+              },
+              "users": {
+                "value": 100,
+                "dod": 1,
+                "baseline": 112,
+                "ratio": 0.89
+              },
+              "leads": {
+                "value": 2,
+                "dod": 1,
+                "baseline": 2,
+                "ratio": 1
+              },
+              "carts": {
+                "value": 2,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 2
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 74,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-30",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 27,
+                "dod": -21,
+                "baseline": 49,
+                "ratio": 0.55
+              },
+              "impressions": {
+                "value": 2210,
+                "dod": 12,
+                "baseline": 2210,
+                "ratio": 1
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 11.2,
+                "dod": 1.4,
+                "baseline": 8,
+                "ratio": 1.4
+              }
+            },
+            "cf": {
+              "date": "2026-10-30",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5280,
+                "dod": -120,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 960,
+                "dod": -20,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 2,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-29",
+            "ga4": {
+              "date": "2026-10-29",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 123,
+                "dod": -6,
+                "baseline": 131,
+                "ratio": 0.94
+              },
+              "users": {
+                "value": 109,
+                "dod": -1,
+                "baseline": 112,
+                "ratio": 0.97
+              },
+              "leads": {
+                "value": 3,
+                "dod": -1,
+                "baseline": 2,
+                "ratio": 1.5
+              },
+              "carts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 0
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 83,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-29",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 54,
+                "dod": 6,
+                "baseline": 50,
+                "ratio": 1.08
+              },
+              "impressions": {
+                "value": 2220,
+                "dod": 120,
+                "baseline": 2200,
+                "ratio": 1.01
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.4,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.04
+              }
+            },
+            "cf": {
+              "date": "2026-10-29",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5580,
+                "dod": 180,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1010,
+                "dod": 30,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0.4,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 3,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-28",
+            "ga4": {
+              "date": "2026-10-28",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 105,
+                "dod": 3,
+                "baseline": 131,
+                "ratio": 0.8
+              },
+              "users": {
+                "value": 91,
+                "dod": 0,
+                "baseline": 112,
+                "ratio": 0.81
+              },
+              "leads": {
+                "value": 0,
+                "dod": 0,
+                "baseline": 2,
+                "ratio": 0
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 1
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 65,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-28",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 37,
+                "dod": -11,
+                "baseline": 50,
+                "ratio": 0.74
+              },
+              "impressions": {
+                "value": 1880,
+                "dod": -220,
+                "baseline": 2200,
+                "ratio": 0.85
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.5,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.05
+              }
+            },
+            "cf": {
+              "date": "2026-10-28",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5070,
+                "dod": -330,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 925,
+                "dod": -55,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-27",
+            "ga4": {
+              "date": "2026-10-27",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 123,
+                "dod": -4,
+                "baseline": 131,
+                "ratio": 0.94
+              },
+              "users": {
+                "value": 109,
+                "dod": 1,
+                "baseline": 112,
+                "ratio": 0.97
+              },
+              "leads": {
+                "value": 1,
+                "dod": 1,
+                "baseline": 2,
+                "ratio": 0.5
+              },
+              "carts": {
+                "value": 2,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 2
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 83,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-27",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 51,
+                "dod": 3,
+                "baseline": 50,
+                "ratio": 1.02
+              },
+              "impressions": {
+                "value": 2160,
+                "dod": 60,
+                "baseline": 2200,
+                "ratio": 0.98
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.6,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.06
+              }
+            },
+            "cf": {
+              "date": "2026-10-27",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5490,
+                "dod": 90,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 995,
+                "dod": 15,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-26",
+            "ga4": {
+              "date": "2026-10-26",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 133,
+                "dod": 5,
+                "baseline": 131,
+                "ratio": 1.02
+              },
+              "users": {
+                "value": 119,
+                "dod": -1,
+                "baseline": 112,
+                "ratio": 1.06
+              },
+              "leads": {
+                "value": 2,
+                "dod": -1,
+                "baseline": 2,
+                "ratio": 1
+              },
+              "carts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 0
+              },
+              "purchases": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 93,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-26",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 62,
+                "dod": 14,
+                "baseline": 50,
+                "ratio": 1.24
+              },
+              "impressions": {
+                "value": 2380,
+                "dod": 280,
+                "baseline": 2200,
+                "ratio": 1.08
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.4,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.04
+              }
+            },
+            "cf": {
+              "date": "2026-10-26",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5820,
+                "dod": 420,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1050,
+                "dod": 70,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 2,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-25",
+            "ga4": {
+              "date": "2026-10-25",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 118,
+                "dod": -6,
+                "baseline": 131,
+                "ratio": 0.9
+              },
+              "users": {
+                "value": 104,
+                "dod": 0,
+                "baseline": 112,
+                "ratio": 0.93
+              },
+              "leads": {
+                "value": 3,
+                "dod": 0,
+                "baseline": 2,
+                "ratio": 1.5
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 1
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 78,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-25",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 48,
+                "dod": 0,
+                "baseline": 50,
+                "ratio": 0.96
+              },
+              "impressions": {
+                "value": 2100,
+                "dod": 0,
+                "baseline": 2200,
+                "ratio": 0.95
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.5,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.05
+              }
+            },
+            "cf": {
+              "date": "2026-10-25",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5400,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 980,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 3,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-24",
+            "ga4": {
+              "date": "2026-10-24",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 126,
+                "dod": 3,
+                "baseline": 131,
+                "ratio": 0.96
+              },
+              "users": {
+                "value": 112,
+                "dod": 1,
+                "baseline": 112,
+                "ratio": 1
+              },
+              "leads": {
+                "value": 0,
+                "dod": 1,
+                "baseline": 2,
+                "ratio": 0
+              },
+              "carts": {
+                "value": 2,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 2
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 86,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-24",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 57,
+                "dod": 9,
+                "baseline": 50,
+                "ratio": 1.14
+              },
+              "impressions": {
+                "value": 2280,
+                "dod": 180,
+                "baseline": 2200,
+                "ratio": 1.04
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.6,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.06
+              }
+            },
+            "cf": {
+              "date": "2026-10-24",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5670,
+                "dod": 270,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1025,
+                "dod": 45,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-23",
+            "ga4": {
+              "date": "2026-10-23",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 112,
+                "dod": -4,
+                "baseline": 131,
+                "ratio": 0.85
+              },
+              "users": {
+                "value": 98,
+                "dod": -1,
+                "baseline": 112,
+                "ratio": 0.88
+              },
+              "leads": {
+                "value": 1,
+                "dod": -1,
+                "baseline": 2,
+                "ratio": 0.5
+              },
+              "carts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 0
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 72,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-23",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 44,
+                "dod": -4,
+                "baseline": 50,
+                "ratio": 0.88
+              },
+              "impressions": {
+                "value": 2020,
+                "dod": -80,
+                "baseline": 2200,
+                "ratio": 0.92
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.4,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.04
+              }
+            },
+            "cf": {
+              "date": "2026-10-23",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5280,
+                "dod": -120,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 960,
+                "dod": -20,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0.12,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-22",
+            "ga4": {
+              "date": "2026-10-22",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 126,
+                "dod": 5,
+                "baseline": 131,
+                "ratio": 0.96
+              },
+              "users": {
+                "value": 112,
+                "dod": 0,
+                "baseline": 112,
+                "ratio": 1
+              },
+              "leads": {
+                "value": 2,
+                "dod": 0,
+                "baseline": 2,
+                "ratio": 1
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 1
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 86,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-22",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 54,
+                "dod": 6,
+                "baseline": 50,
+                "ratio": 1.08
+              },
+              "impressions": {
+                "value": 2220,
+                "dod": 120,
+                "baseline": 2200,
+                "ratio": 1.01
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.5,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.05
+              }
+            },
+            "cf": {
+              "date": "2026-10-22",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5580,
+                "dod": 180,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1010,
+                "dod": 30,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 2,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-21",
+            "ga4": {
+              "date": "2026-10-21",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 108,
+                "dod": -6,
+                "baseline": 131,
+                "ratio": 0.82
+              },
+              "users": {
+                "value": 94,
+                "dod": 1,
+                "baseline": 112,
+                "ratio": 0.84
+              },
+              "leads": {
+                "value": 3,
+                "dod": 1,
+                "baseline": 2,
+                "ratio": 1.5
+              },
+              "carts": {
+                "value": 2,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 2
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 68,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-21",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 37,
+                "dod": -11,
+                "baseline": 50,
+                "ratio": 0.74
+              },
+              "impressions": {
+                "value": 1880,
+                "dod": -220,
+                "baseline": 2200,
+                "ratio": 0.85
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.6,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.06
+              }
+            },
+            "cf": {
+              "date": "2026-10-21",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5070,
+                "dod": -330,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 925,
+                "dod": -55,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 3,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-20",
+            "ga4": {
+              "date": "2026-10-20",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 121,
+                "dod": 3,
+                "baseline": 131,
+                "ratio": 0.92
+              },
+              "users": {
+                "value": 107,
+                "dod": -1,
+                "baseline": 112,
+                "ratio": 0.96
+              },
+              "leads": {
+                "value": 0,
+                "dod": -1,
+                "baseline": 2,
+                "ratio": 0
+              },
+              "carts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 0
+              },
+              "purchases": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 81,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-20",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 51,
+                "dod": 3,
+                "baseline": 50,
+                "ratio": 1.02
+              },
+              "impressions": {
+                "value": 2160,
+                "dod": 60,
+                "baseline": 2200,
+                "ratio": 0.98
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.4,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.04
+              }
+            },
+            "cf": {
+              "date": "2026-10-20",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5490,
+                "dod": 90,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 995,
+                "dod": 15,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-19",
+            "ga4": {
+              "date": "2026-10-19",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 131,
+                "dod": -4,
+                "baseline": 131,
+                "ratio": 1
+              },
+              "users": {
+                "value": 117,
+                "dod": 0,
+                "baseline": 112,
+                "ratio": 1.04
+              },
+              "leads": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 2,
+                "ratio": 0.5
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 1
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 91,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-19",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 62,
+                "dod": 14,
+                "baseline": 50,
+                "ratio": 1.24
+              },
+              "impressions": {
+                "value": 2380,
+                "dod": 280,
+                "baseline": 2200,
+                "ratio": 1.08
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.5,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.05
+              }
+            },
+            "cf": {
+              "date": "2026-10-19",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5820,
+                "dod": 420,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1050,
+                "dod": 70,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-18",
+            "ga4": {
+              "date": "2026-10-18",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 116,
+                "dod": 5,
+                "baseline": 131,
+                "ratio": 0.89
+              },
+              "users": {
+                "value": 102,
+                "dod": 1,
+                "baseline": 112,
+                "ratio": 0.91
+              },
+              "leads": {
+                "value": 2,
+                "dod": 1,
+                "baseline": 2,
+                "ratio": 1
+              },
+              "carts": {
+                "value": 2,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 2
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 76,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-18",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 48,
+                "dod": 0,
+                "baseline": 50,
+                "ratio": 0.96
+              },
+              "impressions": {
+                "value": 2100,
+                "dod": 0,
+                "baseline": 2200,
+                "ratio": 0.95
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.6,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.06
+              }
+            },
+            "cf": {
+              "date": "2026-10-18",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5400,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 980,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 2,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-17",
+            "ga4": {
+              "date": "2026-10-17",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 129,
+                "dod": -6,
+                "baseline": 131,
+                "ratio": 0.98
+              },
+              "users": {
+                "value": 115,
+                "dod": -1,
+                "baseline": 112,
+                "ratio": 1.03
+              },
+              "leads": {
+                "value": 3,
+                "dod": -1,
+                "baseline": 2,
+                "ratio": 1.5
+              },
+              "carts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 0
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 89,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-17",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 57,
+                "dod": 9,
+                "baseline": 50,
+                "ratio": 1.14
+              },
+              "impressions": {
+                "value": 2280,
+                "dod": 180,
+                "baseline": 2200,
+                "ratio": 1.04
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.4,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.04
+              }
+            },
+            "cf": {
+              "date": "2026-10-17",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5670,
+                "dod": 270,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1025,
+                "dod": 45,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 3,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-16",
+            "ga4": {
+              "date": "2026-10-16",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 115,
+                "dod": 3,
+                "baseline": 131,
+                "ratio": 0.88
+              },
+              "users": {
+                "value": 101,
+                "dod": 0,
+                "baseline": 112,
+                "ratio": 0.9
+              },
+              "leads": {
+                "value": 0,
+                "dod": 0,
+                "baseline": 2,
+                "ratio": 0
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 1
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 75,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-16",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 44,
+                "dod": -4,
+                "baseline": 50,
+                "ratio": 0.88
+              },
+              "impressions": {
+                "value": 2020,
+                "dod": -80,
+                "baseline": 2200,
+                "ratio": 0.92
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.5,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.05
+              }
+            },
+            "cf": {
+              "date": "2026-10-16",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5280,
+                "dod": -120,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 960,
+                "dod": -20,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-15",
+            "ga4": {
+              "date": "2026-10-15",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 124,
+                "dod": -4,
+                "baseline": 131,
+                "ratio": 0.95
+              },
+              "users": {
+                "value": 110,
+                "dod": 1,
+                "baseline": 112,
+                "ratio": 0.98
+              },
+              "leads": {
+                "value": 1,
+                "dod": 1,
+                "baseline": 2,
+                "ratio": 0.5
+              },
+              "carts": {
+                "value": 2,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 2
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 84,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-15",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 54,
+                "dod": 6,
+                "baseline": 50,
+                "ratio": 1.08
+              },
+              "impressions": {
+                "value": 2220,
+                "dod": 120,
+                "baseline": 2200,
+                "ratio": 1.01
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.6,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.06
+              }
+            },
+            "cf": {
+              "date": "2026-10-15",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5580,
+                "dod": 180,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1010,
+                "dod": 30,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-14",
+            "ga4": {
+              "date": "2026-10-14",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 106,
+                "dod": 5,
+                "baseline": 131,
+                "ratio": 0.81
+              },
+              "users": {
+                "value": 92,
+                "dod": -1,
+                "baseline": 112,
+                "ratio": 0.82
+              },
+              "leads": {
+                "value": 2,
+                "dod": -1,
+                "baseline": 2,
+                "ratio": 1
+              },
+              "carts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 0
+              },
+              "purchases": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 66,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-14",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 37,
+                "dod": -11,
+                "baseline": 50,
+                "ratio": 0.74
+              },
+              "impressions": {
+                "value": 1880,
+                "dod": -220,
+                "baseline": 2200,
+                "ratio": 0.85
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.4,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.04
+              }
+            },
+            "cf": {
+              "date": "2026-10-14",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5070,
+                "dod": -330,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 925,
+                "dod": -55,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 2,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-13",
+            "ga4": {
+              "date": "2026-10-13",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 119,
+                "dod": -6,
+                "baseline": 131,
+                "ratio": 0.91
+              },
+              "users": {
+                "value": 105,
+                "dod": 0,
+                "baseline": 112,
+                "ratio": 0.94
+              },
+              "leads": {
+                "value": 3,
+                "dod": 0,
+                "baseline": 2,
+                "ratio": 1.5
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 1
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 79,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-13",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 51,
+                "dod": 3,
+                "baseline": 50,
+                "ratio": 1.02
+              },
+              "impressions": {
+                "value": 2160,
+                "dod": 60,
+                "baseline": 2200,
+                "ratio": 0.98
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.5,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.05
+              }
+            },
+            "cf": {
+              "date": "2026-10-13",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5490,
+                "dod": 90,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 995,
+                "dod": 15,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 3,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-12",
+            "ga4": {
+              "date": "2026-10-12",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 134,
+                "dod": 3,
+                "baseline": 131,
+                "ratio": 1.02
+              },
+              "users": {
+                "value": 120,
+                "dod": 1,
+                "baseline": 112,
+                "ratio": 1.07
+              },
+              "leads": {
+                "value": 0,
+                "dod": 1,
+                "baseline": 2,
+                "ratio": 0
+              },
+              "carts": {
+                "value": 2,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 2
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 94,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-12",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 62,
+                "dod": 14,
+                "baseline": 50,
+                "ratio": 1.24
+              },
+              "impressions": {
+                "value": 2380,
+                "dod": 280,
+                "baseline": 2200,
+                "ratio": 1.08
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.6,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.06
+              }
+            },
+            "cf": {
+              "date": "2026-10-12",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5820,
+                "dod": 420,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1050,
+                "dod": 70,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-11",
+            "ga4": {
+              "date": "2026-10-11",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 119,
+                "dod": -4,
+                "baseline": 131,
+                "ratio": 0.91
+              },
+              "users": {
+                "value": 105,
+                "dod": -1,
+                "baseline": 112,
+                "ratio": 0.94
+              },
+              "leads": {
+                "value": 1,
+                "dod": -1,
+                "baseline": 2,
+                "ratio": 0.5
+              },
+              "carts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 0
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 79,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-11",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 48,
+                "dod": 0,
+                "baseline": 50,
+                "ratio": 0.96
+              },
+              "impressions": {
+                "value": 2100,
+                "dod": 0,
+                "baseline": 2200,
+                "ratio": 0.95
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.4,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.04
+              }
+            },
+            "cf": {
+              "date": "2026-10-11",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5400,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 980,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-10",
+            "ga4": {
+              "date": "2026-10-10",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 127,
+                "dod": 5,
+                "baseline": 131,
+                "ratio": 0.97
+              },
+              "users": {
+                "value": 113,
+                "dod": 0,
+                "baseline": 112,
+                "ratio": 1.01
+              },
+              "leads": {
+                "value": 2,
+                "dod": 0,
+                "baseline": 2,
+                "ratio": 1
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": 1,
+                "ratio": 1
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 87,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-10",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 57,
+                "dod": 9,
+                "baseline": 50,
+                "ratio": 1.14
+              },
+              "impressions": {
+                "value": 2280,
+                "dod": 180,
+                "baseline": 2200,
+                "ratio": 1.04
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": 2.3,
+                "ratio": 1
+              },
+              "position": {
+                "value": 8.5,
+                "dod": -0.2,
+                "baseline": 8.1,
+                "ratio": 1.05
+              }
+            },
+            "cf": {
+              "date": "2026-10-10",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5670,
+                "dod": 270,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1025,
+                "dod": 45,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 2,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-09",
+            "ga4": {
+              "date": "2026-10-09",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 113,
+                "dod": -6,
+                "baseline": null,
+                "ratio": null
+              },
+              "users": {
+                "value": 99,
+                "dod": 1,
+                "baseline": null,
+                "ratio": null
+              },
+              "leads": {
+                "value": 3,
+                "dod": 1,
+                "baseline": null,
+                "ratio": null
+              },
+              "carts": {
+                "value": 2,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 73,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-09",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 44,
+                "dod": -4,
+                "baseline": null,
+                "ratio": null
+              },
+              "impressions": {
+                "value": 2020,
+                "dod": -80,
+                "baseline": null,
+                "ratio": null
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": null,
+                "ratio": null
+              },
+              "position": {
+                "value": 8.6,
+                "dod": -0.2,
+                "baseline": null,
+                "ratio": null
+              }
+            },
+            "cf": {
+              "date": "2026-10-09",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5280,
+                "dod": -120,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 960,
+                "dod": -20,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 3,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-08",
+            "ga4": {
+              "date": "2026-10-08",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 122,
+                "dod": 3,
+                "baseline": null,
+                "ratio": null
+              },
+              "users": {
+                "value": 108,
+                "dod": -1,
+                "baseline": null,
+                "ratio": null
+              },
+              "leads": {
+                "value": 0,
+                "dod": -1,
+                "baseline": null,
+                "ratio": null
+              },
+              "carts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "purchases": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 82,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-08",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 54,
+                "dod": 6,
+                "baseline": null,
+                "ratio": null
+              },
+              "impressions": {
+                "value": 2220,
+                "dod": 120,
+                "baseline": null,
+                "ratio": null
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": null,
+                "ratio": null
+              },
+              "position": {
+                "value": 8.4,
+                "dod": -0.2,
+                "baseline": null,
+                "ratio": null
+              }
+            },
+            "cf": {
+              "date": "2026-10-08",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5580,
+                "dod": 180,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1010,
+                "dod": 30,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-07",
+            "ga4": {
+              "date": "2026-10-07",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 109,
+                "dod": -4,
+                "baseline": null,
+                "ratio": null
+              },
+              "users": {
+                "value": 95,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "leads": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "carts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 69,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-07",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 37,
+                "dod": -11,
+                "baseline": null,
+                "ratio": null
+              },
+              "impressions": {
+                "value": 1880,
+                "dod": -220,
+                "baseline": null,
+                "ratio": null
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": null,
+                "ratio": null
+              },
+              "position": {
+                "value": 8.5,
+                "dod": -0.2,
+                "baseline": null,
+                "ratio": null
+              }
+            },
+            "cf": {
+              "date": "2026-10-07",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5070,
+                "dod": -330,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 925,
+                "dod": -55,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 1,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-06",
+            "ga4": {
+              "date": "2026-10-06",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 122,
+                "dod": 5,
+                "baseline": null,
+                "ratio": null
+              },
+              "users": {
+                "value": 108,
+                "dod": 1,
+                "baseline": null,
+                "ratio": null
+              },
+              "leads": {
+                "value": 2,
+                "dod": 1,
+                "baseline": null,
+                "ratio": null
+              },
+              "carts": {
+                "value": 2,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 82,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-06",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 51,
+                "dod": 3,
+                "baseline": null,
+                "ratio": null
+              },
+              "impressions": {
+                "value": 2160,
+                "dod": 60,
+                "baseline": null,
+                "ratio": null
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": null,
+                "ratio": null
+              },
+              "position": {
+                "value": 8.6,
+                "dod": -0.2,
+                "baseline": null,
+                "ratio": null
+              }
+            },
+            "cf": {
+              "date": "2026-10-06",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5490,
+                "dod": 90,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 995,
+                "dod": 15,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 2,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          },
+          {
+            "date": "2026-10-05",
+            "ga4": {
+              "date": "2026-10-05",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "final": true,
+              "sessions": {
+                "value": 132,
+                "dod": -6,
+                "baseline": null,
+                "ratio": null
+              },
+              "users": {
+                "value": 118,
+                "dod": -1,
+                "baseline": null,
+                "ratio": null
+              },
+              "leads": {
+                "value": 3,
+                "dod": -1,
+                "baseline": null,
+                "ratio": null
+              },
+              "carts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "purchases": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "checkouts": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "channels": {
+                "Organic Search": 92,
+                "Direct": 22,
+                "Paid Search": 14,
+                "Referral": 4
+              }
+            },
+            "gsc": {
+              "date": "2026-10-05",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "clicks": {
+                "value": 62,
+                "dod": 14,
+                "baseline": null,
+                "ratio": null
+              },
+              "impressions": {
+                "value": 2380,
+                "dod": 280,
+                "baseline": null,
+                "ratio": null
+              },
+              "ctr": {
+                "value": 2.3,
+                "dod": 0.1,
+                "baseline": null,
+                "ratio": null
+              },
+              "position": {
+                "value": 8.4,
+                "dod": -0.2,
+                "baseline": null,
+                "ratio": null
+              }
+            },
+            "cf": {
+              "date": "2026-10-05",
+              "pulled_at": "2026-11-02T20:14:48.481Z",
+              "day_basis": "UTC",
+              "requests": {
+                "value": 5820,
+                "dod": 420,
+                "baseline": null,
+                "ratio": null
+              },
+              "page_views": {
+                "value": 1050,
+                "dod": 70,
+                "baseline": null,
+                "ratio": null
+              },
+              "err5xx_pct": {
+                "value": 0,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              },
+              "threats": {
+                "value": 3,
+                "dod": 0,
+                "baseline": null,
+                "ratio": null
+              }
+            }
+          }
+        ],
+        "queries_top10": [
+          {
+            "query": "example floor scrubber",
+            "clicks": 14,
+            "impressions": 210,
+            "position": 3.2,
+            "position_prev": 4.1
+          },
+          {
+            "query": "ride on sweeper used",
+            "clicks": 11,
+            "impressions": 480,
+            "position": 6.8,
+            "position_prev": 6.9
+          },
+          {
+            "query": "scrubber battery sample",
+            "clicks": 9,
+            "impressions": 160,
+            "position": 4.4,
+            "position_prev": 9
+          },
+          {
+            "query": "walk behind scrubber rental",
+            "clicks": 7,
+            "impressions": 300,
+            "position": 9.1,
+            "position_prev": 7
+          },
+          {
+            "query": "sweeper parts mock",
+            "clicks": 6,
+            "impressions": 95,
+            "position": 2,
+            "position_prev": 2.2
+          }
+        ],
+        "pages_top10": [
+          {
+            "path": "/machines/example-mini-hd",
+            "clicks": 9,
+            "impressions": 88
+          },
+          {
+            "path": "/",
+            "clicks": 8,
+            "impressions": 410
+          },
+          {
+            "path": "/parts/sample-squeegee",
+            "clicks": 5,
+            "impressions": 120
+          }
+        ],
+        "gsc_window": {
+          "start": "2026-10-24",
+          "end": "2026-10-30"
+        },
+        "gsc_site": "sc-domain:example.invalid",
+        "channels_7d": {
+          "organic": 412,
+          "paid": 96,
+          "direct": 74,
+          "referral": 21,
+          "other": 0
+        },
+        "channels_7d_days": 7,
+        "sources_status": {
+          "ga4": {
+            "ok": true,
+            "last_good": "2026-11-01",
+            "error": null,
+            "failing_since": null,
+            "fail_runs": 0
+          },
+          "gsc": {
+            "ok": true,
+            "last_good": "2026-10-30",
+            "error": null,
+            "failing_since": null,
+            "fail_runs": 0
+          },
+          "cf": {
+            "ok": true,
+            "last_good": "2026-11-01",
+            "error": null,
+            "failing_since": null,
+            "fail_runs": 0,
+            "day_basis": "UTC"
+          }
+        },
+        "tripwire": {
+          "tag_gone": false,
+          "since": null
+        },
+        "units": {
+          "ctr": "%",
+          "err5xx_pct": "%",
+          "position": "rank"
+        },
+        "lower_is_better": [
+          "position",
+          "err5xx",
+          "err5xx_pct",
+          "threats"
+        ],
+        "source": "01-WSS/Projects/Website-Migration/State/traffic-pulse.json"
+      }
+    },
     "cards": {
       "band": "HOURLY",
       "updated_at": "2026-10-06T14:32:32.949Z",

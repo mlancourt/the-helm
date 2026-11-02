@@ -192,6 +192,133 @@ function wrenTile() {
   });
 }
 
+/**
+ * Site Pulse (Site-Pulse-Tile-Spec S1–S10) — the shape the engine's
+ * `wss_traffic()` publishes, modelled on its own assertions
+ * (`_templates/test_wss_traffic.py`). Every number, query and path below is
+ * invented. Deterministic: values are a function of the day's index.
+ *
+ * GA4 and Cloudflare reach yesterday; Search Console lags — its two newest
+ * days are null, so its latest block is dated three days back (S4). The
+ * oldest five days have no ratio (S10: fewer than three same-weekday points).
+ * `ga4.checkouts` and `cf.threats` are metrics the contract does not name,
+ * there so S9's "surfaced, never dropped" has something to surface.
+ */
+function wssTrafficPayload({ gscDown = false, status = 'ok' } = {}) {
+  const m = (value, dod, baseline) => ({
+    value,
+    dod,
+    baseline,
+    ratio: baseline === null ? null : Math.round((value / baseline) * 100) / 100,
+  });
+  const days = [];
+  for (let i = 0; i < 28; i++) {
+    const date = addDays(TODAY, -(i + 1));
+    const base = i < 23;                       // the oldest five have no baseline
+    const wave = [0, 9, -4, 6, -11, 3, 14][i % 7];
+    const sessions = 120 + wave - (i % 5);
+    const ga4 = {
+      date,
+      pulled_at: nowIso(),
+      final: i > 1,
+      sessions: m(sessions, (i % 2 ? -1 : 1) * (3 + (i % 4)), base ? 131 : null),
+      users: m(sessions - 14, i % 3 - 1, base ? 112 : null),
+      leads: m(i % 4, i % 3 - 1, base ? 2 : null),
+      carts: m(i % 3, 0, base ? 1 : null),
+      purchases: m(i % 6 === 0 ? 1 : 0, 0, null),
+      checkouts: m(i % 5 === 0 ? 1 : 0, 0, null),
+      channels: { 'Organic Search': sessions - 40, Direct: 22, 'Paid Search': 14, Referral: 4 },
+    };
+    const gsc =
+      i < 2 || (gscDown && i < 5)
+        ? null
+        : {
+            date,
+            pulled_at: nowIso(),
+            clicks: m(48 + wave, wave, base ? 50 : null),
+            impressions: m(2100 + wave * 20, wave * 20, base ? 2200 : null),
+            ctr: m(2.3, 0.1, base ? 2.3 : null),
+            position: m(8.4 + (i % 3) / 10, -0.2, base ? 8.1 : null),
+          };
+    const cf = {
+      date,
+      pulled_at: nowIso(),
+      day_basis: 'UTC',
+      requests: m(5400 + wave * 30, wave * 30, null),
+      page_views: m(980 + wave * 5, wave * 5, null),
+      err5xx_pct: m(i === 3 ? 0.4 : i === 9 ? 0.12 : 0, 0, null),   // CF has no baseline yet, as live
+      threats: m(i % 4, 0, null),
+    };
+    days.push({ date, ga4, gsc, cf });
+  }
+  // The headline numbers the tests read: 0.66 → warn, 1.0 → good, 0.55 → bad, null → hollow.
+  days[0].ga4.sessions = { value: 87, dod: -9, baseline: 131, ratio: 0.66 };
+  days[0].ga4.leads = { value: 3, dod: 2, baseline: 1, ratio: null };
+  days[0].ga4.carts = { value: 1, dod: 0, baseline: 1, ratio: 1.0 };
+  if (!gscDown) {
+    days[2].gsc.clicks = { value: 27, dod: -21, baseline: 49, ratio: 0.55 };
+    days[2].gsc.impressions = { value: 2210, dod: 12, baseline: 2210, ratio: 1.0 };
+    days[2].gsc.position = { value: 11.2, dod: 1.4, baseline: 8.0, ratio: 1.4 };
+  }
+  const first = (src) => (days.find((d) => d[src]) || {})[src] || null;
+  const gen = `${TODAY}T06:17:03-06:00`;
+  return {
+    status,
+    generated_at: gen,
+    run_today: TODAY,
+    latest: { ga4: first('ga4'), gsc: first('gsc'), cf: first('cf') },
+    days,
+    queries_top10: [
+      ['example floor scrubber', 14, 210, 3.2, 4.1],
+      ['ride on sweeper used', 11, 480, 6.8, 6.9],
+      ['scrubber battery sample', 9, 160, 4.4, 9.0],
+      ['walk behind scrubber rental', 7, 300, 9.1, 7.0],
+      ['sweeper parts mock', 6, 95, 2.0, 2.2],
+    ].map(([query, clicks, impressions, position, position_prev]) => ({ query, clicks, impressions, position, position_prev })),
+    pages_top10: [
+      ['/machines/example-mini-hd', 9, 88],
+      ['/', 8, 410],
+      ['/parts/sample-squeegee', 5, 120],
+    ].map(([path, clicks, impressions]) => ({ path, clicks, impressions })),
+    gsc_window: { start: addDays(TODAY, -9), end: addDays(TODAY, -3) },
+    gsc_site: 'sc-domain:example.invalid',
+    channels_7d: { organic: 412, paid: 96, direct: 74, referral: 21, other: 0 },
+    channels_7d_days: 7,
+    sources_status: {
+      ga4: { ok: true, last_good: addDays(TODAY, -1), error: null, failing_since: null, fail_runs: 0 },
+      gsc: gscDown
+        ? { ok: false, last_good: addDays(TODAY, -6), error: '403 permission', failing_since: addDays(TODAY, -3), fail_runs: 3 }
+        : { ok: true, last_good: addDays(TODAY, -3), error: null, failing_since: null, fail_runs: 0 },
+      cf: { ok: true, last_good: addDays(TODAY, -1), error: null, failing_since: null, fail_runs: 0, day_basis: 'UTC' },
+    },
+    tripwire: { tag_gone: false, since: null },
+    units: { ctr: '%', err5xx_pct: '%', position: 'rank' },
+    lower_is_better: ['position', 'err5xx', 'err5xx_pct', 'threats'],
+    source: '01-WSS/Projects/Website-Migration/State/traffic-pulse.json',
+    ...(status === 'stale' ? { stale_since: addDays(TODAY, -2) } : {}),
+  };
+}
+
+function wssTrafficSnapshot(kind) {
+  const snap = snapshot();
+  if (kind === 'gsc-down') snap.tiles.wss_traffic = tile('DAILY', wssTrafficPayload({ gscDown: true }));
+  if (kind === 'stale') {
+    const t = tile('DAILY', { ...wssTrafficPayload({ status: 'stale' }), generated_at: `${addDays(TODAY, -2)}T06:17:03-06:00` }, 'stale');
+    t.error = `site-pulse last wrote ${addDays(TODAY, -2)}T06:17 — stale since ${addDays(TODAY, -2)}`;
+    snap.tiles.wss_traffic = t;
+  }
+  if (kind === 'empty') {
+    const t = tile('DAILY', {
+      status: 'empty', generated_at: null, latest: { ga4: null, gsc: null, cf: null }, days: [],
+      queries_top10: [], pages_top10: [], channels_7d: {}, sources_status: {}, tripwire: { tag_gone: false, since: null },
+      source: '01-WSS/Projects/Website-Migration/State/traffic-pulse.json',
+    }, 'stale');
+    t.error = "traffic-pulse.json not written yet — site-pulse.py hasn't run";
+    snap.tiles.wss_traffic = t;
+  }
+  return snap;
+}
+
 function snapshot() {
   return {
     schema: 1,
@@ -695,6 +822,7 @@ function snapshot() {
       // has something to open; one row carries a unit serial on a ticket, one
       // has lost its customer (a closed ticket), and the intake bot appears
       // under its own name.
+      wss_traffic: tile('DAILY', wssTrafficPayload()),
       wss_tape: tile('DAILY', {
         title: 'Crew Tape',
         date: TODAY,
@@ -2637,6 +2765,11 @@ const MODES = [
   ['--clog-quiet', () => captainsLogQuietSnapshot()],
   // The weather tile's four faces (W6). The default snapshot carries the
   // Watch; these are the other three.
+  // Site Pulse's other faces: Search Console down three days (S6 ⚫), the
+  // script missed a morning (stale), and day one before it has run (empty).
+  ['--pulse-gsc-down', () => wssTrafficSnapshot('gsc-down')],
+  ['--pulse-stale', () => wssTrafficSnapshot('stale')],
+  ['--pulse-empty', () => wssTrafficSnapshot('empty')],
   ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],
   ['--weather-clear', () => weatherSnapshot(weatherPayload({ alerts: [] }))],
   // Live gone AND no offline copy: the ONLY case allowed to say "feed

@@ -396,7 +396,7 @@ console.log('\nsubhead never contains me.name');
     const ORDER = [
       'yeoman', 'calendar', 'reminders', 'captains_log', 'dinner', 'weather', 'newsstand',
       'entertainment', 'local_events', 'today_games', 'bets_live', 'bets_ledger',
-      'cards', 'purser_due', 'wss_tape', 'watch_bill', 'ship_status',
+      'cards', 'purser_due', 'wss_tape', 'wss_traffic', 'watch_bill', 'ship_status',
     ];
 
     // The tens, and the first tile to cash them in. `captains_log` was slotted
@@ -407,7 +407,10 @@ console.log('\nsubhead never contains me.name');
     // reminders — band ASK, on the board anyway (Y1, Y15). Wren moved it to 5
     // on 2026-10-25 (WT13): the first insert to LEAD the board, so it has no
     // left neighbour and only needs the next tile on a ten above it.
-    const INSERTS = { yeoman: 5, captains_log: 25, watch_bill: 135 };
+    // Site Pulse (2026-11-02, S1) is the fourth, at 132 between Crew Tape and
+    // Watch Bill — the first insert whose neighbour is itself an insert.
+    const INSERTS = { yeoman: 5, captains_log: 25, wss_traffic: 132, watch_bill: 135 };
+    const anchored = (id) => REGISTRY[id].position % 10 === 0 || id in INSERTS;
 
     // -- the registry ------------------------------------------------------
     const onBoard = Object.entries(REGISTRY)
@@ -434,9 +437,10 @@ console.log('\nsubhead never contains me.name');
         // Neighbours still on their tens and the insert strictly between
         // them. Index arithmetic would only hold for the first insert — the
         // second (watch_bill, 2026-09-24) shifts every index after the first.
+        // A neighbour may itself be an insert (wss_traffic 132 / watch_bill 135).
         REGISTRY[id].position === pos &&
-          (i === 0 || REGISTRY[ORDER[i - 1]].position % 10 === 0) &&
-          REGISTRY[ORDER[i + 1]].position % 10 === 0 &&
+          (i === 0 || anchored(ORDER[i - 1])) &&
+          anchored(ORDER[i + 1]) &&
           (i === 0 || REGISTRY[ORDER[i - 1]].position < pos) &&
           pos < REGISTRY[ORDER[i + 1]].position,
         `${REGISTRY[ORDER[i - 1]]?.position} ${REGISTRY[id]?.position} ${REGISTRY[ORDER[i + 1]]?.position}`

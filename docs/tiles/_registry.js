@@ -47,6 +47,9 @@ export const REGISTRY = {
   cards: { band: 'HOURLY', position: 110, module: './tiles/cards.js', title: '🃏 Cards' },
   purser_due: { band: 'DAILY', position: 120, module: './tiles/purser_due.js', title: 'Purser — Due' },
   wss_tape: { band: 'DAILY', position: 130, module: './tiles/wss_tape.js', title: 'Crew Tape' },
+  // Site Pulse (S1): with the WSS cluster, straight after the tape — the tape
+  // is what the crew did, the pulse is who showed up. 132, nothing moved.
+  wss_traffic: { band: 'DAILY', position: 132, module: './tiles/wss_traffic.js', title: '📈 Site Pulse' },
   // The mini's own scheduled tasks, between Crew Tape (130) and Ship Status
   // (140) — the second tile slotted into the tens without a renumber.
   watch_bill: { band: 'DAILY', position: 135, module: './tiles/watch_bill.js', title: 'Watch Bill' },
