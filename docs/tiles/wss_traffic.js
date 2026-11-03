@@ -2,28 +2,37 @@
  * wss_traffic — Site Pulse.
  *
  * The WSS website's previous day, as a glance. Vault spec
- * `Site-Pulse-Tile-Spec.md`, rulings S1–S10. The engine reads the daily
+ * `Site-Pulse-Tile-Spec.md`, rulings S1–S14. The engine reads the daily
  * script's `traffic-pulse.json` into this payload; the page lays it out.
  *
- * TWO INDICATORS PER NUMBER, AND THEY HAVE DIFFERENT JOBS (S3).
+ * THE FACE IS ROWS (S11–S14, v1.2). Two dated groups — GA4, then Search
+ * Console — of one line per metric: dot · label · value · 28-day sparkline ·
+ * arrow, every row the same five columns so the values share one right edge.
+ * CTR, 5xx and Cloudflare's date ride one muted footer; 5xx earns a row only
+ * on a day it is above zero. Leads and carts at 0 · 0 are one quiet row.
+ *
+ * TWO INDICATORS PER NUMBER, AND THEY HAVE DIFFERENT JOBS (S3, S12).
  *   - The ARROW is day-over-day, printed as given: movement, not meaning, so
- *     it carries no colour at all. It is built in exactly one function,
- *     `arrow()`, and that function is the only place in this file that reads
- *     the day-over-day field (a source scan holds it).
- *   - The DOT is the engine's `ratio` — yesterday against the same-weekday
- *     baseline. `dotTone()` is the one function that chooses a colour, and it
- *     chooses from `ratio` alone. Against the day prior every Monday is green
- *     and every Saturday red; against the same weekday a red means something.
+ *     it carries no colour at all, sits last and faint, and a zero prints
+ *     nothing. It is built in exactly one function, `arrow()`, and that
+ *     function is the only place in this file that reads the day-over-day
+ *     field (a source scan holds it).
+ *   - The TONE is the engine's `ratio` — yesterday against the same-weekday
+ *     baseline. `dotTone()` is the one function that chooses a colour, it
+ *     chooses from `ratio` alone, and `toneOf()` is its one caller: the dot,
+ *     the value and the sparkline's last point all wear what it returns.
+ *     Against the day prior every Monday is green and every Saturday red;
+ *     against the same weekday a red means something.
  *
  * EACH BLOCK WEARS ITS OWN DATE (S4). GA4 and Cloudflare are yesterday;
- * Search Console lags 2–3 days. The two face chips print each block's own
- * `date` through `shortDay()` and nothing here relabels, averages or
- * interpolates across the lag — a Thursday that reads as Thursday is the truth.
+ * Search Console lags 2–3 days. Each group head prints its block's own
+ * `date` through `shortDay()`, plus `lags 2–3 days` when the two differ, and
+ * nothing here relabels, averages or interpolates across the lag — a Thursday that reads as Thursday is the truth.
  *
  * THE PAGE COMPUTES NO BASELINE (S10). No middle value, no ratio, no average: a null
  * ratio is a hollow dot with "no baseline yet". The arithmetic in this file is
- * the sparkline geometry (min/max to pixels), the 5xx bar heights, the channel
- * bar widths and one subtraction — a query's position against its prior week.
+ * the sparkline geometry (min/max to pixels, one function for face and
+ * sheet), the 5xx bar heights, the channel bar widths and one subtraction — a query's position against its prior week.
  *
  * A FAILED SOURCE IS GREYED, DATED AND SAYS WHY (S6) — never a blank, never a
  * zero: a zero is a fact and a failure is not. Three or more of the newest
@@ -128,31 +137,35 @@ export function dotTone(metricKey, ratio, lowerIsBetter) {
   return 'bad';
 }
 
-function dot(key, m, lower, dead) {
-  const tone = dead ? 'dead' : dotTone(key, m ? m.ratio : null, lower.includes(key));
+/**
+ * The row's tone — the dot's class AND the value's colour (S12). One call to
+ * dotTone, off `ratio` alone; a dead source is `dead` whatever its ratio.
+ */
+function toneOf(key, m, lower, dead) {
+  return dead ? 'dead' : dotTone(key, m ? m.ratio : null, lower.includes(key));
+}
+
+function dot(tone, m, tip) {
   const title =
-    tone === 'dead'
+    tip ||
+    (tone === 'dead'
       ? 'no data ' + DEAD_AFTER + '+ days'
       : tone === 'none'
         ? 'no baseline yet'
-        : 'usual for this weekday: ' + fmtNum(m.baseline);
+        : 'usual for this weekday: ' + fmtNum(m && m.baseline));
   return el('span', { cls: 'pulse-dot pulse-dot-' + tone, attrs: { title, 'aria-label': title } });
 }
 
 /**
  * The arrow and its delta — day-over-day, printed as given, no colour (S3).
+ * A zero delta prints nothing (S14): `– 0` is not news.
  */
 function arrow(m) {
-  // The ONLY reader of `dod` in this module: the dot never sees it.
+  // The ONLY reader of `dod` in this module: the dot and the value never see it.
   const d = num(m ? m.dod : null);
-  if (d === null) return null;
-  const text = d > 0 ? '▲ ' + String(d) : d < 0 ? '▼ ' + String(-d) : '– 0';
+  if (d === null || d === 0) return null;
+  const text = d > 0 ? '▲ ' + String(d) : '▼ ' + String(-d);
   return el('span', { cls: 'pulse-arrow', text, attrs: { title: 'vs the day before' } });
-}
-
-/** One number's pair: arrow + dot. */
-function marks(key, m, lower, dead) {
-  return el('span', { cls: 'pulse-marks' }, [arrow(m), dot(key, m, lower, dead)]);
 }
 
 // ------------------------------------------------------------- source state
@@ -180,104 +193,9 @@ function statusLine(src, s) {
   return el('p', { cls: 'pulse-src-down', text: parts.join(' · ') });
 }
 
-// ------------------------------------------------------------------ the face
+// --------------------------------------------------------------- sparklines
 
-function dateChip(block, tip) {
-  const b = obj(block);
-  if (!b || typeof b.date !== 'string') return null;
-  return el('span', { cls: 'pulse-date', text: day(b.date), attrs: { title: tip || null } });
-}
-
-function cell(label, valueText, markNodes, grey) {
-  return el('div', { cls: 'pulse-cell' + (grey ? ' pulse-cell-grey' : '') }, [
-    el('span', { cls: 'pulse-label', text: label }),
-    el('span', { cls: 'pulse-value', text: grey ? '—' : valueText }),
-    el('span', { cls: 'pulse-ind' }, markNodes),
-  ]);
-}
-
-function group(cls, chip, cells, down) {
-  return el('div', { cls: 'pulse-group ' + cls }, [
-    chip ? el('div', { cls: 'pulse-group-head' }, [chip]) : null,
-    el('div', { cls: 'pulse-cells' }, cells),
-    down,
-  ]);
-}
-
-function face(data, days, lower) {
-  const latest = obj(data.latest) || {};
-  const ga4 = obj(latest.ga4);
-  const gsc = obj(latest.gsc);
-  const cf = obj(latest.cf);
-
-  const state = {};
-  for (const src of SOURCES) {
-    const s = failed(data, src);
-    state[src] = { down: s, dead: !!s && nullRun(days, src) >= DEAD_AFTER };
-  }
-  const one = (block, src, key) => {
-    const m = metric(block, key);
-    return state[src].down ? dot(key, null, lower, state[src].dead) : marks(key, m, lower, false);
-  };
-
-  const g = state.ga4;
-  const leads = metric(ga4, 'leads');
-  const carts = metric(ga4, 'carts');
-  const ga4Cells = [
-    cell('Sessions', fmtNum(metric(ga4, 'sessions')?.value), [one(ga4, 'ga4', 'sessions')], !!g.down),
-    cell(
-      'Leads · Carts',
-      fmtNum(leads?.value) + ' · ' + fmtNum(carts?.value),
-      [one(ga4, 'ga4', 'leads'), el('span', { cls: 'pulse-sep', text: '·' }), one(ga4, 'ga4', 'carts')],
-      !!g.down
-    ),
-  ];
-
-  const s = state.gsc;
-  const gscCells = [
-    cell('Organic clicks', fmtNum(metric(gsc, 'clicks')?.value), [one(gsc, 'gsc', 'clicks')], !!s.down),
-    cell('Impressions', fmtNum(metric(gsc, 'impressions')?.value), [one(gsc, 'gsc', 'impressions')], !!s.down),
-  ];
-
-  // S4: the GSC chip explains itself only when the two dates actually differ.
-  const lag = ga4 && gsc && typeof ga4.date === 'string' && ga4.date !== gsc.date;
-
-  const grid = el('div', { cls: 'pulse-grid' }, [
-    group('pulse-group-ga4', dateChip(ga4), ga4Cells, g.down ? statusLine('ga4', g.down) : null),
-    group('pulse-group-gsc', dateChip(gsc, lag ? LAG_TIP : null), gscCells, s.down ? statusLine('gsc', s.down) : null),
-  ]);
-
-  // The one line under the four: CTR · Pos · 5xx, each with its own pair.
-  const seg = (label, block, src, key, unit) =>
-    el('span', { cls: 'pulse-seg' + (state[src].down ? ' pulse-seg-grey' : '') }, [
-      el('span', {
-        text: label + ' ' + (state[src].down ? '—' : fmtNum(metric(block, key)?.value) + (num(metric(block, key)?.value) === null ? '' : unit)),
-      }),
-      one(block, src, key),
-    ]);
-  const sub = el('div', { cls: 'pulse-sub' }, [
-    seg('CTR', gsc, 'gsc', 'ctr', '%'),
-    seg('Pos', gsc, 'gsc', 'position', ''),
-    seg('5xx', cf, 'cf', 'err5xx_pct', '%'),
-  ]);
-
-  return [grid, sub, state.cf.down ? statusLine('cf', state.cf.down) : null];
-}
-
-// ----------------------------------------------------------------- the sheet
-
-const SPARK_W = 300;
-const SPARK_H = 54;
-const PAD_X = 4;
-const PAD_Y = 10;
 const round = (n) => Math.round(n * 10) / 10;
-
-const SPARKS = [
-  ['ga4', 'sessions', 'Sessions'],
-  ['gsc', 'clicks', 'Organic clicks'],
-  ['gsc', 'impressions', 'Impressions'],
-  ['gsc', 'position', 'Avg position · up is better'],
-];
 
 /** The series for one metric, oldest → newest, a gap (null) where the block is missing. */
 function series(chrono, src, key) {
@@ -285,11 +203,12 @@ function series(chrono, src, key) {
 }
 
 /**
- * One 28-day sparkline, drawn by hand (rule 3 — no chart library).
+ * The one sparkline geometry, shared by the face and the sheet (S13).
  * The ONLY arithmetic on days[]: min/max of what is drawn, to pixels.
- * `invert` turns the Y axis over so a better position sits higher.
+ * `invert` turns the Y axis over so a better position sits higher; a null
+ * lifts the pen. Returns null when there is nothing to draw.
  */
-function spark(vals, base, label, invert) {
+function sparkGeometry(vals, box, base, invert) {
   const have = vals.filter((v) => v !== null);
   if (!have.length) return null;
   const range = base === null ? have : have.concat([base]);
@@ -300,9 +219,9 @@ function spark(vals, base, label, invert) {
     lo -= 1;
   }
   const n = vals.length;
-  const xAt = (i) => (n === 1 ? SPARK_W / 2 : PAD_X + ((SPARK_W - PAD_X * 2) * i) / (n - 1));
+  const xAt = (i) => (n === 1 ? box.w / 2 : box.px + ((box.w - box.px * 2) * i) / (n - 1));
   const frac = (v) => (invert ? (v - lo) / (hi - lo) : (hi - v) / (hi - lo));
-  const yAt = (v) => PAD_Y + frac(v) * (SPARK_H - PAD_Y * 2);
+  const yAt = (v) => box.py + frac(v) * (box.h - box.py * 2);
 
   let d = '';
   let pen = false;
@@ -316,25 +235,153 @@ function spark(vals, base, label, invert) {
     pen = true;
     last = i;
   });
+  return { d: d.trim(), last, x: xAt(last), y: yAt(vals[last]), yAt };
+}
+
+// ------------------------------------------------------------------ the face
+
+const FACE = { w: 96, h: 22, px: 3, py: 3 };
+
+/** The row's 28 days: a faint line, the last point in the row's tone. < 2 points → nothing. */
+function faceSpark(vals, tone, invert) {
+  if (vals.filter((v) => v !== null).length < 2) return null;
+  const g = sparkGeometry(vals, FACE, null, invert);
+  return svgEl('svg', { cls: 'pulse-face-spark', attrs: { viewBox: '0 0 ' + FACE.w + ' ' + FACE.h, 'aria-hidden': 'true' } }, [
+    svgEl('path', { cls: 'pulse-face-line', attrs: { d: g.d } }),
+    svgEl('circle', { cls: 'pulse-face-now pulse-spark-now-' + tone, attrs: { cx: round(g.x), cy: round(g.y), r: 2.6 } }),
+  ]);
+}
+
+/** One row: dot · label · value · sparkline · arrow — every row the same five columns. */
+function line(key, label, valueText, tone, dotNode, sparkNode, arrowNode) {
+  return el('div', { cls: 'pulse-line pulse-line-' + key }, [
+    dotNode,
+    el('span', { cls: 'pulse-label', text: label }),
+    el('span', { cls: 'pulse-value pulse-value-' + tone, text: valueText }),
+    el('span', { cls: 'pulse-spark-cell' }, [sparkNode]),
+    el('span', { cls: 'pulse-arrow-cell' }, [arrowNode]),
+  ]);
+}
+
+/** A number with its unit, or '—' when it is not a number. */
+function withUnit(v, unit) {
+  return num(v) === null ? '—' : fmtNum(v) + unit;
+}
+
+function face(data, days, lower) {
+  const latest = obj(data.latest) || {};
+  const ga4 = obj(latest.ga4);
+  const gsc = obj(latest.gsc);
+  const cf = obj(latest.cf);
+  const blocks = { ga4, gsc, cf };
+  const chrono = days.slice().reverse();
+
+  const state = {};
+  for (const src of SOURCES) {
+    const s = failed(data, src);
+    state[src] = { down: s, dead: !!s && nullRun(days, src) >= DEAD_AFTER };
+  }
+
+  // S6: a down source greys in place — '—', its dot hollow or black, no line, no arrow.
+  const row = (src, key, label, unit) => {
+    const st = state[src];
+    const m = st.down ? null : metric(blocks[src], key);
+    const tone = toneOf(key, m, lower, st.dead);
+    return line(
+      key,
+      label,
+      st.down ? '—' : withUnit(m?.value, unit),
+      tone,
+      dot(tone, m),
+      st.down ? null : faceSpark(series(chrono, src, key), tone, key === 'position'),
+      st.down ? null : arrow(m)
+    );
+  };
+
+  const ga4Rows = [row('ga4', 'sessions', 'Sessions', '')];
+  // S14: zero is quiet — both at 0 is one row with nothing to watch.
+  const leads = num(metric(ga4, 'leads')?.value);
+  const carts = num(metric(ga4, 'carts')?.value);
+  if (!state.ga4.down && leads === 0 && carts === 0) {
+    ga4Rows.push(line('leads-carts', 'Leads · Carts', '0 · 0', 'none', dot('none', null, 'none on this day'), null, null));
+  } else {
+    ga4Rows.push(row('ga4', 'leads', 'Leads', ''), row('ga4', 'carts', 'Carts', ''));
+  }
+  // S11: 5xx earns a row only on a day it is above zero.
+  const err = num(metric(cf, 'err5xx_pct')?.value);
+  if (!state.cf.down && err !== null && err > 0) ga4Rows.push(row('cf', 'err5xx_pct', '5xx', '%'));
+
+  const gscRows = [
+    row('gsc', 'clicks', 'Organic clicks', ''),
+    row('gsc', 'impressions', 'Impressions', ''),
+    row('gsc', 'position', 'Avg position', ''),
+  ];
+
+  // S4: the GSC head explains itself only when the two dates actually differ.
+  const lag = ga4 && gsc && typeof ga4.date === 'string' && ga4.date !== gsc.date;
+
+  const group = (src, name, rows, note) =>
+    el('div', { cls: 'pulse-group pulse-group-' + src + (state[src].down ? ' pulse-group-grey' : '') }, [
+      el('div', { cls: 'pulse-group-head' }, [
+        el('span', { cls: 'pulse-group-name', text: name }),
+        blocks[src] && typeof blocks[src].date === 'string'
+          ? el('span', { cls: 'pulse-date', text: day(blocks[src].date) + (note ? ' · lags 2–3 days' : ''), attrs: { title: note } })
+          : null,
+      ]),
+      el('div', { cls: 'pulse-lines' }, rows),
+      state[src].down ? statusLine(src, state[src].down) : null,
+    ]);
+
+  // The footer: CTR · 5xx · Cloudflare's own date.
+  const foot = [
+    'CTR ' + (state.gsc.down ? '—' : withUnit(metric(gsc, 'ctr')?.value, '%')),
+    '5xx ' + (state.cf.down ? '—' : withUnit(err, '%')),
+  ];
+  if (cf && typeof cf.date === 'string') foot.push('CF ' + day(cf.date));
+
+  return [
+    group('ga4', 'GA4', ga4Rows, null),
+    group('gsc', 'Search Console', gscRows, lag ? LAG_TIP : null),
+    el('p', { cls: 'pulse-footline', text: foot.join(' · ') }),
+    state.cf.down ? statusLine('cf', state.cf.down) : null,
+  ];
+}
+
+// ----------------------------------------------------------------- the sheet
+
+const SPARK_W = 300;
+const SPARK_H = 54;
+const PAD_X = 4;
+const SHEET = { w: SPARK_W, h: SPARK_H, px: PAD_X, py: 10 };
+
+const SPARKS = [
+  ['ga4', 'sessions', 'Sessions'],
+  ['gsc', 'clicks', 'Organic clicks'],
+  ['gsc', 'impressions', 'Impressions'],
+  ['gsc', 'position', 'Avg position · up is better'],
+];
+
+/** One sheet sparkline, drawn by hand (rule 3 — no chart library), off the shared geometry. */
+function spark(vals, base, label, invert) {
+  const g = sparkGeometry(vals, SHEET, base, invert);
+  if (!g) return null;
 
   const kids = [svgEl('title', { text: label })];
   if (base !== null) {
     kids.push(
       svgEl('line', {
         cls: 'pulse-spark-base',
-        attrs: { x1: PAD_X, x2: SPARK_W - PAD_X, y1: round(yAt(base)), y2: round(yAt(base)) },
+        attrs: { x1: PAD_X, x2: SPARK_W - PAD_X, y1: round(g.yAt(base)), y2: round(g.yAt(base)) },
       })
     );
   }
-  kids.push(svgEl('path', { cls: 'pulse-spark-line', attrs: { d: d.trim() } }));
-  const lx = xAt(last);
-  const ly = yAt(vals[last]);
-  kids.push(svgEl('circle', { cls: 'pulse-spark-now', attrs: { cx: round(lx), cy: round(ly), r: 2.6 } }));
+  kids.push(svgEl('path', { cls: 'pulse-spark-line', attrs: { d: g.d } }));
+  kids.push(svgEl('circle', { cls: 'pulse-spark-now', attrs: { cx: round(g.x), cy: round(g.y), r: 2.6 } }));
   kids.push(
     svgEl('text', {
       cls: 'pulse-spark-label',
-      attrs: { x: SPARK_W - PAD_X, y: round(ly < SPARK_H / 2 ? ly + 10 : ly - 5), 'text-anchor': 'end' },
-      text: fmtNum(vals[last]),
+      attrs: { x: SPARK_W - PAD_X, y: round(g.y < SPARK_H / 2 ? g.y + 10 : g.y - 5), 'text-anchor': 'end' },
+      text: fmtNum(vals[g.last]),
     })
   );
 

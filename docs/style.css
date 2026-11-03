@@ -2695,12 +2695,15 @@ body {
 
 /* ------------------------------------------------------------ wss_traffic ("Site Pulse")
 
-   The website's previous day. Two marks per number with two jobs (S3): the
-   arrow is day-over-day movement and is never coloured; the dot is the
-   engine's same-weekday ratio and is the ONLY thing in this block that names a
-   tone token (test-wss-traffic scans it). Each block wears its own date (S4). */
+   The website's previous day. The face is rows (S11): two dated groups, one
+   line per metric, every line the same five columns — dot · label · value ·
+   sparkline · arrow — so the values share one right edge. The tone tokens
+   appear ONLY on .pulse-dot-*, .pulse-value-* and .pulse-spark-now-* (S12),
+   all three chosen by one dotTone() off the same-weekday ratio; the arrow is
+   day-over-day movement, last, faint and never coloured (S3). test-wss-traffic
+   scans this block. Each group wears its own date (S4). */
 
-.pulse-face { display: flex; flex-direction: column; gap: 8px; }
+.pulse-face { display: flex; flex-direction: column; gap: 10px; }
 .pulse-tappable { cursor: pointer; }
 .pulse-tappable:focus-visible { outline: 1px solid var(--brass); outline-offset: 3px; border-radius: 6px; }
 
@@ -2713,30 +2716,69 @@ body {
   padding: 1px 8px;
 }
 
-.pulse-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.pulse-group { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.pulse-group-head { display: flex; }
-.pulse-date {
+.pulse-group { display: flex; flex-direction: column; min-width: 0; }
+.pulse-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 2px;
   font-size: 10.5px;
   color: var(--text-faint);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
 }
+.pulse-group-name { font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+.pulse-date { font-variant-numeric: tabular-nums; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .pulse-date[title] { text-decoration: underline dotted; text-underline-offset: 2px; }
-.pulse-cells { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-@media (min-width: 640px) {
-  .pulse-grid { grid-template-columns: 1fr 1fr; }
-}
 
-.pulse-cell { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.pulse-label { font-size: 10.5px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pulse-value { font-family: var(--mono, ui-monospace, monospace); font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; }
-.pulse-ind { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
-.pulse-marks { display: inline-flex; align-items: center; gap: 4px; }
-.pulse-arrow { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.pulse-sep { color: var(--text-faint); }
-.pulse-cell-grey .pulse-value,
-.pulse-cell-grey .pulse-label { color: var(--text-faint); }
+.pulse-lines { display: flex; flex-direction: column; }
+.pulse-line {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto 96px 52px;
+  align-items: center;
+  column-gap: 8px;
+  min-height: 34px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.pulse-line:last-child { border-bottom: 0; }
+.pulse-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pulse-value {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.pulse-value-good { color: var(--good); }
+.pulse-value-warn { color: var(--warn); }
+.pulse-value-bad  { color: var(--bad); }
+.pulse-value-none { color: var(--text); }
+.pulse-value-dead { color: var(--text-faint); }
+.pulse-group-grey .pulse-value,
+.pulse-group-grey .pulse-label { color: var(--text-faint); }
+
+.pulse-spark-cell { display: flex; align-items: center; height: 22px; }
+.pulse-face-spark { display: block; width: 96px; height: 22px; overflow: visible; }
+.pulse-face-line { fill: none; stroke: var(--text-faint); stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+.pulse-spark-now-good { fill: var(--good); }
+.pulse-spark-now-warn { fill: var(--warn); }
+.pulse-spark-now-bad  { fill: var(--bad); }
+.pulse-spark-now-none { fill: var(--text-dim); }
+.pulse-spark-now-dead { fill: var(--text-faint); }
+
+.pulse-arrow-cell { text-align: right; white-space: nowrap; }
+.pulse-arrow { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+/* Narrow phones: tighter columns; under 340 the sparkline goes (S11). */
+@media (max-width: 380px) {
+  .pulse-line { grid-template-columns: 8px minmax(0, 1fr) auto 72px 44px; column-gap: 6px; }
+  .pulse-face-spark { width: 72px; }
+}
+@media (max-width: 339px) {
+  .pulse-line { grid-template-columns: 8px minmax(0, 1fr) auto 44px; }
+  .pulse-spark-cell { display: none; }
+}
 
 .pulse-dot {
   display: inline-block;
@@ -2752,10 +2794,8 @@ body {
 .pulse-dot-none { background: transparent; border: 1.5px solid var(--text-faint); }
 .pulse-dot-dead { background: rgba(0, 0, 0, 0.9); border: 1px solid var(--text-dim); }
 
-.pulse-sub { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-.pulse-seg { display: inline-flex; align-items: center; gap: 5px; }
-.pulse-seg-grey { color: var(--text-faint); }
-.pulse-src-down { margin: 0; font-size: 11px; color: var(--text-faint); }
+.pulse-footline { margin: 0; font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.pulse-src-down { margin: 2px 0 0; font-size: 11px; color: var(--text-faint); }
 
 /* -- the sheet -- */
 .pulse-sec { margin-bottom: 18px; }

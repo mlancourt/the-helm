@@ -4,12 +4,16 @@
  *
  *   node tools/test-wss-traffic.js
  *
- * Vault spec `Site-Pulse-Tile-Spec.md`, S1–S10. The rulings with teeth:
+ * Vault spec `Site-Pulse-Tile-Spec.md`, S1–S14. The rulings with teeth:
  *
  *   S3  two indicators, two jobs — the arrow is day-over-day and never
- *       coloured; the dot is `ratio` against the same-weekday baseline, and
+ *       coloured; the tone is `ratio` against the same-weekday baseline, and
  *       nothing that chooses a colour reads the day-over-day field. Held at
  *       the DOM, in the module source and in the stylesheet.
+ *   S11 the face is rows in two dated groups; CTR · 5xx · CF in a footer.
+ *   S12 the value wears the dot's tone — one dotTone(), one caller.
+ *   S13 a 28-day sparkline per row off the sheet's own geometry.
+ *   S14 zero is quiet: 0 · 0 leads/carts is one row, a zero delta no arrow.
  *   S4  each block wears its own date; GSC's lag is shown, never hidden.
  *   S6  a failed source greys in place with its last good date and why;
  *       three newest days missing turns its dots black.
@@ -43,6 +47,7 @@ const cls = (node) => node.className;
   const mod = await import('../docs/tiles/wss_traffic.js');
   const { shortDay } = await import('../docs/lib/fmt.js');
   const SRC = read('docs', 'tiles', 'wss_traffic.js');
+  const CODE = SRC.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   const CSS = read('docs', 'style.css');
 
   /** Render a tile; returns {root, sheet()} — sheet() taps the face and builds the panel body. */
@@ -68,8 +73,11 @@ const cls = (node) => node.className;
   const clean = mockFile('helm-data.json').tiles.wss_traffic;
   const D = clean.data;
   const groupOf = (root, src) => root.querySelector('.pulse-group-' + src);
-  const cellsOf = (root) => root.querySelectorAll('.pulse-cell');
+  const linesOf = (root) => root.querySelectorAll('.pulse-line');
+  const lineOf = (root, key) => root.querySelector('.pulse-line-' + key);
+  const valueOf = (root, key) => lineOf(root, key).querySelector('.pulse-value');
   const dotIn = (node) => node.querySelectorAll('.pulse-dot').map(cls);
+  const LAG = ' · lags 2–3 days';
 
   // -- the registry ------------------------------------------------------------
   console.log('\nregistry');
@@ -81,50 +89,111 @@ const cls = (node) => node.className;
   const { REGISTRY } = await import('../docs/tiles/_registry.js');
   check('Crew Tape 130 and Watch Bill 135 did not move', REGISTRY.wss_tape.position === 130 && REGISTRY.watch_bill.position === 135);
   check('the SW precaches the module', /'\.\/tiles\/wss_traffic\.js'/.test(read('docs', 'sw.js')));
-  check('CACHE_VERSION is helm-v64', /CACHE_VERSION = 'helm-v64'/.test(read('docs', 'sw.js')));
-  check('APP_VERSION is 1.43.0', /APP_VERSION = '1\.43\.0'/.test(read('docs', 'config.js')));
+  {
+    const cv = Number((read('docs', 'sw.js').match(/CACHE_VERSION = 'helm-v(\d+)'/) || [])[1]);
+    const av = (read('docs', 'config.js').match(/APP_VERSION = '(\d+)\.(\d+)\.\d+'/) || []).slice(1).map(Number);
+    check('CACHE_VERSION is at least helm-v65', cv >= 65, String(cv));
+    check('APP_VERSION is at least 1.44.0', av[0] > 1 || (av[0] === 1 && av[1] >= 44), av.join('.'));
+  }
 
   // -- the clean face ------------------------------------------------------------
-  console.log('\nthe face — a clean day');
+  console.log('\nthe face — rows in two dated groups (S11)');
   const { root } = render(clean);
-  const cells = cellsOf(root);
-  check('four cells', cells.length === 4, String(cells.length));
-  const labels = cells.map((c) => c.querySelector('.pulse-label').textContent);
-  check('in S2 order', labels.join('|') === 'Sessions|Leads · Carts|Organic clicks|Impressions', labels.join('|'));
-  check('sessions prints its value', cells[0].querySelector('.pulse-value').textContent === '87');
-  check('leads · carts is one cell, "3 · 1"', cells[1].querySelector('.pulse-value').textContent === '3 · 1');
-  check('clicks and impressions print theirs', cells[2].querySelector('.pulse-value').textContent === '27' && cells[3].querySelector('.pulse-value').textContent === '2,210');
+  check('no v1.1 cells or sub-line remain', root.querySelectorAll('.pulse-cell').length === 0 && root.querySelectorAll('.pulse-sub').length === 0);
+  const heads = root.querySelectorAll('.pulse-group-head');
+  check('two group heads', heads.length === 2, String(heads.length));
+  check('heads read GA4 then Search Console', heads.map((h) => h.querySelector('.pulse-group-name').textContent).join('|') === 'GA4|Search Console');
+  const dates = root.querySelectorAll('.pulse-date');
+  check('the GA4 head wears the GA4 block’s own date, no suffix', dates[0].textContent === shortDay(D.latest.ga4.date) && !dates[0].getAttribute('title'), dates[0].textContent);
+  check('S4: the GSC head wears its own date + the lag suffix', dates[1].textContent === shortDay(D.latest.gsc.date) + LAG, dates[1].textContent);
+  check('S4: the fixture’s GSC date is older than GA4’s', D.latest.gsc.date < D.latest.ga4.date);
+  check('S4: the GSC date keeps its tooltip', dates[1].getAttribute('title') === 'Search Console reports 2–3 days behind');
 
-  const chips = root.querySelectorAll('.pulse-date');
-  check('two date chips', chips.length === 2, String(chips.length));
-  check('the GA4 chip is the GA4 block’s own date', chips[0].textContent === shortDay(D.latest.ga4.date), chips[0].textContent);
-  check('the GSC chip is the GSC block’s own date', chips[1].textContent === shortDay(D.latest.gsc.date), chips[1].textContent);
-  check('S4: the fixture’s GSC date is older than GA4’s, and the chips differ', D.latest.gsc.date < D.latest.ga4.date && chips[0].textContent !== chips[1].textContent);
-  check('S4: the GSC chip says why', chips[1].getAttribute('title') === 'Search Console reports 2–3 days behind');
-  check('the GA4 chip carries no lag note', !chips[0].getAttribute('title'));
+  const lines = linesOf(root);
+  const labels = lines.map((n) => n.querySelector('.pulse-label').textContent);
+  check('six rows when carts > 0, in S11 order', labels.join('|') === 'Sessions|Leads|Carts|Organic clicks|Impressions|Avg position', labels.join('|'));
+  check('GA4 rows sit in the GA4 group', groupOf(root, 'ga4').querySelectorAll('.pulse-line').length === 3);
+  check('GSC rows sit in the GSC group', groupOf(root, 'gsc').querySelectorAll('.pulse-line').length === 3);
+  check('every row is the same five cells', lines.every((n) => n.childNodes.length === 5 && n.childNodes.map(cls).slice(1).join('|').replace(/pulse-value [\w-]+/, 'pulse-value') === 'pulse-label|pulse-value|pulse-spark-cell|pulse-arrow-cell'));
+  const vals = lines.map((n) => n.querySelector('.pulse-value').textContent);
+  check('values print as given', vals.join('|') === '87|3|1|27|2,210|11.2', vals.join('|'));
 
-  check('sessions at 0.66 → warn', dotIn(cells[0]).join() === 'pulse-dot pulse-dot-warn', dotIn(cells[0]).join());
-  check('leads at null → hollow, carts at 1.0 → good', dotIn(cells[1]).join('|') === 'pulse-dot pulse-dot-none|pulse-dot pulse-dot-good', dotIn(cells[1]).join('|'));
-  check('the hollow dot says "no baseline yet"', cells[1].querySelector('.pulse-dot-none').getAttribute('title') === 'no baseline yet');
-  check('clicks at 0.55 → bad', dotIn(cells[2]).join() === 'pulse-dot pulse-dot-bad', dotIn(cells[2]).join());
-  check('impressions at 1.0 → good', dotIn(cells[3]).join() === 'pulse-dot pulse-dot-good');
+  // S12: the value wears the tone.
+  const vcls = (key) => cls(valueOf(root, key));
+  check('sessions 0.66 → value warn', vcls('sessions') === 'pulse-value pulse-value-warn', vcls('sessions'));
+  check('clicks 0.55 → value bad', vcls('clicks') === 'pulse-value pulse-value-bad', vcls('clicks'));
+  check('impressions 1.0 → value good', vcls('impressions') === 'pulse-value pulse-value-good', vcls('impressions'));
+  check('leads null → value none', vcls('leads') === 'pulse-value pulse-value-none', vcls('leads'));
+  check('carts 1.0 → value good', vcls('carts') === 'pulse-value pulse-value-good');
+  check('position 1.4, lower is better → value warn (would be good un-inverted)', vcls('position') === 'pulse-value pulse-value-warn', vcls('position'));
+  check('every row’s dot and value wear the same tone', lines.every((n) => dotIn(n)[0].replace('pulse-dot pulse-dot-', '') === cls(n.querySelector('.pulse-value')).replace('pulse-value pulse-value-', '')));
+  check('the hollow dot says "no baseline yet"', lineOf(root, 'leads').querySelector('.pulse-dot-none').getAttribute('title') === 'no baseline yet');
 
-  const arrows = root.querySelectorAll('.pulse-arrow').map((n) => n.textContent);
-  check('arrows print the delta as given: ▼ 9 · ▲ 2 · – 0 · ▼ 21 · ▲ 12', arrows.slice(0, 5).join(' | ') === '▼ 9 | ▲ 2 | – 0 | ▼ 21 | ▲ 12', arrows.join(' | '));
+  // S3 + S14: the arrow — faint, last, and nothing at zero.
+  const arrows = lines.map((n) => n.querySelector('.pulse-arrow-cell').textContent);
+  check('arrows: ▼ 9 · ▲ 2 · (carts 0: nothing) · ▼ 21 · ▲ 12 · ▲ 1.4', arrows.join('|') === '▼ 9|▲ 2||▼ 21|▲ 12|▲ 1.4', arrows.join('|'));
+  check('S14: a zero delta has no arrow node at all', lineOf(root, 'carts').querySelectorAll('.pulse-arrow').length === 0);
+  check('no "– 0" anywhere on the face', !root.textContent.includes('– 0'));
   check('every arrow wears the one plain class — no tone', root.querySelectorAll('.pulse-arrow').every((n) => cls(n) === 'pulse-arrow'));
 
-  const sub = root.querySelector('.pulse-sub');
-  check('the muted line: CTR · Pos · 5xx', /^CTR 2\.3%.*Pos 11\.2.*5xx 0%/.test(sub.textContent), sub.textContent);
-  const segs = sub.querySelectorAll('.pulse-seg');
-  check('position at 1.4, lower is better → warn (would be good un-inverted)', dotIn(segs[1]).join() === 'pulse-dot pulse-dot-warn', dotIn(segs[1]).join());
-  check('5xx has no baseline → hollow', dotIn(segs[2]).join() === 'pulse-dot pulse-dot-none');
-  check('no source is down', root.querySelectorAll('.pulse-src-down').length === 0);
+  // S13: the sparkline on the face.
+  const faceSparks = (n) => n.querySelectorAll('svg');
+  check('each row with ≥ 2 points has exactly one face sparkline', lines.every((n) => faceSparks(n).length === 1 && cls(faceSparks(n)[0]) === 'pulse-face-spark'));
+  check('face sparklines are inline SVG', root.querySelectorAll('.pulse-face-spark').every((n) => n.namespaceURI === 'http://www.w3.org/2000/svg'));
+  check('no baseline line and no label on the face', root.querySelectorAll('.pulse-spark-base').length === 0 && root.querySelectorAll('text').length === 0);
+  check('the last point wears the row’s tone', lines.every((n) => {
+    const c = n.querySelector('circle');
+    return cls(c) === 'pulse-face-now pulse-spark-now-' + cls(n.querySelector('.pulse-value')).replace('pulse-value pulse-value-', '') && c.getAttribute('r') === '2.6';
+  }));
+  check('viewBox 96×22', root.querySelectorAll('.pulse-face-spark').every((n) => n.getAttribute('viewBox') === '0 0 96 22'));
+
+  // S11: the footer.
+  const foot = root.querySelector('.pulse-footline');
+  check('footer: CTR · 5xx · CF date', foot && foot.textContent === 'CTR 2.3% · 5xx 0% · CF ' + shortDay(D.latest.cf.date), foot && foot.textContent);
+  check('5xx at 0 → footer only, no row', !lineOf(root, 'err5xx_pct'));
+  check('no source is down', root.querySelectorAll('.pulse-src-down').length === 0 && root.querySelectorAll('.pulse-group-grey').length === 0);
 
   const face = root.querySelector('.pulse-face');
   check('the face is a role=button div, focusable', face.tagName === 'DIV' && face.getAttribute('role') === 'button' && face.getAttribute('tabindex') === '0');
   check('S8: no buttons and no links on the face', root.querySelectorAll('button').length === 0 && root.querySelectorAll('a').length === 0);
   check('S8: no dollar sign on the face', !root.textContent.includes('$'));
 
+  // -- S14: zero is quiet ---------------------------------------------------------
+  console.log('\nS14 — zero is quiet');
+  {
+    const z = clone(clean);
+    z.data.latest.ga4.leads = { value: 0, dod: -3, baseline: 1, ratio: 0 };
+    z.data.latest.ga4.carts = { value: 0, dod: -1, baseline: 1, ratio: 0 };
+    const r = render(z).root;
+    const lb = linesOf(r).map((n) => n.querySelector('.pulse-label').textContent);
+    check('both 0 → five rows, one "Leads · Carts"', lb.join('|') === 'Sessions|Leads · Carts|Organic clicks|Impressions|Avg position', lb.join('|'));
+    const lc = lineOf(r, 'leads-carts');
+    check('its value is "0 · 0", toneless', lc.querySelector('.pulse-value').textContent === '0 · 0' && cls(lc.querySelector('.pulse-value')) === 'pulse-value pulse-value-none');
+    check('a hollow dot even at ratio 0', dotIn(lc).join() === 'pulse-dot pulse-dot-none');
+    check('no sparkline, no arrow', lc.querySelectorAll('svg').length === 0 && lc.querySelectorAll('.pulse-arrow').length === 0);
+    const one = clone(z);
+    one.data.latest.ga4.carts.value = 2;
+    const r1 = render(one).root;
+    check('either > 0 → two normal rows', !!lineOf(r1, 'leads') && !!lineOf(r1, 'carts') && !lineOf(r1, 'leads-carts') && valueOf(r1, 'carts').textContent === '2');
+    check('and a leads 0 at ratio 0 is bad like any other 0', cls(valueOf(r1, 'leads')) === 'pulse-value pulse-value-bad');
+    const odd = clone(z);
+    odd.data.latest.ga4.leads.value = '0';
+    const r2 = render(odd).root;
+    check('a non-numeric value falls through to two rows with —', !lineOf(r2, 'leads-carts') && valueOf(r2, 'leads').textContent === '—' && valueOf(r2, 'carts').textContent === '0');
+  }
+
+  // -- 5xx earns a row ------------------------------------------------------------
+  console.log('\n5xx above zero');
+  {
+    const e = clone(clean);
+    e.data.latest.cf.err5xx_pct = { value: 0.4, dod: 0.4, baseline: 0.1, ratio: 4 };
+    const r = render(e).root;
+    const row = lineOf(r, 'err5xx_pct');
+    check('a 5xx row appears', !!row && row.querySelector('.pulse-label').textContent === '5xx' && row.querySelector('.pulse-value').textContent === '0.4%');
+    check('under the GA4 group, last', groupOf(r, 'ga4').querySelectorAll('.pulse-line').pop() === row);
+    check('lower is better: ratio 4 → bad', cls(row.querySelector('.pulse-value')) === 'pulse-value pulse-value-bad');
+    check('and the footer still reads it', r.querySelector('.pulse-footline').textContent.includes('5xx 0.4%'));
+  }
   // -- dotTone: the one colour function ---------------------------------------
   console.log('\ndotTone');
   const T = mod.dotTone;
@@ -141,8 +210,8 @@ const cls = (node) => node.className;
     check(`${k} ${String(r)}${low ? ' (lower is better)' : ''} → ${want}`, T(k, r, low) === want, T(k, r, low));
   }
 
-  // -- S3: the dot never reads dod --------------------------------------------
-  console.log('\nS3 — the dot is the ratio, the arrow is the movement');
+  // -- S3: the tone never reads dod --------------------------------------------
+  console.log('\nS3 — the tone is the ratio, the arrow is the movement');
   {
     const a = clone(clean);
     a.data.latest.ga4.sessions = { value: 87, dod: -500, baseline: 87, ratio: 1.0 };
@@ -150,18 +219,53 @@ const cls = (node) => node.className;
     b.data.latest.ga4.sessions = { value: 87, dod: 500, baseline: 87, ratio: 1.0 };
     const c = clone(clean);
     c.data.latest.ga4.sessions = { value: 87, dod: 500, baseline: 300, ratio: 0.29 };
-    const da = dotIn(cellsOf(render(a).root)[0]).join();
-    const db = dotIn(cellsOf(render(b).root)[0]).join();
-    const dc = dotIn(cellsOf(render(c).root)[0]).join();
-    check('a crash day-over-day at ratio 1.0 is still green', da === 'pulse-dot pulse-dot-good', da);
-    check('and identical to a surge at ratio 1.0', da === db);
-    check('a surge day-over-day at ratio 0.29 is red', dc === 'pulse-dot pulse-dot-bad', dc);
-    const sa = cellsOf(render(a).root)[0].querySelector('.pulse-arrow');
-    const sb = cellsOf(render(b).root)[0].querySelector('.pulse-arrow');
+    const [ra, rb, rc] = [a, b, c].map((t) => lineOf(render(t).root, 'sessions'));
+    check('a crash day-over-day at ratio 1.0 is still green', dotIn(ra).join() === 'pulse-dot pulse-dot-good' && cls(ra.querySelector('.pulse-value')) === 'pulse-value pulse-value-good');
+    check('and identical to a surge at ratio 1.0 (dot, value, spark point)', ['.pulse-dot', '.pulse-value', 'circle'].every((q) => cls(ra.querySelector(q)) === cls(rb.querySelector(q))));
+    check('a surge day-over-day at ratio 0.29 is red', dotIn(rc).join() === 'pulse-dot pulse-dot-bad' && cls(rc.querySelector('.pulse-value')) === 'pulse-value pulse-value-bad');
+    const sa = ra.querySelector('.pulse-arrow');
+    const sb = rb.querySelector('.pulse-arrow');
     check('the arrows differ (▼ 500 / ▲ 500) with the same class', sa.textContent === '▼ 500' && sb.textContent === '▲ 500' && cls(sa) === cls(sb));
     const nod = clone(clean);
     delete nod.data.latest.ga4.sessions.dod;
-    check('no dod → no arrow, the dot stays', cellsOf(render(nod).root)[0].querySelectorAll('.pulse-arrow').length === 0 && dotIn(cellsOf(render(nod).root)[0]).length === 1);
+    const rn = lineOf(render(nod).root, 'sessions');
+    check('no dod → no arrow, the dot stays', rn.querySelectorAll('.pulse-arrow').length === 0 && dotIn(rn).length === 1);
+  }
+
+  // -- S13: position inverted on the face ---------------------------------------
+  console.log('\nS13 — the face sparkline');
+  {
+    const at = (newest, older) => {
+      const t = clone(clean);
+      t.data.days = t.data.days.slice(2, 4);
+      t.data.days[0].gsc.position.value = newest;
+      t.data.days[1].gsc.position.value = older;
+      const ln = lineOf(render(t).root, 'position');
+      const first = Number(ln.querySelector('path').getAttribute('d').match(/^M[\d.]+ ([\d.]+)/)[1]);
+      return { first, last: Number(ln.querySelector('circle').getAttribute('cy')) };
+    };
+    const better = at(4, 12);
+    const worse = at(12, 4);
+    check('a better (lower) newest position sits higher than the older point', better.last < better.first, JSON.stringify(better));
+    check('a worse (higher) newest position sits lower', worse.last > worse.first, JSON.stringify(worse));
+    const up = clone(clean);
+    up.data.days = up.data.days.slice(2, 4);
+    up.data.days[0].ga4.sessions.value = 200;
+    up.data.days[1].ga4.sessions.value = 50;
+    const sl = lineOf(render(up).root, 'sessions');
+    check('sessions is not inverted: more is higher', Number(sl.querySelector('circle').getAttribute('cy')) < Number(sl.querySelector('path').getAttribute('d').match(/^M[\d.]+ ([\d.]+)/)[1]));
+    const one = clone(clean);
+    one.data.days = one.data.days.slice(0, 1);
+    check('days[] of 1 → no face sparkline anywhere', render(one).root.querySelectorAll('.pulse-face-spark').length === 0);
+    const none = clone(clean);
+    none.data.days = [];
+    const rn = render(none).root;
+    check('days[] empty → the rows still print, no sparklines', linesOf(rn).length === 6 && rn.querySelectorAll('svg').length === 0);
+    const gap = clone(clean);
+    gap.data.days = gap.data.days.slice(0, 3);
+    gap.data.days[1].ga4 = null;
+    const gd = lineOf(render(gap).root, 'sessions').querySelector('path').getAttribute('d');
+    check('a gap lifts the pen on the face too', (gd.match(/M/g) || []).length === 2 && !/L/.test(gd), gd);
   }
 
   // -- S4: equal dates ------------------------------------------------------------
@@ -170,11 +274,11 @@ const cls = (node) => node.className;
     const same = clone(clean);
     same.data.latest.gsc.date = same.data.latest.ga4.date;
     const ch = render(same).root.querySelectorAll('.pulse-date');
-    check('same date → same chip text and no lag tooltip', ch[0].textContent === ch[1].textContent && !ch[1].getAttribute('title'));
+    check('same date → same text, no lag suffix, no tooltip', ch[0].textContent === ch[1].textContent && !ch[1].textContent.includes('lags') && !ch[1].getAttribute('title'));
     const noGsc = clone(clean);
     noGsc.data.latest.gsc = null;
     const r = render(noGsc).root;
-    check('a missing GSC block → one chip, its cells print —, nothing thrown', r.querySelectorAll('.pulse-date').length === 1 && cellsOf(r)[2].querySelector('.pulse-value').textContent === '—');
+    check('a missing GSC block → one date, its rows print —, nothing thrown', r.querySelectorAll('.pulse-date').length === 1 && valueOf(r, 'clicks').textContent === '—' && valueOf(r, 'position').textContent === '—');
   }
 
   // -- S6: a greyed source ------------------------------------------------------------
@@ -183,19 +287,18 @@ const cls = (node) => node.className;
     const down = mockFile('pulse-gsc-down.json').tiles.wss_traffic;
     const r = render(down).root;
     const g = groupOf(r, 'gsc');
-    const gCells = g.querySelectorAll('.pulse-cell');
-    check('its cells are greyed in place', gCells.length === 2 && gCells.every((c) => c.classList.contains('pulse-cell-grey')));
-    check('no numbers in its cells', gCells.every((c) => !/\d/.test(c.textContent)), gCells.map((c) => c.textContent).join(' / '));
-    check('never a zero: the value reads —', gCells.every((c) => c.querySelector('.pulse-value').textContent === '—'));
+    const gl = g.querySelectorAll('.pulse-line');
+    check('its group is greyed in place, three rows', g.classList.contains('pulse-group-grey') && gl.length === 3);
+    check('no numbers in its rows', gl.every((c) => !/\d/.test(c.textContent)), gl.map((c) => c.textContent).join(' / '));
+    check('never a zero: every value reads —', gl.every((c) => c.querySelector('.pulse-value').textContent === '—'));
+    check('no sparkline and no arrow on a down source', g.querySelectorAll('svg').length === 0 && g.querySelectorAll('.pulse-arrow').length === 0);
     const line = g.querySelector('.pulse-src-down');
     const want = `GSC · last good ${shortDay(down.data.sources_status.gsc.last_good)} · 403 permission`;
     check('the status line: source · last good · why', line && line.textContent === want, line && line.textContent);
-    check('five newest days missing → its dots are ⚫', dotIn(g).length === 2 && dotIn(g).every((c) => c === 'pulse-dot pulse-dot-dead'), dotIn(g).join());
-    const segs = r.querySelector('.pulse-sub').querySelectorAll('.pulse-seg');
-    check('CTR and Pos grey too, 5xx untouched', segs[0].classList.contains('pulse-seg-grey') && segs[1].classList.contains('pulse-seg-grey') && !segs[2].classList.contains('pulse-seg-grey'));
-    check('CTR and Pos print no numbers', !/\d/.test(segs[0].textContent + segs[1].textContent), segs[0].textContent + segs[1].textContent);
-    check('GA4 is unaffected', groupOf(r, 'ga4').querySelectorAll('.pulse-cell-grey').length === 0 && groupOf(r, 'ga4').querySelectorAll('.pulse-src-down').length === 0);
-    check('the GA4 sessions dot still reads its ratio', dotIn(groupOf(r, 'ga4').querySelectorAll('.pulse-cell')[0]).join() === 'pulse-dot pulse-dot-warn');
+    check('five newest days missing → its dots are ⚫, values dead', dotIn(g).length === 3 && dotIn(g).every((c) => c === 'pulse-dot pulse-dot-dead') && gl.every((c) => cls(c.querySelector('.pulse-value')) === 'pulse-value pulse-value-dead'), dotIn(g).join());
+    check('the footer’s CTR greys to —, its 5xx untouched', /^CTR — · 5xx 0%/.test(r.querySelector('.pulse-footline').textContent), r.querySelector('.pulse-footline').textContent);
+    check('GA4 is unaffected', !groupOf(r, 'ga4').classList.contains('pulse-group-grey') && groupOf(r, 'ga4').querySelectorAll('.pulse-src-down').length === 0);
+    check('the GA4 sessions row still reads its ratio', dotIn(lineOf(r, 'sessions')).join() === 'pulse-dot pulse-dot-warn');
 
     // Two newest days missing → hollow; three → black.
     const two = clone(clean);
@@ -209,7 +312,7 @@ const cls = (node) => node.className;
       const lag = clone(clean);
       lag.data.days[2].gsc = null;
       const rr = render(lag).root;
-      return rr.querySelectorAll('.pulse-cell-grey').length === 0 && rr.querySelectorAll('.pulse-dot-dead').length === 0;
+      return rr.querySelectorAll('.pulse-group-grey').length === 0 && rr.querySelectorAll('.pulse-dot-dead').length === 0;
     })());
     const noGood = clone(two);
     noGood.data.sources_status.gsc.last_good = null;
@@ -219,8 +322,11 @@ const cls = (node) => node.className;
     cfDown.data.latest.cf = null;
     for (const d of cfDown.data.days) d.cf = null;
     const rc = render(cfDown).root;
-    const lines = rc.querySelectorAll('.pulse-src-down').map((n) => n.textContent);
-    check('Cloudflare down → its line under the muted row, 5xx greyed ⚫', lines.join() === 'CF · no good pull yet · 403 token' && dotIn(rc.querySelector('.pulse-sub').querySelectorAll('.pulse-seg')[2]).join() === 'pulse-dot pulse-dot-dead', lines.join());
+    const downLines = rc.querySelectorAll('.pulse-src-down').map((n) => n.textContent);
+    check('Cloudflare down → its line under the footer, 5xx — and no CF date', downLines.join() === 'CF · no good pull yet · 403 token' && rc.querySelector('.pulse-footline').textContent === 'CTR 2.3% · 5xx —', downLines.join() + ' / ' + rc.querySelector('.pulse-footline').textContent);
+    const cfHot = clone(cfDown);
+    cfHot.data.latest.cf = { date: D.latest.cf.date, err5xx_pct: { value: 3, ratio: 9 } };
+    check('a down Cloudflare never earns a 5xx row', !lineOf(render(cfHot).root, 'err5xx_pct'));
   }
 
   // -- stale and empty ------------------------------------------------------------
@@ -230,7 +336,7 @@ const cls = (node) => node.className;
     const r = render(stale).root;
     const chip = r.querySelector('.pulse-stale');
     check('stale → a chip "stale since {day}"', chip && chip.textContent === 'stale since ' + shortDay(stale.data.stale_since), chip && chip.textContent);
-    check('stale still renders the last data — four cells', cellsOf(r).length === 4);
+    check('stale still renders the last data — its rows', linesOf(r).length === 6);
     const noSince = clone(stale);
     delete noSince.data.stale_since;
     check('no stale_since → falls back to generated_at’s date', render(noSince).root.querySelector('.pulse-stale').textContent === 'stale since ' + shortDay(noSince.data.generated_at.slice(0, 10)));
@@ -344,9 +450,13 @@ const cls = (node) => node.className;
       sources_status: [], queries_top10: { a: 1 }, pages_top10: 'x', channels_7d: { organic: 'many', paid: -3 }, lower_is_better: 'position', tripwire: 'yes',
     });
     h('a bad date string', { status: 'ok', latest: { ga4: { date: 'yesterday', sessions: { value: 1 } } }, days: [{ date: 'yesterday', ga4: { sessions: { value: 1 } } }] });
+    h('days[] of 1', { ...clone(D), days: clone(D.days.slice(0, 1)) });
+    h('days[] empty with a full latest', { ...clone(D), days: [] });
+    h('leads/carts as strings', { status: 'ok', latest: { ga4: { date: '2026-11-01', leads: { value: 'none' }, carts: { value: 0 } } }, days: [] });
+    h('5xx as a string', { status: 'ok', latest: { cf: { date: '2026-11-01', err5xx_pct: { value: '2' } } }, days: [] });
     h('stale with nothing parseable', { status: 'stale', generated_at: 5, days: [{ date: '2026-11-01', ga4: { sessions: { value: 1 } } }] }, 'stale');
     const s = render(tileOf({ status: 'ok', latest: { ga4: { date: '2026-11-01', sessions: { value: '87' } } }, days: [] })).root;
-    check('a string where a number belongs prints —, never the string', cellsOf(s)[0].querySelector('.pulse-value').textContent === '—');
+    check('a string where a number belongs prints —, never the string', valueOf(s, 'sessions').textContent === '—');
     const neg = render(tileOf({ status: 'ok', latest: { ga4: { date: '2026-11-01', sessions: { value: 5 } } }, days: [], lower_is_better: 'position' })).root;
     check('a non-array lower_is_better falls back to position + err5xx_pct', !!neg);
   }
@@ -387,8 +497,11 @@ const cls = (node) => node.className;
   const aEnd = SRC.indexOf('\nfunction ', aStart + 1);
   const outside = SRC.slice(0, aStart) + SRC.slice(aEnd);
   check('S3: `dod` appears only inside arrow()', aStart > 0 && aEnd > aStart && /dod/.test(SRC.slice(aStart, aEnd)) && !/dod/.test(outside));
-  const toneUses = [...SRC.matchAll(/pulse-dot-' \+ (\w+)/g)].map((m) => m[1]);
-  check('the dot class is chosen in one place, from dotTone', toneUses.join() === 'tone' && /const tone = dead \? 'dead' : dotTone\(/.test(SRC), toneUses.join());
+  const toneUses = [...SRC.matchAll(/pulse-(dot|value|spark-now)-' \+ (\w+)/g)].map((m) => m[1] + ':' + m[2]);
+  check('dot, value and spark point each take `tone`, nothing else', toneUses.sort().join() === 'dot:tone,spark-now:tone,value:tone', toneUses.join());
+  check('toneOf is dotTone’s one caller', /return dead \? 'dead' : dotTone\(/.test(SRC) && CODE.split('dotTone(').length === 3, String(CODE.split('dotTone(').length));
+  check('S13: one sparkline geometry, called by face and sheet', CODE.split('sparkGeometry(').length === 4 && /faceSpark[\s\S]*sparkGeometry\(vals, FACE/.test(SRC) && /sparkGeometry\(vals, SHEET/.test(SRC));
+  check('S14: the arrow returns nothing at zero', /d === null \|\| d === 0\) return null/.test(SRC) && !/– 0/.test(CODE));
   const dtStart = SRC.indexOf('export function dotTone(');
   const dtBody = SRC.slice(dtStart, SRC.indexOf('\n}\n', dtStart));
   check('dotTone reads ratio only', dtStart > 0 && !/dod|value|baseline/.test(dtBody.replace(/^.*\n/, '')));
@@ -408,7 +521,12 @@ const cls = (node) => node.className;
     check('no .card[data-tile="wss_traffic"] rule mentions dod', !/dod/.test(scoped));
     const rules = [...block.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^}]*)\}/g)].map((m) => ({ sel: m[1].trim(), body: m[2] }));
     const toned = rules.filter((r) => /var\(--(good|warn|bad)\)/.test(r.body));
-    check('--good/--warn/--bad appear only on .pulse-dot rules', toned.length === 3 && toned.every((r) => /^\.pulse-dot-(good|warn|bad)$/.test(r.sel)), toned.map((r) => r.sel).join(','));
+    check('--good/--warn/--bad appear only on .pulse-dot-*, .pulse-value-* and .pulse-spark-now-* rules', toned.length === 9 && toned.every((r) => /^\.pulse-(dot|value|spark-now)-(good|warn|bad)$/.test(r.sel)), toned.map((r) => r.sel).join(','));
+    check('the arrow rule names no tone token', rules.filter((r) => /pulse-arrow/.test(r.sel)).every((r) => !/--(good|warn|bad|info|brass)/.test(r.body)));
+    check('the face sparkline stroke is --text-faint 1.4', /\.pulse-face-line \{[^}]*stroke: var\(--text-faint\); stroke-width: 1\.4/.test(block));
+    check('the row grid: 8px dot · 1fr label · value · 96px spark · 52px arrow', /\.pulse-line \{[^}]*grid-template-columns: 8px minmax\(0, 1fr\) auto 96px 52px/.test(block));
+    check('under 340px the sparkline column goes', /@media \(max-width: 339px\)[\s\S]*?\.pulse-spark-cell \{ display: none; \}/.test(block));
+    check('no v1.1 face rules remain', !/\.pulse-(cell|cells|grid|sub|seg|marks|ind|sep)\b/.test(block));
     check('no rule elsewhere in the stylesheet tones a pulse class', ![...CSS.slice(0, start).matchAll(/([^{}]+)\{([^}]*)\}/g)].some((m) => /pulse-/.test(m[1])));
     check('no colour literal but a black shadow', !/#[0-9a-f]{3,8}\b/i.test(block) && [...block.matchAll(/rgba?\(([^)]*)\)/g)].every((m) => /^0,\s*0,\s*0/.test(m[1])));
   }
