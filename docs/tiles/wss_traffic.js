@@ -8,7 +8,7 @@
  * THE FACE IS ROWS (S11–S14, v1.2). Two dated groups — GA4, then Search
  * Console — of one line per metric: dot · label · value · 28-day sparkline ·
  * arrow, every row the same five columns so the values share one right edge.
- * CTR, 5xx and Cloudflare's date ride one muted footer; 5xx earns a row only
+ * CTR, 5xx and Cloudflare's date ride one muted footer; 5xx earns a row only (at >= ERR_ROW_PCT)
  * on a day it is above zero. Leads and carts at 0 · 0 are one quiet row.
  *
  * TWO INDICATORS PER NUMBER, AND THEY HAVE DIFFERENT JOBS (S3, S12).
@@ -56,6 +56,9 @@ const TITLE = '📈 Site Pulse';
 
 /** Used only when the producer does not publish its own list (it does, today). */
 const LOWER_DEFAULT = ['position', 'err5xx_pct'];
+
+/** S11 (amended 11/03): 5xx earns a face row only at or above this share of requests. 1 in 48,307 is not a story. */
+const ERR_ROW_PCT = 0.5;
 
 const SOURCES = ['ga4', 'gsc', 'cf'];
 const SOURCE_LABEL = { ga4: 'GA4', gsc: 'GSC', cf: 'CF' };
@@ -307,9 +310,9 @@ function face(data, days, lower) {
   } else {
     ga4Rows.push(row('ga4', 'leads', 'Leads', ''), row('ga4', 'carts', 'Carts', ''));
   }
-  // S11: 5xx earns a row only on a day it is above zero.
+  // S11: 5xx earns a row only on a day it reaches ERR_ROW_PCT; below that it lives in the footer.
   const err = num(metric(cf, 'err5xx_pct')?.value);
-  if (!state.cf.down && err !== null && err > 0) ga4Rows.push(row('cf', 'err5xx_pct', '5xx', '%'));
+  if (!state.cf.down && err !== null && err >= ERR_ROW_PCT) ga4Rows.push(row('cf', 'err5xx_pct', '5xx', '%'));
 
   const gscRows = [
     row('gsc', 'clicks', 'Organic clicks', ''),

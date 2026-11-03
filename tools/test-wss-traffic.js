@@ -92,7 +92,7 @@ const cls = (node) => node.className;
   {
     const cv = Number((read('docs', 'sw.js').match(/CACHE_VERSION = 'helm-v(\d+)'/) || [])[1]);
     const av = (read('docs', 'config.js').match(/APP_VERSION = '(\d+)\.(\d+)\.\d+'/) || []).slice(1).map(Number);
-    check('CACHE_VERSION is at least helm-v65', cv >= 65, String(cv));
+    check('CACHE_VERSION is at least helm-v66', cv >= 66, String(cv));
     check('APP_VERSION is at least 1.44.0', av[0] > 1 || (av[0] === 1 && av[1] >= 44), av.join('.'));
   }
 
@@ -183,16 +183,22 @@ const cls = (node) => node.className;
   }
 
   // -- 5xx earns a row ------------------------------------------------------------
-  console.log('\n5xx above zero');
+  console.log('\n5xx earns a row at the threshold');
   {
     const e = clone(clean);
-    e.data.latest.cf.err5xx_pct = { value: 0.4, dod: 0.4, baseline: 0.1, ratio: 4 };
+    const below = clone(clean);
+    below.data.latest.cf.err5xx_pct = { value: 0.002, dod: 0.002, baseline: 0, ratio: null };
+    check('5xx at 0.002% (1 in 48k) → footer only, no row (S11 threshold)', !lineOf(render(below).root, 'err5xx_pct') && render(below).root.querySelector('.pulse-footline').textContent.includes('5xx 0.002%'));
+    const edge = clone(clean);
+    edge.data.latest.cf.err5xx_pct = { value: 0.5, dod: 0.5, baseline: 0.1, ratio: 5 };
+    check('5xx at exactly 0.5% → a row', !!lineOf(render(edge).root, 'err5xx_pct'));
+    e.data.latest.cf.err5xx_pct = { value: 0.6, dod: 0.6, baseline: 0.1, ratio: 6 };
     const r = render(e).root;
     const row = lineOf(r, 'err5xx_pct');
-    check('a 5xx row appears', !!row && row.querySelector('.pulse-label').textContent === '5xx' && row.querySelector('.pulse-value').textContent === '0.4%');
+    check('a 5xx row appears', !!row && row.querySelector('.pulse-label').textContent === '5xx' && row.querySelector('.pulse-value').textContent === '0.6%');
     check('under the GA4 group, last', groupOf(r, 'ga4').querySelectorAll('.pulse-line').pop() === row);
-    check('lower is better: ratio 4 → bad', cls(row.querySelector('.pulse-value')) === 'pulse-value pulse-value-bad');
-    check('and the footer still reads it', r.querySelector('.pulse-footline').textContent.includes('5xx 0.4%'));
+    check('lower is better: ratio 6 → bad', cls(row.querySelector('.pulse-value')) === 'pulse-value pulse-value-bad');
+    check('and the footer still reads it', r.querySelector('.pulse-footline').textContent.includes('5xx 0.6%'));
   }
   // -- dotTone: the one colour function ---------------------------------------
   console.log('\ndotTone');
