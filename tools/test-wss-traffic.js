@@ -92,7 +92,7 @@ const cls = (node) => node.className;
   {
     const cv = Number((read('docs', 'sw.js').match(/CACHE_VERSION = 'helm-v(\d+)'/) || [])[1]);
     const av = (read('docs', 'config.js').match(/APP_VERSION = '(\d+)\.(\d+)\.\d+'/) || []).slice(1).map(Number);
-    check('CACHE_VERSION is at least helm-v66', cv >= 66, String(cv));
+    check('CACHE_VERSION is at least helm-v67', cv >= 67, String(cv));
     check('APP_VERSION is at least 1.44.0', av[0] > 1 || (av[0] === 1 && av[1] >= 44), av.join('.'));
   }
 
@@ -131,7 +131,8 @@ const cls = (node) => node.className;
 
   // S3 + S14: the arrow — faint, last, and nothing at zero.
   const arrows = lines.map((n) => n.querySelector('.pulse-arrow-cell').textContent);
-  check('arrows: ▼ 9 · ▲ 2 · (carts 0: nothing) · ▼ 21 · ▲ 12 · ▲ 1.4', arrows.join('|') === '▼ 9|▲ 2||▼ 21|▲ 12|▲ 1.4', arrows.join('|'));
+  check('arrows: ▼ 9 · ▲ 2 · (carts 0: nothing) · ▼ 21 · ▲ 12 · ▼ 1.4 (position slid 1.4 → ▼, lower is better)', arrows.join('|') === '▼ 9|▲ 2||▼ 21|▲ 12|▼ 1.4', arrows.join('|'));
+  check('the position arrow says so in its tooltip', /lower is better/.test(lineOf(root, 'position').querySelector('.pulse-arrow').getAttribute('title')) && lineOf(root, 'sessions').querySelector('.pulse-arrow').getAttribute('title') === 'vs the day before');
   check('S14: a zero delta has no arrow node at all', lineOf(root, 'carts').querySelectorAll('.pulse-arrow').length === 0);
   check('no "– 0" anywhere on the face', !root.textContent.includes('– 0'));
   check('every arrow wears the one plain class — no tone', root.querySelectorAll('.pulse-arrow').every((n) => cls(n) === 'pulse-arrow'));

@@ -163,12 +163,16 @@ function dot(tone, m, tip) {
  * The arrow and its delta — day-over-day, printed as given, no colour (S3).
  * A zero delta prints nothing (S14): `– 0` is not news.
  */
-function arrow(m) {
+function arrow(m, lowerIsBetter) {
   // The ONLY reader of `dod` in this module: the dot and the value never see it.
   const d = num(m ? m.dod : null);
   if (d === null || d === 0) return null;
-  const text = d > 0 ? '▲ ' + String(d) : '▼ ' + String(-d);
-  return el('span', { cls: 'pulse-arrow', text, attrs: { title: 'vs the day before' } });
+  // ▲ always means better (v1.44.2): on a lower-is-better row (position, 5xx)
+  // the glyph turns over, the magnitude and the no-colour rule do not.
+  const up = lowerIsBetter ? d < 0 : d > 0;
+  const text = (up ? '▲ ' : '▼ ') + String(Math.abs(d));
+  const title = lowerIsBetter ? 'vs the day before · lower is better, ▲ = improved' : 'vs the day before';
+  return el('span', { cls: 'pulse-arrow', text, attrs: { title } });
 }
 
 // ------------------------------------------------------------- source state
@@ -297,7 +301,7 @@ function face(data, days, lower) {
       tone,
       dot(tone, m),
       st.down ? null : faceSpark(series(chrono, src, key), tone, key === 'position'),
-      st.down ? null : arrow(m)
+      st.down ? null : arrow(m, lower.includes(key))
     );
   };
 
