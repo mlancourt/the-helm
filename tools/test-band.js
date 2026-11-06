@@ -446,6 +446,122 @@ const snapshotWith = (tickets, leagues = null, dateCt = null) => {
     check('an unrelated live game does not speed up the loop', nextDelay(res) === 0);
   }
 
+  // ------------------------------------------------- v1.4: college, filtered
+  console.log('\ntoday_games v1.4 — the college board filter (C2–C7)');
+  {
+    const { slate, todayGamesPayload, COLLEGE_EVT } = require('./mock-espn.js');
+    const { boardFilter, ticketIds, ticketedGames } = await import('../docs/live/board-filter.js');
+    const { normalizeEvent } = await import('../docs/live/espn.js');
+    const DAY = '2026-11-07';
+    const RAW = slate(DAY, '2026-11-08', '2026-11-09');
+    const LEAGUES = todayGamesPayload(DAY, '2026-11-08').leagues;
+    const CFB = LEAGUES.find((l) => l.slug === 'football/college-football');
+    const CBB = LEAGUES.find((l) => l.slug === 'basketball/mens-college-basketball');
+    const norm = (slug) => RAW.leagues[slug].map((e) => normalizeEvent(e, slug));
+    const cfb = norm(CFB.slug);
+    const cbb = norm(CBB.slug);
+    const ids = (gs) => gs.map((g) => g.id).sort().join();
+
+    // C3: the two facts on every side.
+    const byId = (gs, id) => gs.find((g) => g.id === id);
+    check('rank: curatedRank 12 -> 12', byId(cfb, COLLEGE_EVT.cfbRank).away.rank === 12);
+    check('rank: curatedRank 99 (unranked) -> null', byId(cfb, COLLEGE_EVT.cfbRank).home.rank === null);
+    check('conf: conferenceId carried as a string', byId(cfb, COLLEGE_EVT.cfbConf).home.conf === '5');
+    {
+      const e = JSON.parse(JSON.stringify(RAW.leagues[CBB.slug][0]));
+      const c = e.competitions[0].competitors;
+      c[0].curatedRank = { current: 17 };
+      delete c[1].curatedRank;
+      delete c[1].team.conferenceId;
+      const g = normalizeEvent(e, CBB.slug);
+      const sides = [g.home, g.away];
+      const ranked = sides.find((x) => x.rank === 17);
+      const bare = sides.find((x) => x !== ranked);
+      check('rank: curatedRank 17 -> 17', !!ranked);
+      check('rank: a missing curatedRank -> null', bare.rank === null);
+      check('conf: a missing conferenceId -> empty string', bare.conf === '');
+      for (const v of [0, 26, '7', 'x', null]) {
+        c[0].curatedRank = { current: v };
+        const r = normalizeEvent(e, CBB.slug);
+        const got = [r.home.rank, r.away.rank];
+        check(`rank: curatedRank ${JSON.stringify(v)} -> ${v === '7' ? 7 : 'null'}`, v === '7' ? got.includes(7) : got.every((x) => x === null));
+      }
+    }
+    {
+      const pro = normalizeEvent(RAW.leagues['baseball/mlb'][0], 'baseball/mlb');
+      check('NFL/MLB sides carry rank null and conf ""', pro.home.rank === null && pro.away.rank === null && pro.home.conf === '' && pro.away.conf === '');
+    }
+
+    // C2/C4/C5: the pure filter.
+    check('CFB filter keeps the ranked game and the conference game, drops the mid-majors', ids(boardFilter(cfb, CFB.filter, new Set())) === [COLLEGE_EVT.cfbRank, COLLEGE_EVT.cfbConf].sort().join());
+    check('NCAAB filter drops both mid-major games with no ticket', ids(boardFilter(cbb, CBB.filter, new Set())) === [COLLEGE_EVT.cbbRank, COLLEGE_EVT.cbbConf].sort().join());
+    check('a ticket keeps a game the filter would drop', boardFilter(cbb, CBB.filter, new Set([COLLEGE_EVT.cbbPinned])).some((g) => g.id === COLLEGE_EVT.cbbPinned));
+    check('the ticket set keeps nothing else extra', boardFilter(cbb, CBB.filter, new Set([COLLEGE_EVT.cbbPinned])).length === 3);
+    check('top alone: rank clause only', ids(boardFilter(cfb, { top: 25 }, null)) === COLLEGE_EVT.cfbRank);
+    check('top narrower than the rank drops it', boardFilter(cfb, { top: 10, conferences: [] }, null).length === 0);
+    check('conferences alone: conference clause only', ids(boardFilter(cfb, { conferences: ['5'] }, null)) === COLLEGE_EVT.cfbConf);
+    check('conference ids compare as strings (5 matches "5")', ids(boardFilter(cfb, { conferences: [5] }, null)) === COLLEGE_EVT.cfbConf);
+    check('an empty conf never matches an empty-string entry', boardFilter([normalizeEvent(RAW.leagues['baseball/mlb'][0], 'baseball/mlb')], { conferences: [''] }, null).length === 0);
+    for (const [name, f] of [['undefined', undefined], ['null', null], ['a string', 'top25'], ['an array', [25]], ['{}', {}], ['top NaN, conferences not an array', { top: NaN, conferences: 'x' }], ['top "25" (a string)', { top: '25' }]]) {
+      check(`absent/garbage filter (${name}) keeps everything`, boardFilter(cfb, f, null).length === cfb.length);
+    }
+    check('garbage games never throw', (() => { try { return boardFilter(null, CFB.filter).length === 0 && boardFilter([null, 3, 'x', {}], CFB.filter, 'nope').length === 0; } catch { return false; } })());
+    check('returns a new array', boardFilter(cfb, null) !== cfb);
+
+    // ticketIds / ticketedGames — the moved helper.
+    const snapT = { tiles: { bets_live: { data: { tickets: [{ id: 't1', label: 'A', espn_event_id: '11' }, { id: 't2', market: 'parlay', label: 'P', games: [{ espn_event_id: '22' }, { espn_event_id: '11' }] }] } } } };
+    check('ticketedGames: singles by id, parlays by each game', JSON.stringify([...ticketedGames(snapT)]) === JSON.stringify([['11', ['A', 'P']], ['22', ['P']]]));
+    check('ticketIds is the Set of those keys', ticketIds(snapT) instanceof Set && [...ticketIds(snapT)].join() === '11,22');
+    check('ticketIds of nothing is empty', ticketIds(null).size === 0 && ticketIds({ tiles: { bets_live: { data: { tickets: 'x' } } } }).size === 0);
+
+    // C7: groups= on the URL.
+    {
+      const calls = stubFetch({});
+      const espn = await import('../docs/live/espn.js');
+      await espn.fetchScoreboard('football/college-football', '20261107');
+      await espn.fetchScoreboard('basketball/mens-college-basketball', '20261107');
+      await espn.fetchScoreboard('football/nfl', '20261107');
+      check('CFB scoreboard URL carries groups=80', /college-football\/scoreboard\?.*&groups=80$/.test(calls[0]), calls[0]);
+      check('NCAAB scoreboard URL carries groups=50', /mens-college-basketball\/scoreboard\?.*&groups=50$/.test(calls[1]), calls[1]);
+      check('NFL scoreboard URL carries neither', !/groups=/.test(calls[2]), calls[2]);
+    }
+
+    // requirements() passes `filter` through untouched.
+    {
+      const snap = snapshotWith([], LEAGUES, DAY);
+      const req = requirements(snap);
+      check('requirements carries each league’s filter', req.leagues.find((l) => l.slug === CFB.slug).filter === CFB.filter);
+      check('a league with no filter carries undefined', req.leagues.find((l) => l.slug === 'baseball/mlb').filter === undefined);
+    }
+
+    // C4: the band filters byLeague, never the ticket path.
+    {
+      const scoreboards = { [CFB.slug]: RAW.leagues[CFB.slug], [CBB.slug]: RAW.leagues[CBB.slug] };
+      stubFetch({ scoreboards });
+      let got = null;
+      const band = createLiveBand((x) => (got = x));
+      const tkt = { id: 'tc', league: CBB.slug, espn_event_id: COLLEGE_EVT.cbbPinned, kick_ct: `${DAY} 12:00`, market: 'ml', side: 'away', label: 'Hollow Creek ML', stake_u: 1, to_win_u: 1.2 };
+      await band.runOnce(snapshotWith([tkt], [CFB, CBB], DAY));
+      check('CFB board count is the filtered count (2 of 3)', got.today.leagues.get(CFB.slug).games.length === 2);
+      check('NCAAB board count is filtered + the ticket (3 of 4)', got.today.leagues.get(CBB.slug).games.length === 3);
+      check('the pinned game is on the board', got.today.leagues.get(CBB.slug).games.some((g) => g.id === COLLEGE_EVT.cbbPinned));
+      check('the dropped CFB game is NOT on the board', !got.today.leagues.get(CFB.slug).games.some((g) => g.id === COLLEGE_EVT.cfbDrop));
+      check('…but live.games still holds it (the ticket path is never filtered)', got.games.has(COLLEGE_EVT.cfbDrop) && got.games.has(COLLEGE_EVT.cbbDrop));
+      check('the ticket still grades off its game', got.grades.get('tc')?.state === 'win', got.grades.get('tc')?.state);
+    }
+    {
+      // A dropped LIVE game holds no clock: CFB alone, with its ranked and
+      // conference games pre/post and only the dropped mid-major `in`.
+      stubFetch({ scoreboards: { [CFB.slug]: RAW.leagues[CFB.slug] } });
+      const band = createLiveBand(() => {});
+      const res = await band.runOnce(snapshotWith([], [CFB], DAY));
+      check('a dropped in-progress game does not make anyLive true', res.anyLive === false && res.anyPre === true);
+      stubFetch({ scoreboards: { [CFB.slug]: RAW.leagues[CFB.slug] } });
+      const unf = await createLiveBand(() => {}).runOnce(snapshotWith([], [{ ...CFB, filter: undefined }], DAY));
+      check('…while the same slate unfiltered does', unf.anyLive === true);
+    }
+  }
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));

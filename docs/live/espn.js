@@ -120,7 +120,7 @@ function linescoreValues(competitor) {
 
 function sideOf(competitors, homeAway) {
   const c = (competitors || []).find((x) => x?.homeAway === homeAway) || null;
-  if (!c) return { abbr: '', short: '', name: '', score: 0, linescores: [], winner: false };
+  if (!c) return { abbr: '', short: '', name: '', score: 0, linescores: [], winner: false, rank: null, conf: '' };
   return {
     abbr: c.team?.abbreviation || '',
     // `shortDisplayName` is the matchup name today_games prints — "Brewers",
@@ -133,7 +133,18 @@ function sideOf(competitors, homeAway) {
     score: Number(c.score) || 0,
     linescores: linescoreValues(c),
     winner: c.winner === true,
+    // C3: two facts for the college board filter, carried on every league.
+    // ESPN sends 99 for "unranked", so only 1–25 is a rank; anything else null.
+    rank: rankOf(c.curatedRank?.current),
+    // Conference ids are strings on the wire and stay strings here.
+    conf: String(c.team?.conferenceId ?? ''),
   };
+}
+
+function rankOf(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 1 && n <= 25 ? n : null;
 }
 
 const arr = (v) => (Array.isArray(v) ? v : []);
@@ -378,7 +389,9 @@ export function fetchScoreboard(league, dateCompact = ctDateCompact()) {
   if (hit) return hit;
 
   // 2026-11-06: college basketball defaults to the featured/Top-25 slate (9 of 72 D-I games on 11/6); groups=50 = all of D-I.
-  const grp = league.includes('college-basketball') ? '&groups=50' : '';
+  // 2026-11-06 (C7): college football defaults to the featured slate too; groups=80 = all of FBS.
+  const grp = league.includes('college-basketball') ? '&groups=50'
+    : league.includes('college-football') ? '&groups=80' : '';
   const url = `${ESPN_BASE}/${league}/scoreboard?dates=${dateCompact}&limit=400${grp}`;
   const p = getJson(url)
     .then((json) => {

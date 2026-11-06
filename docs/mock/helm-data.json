@@ -63,7 +63,7 @@
     },
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-10-06T14:32:32.946Z",
+      "updated_at": "2026-11-06T16:18:26.100Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -76,7 +76,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770114",
             "game": "Harbor Kestrels at Foundry Ironsides",
-            "kick_ct": "2026-10-06 15:25",
+            "kick_ct": "2026-11-06 15:25",
             "market": "spread",
             "side": "away",
             "line": -3.5,
@@ -93,7 +93,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770114",
             "game": "Harbor Kestrels at Foundry Ironsides",
-            "kick_ct": "2026-10-06 15:25",
+            "kick_ct": "2026-11-06 15:25",
             "market": "total_over",
             "side": null,
             "line": 44.5,
@@ -110,7 +110,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770119",
             "game": "Cedar Valley Drays at North Pike Sentinels",
-            "kick_ct": "2026-10-06 19:15",
+            "kick_ct": "2026-11-06 19:15",
             "market": "anytime_td",
             "side": null,
             "line": null,
@@ -127,7 +127,7 @@
             "league": "basketball/nba",
             "espn_event_id": "401810422",
             "game": "Lakeshore Current at Granite City Foremen",
-            "kick_ct": "2026-10-06 20:00",
+            "kick_ct": "2026-11-06 20:00",
             "market": "ml",
             "side": "home",
             "line": null,
@@ -144,7 +144,7 @@
             "league": "soccer/usa.1",
             "espn_event_id": "731204",
             "game": "Riverbend FC vs Cross Harbor SC",
-            "kick_ct": "2026-10-07 19:30",
+            "kick_ct": "2026-11-07 19:30",
             "market": "btts",
             "side": null,
             "line": null,
@@ -161,7 +161,7 @@
             "league": "basketball/nba",
             "espn_event_id": "401810422",
             "game": "Lakeshore Current at Granite City Foremen",
-            "kick_ct": "2026-10-06 20:00",
+            "kick_ct": "2026-11-06 20:00",
             "market": "spread",
             "side": "away",
             "line": 4.5,
@@ -174,6 +174,23 @@
             "to_win_u": null
           },
           {
+            "id": "tkt-mock-010",
+            "league": "basketball/mens-college-basketball",
+            "espn_event_id": "401999404",
+            "game": "Hollow Creek Hawks at Ashfall State Embers",
+            "kick_ct": "2026-11-06 12:00",
+            "market": "ml",
+            "side": "away",
+            "line": null,
+            "player": null,
+            "label": "Hollow Creek ML",
+            "stake_u": 1,
+            "price": 120,
+            "class": "flier",
+            "sport": "🏀",
+            "to_win_u": 1.2
+          },
+          {
             "id": "tkt-mock-007",
             "market": "parlay",
             "game": "3-leg parlay · 4.10x",
@@ -184,7 +201,7 @@
             "to_win_u": 0.78,
             "sport": "🏈",
             "class": "flier",
-            "kick_ct": "2026-10-06 12:00",
+            "kick_ct": "2026-11-06 12:00",
             "league": "football/nfl",
             "espn_event_id": "401990501",
             "home": "FDI",
@@ -219,7 +236,7 @@
                 "espn_event_id": "401990501",
                 "home": "FDI",
                 "away": "HRK",
-                "kick_ct": "2026-10-06 12:00"
+                "kick_ct": "2026-11-06 12:00"
               },
               {
                 "game": "Foremen @ Drays",
@@ -227,7 +244,7 @@
                 "espn_event_id": "401990503",
                 "home": "CVD",
                 "away": "GCF",
-                "kick_ct": "2026-10-06 12:00"
+                "kick_ct": "2026-11-06 12:00"
               },
               {
                 "game": "Sentinels @ Loons",
@@ -235,7 +252,7 @@
                 "espn_event_id": "401990502",
                 "home": "LKL",
                 "away": "NPS",
-                "kick_ct": "2026-10-06 19:20"
+                "kick_ct": "2026-11-06 19:20"
               }
             ]
           },
@@ -250,7 +267,7 @@
             "to_win_u": 0.36,
             "sport": "🏈",
             "class": "flier",
-            "kick_ct": "2026-10-06 12:00",
+            "kick_ct": "2026-11-06 12:00",
             "league": "football/nfl",
             "espn_event_id": "401990501",
             "home": "FDI",
@@ -285,14 +302,14 @@
                 "espn_event_id": "401990501",
                 "home": "FDI",
                 "away": "HRK",
-                "kick_ct": "2026-10-06 12:00"
+                "kick_ct": "2026-11-06 12:00"
               }
             ]
           }
         ],
         "form": {
           "window_days": 7,
-          "since": "2026-09-30",
+          "since": "2026-10-31",
           "record": "14-9",
           "wins": 14,
           "losses": 9,
@@ -303,76 +320,76 @@
             {
               "r": "W",
               "u": 1.23,
-              "d": "2026-10-05",
+              "d": "2026-11-05",
               "s": "⚽",
               "label": "Cross Harbor ML (reg. time)"
             },
             {
               "r": "W",
               "u": 0.48,
-              "d": "2026-10-05",
+              "d": "2026-11-05",
               "s": "⚾",
               "label": "Drays -1.5 run line"
             },
             {
               "r": "W",
               "u": 0.91,
-              "d": "2026-10-04",
+              "d": "2026-11-04",
               "s": "🏈",
               "label": "Kestrels team total over 24.5"
             },
             {
               "r": "W",
               "u": 0.64,
-              "d": "2026-10-04",
+              "d": "2026-11-04",
               "s": "🏀",
               "label": "Foremen -6.5"
             },
             {
               "r": "W",
               "u": 0.71,
-              "d": "2026-10-03",
+              "d": "2026-11-03",
               "s": "⚽",
               "label": "Riverbend both teams to score"
             },
             {
               "r": "L",
               "u": -1,
-              "d": "2026-10-03",
+              "d": "2026-11-03",
               "s": "🏈",
               "label": "Sentinels +3 (1H)"
             },
             {
               "r": "W",
               "u": 0.45,
-              "d": "2026-10-02",
+              "d": "2026-11-02",
               "s": "⚾",
               "label": "Under 8.5"
             },
             {
               "r": "L",
               "u": -0.5,
-              "d": "2026-10-01",
+              "d": "2026-11-01",
               "s": "🏀",
               "label": "Current ML"
             },
             {
               "r": "L",
               "u": -0.75,
-              "d": "2026-10-01",
+              "d": "2026-11-01",
               "s": "🏈",
               "label": "Vasquez anytime TD"
             },
             {
               "r": "W",
               "u": 1.35,
-              "d": "2026-09-30",
+              "d": "2026-10-31",
               "s": "⚽",
               "label": "Harbor Rovers ML"
             }
           ],
           "last_card": {
-            "date": "2026-10-05",
+            "date": "2026-11-05",
             "record": "2-0",
             "net_u": 1.71,
             "tickets": [
@@ -737,13 +754,13 @@
     },
     "today_games": {
       "band": "LIVE",
-      "updated_at": "2026-10-06T14:32:32.946Z",
+      "updated_at": "2026-11-06T16:18:26.100Z",
       "status": "ok",
       "error": null,
       "data": {
         "title": "Today's Games",
-        "date_ct": "2026-10-06",
-        "date_next_ct": "2026-10-07",
+        "date_ct": "2026-11-06",
+        "date_next_ct": "2026-11-07",
         "leagues": [
           {
             "id": "mlb",
@@ -768,6 +785,32 @@
             "slug": "soccer/esp.1",
             "label": "La Liga",
             "emoji": "🇪🇸"
+          },
+          {
+            "id": "cfb",
+            "slug": "football/college-football",
+            "label": "CFB",
+            "emoji": "🏈",
+            "filter": {
+              "top": 25,
+              "conferences": [
+                "5",
+                "8"
+              ]
+            }
+          },
+          {
+            "id": "ncaab",
+            "slug": "basketball/mens-college-basketball",
+            "label": "NCAAB",
+            "emoji": "🏀",
+            "filter": {
+              "top": 25,
+              "conferences": [
+                "7",
+                "4"
+              ]
+            }
           }
         ],
         "services": [

@@ -79,7 +79,15 @@ const LEAGUES = [
   { id: 'mls', slug: 'soccer/usa.1', label: 'MLS', emoji: '⚽' },
   { id: 'epl', slug: 'soccer/eng.1', label: 'EPL', emoji: '\u{1F3F4}' },
   { id: 'laliga', slug: 'soccer/esp.1', label: 'La Liga', emoji: '\u{1F1EA}\u{1F1F8}' },
+  // v1.4 (C1/C2): the two FILTERED leagues, with the config's real conference
+  // ids (CFB Big Ten 5 · SEC 8; NCAAB Big Ten 7 · Big East 4). Every team on
+  // their slates is invented.
+  { id: 'cfb', slug: 'football/college-football', label: 'CFB', emoji: '🏈', filter: { top: 25, conferences: ['5', '8'] } },
+  { id: 'ncaab', slug: 'basketball/mens-college-basketball', label: 'NCAAB', emoji: '🏀', filter: { top: 25, conferences: ['7', '4'] } },
 ];
+
+/** The college game the mock bets_live ticket pins — dropped by the filter, kept by the ticket (C5). */
+const COLLEGE_EVT = { cfbRank: '401999301', cfbConf: '401999302', cfbDrop: '401999303', cbbRank: '401999401', cbbConf: '401999402', cbbDrop: '401999403', cbbPinned: '401999404', cbbNextKeep: '401999411', cbbNextDrop: '401999412' };
 
 /**
  * Service and channel names are real where a chip has to look like the real
@@ -251,6 +259,11 @@ function event({ id, date, away, home, state, shortDetail, period = 0, clock = '
       score: String(t.score ?? 0),
       team: { abbreviation: t.abbr, displayName: t.name, shortDisplayName: t.short },
     };
+    // C3: college competitors carry both, in ESPN's real shape — a string
+    // conference id on the team, and curatedRank.current (99 = unranked).
+    // Pro leagues' mock sides carry neither, as ESPN's barely matter there.
+    if (t.conf !== undefined) c.team.conferenceId = t.conf;
+    if (t.rank !== undefined) c.curatedRank = { current: t.rank };
     // linescores is absent pre-game and for soccer (gotcha #2).
     if (t.linescores) c.linescores = t.linescores.map((v, i) => ({ value: v, displayValue: String(v), period: i + 1 }));
     if (state === 'post') c.winner = Number(t.score) > Number((homeAway === 'home' ? away : home).score);
@@ -461,6 +474,88 @@ function slate(todayCt, nextCt, afterCt) {
       // Not a today_games league — only the mock parlays ride on these.
       'football/nfl': parlayEvents(at),
 
+      // v1.4 (C11): three CFB games, one dropped by the filter.
+      'football/college-football': [
+        // Kept by RANK: #12 vs an unranked team from a conference not listed.
+        event({
+          id: COLLEGE_EVT.cfbRank,
+          date: at('14:30'),
+          state: 'pre',
+          venue: 'Quarry Bowl',
+          away: { abbr: 'QRY', name: 'Quarry State Masons', short: 'Quarry St', score: 0, rank: 12, conf: '1' },
+          home: { abbr: 'BLF', name: 'Bluffton Ferrymen', short: 'Bluffton', score: 0, rank: 99, conf: '17' },
+          broadcasts: [{ market: 'national', names: ['ESPN'] }],
+        }),
+        // Kept by CONFERENCE: an unranked conference-5 team vs a mid-major.
+        // Final, with quarter linescores — football folds to its story (fetch).
+        event({
+          id: COLLEGE_EVT.cfbConf,
+          date: at('11:00'),
+          state: 'post',
+          venue: 'Prairie Field',
+          away: { abbr: 'TMR', name: 'Tamarack Tech Owls', short: 'Tamarack Tech', score: 10, linescores: [0, 3, 7, 0], rank: 99, conf: '37' },
+          home: { abbr: 'PRU', name: 'Prairie University Bison', short: 'Prairie', score: 31, linescores: [7, 10, 7, 7], rank: 99, conf: '5' },
+        }),
+        // DROPPED: two mid-majors, unranked, LIVE — and must not hold the clock.
+        event({
+          id: COLLEGE_EVT.cfbDrop,
+          date: at('13:00'),
+          state: 'in',
+          shortDetail: '2nd Quarter',
+          period: 2,
+          clock: '4:12',
+          venue: 'Marsh Stadium',
+          away: { abbr: 'MRS', name: 'Marshland A&M Herons', short: 'Marshland A&M', score: 7, linescores: [7, 0], rank: 99, conf: '37' },
+          home: { abbr: 'SLT', name: 'Saltgrass State Rams', short: 'Saltgrass St', score: 3, linescores: [3, 0], rank: 99, conf: '12' },
+        }),
+      ],
+
+      // v1.4 (C11): four NCAAB games — rank, conference, dropped, and a
+      // dropped-shape game the mock bets_live ticket pins (kept, 🎟️).
+      'basketball/mens-college-basketball': [
+        // Kept by RANK on both sides; live in the 2nd half. 🏀 folds to the
+        // line score and fetches nothing.
+        event({
+          id: COLLEGE_EVT.cbbRank,
+          date: at('18:00'),
+          state: 'in',
+          shortDetail: '8:14 - 2nd Half',
+          period: 2,
+          clock: '8:14',
+          venue: 'Copper Dome',
+          away: { abbr: 'ALD', name: 'Alder University Lynx', short: 'Alder', score: 51, linescores: [33, 18], rank: 9, conf: '2' },
+          home: { abbr: 'CPR', name: 'Copperline Miners', short: 'Copperline', score: 47, linescores: [30, 17], rank: 3, conf: '2' },
+        }),
+        // Kept by CONFERENCE: an unranked conference-7 team vs a mid-major.
+        event({
+          id: COLLEGE_EVT.cbbConf,
+          date: at('19:30'),
+          state: 'pre',
+          venue: 'Lantern Fieldhouse',
+          away: { abbr: 'YSB', name: 'Yellowbirch College Wrens', short: 'Yellowbirch', score: 0, rank: 99, conf: '25' },
+          home: { abbr: 'LNT', name: 'Lantern State Keepers', short: 'Lantern St', score: 0, rank: 99, conf: '7' },
+        }),
+        // DROPPED: mid-major vs mid-major.
+        event({
+          id: COLLEGE_EVT.cbbDrop,
+          date: at('18:30'),
+          state: 'pre',
+          venue: 'Gully Gym',
+          away: { abbr: 'GUL', name: 'Gully College Coyotes', short: 'Gully', score: 0, rank: 99, conf: '25' },
+          home: { abbr: 'FEN', name: 'Fenwater Tech Otters', short: 'Fenwater Tech', score: 0, rank: 99, conf: '30' },
+        }),
+        // PINNED: a dropped shape the Bookie holds a ticket on. Final in OT,
+        // so the line score has an OT column.
+        event({
+          id: COLLEGE_EVT.cbbPinned,
+          date: at('12:00'),
+          state: 'post',
+          venue: 'Hollow Arena',
+          away: { abbr: 'HLW', name: 'Hollow Creek Hawks', short: 'Hollow Creek', score: 71, linescores: [30, 32, 9], rank: 99, conf: '25' },
+          home: { abbr: 'ASH', name: 'Ashfall State Embers', short: 'Ashfall St', score: 68, linescores: [33, 29, 6], rank: 99, conf: '30' },
+        }),
+      ],
+
       // Nothing on today. The button greys and says so, and still opens (G6).
       'soccer/eng.1': [],
 
@@ -561,6 +656,26 @@ function slate(todayCt, nextCt, afterCt) {
 
       'soccer/eng.1': [],
 
+      // Tomorrow gets the same filter (C4/C8): one kept by rank, one dropped.
+      'basketball/mens-college-basketball': [
+        event({
+          id: COLLEGE_EVT.cbbNextKeep,
+          date: tmr('19:00'),
+          state: 'pre',
+          venue: 'Copper Dome',
+          away: { abbr: 'FEN', name: 'Fenwater Tech Otters', short: 'Fenwater Tech', score: 0, rank: 99, conf: '30' },
+          home: { abbr: 'CPR', name: 'Copperline Miners', short: 'Copperline', score: 0, rank: 3, conf: '2' },
+        }),
+        event({
+          id: COLLEGE_EVT.cbbNextDrop,
+          date: tmr('20:00'),
+          state: 'pre',
+          venue: 'Gully Gym',
+          away: { abbr: 'HLW', name: 'Hollow Creek Hawks', short: 'Hollow Creek', score: 0, rank: 99, conf: '25' },
+          home: { abbr: 'GUL', name: 'Gully College Coyotes', short: 'Gully', score: 0, rank: 99, conf: '25' },
+        }),
+      ],
+
       'soccer/esp.1': [
         event({
           id: '731461',
@@ -596,4 +711,4 @@ function slate(todayCt, nextCt, afterCt) {
   };
 }
 
-module.exports = { LEAGUES, SERVICES, WATCH_MAP, LOCAL_TEAMS, todayGamesPayload, slate, ctInstant, PARLAY_EVT, parlaySummaries };
+module.exports = { COLLEGE_EVT, LEAGUES, SERVICES, WATCH_MAP, LOCAL_TEAMS, todayGamesPayload, slate, ctInstant, PARLAY_EVT, parlaySummaries };

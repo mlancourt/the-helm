@@ -47,6 +47,7 @@ import {
   onCtDate,
 } from './espn.js';
 import { gradeTicket, gradeParlay, NEEDS_SUMMARY } from './graders.js';
+import { boardFilter, ticketIds } from './board-filter.js';
 import {
   fetchAlerts as realFetchAlerts,
   fetchForecast as realFetchForecast,
@@ -121,7 +122,9 @@ export function requirements(snapshot, now = new Date()) {
   for (const l of rawLeagues) {
     const slug = String(l?.slug || '');
     if (!slug || leagues.some((x) => x.slug === slug)) continue;
-    leagues.push({ slug, id: String(l?.id || slug), label: String(l?.label || ''), emoji: String(l?.emoji || '') });
+    // `filter` (v1.4, C2) is passed through untouched — boardFilter() decides
+    // what an unreadable one means (keep everything), not this function.
+    leagues.push({ slug, id: String(l?.id || slug), label: String(l?.label || ''), emoji: String(l?.emoji || ''), filter: l?.filter });
     add(slug, boardDate);
   }
 
@@ -268,11 +271,17 @@ export function createLiveBand(onUpdate, deps = {}) {
     // TICKET path deliberately does not filter — `games` above is every event
     // the tick saw, matched by id, because a ticket names a specific game and
     // which calendar day it belongs to is none of the board's business.
+    //
+    // Then the league's own filter (v1.4, C4): college is 50–70 games a day
+    // and the config names the few Matt follows. A ticketed game always
+    // survives it (C5). Filtering HERE means the count, the sheet and the
+    // cadence below all read the same board.
+    const held = ticketIds(snapshot);
     const byLeague = new Map();
-    for (const { slug } of req.leagues) {
+    for (const { slug, filter } of req.leagues) {
       const events = results.get(`${slug}|${req.boardDate}`);
       if (events) {
-        byLeague.set(slug, { games: onCtDate(events, req.boardDate), ok: true });
+        byLeague.set(slug, { games: boardFilter(onCtDate(events, req.boardDate), filter, held), ok: true });
       } else {
         const prev = live.today?.leagues?.get(slug);
         byLeague.set(slug, { games: prev?.games || [], ok: false });
@@ -290,7 +299,8 @@ export function createLiveBand(onUpdate, deps = {}) {
 
     // Cadence is decided by the games that are actually relevant — the ones a
     // ticket names, plus every game on a followed league's slate, because the
-    // board is a live scoreboard and G5 says it updates on this clock.
+    // board is a live scoreboard and G5 says it updates on this clock. The
+    // FILTERED board (C4): a live mid-major nobody follows holds no clock.
     const relevant = new Set();
     for (const t of req.tickets) {
       const g = ticketGame.get(t.id);

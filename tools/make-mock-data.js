@@ -24,7 +24,7 @@
  * `new Date()`.
  */
 
-const { todayGamesPayload, slate, PARLAY_EVT } = require('./mock-espn.js');
+const { todayGamesPayload, slate, PARLAY_EVT, COLLEGE_EVT } = require('./mock-espn.js');
 
 const CT_YMD = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Chicago',
@@ -438,6 +438,26 @@ function snapshot() {
             class: 'lean',
             sport: '🏀',
             to_win_u: null,
+          },
+          // Today's Games v1.4 (C5): a ticket on a college game the board
+          // filter would drop — two mid-majors — so the board keeps it and
+          // wears the 🎟️. Final; the Hawks won it in OT.
+          {
+            id: 'tkt-mock-010',
+            league: 'basketball/mens-college-basketball',
+            espn_event_id: COLLEGE_EVT.cbbPinned,
+            game: 'Hollow Creek Hawks at Ashfall State Embers',
+            kick_ct: `${TODAY} 12:00`,
+            market: 'ml',
+            side: 'away',
+            line: null,
+            player: null,
+            label: 'Hollow Creek ML',
+            stake_u: 1.0,
+            price: 120,
+            class: 'flier',
+            sport: '🏀',
+            to_win_u: 1.2,
           },
           // B16 — two parlays, on the three invented NFL games in the mock
           // slate (one live, one to come, one final). `payout_x` and

@@ -94,6 +94,7 @@
 import { el, empty, clear } from '../lib/dom.js';
 import { ctTime, prettyDate } from '../lib/fmt.js';
 import { compactCtDate, onCtDate, fetchScoreboard as realFetchScoreboard, fetchSummary as realFetchSummary } from '../live/espn.js';
+import { boardFilter, ticketedGames } from '../live/board-filter.js';
 
 /** A plain object, or {} — the payload is untrusted in shape as well as text. */
 function obj(v) {
@@ -121,6 +122,8 @@ function leaguesOf(data) {
       // league the vault adds tomorrow gets a readable button with no deploy.
       label: str(l.label) || slug.split('/').pop().toUpperCase(),
       emoji: str(l.emoji),
+      // v1.4 (C2): carried, never read here — boardFilter() owns its meaning.
+      filter: l.filter,
     });
   }
   return out;
@@ -293,32 +296,9 @@ export function oddsChips(game) {
 
 // ------------------------------------------------------------------ tickets
 
-/**
- * The ESPN event ids the Bookie currently holds a ticket on, with the ticket
- * labels per id (T1): `Map<id, string[]>`. Read off the snapshot's `bets_live`
- * payload — a single names one game, a parlay names each of its `games[]`.
- * An empty map when the tile or its tickets are absent. No fetch, no grade.
- */
-export function ticketedGames(snapshot) {
-  const out = new Map();
-  const tickets = obj(obj(obj(obj(snapshot).tiles).bets_live).data).tickets;
-  for (const raw of Array.isArray(tickets) ? tickets : []) {
-    const t = obj(raw);
-    const label = str(t.label) || str(t.game) || 'ticket';
-    const ids = [];
-    if (Array.isArray(t.games) && t.games.length) {
-      for (const g of t.games) ids.push(str(obj(g).espn_event_id));
-    } else {
-      ids.push(str(t.espn_event_id));
-    }
-    for (const id of ids) {
-      if (!id) continue;
-      if (!out.has(id)) out.set(id, []);
-      out.get(id).push(label);
-    }
-  }
-  return out;
-}
+// `ticketedGames` moved to live/board-filter.js in v1.4 (C5) so the band and
+// this tile share one definition; re-exported here for the harness.
+export { ticketedGames };
 
 // -------------------------------------------------------------------- story
 
@@ -386,7 +366,8 @@ export function storyRows(summary) {
  * The line score, when the game carries one: `{innings:[…], away:{abbr,
  * runs:[…], total}, home:{…}}`, or null for a game with no per-period
  * numbers (every pre-game and all of soccer — espn.js leaves those []).
- * Baseball's whole story is in here, so ⚾ never fetches a summary.
+ * Baseball's whole story is in here, so ⚾ never fetches a summary; since
+ * v1.4 so is basketball's (🏀, C9), with OT columns and a `T` total.
  */
 export function lineScore(game) {
   const a = obj(obj(game).away);
@@ -396,8 +377,19 @@ export function lineScore(game) {
   const n = Math.max(ar.length, hr.length);
   if (!n) return null;
   const pad = (arr) => arr.concat(Array(n - arr.length).fill(null));
+  // 🏀 (v1.4, C9): periods past regulation are overtimes — college plays two
+  // halves, the NBA four quarters — and the total column is T, not R.
+  const league = str(obj(game).league);
+  const hoops = /basketball/i.test(league);
+  const reg = /college/i.test(league) ? 2 : 4;
+  const label = (i) => {
+    if (!hoops || i < reg) return String(i + 1);
+    const ot = i - reg + 1;
+    return ot === 1 ? 'OT' : `${ot}OT`;
+  };
   return {
-    innings: Array.from({ length: n }, (_, i) => String(i + 1)),
+    innings: Array.from({ length: n }, (_, i) => label(i)),
+    totalHead: hoops ? 'T' : 'R',
     away: { abbr: str(a.abbr) || 'A', runs: pad(ar), total: Number(a.score) || 0 },
     home: { abbr: str(h.abbr) || 'H', runs: pad(hr), total: Number(h.score) || 0 },
   };
@@ -452,11 +444,18 @@ function sortByKick(games) {
   return [...(Array.isArray(games) ? games : [])].sort((a, b) => kickRank(a) - kickRank(b));
 }
 
-/** "Brewers @ Pirates" — shortDisplayNames, per the spec. */
+/**
+ * "Brewers @ Pirates" — shortDisplayNames, per the spec. A ranked side wears
+ * ESPN's number (v1.4, C6): `#9 Virginia @ #3 Duke`. espn.js only carries a
+ * rank of 1–25, so an unranked side — and every NFL/MLB row — reads as before.
+ */
 function matchupText(game) {
-  const away = str(obj(game.away).short) || str(obj(game.away).abbr) || '—';
-  const home = str(obj(game.home).short) || str(obj(game.home).abbr) || '—';
-  return `${away} @ ${home}`;
+  const side = (s) => {
+    const name = str(obj(s).short) || str(obj(s).abbr) || '—';
+    const r = obj(s).rank;
+    return Number.isInteger(r) && r >= 1 && r <= 25 ? `#${r} ${name}` : name;
+  };
+  return `${side(game.away)} @ ${side(game.home)}`;
 }
 
 /** "MIL 3 – 2 PIT", away-first, the way the matchup reads. */
@@ -587,16 +586,17 @@ function paintFold(fold, game, fetchSummary) {
       ]);
     fold.appendChild(
       el('div', { cls: 'tg-ls', attrs: { role: 'table', 'aria-label': 'line score' } }, [
-        el('div', { cls: 'tg-ls-row tg-ls-innings' }, [cell('', 'tg-ls-head'), ...ls.innings.map((i) => cell(i)), cell('R', 'tg-ls-total')]),
+        el('div', { cls: 'tg-ls-row tg-ls-innings' }, [cell('', 'tg-ls-head'), ...ls.innings.map((i) => cell(i)), cell(ls.totalHead, 'tg-ls-total')]),
         line(ls.away, ls.away.abbr),
         line(ls.home, ls.home.abbr),
       ])
     );
   }
 
-  // The story. Baseball's is the line score above; nothing to fetch.
+  // The story. Baseball's and basketball's are the line score above — neither
+  // summary carries scoring plays (S3, C9) — so only football and soccer fetch.
   const league = str(g.league);
-  const wantsStory = !g.dead && (g.state === 'in' || g.state === 'post') && !/baseball/i.test(league) && typeof fetchSummary === 'function';
+  const wantsStory = !g.dead && (g.state === 'in' || g.state === 'post') && /^(football|soccer)\//i.test(league) && typeof fetchSummary === 'function';
   let storyEl = null;
   if (wantsStory) {
     drew = true;
@@ -723,7 +723,8 @@ function tomorrowBody(leagues, data, dateCt, fetchBoard, aux) {
           .then(() => fetchBoard(league.slug, compact))
           // ESPN's `dates=` is a hint: a thin day comes back with its
           // neighbours attached. Tomorrow is the thin day.
-          .then((events) => ({ league, games: onCtDate(events, compact), ok: true }))
+          // Then the league's own filter (C4/C8): Tomorrow gets the same board.
+          .then((events) => ({ league, games: boardFilter(onCtDate(events, compact), league.filter, aux.ticketIds), ok: true }))
           .catch(() => ({ league, games: [], ok: false }))
       )
     )
@@ -785,6 +786,8 @@ export function render(root, tile, ctx) {
     tickets: ticketedGames(ctx?.snapshot),
     fetchSummary: typeof ctx?.actions?.fetchSummary === 'function' ? ctx.actions.fetchSummary : realFetchSummary,
   };
+  // The same ids as a Set, for the Tomorrow sheet's filter (C5).
+  aux.ticketIds = new Set(aux.tickets.keys());
 
   const buttons = leagues.map((league) => {
     const entry = byLeague ? byLeague.get(league.slug) : null;

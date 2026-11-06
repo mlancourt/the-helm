@@ -1801,7 +1801,11 @@ async function main() {
     const NEXT_CT = '2026-09-18';
     const AFTER_CT = '2026-09-19';
     const RAW = slate(DATE_CT, NEXT_CT, AFTER_CT);
-    const payload = todayGamesPayload(DATE_CT, NEXT_CT);
+    // The pre-v1.4 sections below run on the four pro leagues exactly as
+    // they always have (C11: those rows must render byte-identical); the two
+    // filtered college leagues get their own section further down.
+    const FULL_PAYLOAD = todayGamesPayload(DATE_CT, NEXT_CT);
+    const payload = { ...FULL_PAYLOAD, leagues: FULL_PAYLOAD.leagues.filter((l) => !l.filter) };
 
     const liveFor = (slugs, { ok = true, error = null } = {}) => ({
       games: new Map(),
@@ -2565,6 +2569,147 @@ async function main() {
         check('the tomorrow line has a stylesheet block', !!TMR_CSS);
         check('it is muted, not a tone', /--text-faint/.test(TMR_CSS) && !/--good|--warn|--bad|--info/.test(TMR_CSS));
       }
+    }
+
+    // -- v1.4: college, filtered in the band (C1–C12) ------------------------
+    console.log('\ntoday_games v1.4 — college leagues, filtered');
+    {
+      const { COLLEGE_EVT } = require('./mock-espn.js');
+      const { createLiveBand } = await import('../docs/live/band.js');
+      const { boardFilter } = await import('../docs/live/board-filter.js');
+      const CFB = FULL_PAYLOAD.leagues.find((l) => l.slug === 'football/college-football');
+      const CBB = FULL_PAYLOAD.leagues.find((l) => l.slug === 'basketball/mens-college-basketball');
+      check('C1: CFB and NCAAB follow the pro leagues, in that order', FULL_PAYLOAD.leagues.slice(-2).map((l) => `${l.emoji} ${l.label}`).join('|') === '🏈 CFB|🏀 NCAAB');
+      check('tg.ticketedGames is the board-filter helper, re-exported', tg.ticketedGames === (await import('../docs/live/board-filter.js')).ticketedGames);
+
+      // The real band, on the mock slate, with a ticket on the dropped-shape game.
+      const ticket = { id: 'tc', league: CBB.slug, espn_event_id: COLLEGE_EVT.cbbPinned, kick_ct: `${DATE_CT} 12:00`, market: 'ml', side: 'away', label: 'Hollow Creek ML', stake_u: 1, to_win_u: 1.2 };
+      const snap = { schema: 1, tiles: { bets_live: { band: 'DAILY', status: 'ok', data: { tickets: [ticket] } }, today_games: { band: 'LIVE', status: 'ok', data: FULL_PAYLOAD } } };
+      const bandFetch = async (league, _date) => (RAW.leagues[league] || []).map((e) => normalizeEvent(e, league)).filter(Boolean);
+      let live = null;
+      await createLiveBand((x) => (live = x), { fetchScoreboard: bandFetch, fetchSummary: async () => ({}) }).runOnce(snap);
+
+      const calls = [];
+      const cPanel = fakePanel();
+      const cRoot = new El('div');
+      tg.render(cRoot, { band: 'LIVE', status: 'ok', data: FULL_PAYLOAD }, {
+        id: 'today_games', snapshot: snap, live,
+        actions: { ...cPanel.actions, fetchSummary: (l, id) => { calls.push(`${l}|${id}`); return Promise.resolve({}); } },
+      });
+      const btns = tgBtns(cRoot);
+      check('six mock buttons — four pro + CFB + NCAAB', tgLabels(cRoot).join('|') === 'MLB|MLS|EPL|La Liga|CFB|NCAAB', tgLabels(cRoot).join('|'));
+      check('the pro chips are unchanged by the filter', btns.slice(0, 4).map(chipText).join() === '3 games,2 games,no games today,2 games', btns.slice(0, 4).map(chipText).join());
+      check('C8: CFB chip is the filtered count (2 of 3)', chipText(btns[4]) === '2 games', chipText(btns[4]));
+      check('C8: NCAAB chip is filtered + the ticket (3 of 4)', chipText(btns[5]) === '3 games', chipText(btns[5]));
+      check('CFB wears no live dot — its only live game was filtered out', !btns[4].querySelector('.tg-dot'));
+      check('NCAAB wears one — the ranked game is live', !!btns[5].querySelector('.tg-dot'));
+      check('no "filtered" vocabulary anywhere on the face', !/filter/i.test(textOf(cRoot)));
+
+      // CFB sheet: the rank prefix.
+      tap(btns[4]);
+      const names = (body) => body.querySelectorAll('.tg-matchup').map((m) => { const sp = m.querySelectorAll('span'); return sp[sp.length - 1].textContent; });
+      const cfbNames = names(cPanel.last.body);
+      check('C6: a ranked side wears #n, an unranked one does not', cfbNames.includes('#12 Quarry St @ Bluffton'), cfbNames.join(' | '));
+      check('C6: an unranked conference game reads as before', cfbNames.includes('Tamarack Tech @ Prairie'), cfbNames.join(' | '));
+      check('the dropped mid-major is not in the sheet', !cfbNames.some((n) => /Marshland/.test(n)));
+      check('the score text is unchanged — no # in the status', !cPanel.last.body.querySelectorAll('.tg-status').some((n) => /#/.test(n.textContent)));
+      // 🏈 fold: one summary fetch for the final.
+      const cfbRows = cPanel.last.body.querySelectorAll('.tg-game');
+      const finIdx = cfbNames.indexOf('Tamarack Tech @ Prairie');
+      tap(cfbRows[finIdx]);
+      check('🏈 fold still makes one fetchSummary call', calls.length === 1 && calls[0] === `${CFB.slug}|${COLLEGE_EVT.cfbConf}`, calls.join());
+      check('🏈 fold keeps the R header on its line score', cPanel.last.body.querySelectorAll('.tg-ls-innings').map((r) => { const c = r.querySelectorAll('.tg-ls-cell'); return c[c.length - 1].textContent; }).join() === 'R');
+
+      // NCAAB sheet: both ranked, the pin, the 🏀 fold.
+      calls.length = 0;
+      tap(btns[5]);
+      const body = cPanel.last.body;
+      const cbbNames = names(body);
+      check('C6: both ranks on the row — "#9 Alder @ #3 Copperline"', cbbNames.includes('#9 Alder @ #3 Copperline'), cbbNames.join(' | '));
+      const pinned = body.querySelectorAll('.tg-matchup').find((m) => /Hollow Creek/.test(m.textContent));
+      check('C5: the pinned-but-dropped game is on the sheet', !!pinned);
+      check('…and wears tg-ticket', !!pinned && !!pinned.querySelector('.tg-ticket') && pinned.querySelector('.tg-ticket').getAttribute('title') === 'Hollow Creek ML');
+      check('the dropped unpinned game is not', !cbbNames.some((n) => /Gully/.test(n)));
+      const cbbRows = body.querySelectorAll('.tg-game');
+      const liveIdx = cbbNames.indexOf('#9 Alder @ #3 Copperline');
+      const pinIdx = cbbNames.findIndex((n) => /Hollow Creek/.test(n));
+      tap(cbbRows[liveIdx]);
+      tap(cbbRows[pinIdx]);
+      check('🏀 fold renders the line score (.tg-ls*)', countOf(body, 'tg-ls') === 2 && countOf(body, 'tg-ls-row') === 6);
+      check('🏀 fold makes zero fetchSummary calls, live or final', calls.length === 0, calls.join());
+      check('🏀 fold draws no story block', countOf(body, 'tg-story') === 0);
+      const heads = body.querySelectorAll('.tg-ls-innings').map((r) => r.querySelectorAll('.tg-ls-cell').map((c) => c.textContent).join(','));
+      check('🏀 halves 1,2 and a T total', heads.includes(',1,2,T'), heads.join(' / '));
+      check('🏀 an overtime column reads OT', heads.includes(',1,2,OT,T'), heads.join(' / '));
+      const ls = tg.lineScore(normalizeEvent(RAW.leagues[CBB.slug][3], CBB.slug));
+      check('lineScore: totals off the score, OT runs off linescores', ls.away.total === 71 && ls.away.runs.join() === '30,32,9' && ls.totalHead === 'T');
+      check('lineScore: NBA regulation is four quarters', tg.lineScore({ league: 'basketball/nba', away: { linescores: [1, 2, 3, 4, 5, 6] }, home: { linescores: [1, 1, 1, 1, 1, 1] } }).innings.join() === '1,2,3,4,OT,2OT');
+      check('lineScore: baseball keeps R and numbered innings', tg.lineScore(normalizeEvent(RAW.leagues['baseball/mlb'][1], 'baseball/mlb')).totalHead === 'R');
+
+      // #n only when rank is 1–25.
+      const rankRow = (awayRank, homeRank) => {
+        const pn = fakePanel();
+        const rt = new El('div');
+        const g = { id: '1', league: CBB.slug, state: 'pre', startDate: null, away: { short: 'Away', abbr: 'AW', rank: awayRank }, home: { short: 'Home', abbr: 'HM', rank: homeRank }, broadcasts: [] };
+        tg.render(rt, { band: 'LIVE', status: 'ok', data: { leagues: [CBB], date_ct: DATE_CT } }, { id: 'today_games', actions: pn.actions, live: { today: { date_ct: DATE_CT, leagues: new Map([[CBB.slug, { games: [g], ok: true }]]) } } });
+        tap(tgBtns(rt)[0]);
+        return pn.last.body.querySelector('.tg-matchup').textContent;
+      };
+      check('#n prefix: 1 and 25 print', rankRow(1, 25) === '#1 Away @ #25 Home', rankRow(1, 25));
+      check('#n prefix: null, 0, 26, 99, a string print nothing', rankRow(null, 0) === 'Away @ Home' && rankRow(26, 99) === 'Away @ Home' && rankRow('7', undefined) === 'Away @ Home');
+
+      // A slate that filters to nothing reads G6's greyed state.
+      {
+        const mid = RAW.leagues[CBB.slug].filter((e) => [COLLEGE_EVT.cbbDrop].includes(e.id));
+        let lv = null;
+        await createLiveBand((x) => (lv = x), { fetchScoreboard: async (league) => (league === CBB.slug ? mid : []).map((e) => normalizeEvent(e, league)), fetchSummary: async () => ({}) })
+          .runOnce({ tiles: { today_games: { data: { leagues: [CBB], date_ct: DATE_CT } } } });
+        const rt = new El('div');
+        tg.render(rt, { band: 'LIVE', status: 'ok', data: { leagues: [CBB], date_ct: DATE_CT } }, { id: 'today_games', actions: fakePanel().actions, live: lv });
+        check('C8: a slate that filters to nothing reads "no games today", greyed', chipText(tgBtns(rt)[0]) === 'no games today' && tgBtns(rt)[0].className.includes('tg-btn-none'));
+      }
+
+      // Tomorrow gets the same filter (C4/C8).
+      {
+        const pn = fakePanel();
+        const rt = new El('div');
+        tg.render(rt, { band: 'LIVE', status: 'ok', data: { ...FULL_PAYLOAD, leagues: [CBB] } }, {
+          id: 'today_games', live,
+          actions: { ...pn.actions, fetchScoreboard: async (league) => (RAW.leagues_next[league] || []).map((e) => normalizeEvent(e, league)) },
+        });
+        tap(rt.querySelector('.tg-tomorrow'));
+        await new Promise((r) => setTimeout(r, 0));
+        const tn = names(pn.last.body);
+        check('Tomorrow: the ranked game is kept with its #n', tn.join('|') === 'Fenwater Tech @ #3 Copperline', tn.join('|'));
+        check('Tomorrow: the mid-major game is dropped', !tn.some((n) => /Gully/.test(n)));
+      }
+      {
+        // …and a ticket on tomorrow's dropped game keeps it there too.
+        const pn = fakePanel();
+        const rt = new El('div');
+        const tSnap = { tiles: { bets_live: { data: { tickets: [{ id: 'x', label: 'Gully ML', espn_event_id: COLLEGE_EVT.cbbNextDrop }] } } } };
+        tg.render(rt, { band: 'LIVE', status: 'ok', data: { ...FULL_PAYLOAD, leagues: [CBB] } }, {
+          id: 'today_games', live, snapshot: tSnap,
+          actions: { ...pn.actions, fetchScoreboard: async (league) => (RAW.leagues_next[league] || []).map((e) => normalizeEvent(e, league)) },
+        });
+        tap(rt.querySelector('.tg-tomorrow'));
+        await new Promise((r) => setTimeout(r, 0));
+        check('Tomorrow: a ticketed game the filter would drop is kept, with 🎟️', names(pn.last.body).length === 2 && countOf(pn.last.body, 'tg-ticket') === 1);
+      }
+
+      // The pro rows are byte-identical: unfiltered leagues pass through boardFilter untouched.
+      const mlbRaw = RAW.leagues['baseball/mlb'].map((e) => normalizeEvent(e, 'baseball/mlb'));
+      check('a league with no filter keeps every game through boardFilter', boardFilter(mlbRaw, undefined, new Set()).length === mlbRaw.length);
+
+      // Source scans.
+      const strip = (f) => fs.readFileSync(path.join(__dirname, '..', 'docs', ...f.split('/')), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      const BF = strip('live/board-filter.js');
+      check('board-filter.js is pure: no fetch, no DOM, no Date, no storage', !/fetch\(|document\.|new Date|Date\.parse|localStorage|innerHTML/.test(BF));
+      const TG = strip('tiles/today_games.js');
+      check('today_games.js still constructs no Date and sets no innerHTML', !/new Date\(/.test(TG) && !/innerHTML/.test(TG));
+      check('today_games.js no longer defines ticketedGames itself', !/function ticketedGames/.test(TG));
+      const SW = fs.readFileSync(path.join(__dirname, '..', 'docs', 'sw.js'), 'utf8');
+      check('the SW precaches live/board-filter.js', /live\/board-filter\.js/.test(SW));
     }
 
     // -- watchChips directly (G4), for the cases a row cannot reach ----------
