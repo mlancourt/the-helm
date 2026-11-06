@@ -377,7 +377,9 @@ export function fetchScoreboard(league, dateCompact = ctDateCompact()) {
   const hit = inFlight.get(key);
   if (hit) return hit;
 
-  const url = `${ESPN_BASE}/${league}/scoreboard?dates=${dateCompact}&limit=100`;
+  // 2026-11-06: college basketball defaults to the featured/Top-25 slate (9 of 72 D-I games on 11/6); groups=50 = all of D-I.
+  const grp = league.includes('college-basketball') ? '&groups=50' : '';
+  const url = `${ESPN_BASE}/${league}/scoreboard?dates=${dateCompact}&limit=400${grp}`;
   const p = getJson(url)
     .then((json) => {
       const events = Array.isArray(json?.events) ? json.events : [];
