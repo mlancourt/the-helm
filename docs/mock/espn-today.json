@@ -1,19 +1,19 @@
 {
   "_comment": "INVENTED ESPN SLATE for ?mock=1. Real league slugs and response shapes; every team, score, channel and event id is fake. Regenerate with: node tools/make-mock-data.js --espn > docs/mock/espn-today.json",
-  "date_ct": "2026-11-06",
-  "date_next_ct": "2026-11-07",
+  "date_ct": "2026-11-10",
+  "date_next_ct": "2026-11-11",
   "leagues": {
     "baseball/mlb": [
       {
         "id": "401998201",
         "uid": "s:1~l:1~e:401998201",
-        "date": "2026-11-07T01:10:00.000Z",
+        "date": "2026-11-11T01:10:00.000Z",
         "name": "Lakeshore Loons at Cream City Nine",
         "shortName": "LKL @ CCN",
         "competitions": [
           {
             "id": "401998201",
-            "date": "2026-11-07T01:10:00.000Z",
+            "date": "2026-11-11T01:10:00.000Z",
             "venue": {
               "fullName": "Cream City Yard",
               "address": {
@@ -272,13 +272,13 @@
       {
         "id": "401998202",
         "uid": "s:1~l:1~e:401998202",
-        "date": "2026-11-06T19:10:00.000Z",
+        "date": "2026-11-10T19:10:00.000Z",
         "name": "Harbor Herons at Foundry Ironsides",
         "shortName": "HRN @ FIS",
         "competitions": [
           {
             "id": "401998202",
-            "date": "2026-11-06T19:10:00.000Z",
+            "date": "2026-11-10T19:10:00.000Z",
             "venue": {
               "fullName": "Foundry Field",
               "address": {
@@ -559,13 +559,13 @@
       {
         "id": "401998203",
         "uid": "s:1~l:1~e:401998203",
-        "date": "2026-11-07T03:40:00.000Z",
+        "date": "2026-11-11T03:40:00.000Z",
         "name": "Granite City Foremen at Cedar Valley Drays",
         "shortName": "GCF @ CVD",
         "competitions": [
           {
             "id": "401998203",
-            "date": "2026-11-07T03:40:00.000Z",
+            "date": "2026-11-11T03:40:00.000Z",
             "venue": {
               "fullName": "Drayworks Park",
               "address": {
@@ -752,13 +752,13 @@
       {
         "id": "742118",
         "uid": "s:1~l:1~e:742118",
-        "date": "2026-11-07T01:30:00.000Z",
+        "date": "2026-11-11T01:30:00.000Z",
         "name": "Cross Harbor SC at Riverbend FC",
         "shortName": "CHS @ RVB",
         "competitions": [
           {
             "id": "742118",
-            "date": "2026-11-07T01:30:00.000Z",
+            "date": "2026-11-11T01:30:00.000Z",
             "venue": {
               "fullName": "Riverbend Grounds",
               "address": {
@@ -934,13 +934,13 @@
       {
         "id": "742119",
         "uid": "s:1~l:1~e:742119",
-        "date": "2026-11-07T02:00:00.000Z",
+        "date": "2026-11-11T02:00:00.000Z",
         "name": "North Pike Sentinels at Slack Water United",
         "shortName": "NPS @ SWU",
         "competitions": [
           {
             "id": "742119",
-            "date": "2026-11-07T02:00:00.000Z",
+            "date": "2026-11-11T02:00:00.000Z",
             "venue": {
               "fullName": "Pike Street Stadium",
               "address": {
@@ -1003,13 +1003,13 @@
       {
         "id": "401990501",
         "uid": "s:1~l:1~e:401990501",
-        "date": "2026-11-06T18:00:00.000Z",
+        "date": "2026-11-10T18:00:00.000Z",
         "name": "Harbor Kestrels at Foundry Ironsides",
         "shortName": "HRK @ FDI",
         "competitions": [
           {
             "id": "401990501",
-            "date": "2026-11-06T18:00:00.000Z",
+            "date": "2026-11-10T18:00:00.000Z",
             "venue": {
               "fullName": "Harbor Field",
               "address": {
@@ -1114,13 +1114,13 @@
       {
         "id": "401990502",
         "uid": "s:1~l:1~e:401990502",
-        "date": "2026-11-07T01:20:00.000Z",
+        "date": "2026-11-11T01:20:00.000Z",
         "name": "North Pike Sentinels at Lakeshore Loons",
         "shortName": "NPS @ LKL",
         "competitions": [
           {
             "id": "401990502",
-            "date": "2026-11-07T01:20:00.000Z",
+            "date": "2026-11-11T01:20:00.000Z",
             "venue": {
               "fullName": "Pike Bowl",
               "address": {
@@ -1181,13 +1181,13 @@
       {
         "id": "401990503",
         "uid": "s:1~l:1~e:401990503",
-        "date": "2026-11-06T18:00:00.000Z",
+        "date": "2026-11-10T18:00:00.000Z",
         "name": "Granite City Foremen at Cedar Valley Drays",
         "shortName": "GCF @ CVD",
         "competitions": [
           {
             "id": "401990503",
-            "date": "2026-11-06T18:00:00.000Z",
+            "date": "2026-11-10T18:00:00.000Z",
             "venue": {
               "fullName": "Drayworks Stadium",
               "address": {
@@ -1296,13 +1296,13 @@
       {
         "id": "401999301",
         "uid": "s:1~l:1~e:401999301",
-        "date": "2026-11-06T20:30:00.000Z",
+        "date": "2026-11-10T20:30:00.000Z",
         "name": "Quarry State Masons at Bluffton Ferrymen",
         "shortName": "QRY @ BLF",
         "competitions": [
           {
             "id": "401999301",
-            "date": "2026-11-06T20:30:00.000Z",
+            "date": "2026-11-10T20:30:00.000Z",
             "venue": {
               "fullName": "Quarry Bowl",
               "address": {
@@ -1378,13 +1378,13 @@
       {
         "id": "401999302",
         "uid": "s:1~l:1~e:401999302",
-        "date": "2026-11-06T17:00:00.000Z",
+        "date": "2026-11-10T17:00:00.000Z",
         "name": "Tamarack Tech Owls at Prairie University Bison",
         "shortName": "TMR @ PRU",
         "competitions": [
           {
             "id": "401999302",
-            "date": "2026-11-06T17:00:00.000Z",
+            "date": "2026-11-10T17:00:00.000Z",
             "venue": {
               "fullName": "Prairie Field",
               "address": {
@@ -1499,13 +1499,13 @@
       {
         "id": "401999303",
         "uid": "s:1~l:1~e:401999303",
-        "date": "2026-11-06T19:00:00.000Z",
+        "date": "2026-11-10T19:00:00.000Z",
         "name": "Marshland A&M Herons at Saltgrass State Rams",
         "shortName": "MRS @ SLT",
         "competitions": [
           {
             "id": "401999303",
-            "date": "2026-11-06T19:00:00.000Z",
+            "date": "2026-11-10T19:00:00.000Z",
             "venue": {
               "fullName": "Marsh Stadium",
               "address": {
@@ -1600,13 +1600,13 @@
       {
         "id": "401999401",
         "uid": "s:1~l:1~e:401999401",
-        "date": "2026-11-07T00:00:00.000Z",
+        "date": "2026-11-11T00:00:00.000Z",
         "name": "Alder University Lynx at Copperline Miners",
         "shortName": "ALD @ CPR",
         "competitions": [
           {
             "id": "401999401",
-            "date": "2026-11-07T00:00:00.000Z",
+            "date": "2026-11-11T00:00:00.000Z",
             "venue": {
               "fullName": "Copper Dome",
               "address": {
@@ -1699,13 +1699,13 @@
       {
         "id": "401999402",
         "uid": "s:1~l:1~e:401999402",
-        "date": "2026-11-07T01:30:00.000Z",
+        "date": "2026-11-11T01:30:00.000Z",
         "name": "Yellowbirch College Wrens at Lantern State Keepers",
         "shortName": "YSB @ LNT",
         "competitions": [
           {
             "id": "401999402",
-            "date": "2026-11-07T01:30:00.000Z",
+            "date": "2026-11-11T01:30:00.000Z",
             "venue": {
               "fullName": "Lantern Fieldhouse",
               "address": {
@@ -1774,13 +1774,13 @@
       {
         "id": "401999403",
         "uid": "s:1~l:1~e:401999403",
-        "date": "2026-11-07T00:30:00.000Z",
+        "date": "2026-11-11T00:30:00.000Z",
         "name": "Gully College Coyotes at Fenwater Tech Otters",
         "shortName": "GUL @ FEN",
         "competitions": [
           {
             "id": "401999403",
-            "date": "2026-11-07T00:30:00.000Z",
+            "date": "2026-11-11T00:30:00.000Z",
             "venue": {
               "fullName": "Gully Gym",
               "address": {
@@ -1849,13 +1849,13 @@
       {
         "id": "401999404",
         "uid": "s:1~l:1~e:401999404",
-        "date": "2026-11-06T18:00:00.000Z",
+        "date": "2026-11-10T18:00:00.000Z",
         "name": "Hollow Creek Hawks at Ashfall State Embers",
         "shortName": "HLW @ ASH",
         "competitions": [
           {
             "id": "401999404",
-            "date": "2026-11-06T18:00:00.000Z",
+            "date": "2026-11-10T18:00:00.000Z",
             "venue": {
               "fullName": "Hollow Arena",
               "address": {
@@ -1963,13 +1963,13 @@
       {
         "id": "731447",
         "uid": "s:1~l:1~e:731447",
-        "date": "2026-11-06T20:00:00.000Z",
+        "date": "2026-11-10T20:00:00.000Z",
         "name": "Almendro CF at Val de Mar",
         "shortName": "ALM @ VDM",
         "competitions": [
           {
             "id": "731447",
-            "date": "2026-11-06T20:00:00.000Z",
+            "date": "2026-11-10T20:00:00.000Z",
             "venue": {
               "fullName": "Estadio Inventado",
               "address": {
@@ -2063,13 +2063,13 @@
       {
         "id": "731448",
         "uid": "s:1~l:1~e:731448",
-        "date": "2026-11-06T15:00:00.000Z",
+        "date": "2026-11-10T15:00:00.000Z",
         "name": "Puerto Faro at Montaraz",
         "shortName": "PTF @ MNT",
         "competitions": [
           {
             "id": "731448",
-            "date": "2026-11-06T15:00:00.000Z",
+            "date": "2026-11-10T15:00:00.000Z",
             "venue": {
               "fullName": "Campo del Faro",
               "address": {
@@ -2172,13 +2172,13 @@
       {
         "id": "401998211",
         "uid": "s:1~l:1~e:401998211",
-        "date": "2026-11-08T00:40:00.000Z",
+        "date": "2026-11-12T00:40:00.000Z",
         "name": "Granite City Foremen at Cream City Nine",
         "shortName": "GCF @ CCN",
         "competitions": [
           {
             "id": "401998211",
-            "date": "2026-11-08T00:40:00.000Z",
+            "date": "2026-11-12T00:40:00.000Z",
             "venue": {
               "fullName": "Cream City Yard",
               "address": {
@@ -2363,13 +2363,13 @@
       {
         "id": "401998212",
         "uid": "s:1~l:1~e:401998212",
-        "date": "2026-11-07T19:10:00.000Z",
+        "date": "2026-11-11T19:10:00.000Z",
         "name": "Lakeshore Loons at Foundry Ironsides",
         "shortName": "LKL @ FIS",
         "competitions": [
           {
             "id": "401998212",
-            "date": "2026-11-07T19:10:00.000Z",
+            "date": "2026-11-11T19:10:00.000Z",
             "venue": {
               "fullName": "Foundry Field",
               "address": {
@@ -2449,13 +2449,13 @@
       {
         "id": "401998213",
         "uid": "s:1~l:1~e:401998213",
-        "date": "2026-11-09T01:05:00.000Z",
+        "date": "2026-11-13T01:05:00.000Z",
         "name": "Harbor Herons at Cedar Valley Drays",
         "shortName": "HRN @ CVD",
         "competitions": [
           {
             "id": "401998213",
-            "date": "2026-11-09T01:05:00.000Z",
+            "date": "2026-11-13T01:05:00.000Z",
             "venue": {
               "fullName": "Drayworks Park",
               "address": {
@@ -2537,13 +2537,13 @@
       {
         "id": "742131",
         "uid": "s:1~l:1~e:742131",
-        "date": "2026-11-08T01:30:00.000Z",
+        "date": "2026-11-12T01:30:00.000Z",
         "name": "Riverbend FC at Slack Water United",
         "shortName": "RVB @ SWU",
         "competitions": [
           {
             "id": "742131",
-            "date": "2026-11-08T01:30:00.000Z",
+            "date": "2026-11-12T01:30:00.000Z",
             "venue": {
               "fullName": "Pike Street Stadium",
               "address": {
@@ -2607,13 +2607,13 @@
       {
         "id": "401999411",
         "uid": "s:1~l:1~e:401999411",
-        "date": "2026-11-08T01:00:00.000Z",
+        "date": "2026-11-12T01:00:00.000Z",
         "name": "Fenwater Tech Otters at Copperline Miners",
         "shortName": "FEN @ CPR",
         "competitions": [
           {
             "id": "401999411",
-            "date": "2026-11-08T01:00:00.000Z",
+            "date": "2026-11-12T01:00:00.000Z",
             "venue": {
               "fullName": "Copper Dome",
               "address": {
@@ -2682,13 +2682,13 @@
       {
         "id": "401999412",
         "uid": "s:1~l:1~e:401999412",
-        "date": "2026-11-08T02:00:00.000Z",
+        "date": "2026-11-12T02:00:00.000Z",
         "name": "Hollow Creek Hawks at Gully College Coyotes",
         "shortName": "HLW @ GUL",
         "competitions": [
           {
             "id": "401999412",
-            "date": "2026-11-08T02:00:00.000Z",
+            "date": "2026-11-12T02:00:00.000Z",
             "venue": {
               "fullName": "Gully Gym",
               "address": {
@@ -2759,13 +2759,13 @@
       {
         "id": "731461",
         "uid": "s:1~l:1~e:731461",
-        "date": "2026-11-07T20:00:00.000Z",
+        "date": "2026-11-11T20:00:00.000Z",
         "name": "Montaraz at Almendro CF",
         "shortName": "MNT @ ALM",
         "competitions": [
           {
             "id": "731461",
-            "date": "2026-11-07T20:00:00.000Z",
+            "date": "2026-11-11T20:00:00.000Z",
             "venue": {
               "fullName": "Estadio Inventado",
               "address": {

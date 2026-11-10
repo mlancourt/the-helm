@@ -87,7 +87,7 @@ const cls = (node) => node.className;
     /wss_traffic:\s*\{\s*band:\s*'DAILY',\s*position:\s*132,\s*module:\s*'\.\/tiles\/wss_traffic\.js',\s*title:\s*'📈 Site Pulse'/.test(REG)
   );
   const { REGISTRY } = await import('../docs/tiles/_registry.js');
-  check('Crew Tape 130 and Watch Bill 135 did not move', REGISTRY.wss_tape.position === 130 && REGISTRY.watch_bill.position === 135);
+  check('Crew Tape 130 and Ship Status 140 did not move', REGISTRY.wss_tape.position === 130 && REGISTRY.ship_status.position === 140);
   check('the SW precaches the module', /'\.\/tiles\/wss_traffic\.js'/.test(read('docs', 'sw.js')));
   {
     const cv = Number((read('docs', 'sw.js').match(/CACHE_VERSION = 'helm-v(\d+)'/) || [])[1]);
