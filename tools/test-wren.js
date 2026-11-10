@@ -544,10 +544,11 @@ const pane = (s, key) => one(s, `.wren-pane-${key}`);
       stray.map((r) => r.sel).join(' | ') || `${uses.length} uses`
     );
     const base = rules.find((r) => r.sel === '.card-title');
-    const before = rules.find((r) => r.sel === '.card-title::before');
+    // v1.46: the nameplate's leading dash is gone (the title is plain system
+    // type now), so there is no ::before left to tint — and none may come back.
     check(
       '.card-title outside her scope still resolves to --brass',
-      !!base && /color:\s*var\(--brass\)/.test(base.body) && !!before && /background:\s*var\(--brass\)/.test(before.body) && !/Helm Display/.test(base.body)
+      !!base && /color:\s*var\(--brass\)/.test(base.body) && !/Helm Display/.test(base.body) && !rules.some((r) => r.sel === '.card-title::before')
     );
     const APP = fs.readFileSync(path.join(__dirname, '..', 'docs', 'app.js'), 'utf8');
     check('the shell tags the panel with the tile that opened it', /panel\.setAttribute\('data-tile'/.test(APP) && /tileActions\(id\)/.test(APP));

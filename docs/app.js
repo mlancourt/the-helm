@@ -129,7 +129,7 @@ const mockEspn = {
 const liveBand = createLiveBand(
   (next) => {
     state.live = next;
-    renderAll();
+    renderFeed('live');
   },
   MOCK_ESPN ? mockEspn : {}
 );
@@ -162,7 +162,7 @@ const mockNws = {
 const weatherBand = createWeatherBand(
   (next) => {
     state.weather = next;
-    renderAll();
+    renderFeed('weather');
   },
   MOCK ? mockNws : {}
 );
@@ -545,7 +545,10 @@ function tileCard(id, entry, tile) {
         const teardown = mod(body, tile, { id, title, snapshot: state.snapshot, pending: state.pending, actions: tileActions(id), live: state.live, weather: state.weather });
         // A tile that started a clock hands back its teardown (bets_live's
         // graded-ago stamp); renderAll runs every one before the next board.
-        if (typeof teardown === 'function') (state.tileTeardowns ||= []).push(teardown);
+        if (typeof teardown === 'function') {
+          teardown.tile = id; // renderFeed retires one card's without touching the rest
+          (state.tileTeardowns ||= []).push(teardown);
+        }
       } else {
         genericCard(body, tile);
       }
@@ -678,6 +681,41 @@ function renderHeader() {
     chip.classList.add('show');
   } else {
     chip.classList.remove('show');
+  }
+}
+
+/**
+ * A feed ticked — redraw the cards that read it, and only those.
+ *
+ * The LIVE band reports every 20 seconds on a game night. Rebuilding the whole
+ * board for it meant eighteen cards torn down and re-laid to change two: every
+ * image re-requested, every tile's open/closed state at the mercy of its own
+ * bookkeeping, and a scroll that could jump under a thumb. The registry says
+ * which tiles read which feed (`feed:`), so the swap is one card for one card
+ * and the rest of the board never notices.
+ *
+ * Falls back to the full render whenever there is no board to patch.
+ */
+function renderFeed(feed) {
+  const grid = document.querySelector('#board > .grid');
+  const tiles = state.snapshot?.tiles;
+  if (!grid || !tiles || typeof tiles !== 'object') {
+    renderAll();
+    return;
+  }
+  renderBanner();
+  renderBoardBanner();
+  renderHeader();
+  for (const [id, entry] of Object.entries(REGISTRY)) {
+    if (entry.feed !== feed) continue;
+    const old = grid.querySelector(`.card[data-tile="${id}"]`);
+    if (!old) continue;
+    const mine = (state.tileTeardowns || []).filter((fn) => fn.tile === id);
+    state.tileTeardowns = (state.tileTeardowns || []).filter((fn) => fn.tile !== id);
+    for (const fn of mine) {
+      try { fn(); } catch { /* rule 8 */ }
+    }
+    old.replaceWith(tileCard(id, entry, tiles[id] || null));
   }
 }
 

@@ -15,6 +15,13 @@
  * clocks in live/band.js key off the snapshot payloads (tiles.bets_live,
  * tiles.today_games, tiles.weather), never off this field.
  *
+ * `feed` names the browser-side feed a tile's face reads through `ctx` —
+ * 'live' (ESPN, ctx.live) or 'weather' (NWS, ctx.weather). When that feed
+ * ticks the shell redraws exactly those cards (renderFeed in app.js) and
+ * leaves the rest of the board alone. A tile that reads ctx.live or
+ * ctx.weather MUST declare it here, or it only updates on the 5-minute
+ * snapshot refresh.
+ *
  * Rule 9 — the page tolerates schema growth in both directions:
  *   - a snapshot tile with no entry here renders as a generic key/value card
  *   - an entry here missing from the snapshot renders as an empty grey card
@@ -36,12 +43,12 @@ export const REGISTRY = {
   // were for (ruling, 2026-09-20).
   captains_log: { band: 'DAILY', position: 25, module: './tiles/captains_log.js', title: "⚓ Captain's Log" },
   dinner: { band: 'DAILY', position: 30, module: './tiles/dinner.js', title: 'Dinner' },
-  weather: { band: 'LIVE', position: 40, module: './tiles/weather.js', title: 'Weather' },
+  weather: { band: 'LIVE', position: 40, module: './tiles/weather.js', title: 'Weather', feed: 'weather' },
   newsstand: { band: 'HOURLY', position: 50, module: './tiles/newsstand.js', title: '📰 Newsstand' },
   entertainment: { band: 'DAILY', position: 60, module: './tiles/entertainment.js', title: 'Entertainment' },
   local_events: { band: 'DAILY', position: 70, module: './tiles/local_events.js', title: 'Lake Country' },
-  today_games: { band: 'LIVE', position: 80, module: './tiles/today_games.js', title: "Today's Games" },
-  bets_live: { band: 'LIVE', position: 90, module: './tiles/bets_live.js', title: 'Open Bets' },
+  today_games: { band: 'LIVE', position: 80, module: './tiles/today_games.js', title: "Today's Games", feed: 'live' },
+  bets_live: { band: 'LIVE', position: 90, module: './tiles/bets_live.js', title: 'Open Bets', feed: 'live' },
   // The look-back to `bets_live`'s sweat, and directly under it.
   bets_ledger: { band: 'DAILY', position: 100, module: './tiles/bets_ledger.js', title: '📒 The Ledger' },
   cards: { band: 'HOURLY', position: 110, module: './tiles/cards.js', title: '🃏 Cards' },

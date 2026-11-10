@@ -259,7 +259,9 @@ console.log('\nsubhead never contains me.name');
   );
 
   const trans = decls(sheetBody, 'transition')[0] || '';
-  check('.sheet slides in 200ms ease-out', /transform\s+200ms\s+ease-out/.test(trans), trans);
+  // v1.46: 200ms ease-out became the system sheet's curve — front-loaded, so it
+  // lands fast and settles slow. The curve lives in :root as --ease-sheet.
+  check('.sheet slides on the sheet curve', /transform\s+380ms\s+var\(--ease-sheet\)/.test(trans) && /--ease-sheet:\s*cubic-bezier\(/.test(CSS), trans);
   check('.sheet is translated, not resized, to open', /translateY/.test(sheetBody));
 
   for (const sel of ['.sheet-body', '.ask-transcript', '.panel-body', '.ask-compose']) {
@@ -584,6 +586,28 @@ console.log('\nsubhead never contains me.name');
     check('renderAll runs the last board\'s teardowns', stopped === 2, String(stopped));
     check('a throwing teardown does not stop the board', titles().length === ORDER.length);
     check('and the list is emptied for the next board', Array.isArray(shellState.tileTeardowns) && shellState.tileTeardowns.length === 0);
+
+    // -- a feed tick redraws its own cards, not the board (v1.46) -----------
+    //
+    // The contract is the registry's `feed:` field. It is checked against the
+    // tile SOURCES, because the failure it guards is silent: a tile that
+    // reads ctx.live without declaring it still renders — it just stops
+    // ticking, and only on a game night.
+    const feedSrc = (CODE.match(/function renderFeed\(feed\)\s*\{[\s\S]*?\n\}/) || [''])[0];
+    check('renderFeed was found', feedSrc.length > 0);
+    check('the live band redraws through it', /state\.live = next;\s*renderFeed\('live'\)/.test(CODE));
+    check('and so does the weather band', /state\.weather = next;\s*renderFeed\('weather'\)/.test(CODE));
+    check('no feed callback rebuilds the whole board', !/state\.(live|weather) = next;\s*renderAll\(\)/.test(CODE));
+    check('it falls back to the full render when there is no board to patch', /if \(!grid \|\| !tiles[^)]*\) \{\s*renderAll\(\);/.test(feedSrc));
+    check('it retires only the replaced card\'s teardowns', /fn\.tile === id/.test(feedSrc) && /fn\.tile !== id/.test(feedSrc) && /teardown\.tile = id/.test(cardSrc));
+    check('and swaps the card in place', /old\.replaceWith\(tileCard\(id, entry, tiles\[id\] \|\| null\)\)/.test(feedSrc));
+    for (const [id, entry] of Object.entries(REGISTRY)) {
+      if (id === 'ask' || !entry.module) continue;
+      const src = read('docs', entry.module.replace('./', ''));
+      const reads = (f) => new RegExp(`ctx(\\?)?\\.${f}\\b|ctx && ctx\\.${f}\\b`).test(src);
+      const want = reads('live') ? 'live' : reads('weather') ? 'weather' : undefined;
+      check(`${id}: registry feed matches what the module reads (${want || 'none'})`, entry.feed === want, String(entry.feed));
+    }
   }
 
   console.log(`\n${pass} passed, ${failures.length} failed`);
