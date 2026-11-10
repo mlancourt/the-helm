@@ -35,8 +35,8 @@
 /* ----------------------------------------------------------------- tokens
 
    The whole skin is this block. Rules below name a token, never a value: a
-   colour literal outside :root is a bug (Night Watch S3), and since v1.46 so
-   is a radius or a font size that is not on the scales here.
+   colour literal outside :root is a bug (Night Watch S3). Since v1.46 corner
+   radii are tokens too, and text is held to the type scale below.
 
    Surfaces follow the system convention: true black underneath, and every
    layer that sits on top of another is one step LIGHTER — elevation is
@@ -94,8 +94,12 @@
   --safe-r: env(safe-area-inset-right, 0px);
 }
 
-/* Type scale (px): 11 · 12 · 13 · 14 · 15 · 16 · 17 · 22 · 28. Nothing
-   smaller than 11, no half pixels. */
+/* Type scale (px): 11 · 12 · 13 · 14 · 15 · 16 · 17 · 22 · 28 — literals,
+   not tokens. It governs TEXT: nothing a person reads is under 11 or on a
+   half pixel. Set by eye and off the scale on purpose: glyph sizes (emoji,
+   dots, the × and ↻), text inside an SVG, and the two display-face titles
+   (the wordmark, Wren). Bars and tracks 2–3px tall keep literal radii — that
+   is geometry, not a corner. */
 
 * { box-sizing: border-box; }
 
@@ -110,7 +114,7 @@ html, body {
 }
 
 body {
-  padding: calc(var(--safe-t)) calc(16px + var(--safe-r)) calc(96px + var(--safe-b)) calc(16px + var(--safe-l));
+  padding: calc(var(--safe-t)) calc(12px + var(--safe-r)) calc(96px + var(--safe-b)) calc(12px + var(--safe-l));
   overscroll-behavior-y: contain;
 }
 
@@ -121,7 +125,7 @@ body {
 button {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: opacity var(--t-press) ease, transform var(--t-press) ease, background-color var(--t-press) ease;
+  transition: opacity var(--t-press) ease, background-color var(--t-press) ease;
 }
 button:active:not(:disabled) { opacity: 0.6; }
 :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
@@ -273,7 +277,7 @@ button:active:not(:disabled) { opacity: 0.6; }
 .card {
   background: var(--bg-raise);
   border-radius: var(--r-card);
-  padding: 16px 16px 12px;
+  padding: 16px 14px 12px;
   display: flex;
   flex-direction: column;
   /* a grid item's min-width is auto: without this one long unbroken string
@@ -284,7 +288,7 @@ button:active:not(:disabled) { opacity: 0.6; }
 }
 
 /* Stale, missing or errored: the card recedes and its head says why. */
-.card-degraded { opacity: 0.55; }
+.card-degraded { opacity: 0.62; }
 
 .card-head {
   display: flex;
@@ -485,7 +489,7 @@ button:active:not(:disabled) { opacity: 0.6; }
 /* B19 (v1.28.0) — ALIVE: a parlay with nothing lost and a game still to
    play. Muted amber, deliberately quieter than TRAILING's warn: it is not
    behind, it is untested. */
-.pill-alive { background: var(--bg-chip); color: color-mix(in srgb, var(--warn) 65%, var(--text-faint)); border-color: color-mix(in srgb, var(--warn) 30%, var(--bg-raise)); }
+.pill-alive { background: var(--bg-chip); color: color-mix(in srgb, var(--warn) 65%, var(--text-faint)); border-color: var(--edge); }
 
 /* B17 — the parlay's own card: a head with the slip, a chip per game, one
    row per leg, and the ticket's own row at the foot. */
@@ -872,7 +876,7 @@ button:active:not(:disabled) { opacity: 0.6; }
   align-items: center;
   gap: 5px;
   min-width: 0;
-  padding: 9px 10px;
+  padding: 9px 8px;
   border-radius: var(--r-md);
   border: 1px solid var(--edge);
   background: var(--bg-chip);
@@ -1128,7 +1132,8 @@ button:active:not(:disabled) { opacity: 0.6; }
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 999px;
-  border: 1px solid currentColor;
+  border: 1px solid var(--edge);
+  background: color-mix(in srgb, currentColor 22%, transparent);
   opacity: 0.8;
 }
 
@@ -1260,6 +1265,9 @@ button:active:not(:disabled) { opacity: 0.6; }
   padding: 10px 12px;
   margin-bottom: 10px;
 }
+
+/* A pill on a tinted block: the block already wears the pill's 18% ground. */
+.wx-sheet-alert .pill { background: color-mix(in srgb, currentColor 24%, transparent); }
 
 .wx-sheet-alert-head {
   display: flex;
@@ -1601,7 +1609,7 @@ button:active:not(:disabled) { opacity: 0.6; }
   align-items: center;
   gap: 5px;
   min-width: 0;
-  padding: 9px 10px;
+  padding: 9px 8px;
   border-radius: var(--r-md);
   border: 1px solid var(--edge);
   background: var(--bg-chip);
@@ -1639,7 +1647,7 @@ button:active:not(:disabled) { opacity: 0.6; }
   border-radius: 999px;
   background: var(--brass);
   color: var(--bg);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -1752,7 +1760,7 @@ button:active:not(:disabled) { opacity: 0.6; }
 .news-lens {
   margin: 6px 0 0;
   padding-left: 8px;
-  border-left: 2px solid var(--edge);
+  border-left: 2px solid color-mix(in srgb, var(--info) 45%, var(--bg-raise));
   color: var(--info);
   font-size: 12px;
   line-height: 1.4;
@@ -1776,7 +1784,7 @@ button:active:not(:disabled) { opacity: 0.6; }
   align-items: center;
   gap: 5px;
   min-width: 0;
-  padding: 9px 10px;
+  padding: 9px 8px;
   border-radius: var(--r-md);
   border: 1px solid var(--edge);
   background: var(--bg-chip);
@@ -1902,7 +1910,7 @@ button:active:not(:disabled) { opacity: 0.6; }
 .ent-year,
 .ent-seq { font-size: 12px; color: var(--text-faint); }
 
-/* Pushed to the end of the title line: mono and tabular so five ratings stack
+/* Pushed to the end of the title line: tabular figures so five ratings stack
    into a column rather than jittering with the decimals. */
 .ent-rating {
   margin-left: auto;
@@ -1975,7 +1983,7 @@ button:active:not(:disabled) { opacity: 0.6; }
   border-radius: 999px;
   background: var(--brass);
   color: var(--bg);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -2093,7 +2101,7 @@ button:active:not(:disabled) { opacity: 0.6; }
    for a live one. The age rides on the note line below it. */
 .ship-plan-stale { opacity: 0.55; }
 
-/* The hull panel — an overhead annunciator, not a dashboard widget. Hairline
+/* The hull panel — an overhead annunciator, not a dashboard widget. Filled
    panels on the card surface, lamps learned by position. Every tint is a
    color-mix off the four tone tokens; the dots are the pill palette, so a red
    here is the red everywhere else on the board. No glow, no scanlines. */
@@ -2143,11 +2151,11 @@ button:active:not(:disabled) { opacity: 0.6; }
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  padding: 6px 8px;
+  padding: 6px 6px;
   text-align: left;
   font: inherit;
   color: var(--text);
-  background: var(--bg-raise);
+  background: var(--bg-sink);
   border: 1px solid var(--edge);
   border-radius: var(--r-sm);
   cursor: pointer;
@@ -2268,7 +2276,7 @@ button:active:not(:disabled) { opacity: 0.6; }
   display: flex;
   flex-direction: column;
   background: var(--bg-raise);
-  border-radius: 24px 24px 0 0;
+  border-radius: var(--r-card) var(--r-card) 0 0;
 
   /* The home indicator only needs clearing when the keyboard is not already
      covering it; once --kb exceeds the inset this collapses to nothing rather
@@ -2304,6 +2312,8 @@ button:active:not(:disabled) { opacity: 0.6; }
     width: 420px; max-height: 70vh;
     border-radius: var(--r-card);
     padding: 16px 16px 14px;
+    /* it floats 18px above the edge, so its own height is not far enough */
+    transform: translateY(calc(100% + 48px));
   }
   .sheet.open { transform: translateY(0); }
   .sheet::before { display: none; }
@@ -2377,7 +2387,7 @@ button:active:not(:disabled) { opacity: 0.6; }
 .ask-transcript:not(:has(.bubble)) { padding-bottom: 2px; }
 
 .bubble {
-  max-width: 86%; padding: 9px 13px; border-radius: 18px; font-size: 15px; line-height: 1.35;
+  max-width: 86%; padding: 9px 13px; border-radius: var(--r-card); font-size: 15px; line-height: 1.35;
 }
 .bubble-user {
   align-self: flex-end; background: var(--brass); color: var(--bg); border-bottom-right-radius: var(--r-sm);
@@ -2417,15 +2427,19 @@ button:active:not(:disabled) { opacity: 0.6; }
 .ask-input {
   flex: 1;
   resize: none;
-  min-height: 40px;
+  min-height: 44px;
   max-height: 120px;
   padding: 10px 11px;
-  border-radius: 20px;
+  border-radius: var(--r-card);
   border: 1px solid var(--edge);
   background: var(--bg-sink);
   color: var(--text);
-  /* 16px keeps iOS Safari from zooming the viewport on focus */
-  font: 16px/1.35 inherit;
+  /* 16px keeps iOS Safari from zooming the viewport on focus. Longhands on
+     purpose: `font: 16px/1.35 inherit` is not a valid shorthand, so the whole
+     declaration was dropped and the field rendered at the browser's 13.3px —
+     and zoomed. (Found by the v1.46.0 fresh-eyes pass; it predates the skin.) */
+  font-size: 16px;
+  line-height: 1.35;
   font-family: inherit;
 }
 .ask-input:focus { outline: none; border-color: var(--brass); }
@@ -3082,7 +3096,7 @@ a.wb-doc:hover { text-decoration: underline; }
 .cards-btn-shop { background: color-mix(in srgb, var(--info) 18%, var(--bg-raise)); color: var(--info);  border-color: var(--edge); }
 .cards-btn-pc   { background: color-mix(in srgb, var(--pc-serial) 18%, var(--bg-raise)); color: var(--pc-serial); border-color: var(--edge); }
 /* The keepers: the board's own warm text, not a deal colour and not the 1/1 gold. */
-.cards-btn-keep { background: color-mix(in srgb, var(--text) 10%, var(--bg-raise)); color: var(--text); border-color: color-mix(in srgb, var(--text) 35%, var(--bg-raise)); }
+.cards-btn-keep { background: color-mix(in srgb, var(--text) 10%, var(--bg-raise)); color: var(--text); border-color: var(--edge); }
 
 /* A face the engine has not built yet: visible, so it reads as coming. */
 .cards-btn-soon {
@@ -3398,7 +3412,7 @@ a.wb-doc:hover { text-decoration: underline; }
   background: color-mix(in srgb, var(--brass) 18%, var(--bg-raise));
   border: 1px solid var(--edge);
   color: var(--brass);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
 }
 

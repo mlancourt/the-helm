@@ -55,7 +55,7 @@ const state = {
   error: null,
   live: null, // the LIVE band fills this: {games, grades, today, fetched_at, error}
   weather: null, // the weather band fills this: {alerts, now, days, ok, error}
-  tileTeardowns: [], // what the current board's tiles started; run before the next
+  tileTeardowns: [], // what the drawn tiles started; each is run before its card is redrawn
 };
 
 let askController = null;
@@ -544,7 +544,8 @@ function tileCard(id, entry, tile) {
       if (mod) {
         const teardown = mod(body, tile, { id, title, snapshot: state.snapshot, pending: state.pending, actions: tileActions(id), live: state.live, weather: state.weather });
         // A tile that started a clock hands back its teardown (bets_live's
-        // graded-ago stamp); renderAll runs every one before the next board.
+        // graded-ago stamp); it is run before that card is drawn again —
+        // by renderAll for the whole board, by renderFeed for one card.
         if (typeof teardown === 'function') {
           teardown.tile = id; // renderFeed retires one card's without touching the rest
           (state.tileTeardowns ||= []).push(teardown);
