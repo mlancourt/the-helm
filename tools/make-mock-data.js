@@ -350,6 +350,10 @@ function snapshot() {
             // returns at the logged price. The page prints both and computes neither.
             sport: '🏈',
             to_win_u: 1.82,
+            // B26 — the implied chance of the logged price, the engine's
+            // (off the same American string as to_win_u). The page starts the
+            // lean here and does no odds math of its own.
+            p0: 0.5238,
           },
           {
             id: 'tkt-mock-002',
@@ -367,6 +371,7 @@ function snapshot() {
             class: 'lean',
             sport: '🏈',
             to_win_u: 0.95,
+            p0: 0.5122,
           },
           {
             id: 'tkt-mock-003',
@@ -384,6 +389,7 @@ function snapshot() {
             class: 'flier',
             sport: '🏈',
             to_win_u: 1.35,
+            p0: 0.4255,
           },
           {
             id: 'tkt-mock-004',
@@ -401,6 +407,7 @@ function snapshot() {
             class: 'core',
             sport: '🏀',
             to_win_u: 1.03,
+            p0: 0.5918,
           },
           {
             id: 'tkt-mock-005',
@@ -418,6 +425,7 @@ function snapshot() {
             class: 'flier',
             sport: '⚽',
             to_win_u: 0.42,
+            p0: 0.5455,
           },
           {
             // No price in the log, so the Bookie publishes no `to_win_u`. The
@@ -438,6 +446,7 @@ function snapshot() {
             class: 'lean',
             sport: '🏀',
             to_win_u: null,
+            p0: null,
           },
           // Today's Games v1.4 (C5): a ticket on a college game the board
           // filter would drop — two mid-majors — so the board keeps it and
@@ -458,6 +467,63 @@ function snapshot() {
             class: 'flier',
             sport: '🏀',
             to_win_u: 1.2,
+            p0: 0.4545,
+          },
+          // B32 — the three markets the engine parses since 2026-11-11: one
+          // team's total, the draw, and double chance (side or draw).
+          {
+            id: 'tkt-mock-011',
+            league: 'football/nfl',
+            espn_event_id: EVT.nfl1,
+            game: 'Harbor Kestrels at Foundry Ironsides',
+            kick_ct: `${TODAY} 15:25`,
+            market: 'team_total_over',
+            side: 'home',
+            line: 20.5,
+            player: null,
+            label: 'Ironsides Team Total O20.5',
+            stake_u: 1.0,
+            price: -115,
+            class: 'lean',
+            sport: '🏈',
+            to_win_u: 0.87,
+            p0: 0.5349,
+          },
+          {
+            id: 'tkt-mock-012',
+            league: 'soccer/usa.1',
+            espn_event_id: EVT.soccer1,
+            game: 'Riverbend FC vs Cross Harbor SC',
+            kick_ct: `${TOMORROW} 19:30`,
+            market: 'draw',
+            side: null,
+            line: null,
+            player: null,
+            label: 'Draw',
+            stake_u: 0.5,
+            price: 240,
+            class: 'flier',
+            sport: '⚽',
+            to_win_u: 1.2,
+            p0: 0.2941,
+          },
+          {
+            id: 'tkt-mock-013',
+            league: 'soccer/usa.1',
+            espn_event_id: EVT.soccer1,
+            game: 'Riverbend FC vs Cross Harbor SC',
+            kick_ct: `${TOMORROW} 19:30`,
+            market: 'dc',
+            side: 'home',
+            line: null,
+            player: null,
+            label: 'Cross Harbor "No" (Riverbend or Draw)',
+            stake_u: 1.0,
+            price: -150,
+            class: 'core',
+            sport: '⚽',
+            to_win_u: 0.67,
+            p0: 0.6,
           },
           // B16 — two parlays, on the three invented NFL games in the mock
           // slate (one live, one to come, one final). `payout_x` and

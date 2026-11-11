@@ -3390,6 +3390,18 @@ button:active:not(:disabled) { opacity: 0.6; }
 }
 .cover-muted .cover-notch { background: var(--text-faint); }
 
+/* B29–B30 (v1.47.0) — the lean: a muted whole percent beside the pill, and
+   the sweat line under the figures — the chance over this session on a fixed
+   0–1 scale, a dotted line at 50%, the last point in the bar's tone. */
+.ticket-odds { display: flex; align-items: center; gap: 6px; }
+.ticket-pct { font-size: 12px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.bets-sweat { display: block; width: 64px; height: 16px; }
+.bets-sweat-mid { stroke: var(--text-faint); stroke-width: 1; stroke-dasharray: 1 2; }
+.bets-sweat-line { fill: none; stroke: var(--text-faint); stroke-width: 1.2; stroke-linejoin: round; stroke-linecap: round; }
+.bets-sweat-now { fill: var(--text-faint); }
+.bets-sweat-now-good { fill: var(--good); }
+.bets-sweat-now-bad { fill: var(--bad); }
+
 /* B14 — the live pulse: how long ago the band graded, or its error. */
 .bets-graded {
   margin: -6px 0 9px;

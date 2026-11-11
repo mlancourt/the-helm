@@ -56,6 +56,15 @@
  * game runs. It is a picture of the row's `why` — aria-hidden, no text, and
  * no new number: lean-now still sums the row figures and nothing else (B15).
  *
+ * THE LEAN (B25–B31, v1.47.0). A single ticket whose engine sent `p0` gets a
+ * live chance off `live/lean.js` — the score, the clock and its own price,
+ * nothing else. The row prints it (`62%`, live and unlocked only), the bar
+ * draws it from the 50% notch, a sweat line traces it over the session, and
+ * the units figure is its expected value: `p × to_win_u − (1 − p − push) ×
+ * stake_u`. Locks are 1 and 0, so a final reads exactly as before; PRE, a
+ * parlay and any ticket the lean cannot price keep the B4 ladder untouched.
+ * The pill still says the score — a ticket can be LEADING at 40%.
+ *
  * THE PULSE (B14). One muted `graded 12s ago` in the header, repainted every
  * 5 s by exactly one interval. The render returns its teardown to the shell,
  * and the module also clears its own last timer at the top of every render,
@@ -82,9 +91,12 @@
  * textContent. ESPN text is untrusted exactly like snapshot text is.
  */
 
-import { el, pill, empty } from '../lib/dom.js';
+import { el, svgEl, pill, empty } from '../lib/dom.js';
 // Pure functions only — no fetch, no clock. The tile still never fetches.
 import { gameProgress, sportOf, LEG_STAT } from '../live/graders.js';
+// The lean (B25–B34): the one module that prices a ticket's chances.
+import { leanProb, expectedUnits } from '../live/lean.js';
+import { sparkGeometry } from '../lib/spark.js';
 // The streak chip is shared with `bets_ledger` — see lib/bets.js.
 import { streakChip } from '../lib/bets.js';
 import {
@@ -168,7 +180,7 @@ function num(v) {
  * lean toward the money, red away from it, grey for a ticket that is not
  * saying anything yet.
  */
-export function ticketUnits(ticket, grade) {
+export function ticketUnits(ticket, grade, game = null) {
   const stake = num(ticket && ticket.stake_u);
   const toWin = num(ticket && ticket.to_win_u);
   const state = (grade && grade.state) || 'pre';
@@ -182,6 +194,18 @@ export function ticketUnits(ticket, grade) {
   // leaning on the payout either — the AND is strict, so it reads 0.00u.
   if (ticket.market === 'parlay' && (state === 'trail' || state === 'alive')) {
     return { value: 0, text: '0.00u', tone: 'flat' };
+  }
+
+  // B28: expected units, off lean.js's one weighted sum (the tile itself
+  // multiplies no stake). Rounded to the cent there, so the value the header
+  // adds is exactly the figure the row prints and the two reconcile by
+  // construction. A lock is p = 1 / p = 0, which is +to_win_u / −stake_u to
+  // the cent — the finals read as they always have.
+  const lean = stake === null ? null : leanProb(ticket, grade, game);
+  if (lean) {
+    const value = expectedUnits(lean, toWin, stake);
+    if (value === 0) return { value: 0, text: '0.00u', tone: 'flat' };
+    return { value, text: signedUnits(value), tone: value > 0 ? 'good' : 'bad' };
   }
 
   if (state === 'lead' || state === 'win') {
@@ -207,11 +231,17 @@ export function ticketUnits(ticket, grade) {
  * nowhere and must say "—" rather than a confident 0.00u. Once the band is up,
  * a board of PRE tickets genuinely does lean nowhere, and 0.00u is the truth.
  */
-function leanUnits(tickets, grades) {
+function leanUnits(tickets, grades, games) {
   if (!grades) return null;
   let net = 0;
-  for (const t of tickets) net += ticketUnits(t, grades.get(t.id)).value;
+  for (const t of tickets) net += ticketUnits(t, grades.get(t.id), gameOf(t, games)).value;
   return net;
+}
+
+/** A single ticket's live game, or null (a parlay has many and needs none here). */
+function gameOf(t, games) {
+  if (!games || !t || t.market === 'parlay') return null;
+  return games.get(String(t.espn_event_id)) || null;
 }
 
 /**
@@ -227,7 +257,7 @@ function closedUnits(tickets, grades, games) {
   for (const t of tickets) {
     if (!ticketFinal(t, games)) continue;
     any = true;
-    net += ticketUnits(t, grades.get(t.id)).value;
+    net += ticketUnits(t, grades.get(t.id), gameOf(t, games)).value;
   }
   return any ? net : 0;
 }
@@ -274,7 +304,7 @@ function headerStats(data, grades, games) {
     // printed on it IS the news; the colour stays off (B9 · B22).
     stat('net', netUnits(data.net_u)),
     stat('open', units(data.open_u)),
-    signedStat('lean now', leanUnits(tickets, grades)),
+    signedStat('lean now', leanUnits(tickets, grades, games)),
     signedStat('closed', closedUnits(tickets, grades, games)),
     stat('record', str(data.record) || '—'),
   ]);
@@ -432,20 +462,6 @@ function lastCardLine(card) {
 // ---------------------------------------------------------------- cover bar
 
 /**
- * How many points reach the edge of the bar (B11): per SPORT, not per market.
- * A 14-point football cover and a 3-run baseball cover both read as "all the
- * way" — the scale is the sport's own sense of a comfortable margin.
- */
-const COVER_SCALE = {
-  football: 14,
-  basketball: 14,
-  baseball: 3,
-  hockey: 3,
-  soccer: 3,
-};
-const DEFAULT_SCALE = 14;
-
-/**
  * Parlay stat legs (B20) scale by the STAT, not the sport: forty rushing
  * yards over the line is as comfortable as a hundred passing.
  */
@@ -461,6 +477,19 @@ const BINARY = new Set(['anytime_td', 'anytime_goal', 'btts']);
 
 /** The pill's side of the story. Only these five states draw a fill. */
 const BAR_TONE = { lead: 'good', win: 'good', trail: 'bad', lose: 'bad' };
+
+/** Results the graders have locked: the lean is 1 or 0 and says nothing new. */
+const LOCKED = new Set(['win', 'lose', 'dead', 'push']);
+
+/**
+ * The lean on a single ticket while its game is live and nothing is locked,
+ * or null. This is what the row's percentage, the bar and the sweat line
+ * draw; a lock keeps the pictures it always had.
+ */
+function liveLean(ticket, grade, game) {
+  if (!game || game.state !== 'in' || !grade || LOCKED.has(grade.state)) return null;
+  return leanProb(ticket, grade, game);
+}
 
 const pct = (x) => `${(x * 100).toFixed(1)}%`;
 
@@ -479,6 +508,18 @@ export function coverBar(ticket, grade, game) {
   const track = progress === null ? 1 : 1 - progress;
 
   const state = grade && grade.state;
+
+  // B29: a priced single draws its chance — the notch is 50%, the fill runs
+  // toward the side it leans and is |p − 0.5| of the row. Its tone is the
+  // lean's, so a LEADING ticket at 40% leans red: the pill says the score,
+  // the bar says the odds.
+  const lean = liveLean(ticket, grade, game);
+  if (lean) {
+    if (lean.p > 0.5) return { track, tone: 'good', side: 'right', fill: lean.p - 0.5 };
+    if (lean.p < 0.5) return { track, tone: 'bad', side: 'left', fill: 0.5 - lean.p };
+    return { track, tone: 'muted', side: null, fill: 0 };
+  }
+
   const tone = BAR_TONE[state] || null;
   if (!tone) return { track, tone: 'muted', side: null, fill: 0 };
 
@@ -492,10 +533,13 @@ export function coverBar(ticket, grade, game) {
   // number it locked on.
   if (state === 'win' || state === 'lose') return { track, tone, side, fill: 0.5 };
 
+  // A parlay stat leg (B20) still fills by its margin over the stat's scale.
+  // A single the lean cannot price keeps its pill's tone over the notch alone:
+  // the per-sport margin scale it once used is retired (B29), and the pill
+  // and the figure beside it still say everything the grader knows.
+  const scale = MARKET_SCALE[ticket && ticket.market];
   const margin = num(grade.margin);
-  if (margin === null || margin === 0) return { track, tone, side: null, fill: 0 };
-  const scale =
-    MARKET_SCALE[ticket && ticket.market] || COVER_SCALE[sportOf(ticket && ticket.league)] || DEFAULT_SCALE;
+  if (!scale || margin === null || margin === 0) return { track, tone, side: null, fill: 0 };
   return { track, tone, side, fill: Math.min(Math.abs(margin) / scale, 1) * 0.5 };
 }
 
@@ -509,6 +553,61 @@ function coverBarEl(ticket, grade, game) {
   ]);
 }
 
+// --------------------------------------------------------------- sweat line
+
+const SECOND_MS = 1000;
+
+/**
+ * ticket id -> `{stamp, vals}`: the lean over this session (B30). Module
+ * memory, like the flip pulse — nothing is stored, a reload starts clean.
+ * One sample per grade pass (keyed off the band's `fetched_at`, so a board
+ * re-render between passes adds nothing); a pass that comes after the page
+ * slept lifts the pen first, so the gap shows.
+ */
+const sweat = new Map();
+const SWEAT_MAX = 400;
+const SWEAT_GAP_MS = 60 * SECOND_MS;
+const SWEAT = { w: 64, h: 16, px: 2, py: 2 };
+const SWEAT_SPAN = { lo: 0, hi: 1 };
+
+function recordSweat(tickets, games, grades, fetchedAt) {
+  const seen = new Set();
+  for (const t of tickets) {
+    const id = String(t.id);
+    seen.add(id);
+    if (t.market === 'parlay' || !grades || !fetchedAt) continue;
+    const game = gameOf(t, games);
+    const grade = grades.get(t.id);
+    if (!game || game.state !== 'in') continue;
+    const lean = leanProb(t, grade, game);
+    if (!lean) continue;
+    const prev = sweat.get(id) || { stamp: null, vals: [] };
+    if (prev.stamp === fetchedAt) continue;
+    const gap = prev.stamp ? Date.parse(fetchedAt) - Date.parse(prev.stamp) : 0;
+    if (prev.vals.length && gap > SWEAT_GAP_MS) prev.vals.push(null);
+    prev.vals.push(lean.p);
+    while (prev.vals.length > SWEAT_MAX) prev.vals.shift();
+    while (prev.vals.length && prev.vals[0] === null) prev.vals.shift();
+    sweat.set(id, { stamp: fetchedAt, vals: prev.vals });
+  }
+  for (const id of [...sweat.keys()]) if (!seen.has(id)) sweat.delete(id);
+}
+
+/** The sparkline: 0–1, a dotted 50% line, the last point in the bar's tone. */
+function sweatEl(id, tone) {
+  const s = sweat.get(String(id));
+  const vals = s ? s.vals : [];
+  if (vals.filter((v) => v !== null).length < 2) return null;
+  const g = sparkGeometry(vals, SWEAT, 0.5, false, SWEAT_SPAN);
+  if (!g) return null;
+  const mid = g.yAt(0.5);
+  return svgEl('svg', { cls: 'bets-sweat', attrs: { viewBox: `0 0 ${SWEAT.w} ${SWEAT.h}`, 'aria-hidden': 'true' } }, [
+    svgEl('line', { cls: 'bets-sweat-mid', attrs: { x1: SWEAT.px, x2: SWEAT.w - SWEAT.px, y1: mid, y2: mid } }),
+    svgEl('path', { cls: 'bets-sweat-line', attrs: { d: g.d } }),
+    svgEl('circle', { cls: `bets-sweat-now bets-sweat-now-${tone}`, attrs: { cx: g.x.toFixed(1), cy: g.y.toFixed(1), r: 1.8 } }),
+  ]);
+}
+
 // -------------------------------------------------------------------- pulse
 
 /** The one repaint interval this module may own. Cleared on every render. */
@@ -518,8 +617,6 @@ function stopStamp() {
   if (stampTimer !== null) clearInterval(stampTimer);
   stampTimer = null;
 }
-
-const SECOND_MS = 1000;
 
 /** `graded 12s ago`, or `graded 3m ago` once seconds stop being useful. */
 export function gradedAgo(fetchedAt, now = Date.now()) {
@@ -559,7 +656,9 @@ function pulseStamp(live) {
 function ticketRow(ticket, grade, flip, game) {
   const [label, tone] = STATE_PILL[grade && grade.state] || STATE_PILL.pre;
   const cls = str(ticket.class) || 'core';
-  const u = ticketUnits(ticket, grade);
+  const u = ticketUnits(ticket, grade, game);
+  // B29: the chance, live and unlocked only — never pre, never on a result.
+  const lean = liveLean(ticket, grade, game);
 
   const bits = [];
   if (ticket.market) bits.push(str(ticket.market).replace(/_/g, ' '));
@@ -577,12 +676,19 @@ function ticketRow(ticket, grade, flip, game) {
       }),
     ]),
     el('div', { cls: 'ticket-side' }, [
-      pill((grade && grade.label) || label, tone),
+      lean
+        ? el('div', { cls: 'ticket-odds' }, [
+            el('span', { cls: 'ticket-pct', text: `${Math.round(lean.p * 100)}%` }),
+            pill((grade && grade.label) || label, tone),
+          ])
+        : pill((grade && grade.label) || label, tone),
       el('div', { cls: `ticket-units ticket-units-${u.tone}`, text: u.text }),
       el('div', {
         cls: 'ticket-stake',
         text: `${units(ticket.stake_u)} @ ${odds(ticket.price) || '—'}`,
       }),
+      // B30: the sweat line, once this session has two points of it.
+      lean ? sweatEl(ticket.id, coverBar(ticket, grade, game).tone) : null,
     ]),
     // B11: last in the row, full width under everything above.
     coverBarEl(ticket, grade, game),
@@ -902,6 +1008,9 @@ export function render(el_, tile, ctx) {
   // absent when there is no settled row to report.
   const lastCard = data.form && typeof data.form === 'object' ? lastCardLine(data.form.last_card) : null;
   if (lastCard) el_.appendChild(lastCard);
+
+  // B30: one sample per grade pass, before anything is drawn from it.
+  recordSweat(tickets, games, grades, ctx && ctx.live ? ctx.live.fetched_at : null);
 
   if (!tickets.length) {
     el_.appendChild(empty('No open tickets.'));

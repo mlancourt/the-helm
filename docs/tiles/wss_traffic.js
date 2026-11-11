@@ -51,6 +51,7 @@
 
 import { el, svgEl, empty, extLink } from '../lib/dom.js';
 import { shortDay } from '../lib/fmt.js';
+import { sparkGeometry } from '../lib/spark.js';
 
 const TITLE = '📈 Site Pulse';
 
@@ -209,41 +210,8 @@ function series(chrono, src, key) {
   return chrono.map((row) => num(metric(obj(row)?.[src], key)?.value));
 }
 
-/**
- * The one sparkline geometry, shared by the face and the sheet (S13).
- * The ONLY arithmetic on days[]: min/max of what is drawn, to pixels.
- * `invert` turns the Y axis over so a better position sits higher; a null
- * lifts the pen. Returns null when there is nothing to draw.
- */
-function sparkGeometry(vals, box, base, invert) {
-  const have = vals.filter((v) => v !== null);
-  if (!have.length) return null;
-  const range = base === null ? have : have.concat([base]);
-  let lo = Math.min(...range);
-  let hi = Math.max(...range);
-  if (hi === lo) {
-    hi += 1;
-    lo -= 1;
-  }
-  const n = vals.length;
-  const xAt = (i) => (n === 1 ? box.w / 2 : box.px + ((box.w - box.px * 2) * i) / (n - 1));
-  const frac = (v) => (invert ? (v - lo) / (hi - lo) : (hi - v) / (hi - lo));
-  const yAt = (v) => box.py + frac(v) * (box.h - box.py * 2);
-
-  let d = '';
-  let pen = false;
-  let last = null;
-  vals.forEach((v, i) => {
-    if (v === null) {
-      pen = false;
-      return;
-    }
-    d += (pen ? 'L' : 'M') + round(xAt(i)) + ' ' + round(yAt(v)) + ' ';
-    pen = true;
-    last = i;
-  });
-  return { d: d.trim(), last, x: xAt(last), y: yAt(vals[last]), yAt };
-}
+// The one sparkline geometry, shared by the face and the sheet (S13), lives in
+// lib/spark.js — `bets_live`'s sweat line draws through it too (B30).
 
 // ------------------------------------------------------------------ the face
 

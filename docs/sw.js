@@ -15,7 +15,7 @@
  * Bump CACHE_VERSION to evict the old shell on deploy.
  */
 
-const CACHE_VERSION = 'helm-v72';
+const CACHE_VERSION = 'helm-v73';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 
@@ -31,10 +31,12 @@ const SHELL = [
   './lib/dom.js',
   './lib/fmt.js',
   './lib/header.js',
+  './lib/spark.js',
   './live/band.js',
   './live/board-filter.js',
   './live/espn.js',
   './live/graders.js',
+  './live/lean.js',
   './live/nws.js',
   './tiles/_registry.js',
   './tiles/ask.js',

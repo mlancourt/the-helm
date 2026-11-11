@@ -214,7 +214,8 @@ async function route(world, url, method = 'GET') {
     const missing = [...TILE_MODULES, 'tiles/_registry.js'].filter((m) => !w.log.added.includes(`./${m}`));
     check('install precaches every tile module', missing.length === 0, `missing: ${missing.join(', ')}`);
     // v1.45.0: five — board-filter.js joined espn/graders/nws/band.
-    check('install precaches every LIVE band module', w.log.added.filter((u) => u.includes('/live/')).length === 5);
+    check('install precaches every LIVE band module', w.log.added.filter((u) => u.includes('/live/')).length === 6);
+    check('install precaches the lean and the shared sparkline', w.log.added.includes('./live/lean.js') && w.log.added.includes('./lib/spark.js'));
     check('install precaches the icons', w.log.added.filter((u) => u.includes('/icons/')).length === 3);
     check('install calls skipWaiting', w.log.skipWaiting === 1);
   }

@@ -507,7 +507,9 @@ const cls = (node) => node.className;
   const toneUses = [...SRC.matchAll(/pulse-(dot|value|spark-now)-' \+ (\w+)/g)].map((m) => m[1] + ':' + m[2]);
   check('dot, value and spark point each take `tone`, nothing else', toneUses.sort().join() === 'dot:tone,spark-now:tone,value:tone', toneUses.join());
   check('toneOf is dotTone’s one caller', /return dead \? 'dead' : dotTone\(/.test(SRC) && CODE.split('dotTone(').length === 3, String(CODE.split('dotTone(').length));
-  check('S13: one sparkline geometry, called by face and sheet', CODE.split('sparkGeometry(').length === 4 && /faceSpark[\s\S]*sparkGeometry\(vals, FACE/.test(SRC) && /sparkGeometry\(vals, SHEET/.test(SRC));
+  // B30 moved the geometry to lib/spark.js (bets_live's sweat line shares it):
+  // still ONE definition, imported here and called by the face and the sheet.
+  check('S13: one sparkline geometry, called by face and sheet', CODE.split('sparkGeometry(').length === 3 && /import \{ sparkGeometry \} from '\.\.\/lib\/spark\.js'/.test(SRC) && !/function sparkGeometry/.test(SRC) && /faceSpark[\s\S]*sparkGeometry\(vals, FACE/.test(SRC) && /sparkGeometry\(vals, SHEET/.test(SRC));
   check('S14: the arrow returns nothing at zero', /d === null \|\| d === 0\) return null/.test(SRC) && !/– 0/.test(CODE));
   const dtStart = SRC.indexOf('export function dotTone(');
   const dtBody = SRC.slice(dtStart, SRC.indexOf('\n}\n', dtStart));

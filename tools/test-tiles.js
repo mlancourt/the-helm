@@ -3811,21 +3811,24 @@ async function main() {
     // One ticket per market at each state it can reach, on one live football
     // game at Q3 4:12 — (2 + (1 − 252/900)) / 4 = 0.68 played, so the track
     // is 32.0% of the row. Every grade carries the margin the grader would.
-    console.log('\nbets_live — the cover bar (B11, B12, B13)');
+    // None of these tickets carries `p0`, so none is priced by the lean: since
+    // B29 an unpriced single keeps its pill's tone over the notch alone (the
+    // per-sport margin scale is retired), and locks and binaries are as before.
+    console.log('\nbets_live — the cover bar (B11, B12, B13, B29)');
     const COVER_GAME = gameIn({ league: 'football/nfl', period: 3, clock: '4:12' });
     const CASES = [
       // id, market, state, margin, expected {tone, side, fill}
-      ['sp-lead', 'spread', 'lead', 7, { tone: 'good', side: 'right', fill: '25.0%' }],
-      ['sp-trail', 'spread', 'trail', -3.5, { tone: 'bad', side: 'left', fill: '12.5%' }],
-      ['sp-big', 'spread', 'lead', 30, { tone: 'good', side: 'right', fill: '50.0%' }],
+      ['sp-lead', 'spread', 'lead', 7, { tone: 'good', side: null }],
+      ['sp-trail', 'spread', 'trail', -3.5, { tone: 'bad', side: null }],
+      ['sp-big', 'spread', 'lead', 30, { tone: 'good', side: null }],
       ['sp-win', 'spread', 'win', 0.5, { tone: 'good', side: 'right', fill: '50.0%' }],
       ['sp-lose', 'spread', 'lose', -0.5, { tone: 'bad', side: 'left', fill: '50.0%' }],
-      ['h1-lead', 'spread_1h', 'lead', 3.5, { tone: 'good', side: 'right', fill: '12.5%' }],
-      ['ml-lead', 'ml', 'lead', 14, { tone: 'good', side: 'right', fill: '50.0%' }],
-      ['ml-trail', 'ml', 'trail', -7, { tone: 'bad', side: 'left', fill: '25.0%' }],
-      ['ov-trail', 'total_over', 'trail', -7, { tone: 'bad', side: 'left', fill: '25.0%' }],
+      ['h1-lead', 'spread_1h', 'lead', 3.5, { tone: 'good', side: null }],
+      ['ml-lead', 'ml', 'lead', 14, { tone: 'good', side: null }],
+      ['ml-trail', 'ml', 'trail', -7, { tone: 'bad', side: null }],
+      ['ov-trail', 'total_over', 'trail', -7, { tone: 'bad', side: null }],
       ['ov-win', 'total_over', 'win', 1.5, { tone: 'good', side: 'right', fill: '50.0%' }],
-      ['un-lead', 'total_under', 'lead', 3.5, { tone: 'good', side: 'right', fill: '12.5%' }],
+      ['un-lead', 'total_under', 'lead', 3.5, { tone: 'good', side: null }],
       ['un-lose', 'total_under', 'lose', -0.5, { tone: 'bad', side: 'left', fill: '50.0%' }],
       ['un-level', 'total_under', 'lead', 0, { tone: 'good', side: null }],
       ['td-trail', 'anytime_td', 'trail', null, { tone: 'bad', side: 'full', fill: '100.0%' }],
@@ -3874,13 +3877,10 @@ async function main() {
     const ct = (market, state, margin, game = COVER_GAME, league = 'football/nfl') => coverBar(tkt({ market, league }), { state, margin }, game);
     check('a locked win on a tiny margin is FULL green', ct('spread', 'win', 0.5).fill === 0.5 && ct('spread', 'win', 0.5).tone === 'good' && ct('spread', 'win', 0.5).side === 'right');
     check('a locked loss on a tiny margin is FULL red', ct('total_under', 'lose', -0.5).fill === 0.5 && ct('total_under', 'lose', -0.5).tone === 'bad');
-    check('tone is the pill\'s: lead with an odd negative margin is still good', ct('spread', 'lead', -2).tone === 'good' && ct('spread', 'lead', -2).side === 'right');
+    check('tone is the pill\'s: an unpriced lead with an odd negative margin is still good', ct('spread', 'lead', -2).tone === 'good' && ct('spread', 'lead', -2).side === null);
     check('no fill when the margin is 0, whatever the state', ct('total_over', 'trail', 0).side === null && ct('total_under', 'lead', 0).fill === 0);
-    check('scale by sport — baseball ±3: 1.5 runs is a quarter row', ct('spread', 'lead', 1.5, { state: 'in', period: 5 }, 'baseball/mlb').fill === 0.25);
-    check('hockey ±3: 3 goals pins at the half', ct('ml', 'lead', 3, { state: 'in', period: 2, clock: '10:00' }, 'hockey/nhl').fill === 0.5);
-    check('soccer ±3', ct('ml', 'trail', -1, { state: 'in', clock: "30'" }, 'soccer/eng.1').fill === 1 / 6);
-    check('basketball ±14: 7 is a quarter row', ct('spread', 'lead', 7, { state: 'in', period: 2, clock: '6:00' }, 'basketball/nba').fill === 0.25);
-    check('an unknown sport falls back to ±14', ct('ml', 'lead', 7, null, 'cricket/ipl').fill === 0.25);
+    check('B29: no per-sport margin scale survives — an unpriced single never fills', ['baseball/mlb', 'hockey/nhl', 'soccer/eng.1', 'basketball/nba', 'cricket/ipl'].every((lg) => ct('ml', 'lead', 3, { state: 'in', period: 2, clock: '10:00' }, lg).fill === 0));
+    check('B29: COVER_SCALE and DEFAULT_SCALE are gone from the module', !/COVER_SCALE|DEFAULT_SCALE/.test(BETS_SRC));
     check('track: pre is full', ct('spread', 'pre', null, gamePre()).track === 1);
     check('track: no game matched is full', ct('spread', 'lead', 3, null).track === 1);
     check('track: an unknowable clock leaves it full', ct('spread', 'lead', 3, gameIn({ league: 'football/nfl', clock: 'Halftime' })).track === 1);

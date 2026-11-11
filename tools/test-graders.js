@@ -380,6 +380,64 @@ function check(name, cond, detail) {
   const GSRC2 = GSRC.slice(GSRC.indexOf('export function gameProgress'));
   check('gameProgress reads no clock and fetches nothing', !/Date\.now|new Date|fetch\(|document\./.test(GSRC2));
 
+  // ------------------------------------- B32: the markets the engine now names
+  //
+  // Real finals: NFL CIN 33 – TB 27 (home CIN), soccer COV 0 – BHA 5 (home
+  // COV). In-play and level variants are derived from them, and marked.
+  console.log('\nteam totals, draw, double chance (B32)');
+  const tt = (market, side, line) => ({ id: 'tt', league: 'football/nfl', market, side, line });
+  const ttO = (side, line) => tt('team_total_over', side, line);
+  const ttU = (side, line) => tt('team_total_under', side, line);
+  check('team total: pre is PRE', st(ttO('home', 20.5), NFL_PRE) === 'pre');
+  check('team total over: CIN 33 final over 30.5 is WIN', st(ttO('home', 30.5), NFL) === 'win');
+  check('team total over: TB 27 final over 30.5 is LOSS — only the pick side counts', st(ttO('away', 30.5), NFL) === 'lose');
+  check('team total over: the GAME total (60) never decides it', st(ttO('away', 44.5), NFL) === 'lose');
+  check('team total over: lands on 27 is PUSH', st(ttO('away', 27), NFL) === 'push' && st(ttU('away', 27), NFL) === 'push');
+  check('team total under: TB 27 under 30.5 is WIN', st(ttU('away', 30.5), NFL) === 'win');
+  const ttLive = live(NFL, { home: { ...NFL.home, score: 17 }, away: { ...NFL.away, score: 14 } });
+  check('team total over in play, short: TRAILING with the gap', st(ttO('home', 20.5), ttLive) === 'trail' && /needs 3\.5 more/.test(gradeTicket(ttO('home', 20.5), ttLive).why), gradeTicket(ttO('home', 20.5), ttLive).why);
+  check('team total under in play, short: LEADING', st(ttU('home', 20.5), ttLive) === 'lead');
+  check('team total over LOCKS the moment the side clears the line', st(ttO('home', 16.5), ttLive) === 'win');
+  check('team total under BUSTS the moment the side clears the line', st(ttU('home', 16.5), ttLive) === 'lose');
+  check('team total level in play: over trails, under leads', st(ttO('home', 17), ttLive) === 'trail' && st(ttU('home', 17), ttLive) === 'lead');
+  check('team total margin: over pick − line, under line − pick', mg(ttO('home', 20.5), ttLive) === -3.5 && mg(ttU('home', 20.5), ttLive) === 3.5 && mg(ttO('home', 30.5), NFL) === 2.5);
+  check('team total: side null is unsupported (the engine could not tie it)', st(ttO(null, 20.5), ttLive) === 'unsupported');
+  check('team total: no line is unsupported', st(ttO('home', null), ttLive) === 'unsupported');
+
+  const SOC_LEVEL = live(SOC, { detail: "70'", clock: "70'", home: { ...SOC.home, score: 1 }, away: { ...SOC.away, score: 1 } });
+  const SOC_FINAL_LEVEL = { ...SOC, home: { ...SOC.home, score: 2 }, away: { ...SOC.away, score: 2 } };
+  const draw = { id: 'dr', league: 'soccer/eng.1', market: 'draw', side: null, line: null };
+  check('draw: pre is PRE', st(draw, { ...SOC, state: 'pre' }) === 'pre');
+  check('draw: level in play is LEADING', st(draw, SOC_LEVEL) === 'lead');
+  check('draw: apart in play is TRAILING', st(draw, live(SOC)) === 'trail');
+  check('draw: a level final is WIN', st(draw, SOC_FINAL_LEVEL) === 'win');
+  check('draw: the real 5–0 final is LOSS', st(draw, SOC) === 'lose');
+  check('draw: never a push', ![SOC, SOC_LEVEL, SOC_FINAL_LEVEL].some((g) => st(draw, g) === 'push'));
+  check('draw margin: 0 level, −|gap| apart', mg(draw, SOC_LEVEL) === 0 && mg(draw, SOC) === -5);
+
+  const dc = (side) => ({ id: 'dc', league: 'soccer/eng.1', market: 'dc', side, line: null });
+  check('dc: pre is PRE', st(dc('home'), { ...SOC, state: 'pre' }) === 'pre');
+  check('dc: level in play is LEADING (side or draw)', st(dc('home'), SOC_LEVEL) === 'lead');
+  check('dc: behind in play is TRAILING', st(dc('home'), live(SOC)) === 'trail');
+  check('dc: ahead in play is LEADING', st(dc('away'), live(SOC)) === 'lead');
+  check('dc: a level final is WIN', st(dc('home'), SOC_FINAL_LEVEL) === 'win' && st(dc('away'), SOC_FINAL_LEVEL) === 'win');
+  check('dc: the 5–0 loser is LOSS, the winner WIN', st(dc('home'), SOC) === 'lose' && st(dc('away'), SOC) === 'win');
+  check('dc: never a push', ![SOC, SOC_LEVEL, SOC_FINAL_LEVEL].some((g) => st(dc('home'), g) === 'push'));
+  check('dc: side null is unsupported', st(dc(null), SOC_LEVEL) === 'unsupported');
+  check('dc margin: pick − opp', mg(dc('away'), SOC) === 5 && mg(dc('home'), SOC_LEVEL) === 0);
+
+  console.log('\nsoccer moneyline is three-way (B32b)');
+  const socMl = (side) => ({ id: 'sm', league: 'soccer/eng.1', market: 'ml', side });
+  check('a soccer ML level at the whistle is LOSS, not PUSH', st(socMl('home'), SOC_FINAL_LEVEL) === 'lose' && st(socMl('away'), SOC_FINAL_LEVEL) === 'lose');
+  check('…and says it was drawn', /drawn/.test(gradeTicket(socMl('home'), SOC_FINAL_LEVEL).why));
+  check('a soccer ML read off the game\'s league alone (ticket league missing) is still three-way', st({ id: 's', market: 'ml', side: 'home' }, SOC_FINAL_LEVEL) === 'lose');
+  check('a soccer ML still wins and loses as before', st(socMl('away'), SOC) === 'win' && st(socMl('home'), SOC) === 'lose');
+  check('level in play is still TIED, not a loss', st(socMl('home'), SOC_LEVEL) === 'even');
+  const NFL_TIE = { ...NFL, home: { ...NFL.home, score: 27 } };
+  check('no regression: an NFL ML tied at the final is still PUSH', st({ ...mlHome, league: 'football/nfl' }, NFL_TIE) === 'push');
+  check('no regression: a hockey ML level at a final is still PUSH', st({ id: 'h', league: 'hockey/nhl', market: 'ml', side: 'home' }, { ...NFL_TIE, league: 'hockey/nhl' }) === 'push');
+  check('no regression: a baseball ML level at a final is still PUSH', st({ id: 'b', league: 'baseball/mlb', market: 'ml', side: 'home' }, { ...MLB, home: { ...MLB.home, score: 6 } }) === 'push');
+
   console.log(`\n${pass} passed, ${failures.length} failed`);
   if (failures.length) {
     console.log('failed:\n  - ' + failures.join('\n  - '));

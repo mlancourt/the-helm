@@ -11,6 +11,7 @@
  *
  *   total_over    win   the moment the total clears the line
  *   total_under   lose  the moment the total clears the line
+ *   team_total_*  the same, on the pick side's score alone
  *   spread_1h     decided at halftime, or once the third period starts
  *   anytime_td    win   on the scoring play; LOSS only at the final whistle
  *   anytime_goal  same (still behind its flag)
@@ -36,6 +37,12 @@
  *   ml                   pick − opp
  *   total_over           total − line
  *   total_under          line − total
+ *   team_total_over      pick − line        (the pick side's score only)
+ *   team_total_under     line − pick
+ *   dc                   pick − opp         (≥ 0 is covering: side or draw)
+ *   draw                 −|pick − opp|      (0 while level)
+ *
+ * The lean (`lean.js`) reads these; nothing here reads the lean.
  *
  * `null` wherever a distance has no meaning: the binary markets (anytime TD,
  * anytime goal, both teams to score — a player has scored or has not), a
@@ -70,6 +77,21 @@ const r = (state, label, why, margin = null) => ({ state, label, why, margin });
  *      scorer. Grading someone's bet on a transliteration is not acceptable.
  *
  * Flip this to true only after watching one live match grade correctly.
+ *
+ * RE-CHECKED 2026-11-11 (Lean spec B33) against finished summaries from the
+ * board's three soccer leagues — usa.1 761934 / 761935, eng.1 401879240 /
+ * 401879243, esp.1 401882816 — and left OFF, because two things drift:
+ *
+ *   1. Penalties never reach goalEvents(): their type.text is
+ *      "Penalty - Scored", with no "goal" in it (Fernandes and McGinn in
+ *      401879240, Nketiah in 401879243, Lewandowski twice in 761935). A
+ *      penalty scorer's ticket would grade LOSS.
+ *   2. The same spelling drift, again, in a third league: 761934's 50' goal
+ *      reads "Cheikh Sabaly" in `text` and "Cheick Sabaly" in `shortText`
+ *      and `participants`, and nameHits() rejects a first name that differs.
+ *
+ * Both need fixing (scoringPlay + not an own goal, and the scorer off
+ * participants[0]) and one live match watched before the flag flips.
  */
 export const ANYTIME_GOAL_ENABLED = false;
 
@@ -267,6 +289,11 @@ function gradeMl(ticket, game) {
   if (game.state === 'post') {
     if (margin > 0) return r('win', 'WIN', `${score} final`, margin);
     if (margin < 0) return r('lose', 'LOSS', `${score} final`, margin);
+    // B32(b): a soccer moneyline is three-way over regulation — a draw is its
+    // own outcome and the side bet loses. Every other sport plays it off.
+    if (sportOf(ticket.league || game.league) === 'soccer') {
+      return r('lose', 'LOSS', `${score} final — drawn`, margin);
+    }
     return r('push', 'PUSH', `${score} final — drawn`, margin);
   }
   if (margin > 0) return r('lead', 'LEADING', `${score}, ${game.detail || 'live'}`, margin);
@@ -353,6 +380,85 @@ function gradeTotal(ticket, game, over) {
     : r('lead', 'LEADING', `${total} total, ${need} of room left`, margin);
 }
 
+/**
+ * One team's total (B32a): `side` names the team, `line` its number, and only
+ * that side's score counts. The same early locks as a game total — a score
+ * cannot go down, so past the line the over has cashed and the under busted.
+ */
+function gradeTeamTotal(ticket, game, over) {
+  if (ticket.side !== 'home' && ticket.side !== 'away') {
+    return r('unsupported', 'N/A', 'team total needs side home or away');
+  }
+  const line = Number(ticket.line);
+  if (ticket.line === null || ticket.line === undefined || !Number.isFinite(line)) {
+    return r('unsupported', 'N/A', 'team total needs a line');
+  }
+  const { pick } = sides(ticket, game);
+  const pts = pick.score;
+  const word = over ? 'over' : 'under';
+  const margin = over ? pts - line : line - pts;
+  const head = `${pick.abbr} ${pts}`;
+
+  if (game.state === 'post') {
+    if (pts === line) return r('push', 'PUSH', `${head} final, lands on ${line}`, margin);
+    const won = over ? pts > line : pts < line;
+    return won
+      ? r('win', 'WIN', `${head} final, ${word} ${line}`, margin)
+      : r('lose', 'LOSS', `${head} final, ${word} ${line} missed`, margin);
+  }
+  if (pts > line) {
+    return over
+      ? r('win', 'WIN', `${head}, already past ${line}`, margin)
+      : r('lose', 'LOSS', `${head}, already past ${line}`, margin);
+  }
+  if (pts === line) {
+    return over
+      ? r('trail', 'TRAILING', `${head}, level with ${line}`, margin)
+      : r('lead', 'LEADING', `${head}, level with ${line}`, margin);
+  }
+  const need = (line - pts).toFixed(1).replace(/\.0$/, '');
+  return over
+    ? r('trail', 'TRAILING', `${head}, needs ${need} more`, margin)
+    : r('lead', 'LEADING', `${head}, ${need} of room left`, margin);
+}
+
+/**
+ * The draw (B32c): LEADING while level, TRAILING otherwise, decided at the
+ * whistle. `margin` is how far from level, never positive: −|pick − opp|.
+ */
+function gradeDraw(ticket, game) {
+  const h = game.home.score;
+  const a = game.away.score;
+  const gap = Math.abs(h - a);
+  const margin = gap === 0 ? 0 : -gap;
+  const score = `${game.away.abbr} ${a}–${h} ${game.home.abbr}`;
+  if (game.state === 'post') {
+    return gap === 0 ? r('win', 'WIN', `${score} final, drawn`, margin) : r('lose', 'LOSS', `${score} final`, margin);
+  }
+  return gap === 0
+    ? r('lead', 'LEADING', `${score}, level, ${game.detail || 'live'}`, margin)
+    : r('trail', 'TRAILING', `${score}, ${game.detail || 'live'}`, margin);
+}
+
+/**
+ * Double chance, side or draw (B32c): `side` is the team that must not lose.
+ * LEADING while it is ahead or level, decided at the whistle.
+ */
+function gradeDc(ticket, game) {
+  if (ticket.side !== 'home' && ticket.side !== 'away') {
+    return r('unsupported', 'N/A', 'double chance needs side home or away');
+  }
+  const { pick, opp } = sides(ticket, game);
+  const margin = pick.score - opp.score;
+  const score = `${pick.abbr} ${pick.score}–${opp.score} ${opp.abbr}`;
+  if (game.state === 'post') {
+    return margin >= 0 ? r('win', 'WIN', `${score} final`, margin) : r('lose', 'LOSS', `${score} final`, margin);
+  }
+  return margin >= 0
+    ? r('lead', 'LEADING', `${score}, ${game.detail || 'live'}`, margin)
+    : r('trail', 'TRAILING', `${score}, ${game.detail || 'live'}`, margin);
+}
+
 function gradeAnytimeTd(ticket, game, extras) {
   if (!ticket.player) return r('unsupported', 'N/A', 'anytime TD needs a player');
   if (game.state === 'pre') return r('pre', 'PRE', 'not started');
@@ -413,6 +519,10 @@ export const MARKETS = {
   spread_1h: (t, g) => gradeSpread(t, g, { half: true }),
   total_over: (t, g) => gradeTotal(t, g, true),
   total_under: (t, g) => gradeTotal(t, g, false),
+  team_total_over: (t, g) => gradeTeamTotal(t, g, true),
+  team_total_under: (t, g) => gradeTeamTotal(t, g, false),
+  draw: gradeDraw,
+  dc: gradeDc,
   anytime_td: gradeAnytimeTd,
   anytime_goal: gradeAnytimeGoal,
   btts: gradeBtts,
