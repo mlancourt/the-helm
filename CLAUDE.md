@@ -184,6 +184,7 @@ A standalone Node service (ESM, its own `agent/package.json` + `node_modules`; n
 - **Its own $3/day rail (A7)** — `~/Library/Logs/the-helm/ask-spend.json` `{day (Central), usd, n}`, checked before the model is called, priced by `prices.js` (the Worker's table + an explicit `claude-sonnet-5-5` row; unknown models at the top tier). **Audit (A8)** — `ask-audit.jsonl`, one line per ask, counts/paths/money only: **never the question, the answer or a grep pattern.** Those two files are the only things it writes.
 - One ask at a time (a second waits 20 s, then `503 busy`); 90 s wall clock; a 12-turn run returns its partial answer + `(stopped at the 12-turn limit.)`. Model `ASK_MODEL`, default `claude-sonnet-5-5` (A4).
 - Tests: `cd agent && npm test` (node:test, no key, no network). Ops: `agent/README.md`.
+- **Deploy:** the mini runs `agent/` from its own clone; a push to `main` does not reach it. A commit that touches `agent/` is not live until the mini runs `cd ~/Projects/the-helm && git pull --ff-only && cd agent && npm ci && npm test && launchctl kickstart -k gui/$(id -u)/com.lannyai.helm-agent` and `GET /health` answers 200. Code cannot reach the mini: say "agent/ changed, needs the mini deploy" in the build report; the Architect runs it.
 
 ## Event types (`POST /api/event`) — exactly these
 
