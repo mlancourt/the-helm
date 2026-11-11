@@ -1067,7 +1067,7 @@ pill that says WIN and later says LEADING is worse than one that never locked.
 
 `manifest.webmanifest` (standalone, dark, 192/512 + maskable) and a real PNG
 `apple-touch-icon`, because iOS will not take an SVG. The icons are drawn
-procedurally by `tools/make-icons.js` — a ship's wheel, no brand marks, no icon
+procedurally by `tools/make-icons.js` — the LannyAI mark, no outside brand marks, no icon
 font, no CDN.
 
 `sw.js` caches the shell stale-while-revalidate and `/api/data` network-first.

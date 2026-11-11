@@ -225,7 +225,7 @@ The page's ask panel: shows a small chip — **vault · snapshot · sign in · o
 
 ## PWA
 
-`manifest.webmanifest` (standalone, dark theme color, icons 192/512 — generic helm/compass glyph you draw, no brand marks), `sw.js` caches the shell + last `/api/data` response (stale-while-revalidate for the shell; network-first for data; **never cache ESPN or `/ask`**). Home-screen install on iOS must work. Icons come from `tools/make-icons.js` (ground `#1a1a1c`, wheel `#ff8c1a`); iOS captures the home-screen icon at install time, so re-add the PWA (from `helm.lannyai.com`) to see a change.
+`manifest.webmanifest` (standalone, dark theme color, icons 192/512 — the LannyAI mark, drawn in code, no outside brand marks), `sw.js` caches the shell + last `/api/data` response (stale-while-revalidate for the shell; network-first for data; **never cache ESPN or `/ask`**). Home-screen install on iOS must work. Icons come from `tools/make-icons.js` — the LannyAI mark (Matt, 2026-11-11, v1.47.1): an L with a crossbar-less AI in its upper right inside a plain ring; L + ring `#f2ede3`, AI `#69be28`, ground `#1f1f21` → `#09090a`; iOS captures the home-screen icon at install time, so re-add the PWA (from `helm.lannyai.com`) to see a change.
 
 ## Mock data (`tools/make-mock-data.js`)
 

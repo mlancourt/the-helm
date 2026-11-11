@@ -4,7 +4,7 @@
  *
  *   node tools/make-icons.js
  *
- * Draws a ship's wheel procedurally and writes real PNGs. No external icon
+ * Draws the LannyAI mark procedurally and writes real PNGs. No external icon
  * fonts, no CDN, no brand marks — rule 4 means the glyph has to be ours, and
  * "no build step for the page" means the PNGs are committed artifacts.
  *
@@ -70,83 +70,71 @@ function encodePng(w, h, rgba) {
 }
 
 // ---------------------------------------------------------------- the glyph
+// The LannyAI mark (Matt, 2026-11-11): an L with a crossbar-less "AI" in its
+// upper right, inside a plain ring. Two inks on the dark ground — warm white
+// for the L and ring, Wren green for the AI. Geometry is in 1024ths of the
+// canvas; the ring's outer edge is 0.39 S, inside the 0.40 S maskable circle.
+const BG_TOP = [31, 31, 33]; // #1f1f21
+const BG_BOT = [9, 9, 10]; // #09090a
+const INK = [242, 237, 227]; // #f2ede3 — L + ring
+const NOD = [105, 190, 40]; // #69be28 — the AI (--wren)
 
-const BG = [26, 26, 28]; // #1a1a1c — Night Watch (9/27): --bg-chip, deep grey rather than the page black so the tile reads on a dark dock
-const FG = [255, 140, 26]; // #ff8c1a — the Night Watch accent (--brass)
+const STROKE = 60;
+const RING = { r: 384, w: 30 };
+// The L's rounded corner is a quadratic (322,631.6) → ctrl (322,702) → (392.4,702), walked as short segments.
+const CORNER = Array.from({ length: 9 }, (_, i) => {
+  const t = i / 8;
+  const u = 1 - t;
+  return [u * u * 322 + 2 * u * t * 322 + t * t * 392.4, u * u * 631.6 + 2 * u * t * 702 + t * t * 702];
+});
+const L_PATH = [[322, 322], ...CORNER, [702, 702]];
+const AI_PATHS = [
+  [[439.2, 517.2], [518.1, 322], [597, 517.2]], // Λ
+  [[702, 322], [702, 517.2]], // I
+];
 
-/**
- * Coverage of the ship's-wheel glyph at a point, 0..1, by supersampling.
- * Geometry is expressed as fractions of the canvas so it scales exactly.
- *
- * The whole wheel fits inside 62% of the canvas width, which keeps it within
- * the 80%-diameter safe circle that maskable icons get cropped to.
- */
-function wheelCoverage(px, py, size, samples = 4) {
-  const c = size / 2;
-  const S = size; // shorthand for fractional geometry
-  const rimR = 0.235 * S; // rim centreline radius
-  const rimT = 0.042 * S; // rim thickness
-  const hubR = 0.062 * S; // centre hub radius
-  const hubHole = 0.024 * S; // hub bore
-  const spokeW = 0.030 * S; // spoke width
-  const pegGap = 0.012 * S; // gap between rim and handle
-  const pegLen = 0.055 * S; // handle length
-  const pegW = 0.034 * S; // handle width
+function distToSegment(x, y, [ax, ay], [bx, by]) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+  return Math.hypot(x - ax - t * dx, y - ay - t * dy);
+}
 
-  let hits = 0;
-  const step = 1 / samples;
+function onPath(x, y, pts) {
+  for (let i = 0; i < pts.length - 1; i++) {
+    if (distToSegment(x, y, pts[i], pts[i + 1]) <= STROKE / 2) return true;
+  }
+  return false;
+}
+
+/** Coverage of each ink at a pixel, 0..1, by supersampling: [ink, nod]. */
+function markCoverage(px, py, size, samples = 4) {
+  const k = 1024 / size;
+  let ink = 0;
+  let nod = 0;
   for (let sy = 0; sy < samples; sy++) {
     for (let sx = 0; sx < samples; sx++) {
-      const x = px + (sx + 0.5) * step - c;
-      const y = py + (sy + 0.5) * step - c;
-      const dist = Math.hypot(x, y);
-
-      // rim
-      if (Math.abs(dist - rimR) <= rimT / 2) {
-        hits++;
-        continue;
-      }
-      // hub (an annulus, so the wheel reads as a wheel and not a lollipop)
-      if (dist <= hubR && dist >= hubHole) {
-        hits++;
-        continue;
-      }
-
-      // eight spokes and eight handles, every 45 degrees
-      let on = false;
-      for (let k = 0; k < 8 && !on; k++) {
-        const a = (k * Math.PI) / 4;
-        const cos = Math.cos(a);
-        const sin = Math.sin(a);
-        const along = x * cos + y * sin;
-        const perp = -x * sin + y * cos;
-
-        if (Math.abs(perp) <= spokeW / 2 && along >= 0 && along <= rimR) on = true;
-        else if (
-          Math.abs(perp) <= pegW / 2 &&
-          along >= rimR + rimT / 2 + pegGap &&
-          along <= rimR + rimT / 2 + pegGap + pegLen
-        ) {
-          on = true;
-        }
-      }
-      if (on) hits++;
+      const x = (px + (sx + 0.5) / samples) * k;
+      const y = (py + (sy + 0.5) / samples) * k;
+      if (AI_PATHS.some((p) => onPath(x, y, p))) nod++;
+      else if (onPath(x, y, L_PATH) || Math.abs(Math.hypot(x - 512, y - 512) - RING.r) <= RING.w / 2) ink++;
     }
   }
-  return hits / (samples * samples);
+  return [ink / (samples * samples), nod / (samples * samples)];
 }
 
 function renderIcon(size) {
   const buf = Buffer.alloc(size * size * 4);
   for (let y = 0; y < size; y++) {
+    const g = y / (size - 1);
     for (let x = 0; x < size; x++) {
-      const a = wheelCoverage(x, y, size);
+      const [a, b] = markCoverage(x, y, size);
       const i = (y * size + x) * 4;
-      // Composite brass over the opaque background. Opaque throughout so
-      // maskable cropping never exposes a transparent corner.
-      buf[i] = Math.round(BG[0] + (FG[0] - BG[0]) * a);
-      buf[i + 1] = Math.round(BG[1] + (FG[1] - BG[1]) * a);
-      buf[i + 2] = Math.round(BG[2] + (FG[2] - BG[2]) * a);
+      // Opaque throughout so maskable cropping never exposes a transparent corner.
+      for (let c = 0; c < 3; c++) {
+        const bg = BG_TOP[c] + (BG_BOT[c] - BG_TOP[c]) * g;
+        buf[i + c] = Math.round(bg * (1 - a - b) + INK[c] * a + NOD[c] * b);
+      }
       buf[i + 3] = 255;
     }
   }
