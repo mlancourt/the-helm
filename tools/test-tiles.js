@@ -5899,7 +5899,14 @@ async function main() {
     const cardRow = draw({ items: [item({ kind: 'card', tone: 'fund' })] });
     check('a bill and a card render the same class set', [...classSet(billRow)].sort().join(' ') === [...classSet(cardRow)].sort().join(' '), `${[...classSet(billRow)].sort().join(' ')}\n${[...classSet(cardRow)].sort().join(' ')}`);
     check('and the same shape of row', countOf(billRow, 'purser-row') === 1 && countOf(cardRow, 'purser-row') === 1);
-    check('the module never branches on kind', !/\bkind\b/.test(PURSER_SRC), (PURSER_SRC.match(/.*\bkind\b.*/) || [''])[0]);
+    // v1.49.0: the Purser's notes carry a `kind` of their own — a word he
+    // chose, printed on a chip. That region is cut out here and held on its
+    // own in tools/test-purser-notes.js; the due stack still never reads kind.
+    const NOTES_A = PURSER_SRC.indexOf('const FACE_NOTES');
+    const NOTES_B = PURSER_SRC.indexOf('function money(');
+    const STACK_SRC = NOTES_A !== -1 && NOTES_B > NOTES_A ? PURSER_SRC.slice(0, NOTES_A) + PURSER_SRC.slice(NOTES_B) : PURSER_SRC;
+    check('the notes region is found, so the cut is real', NOTES_A !== -1 && NOTES_B > NOTES_A);
+    check('the module never branches on kind', !/\bkind\b/.test(STACK_SRC), (STACK_SRC.match(/.*\bkind\b.*/) || [''])[0]);
     check('there is exactly one row builder', (PURSER_SRC.match(/function itemRow\(/g) || []).length === 1);
 
     // -- the honest line ------------------------------------------------------
@@ -6044,7 +6051,21 @@ async function main() {
     // Only the two tone dots may carry a tone colour. Anything else reaching
     // for --warn or --good in this block is a second colour story starting.
     const tonedRules = [...PURSER_CSS.matchAll(/(\.purser-[a-z-]+)[^{]*\{[^}]*var\(--(warn|good|bad|info)\)/g)].map((m) => m[1]);
-    check('only the two dots are coloured by tone', tonedRules.slice().sort().join(' ') === '.purser-dot-act .purser-dot-fund', tonedRules.join(' | '));
+    // v1.49.0 (PM5/PM6): two more rules may reach for a tone, and both are
+    // the act dot's own — the urgent note mark and the unreadable-file line.
+    // No third colour: each must name exactly the token the act dot names.
+    check(
+      'only the two dots, the urgent note mark and the problem line are coloured by tone',
+      tonedRules.slice().sort().join(' ') === '.purser-dot-act .purser-dot-fund .purser-note-mark-urgent .purser-problem',
+      tonedRules.join(' | ')
+    );
+    const toneTokenOf = (sel) => {
+      const m = PURSER_CSS.match(new RegExp(sel.replace(/[.-]/g, '\\$&') + '\\s*\\{[^}]*var\\(--(warn|good|bad|info)\\)'));
+      return m ? m[1] : null;
+    };
+    check('the act dot is --warn', toneTokenOf('.purser-dot-act') === 'warn', toneTokenOf('.purser-dot-act'));
+    check('the urgent note mark is the act dot’s token', toneTokenOf('.purser-note-mark-urgent') === toneTokenOf('.purser-dot-act'), toneTokenOf('.purser-note-mark-urgent'));
+    check('the problem line is the act dot’s token', toneTokenOf('.purser-problem') === toneTokenOf('.purser-dot-act'), toneTokenOf('.purser-problem'));
 
     // -- the registry ---------------------------------------------------------
     check('the tile points at the new module', /purser_due:[^}]*module:\s*'\.\/tiles\/purser_due\.js'/.test(REGISTRY_SRC));

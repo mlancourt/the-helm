@@ -44,6 +44,29 @@
  *
  * RULE 10: names, `why` strings and every other snapshot string land via
  * textContent, through `el()`.
+ *
+ * v1.49.0 — HIS NOTES AND MONEY OUT (vault spec `Purser-Money-Desk-Tile-Spec`,
+ * PM1–PM8). Two additive keys, and the due stack itself does not change:
+ *
+ *   heads_up   the Purser's own notes for TODAY, as he wrote them. P7 as
+ *              amended by PM2: the tile still has no opinion — it prints his.
+ *              Up to three headlines on the face (+N more inside the same tap
+ *              target), the whole of each in the sheet. An urgent note wears
+ *              the act tone on its mark (PM5); a file the engine could not
+ *              read says so in the act tone (PM6). `null`, or `notes: []` with
+ *              no `problem`, draws nothing at all — no "no notes" line, no
+ *              count, no badge.
+ *   money_out  the bank feed's own sum for yesterday: label, amount, count.
+ *              It carries its own date, so a stale feed shows an old date
+ *              rather than a wrong number; `fresh: false` mutes the row. Its
+ *              `through_label` is the second freshness line (PM4), under the
+ *              ledger's own.
+ *
+ * PM8: every number and every label is the engine's. `out_total` goes through
+ * `usd()` only when it is a real number (never `$NaN`, never `$0.00` for a
+ * missing one); the labels print verbatim. Every string — headline, body,
+ * evidence (merchant names off a bank feed), kind, problem — is untrusted and
+ * lands through textContent (PM7). Still no buttons, no events, no posts.
  */
 
 import { el } from '../lib/dom.js';
@@ -90,6 +113,129 @@ function reminderDue(item, today) {
   const r = str(item && item.reminder);
   if (!YMD.test(r) || !YMD.test(today)) return false;
   return r <= today;
+}
+
+// ---------------------------------------------- the Purser's notes (PM1–PM7)
+//
+// Everything in this region reads `heads_up`, and nothing outside it does.
+// The note's `kind` is a word the Purser chose; it is printed on a quiet chip
+// in the sheet and branched on nowhere.
+
+const FACE_NOTES = 3;
+
+/** A snapshot value as display text: strings and finite numbers, else ''. */
+function words(v) {
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' && Number.isFinite(v)) return String(v);
+  return '';
+}
+
+/** The heads_up block's notes, as objects; anything else vanishes. */
+function notesOf(data) {
+  const hu = obj(data.heads_up);
+  return hu ? arr(hu.notes).map(obj).filter(Boolean) : [];
+}
+
+/**
+ * The mark: the act tone when the Purser said urgent, quiet otherwise. Two
+ * literal class sets, picked by a statement — PM5 allows no third tone, and
+ * the urgent one is the act dot's own token (the stylesheet test compares).
+ */
+function noteMark(note) {
+  if (note.urgent === true) {
+    return el('span', { cls: 'purser-note-mark purser-note-mark-urgent', attrs: { 'aria-label': 'urgent' } });
+  }
+  return el('span', { cls: 'purser-note-mark', attrs: { 'aria-hidden': 'true' } });
+}
+
+/** Face: up to three headlines, in the engine's order, then a quiet "+N more". */
+function notesFace(data) {
+  const notes = notesOf(data);
+  if (!notes.length) return null;
+  const rows = notes.slice(0, FACE_NOTES).map((n) =>
+    el('div', { cls: 'purser-note' }, [noteMark(n), el('span', { cls: 'purser-note-head', text: words(n.headline) || '—' })])
+  );
+  const more = notes.length - FACE_NOTES;
+  // Text inside the face, which is already the tap target — not a control.
+  if (more > 0) rows.push(el('div', { cls: 'purser-note-more', text: `+${more} more` }));
+  return el('div', { cls: 'purser-notes' }, rows);
+}
+
+/** PM6: a file the engine could not read says so, in the act tone. */
+function problemRow(data) {
+  const hu = obj(data.heads_up);
+  const text = hu ? words(hu.problem) : '';
+  if (!text) return null;
+  return el('p', { cls: 'purser-problem', text });
+}
+
+/** Sheet: headline, the kind chip, the body, then the evidence lines, faint. */
+function noteSheetRow(note) {
+  const kind = words(note.kind);
+  const evidence = arr(note.evidence).map(words).filter(Boolean);
+  return el('div', { cls: 'purser-from-note' }, [
+    el('div', { cls: 'purser-from-top' }, [
+      noteMark(note),
+      el('span', { cls: 'purser-from-head', text: words(note.headline) || '—' }),
+      kind ? el('span', { cls: 'purser-note-kind', text: kind }) : null,
+    ]),
+    words(note.body) ? el('p', { cls: 'purser-from-body', text: words(note.body) }) : null,
+    ...evidence.map((e) => el('div', { cls: 'purser-from-evidence', text: e })),
+  ]);
+}
+
+/** The sheet's first section, drawn only when there are notes. */
+function notesSheet(data) {
+  const notes = notesOf(data);
+  if (!notes.length) return null;
+  const label = words(obj(data.heads_up).label);
+  return el('div', { cls: 'purser-from' }, [
+    el('h3', { cls: 'purser-sec-head', text: label ? `From the Purser · ${label}` : 'From the Purser' }),
+    ...notes.map(noteSheetRow),
+  ]);
+}
+
+// ------------------------------------------------------ money out (PM3/PM4)
+
+/** A real number or null — strictly: a string, a boolean or NaN is not money. */
+function money(v) {
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
+/**
+ * `Money out Wed 11/11 · $269.45 · 10 charges (2 pending)`.
+ *
+ * The amount is the engine's sum, formatted and nothing more; a missing or
+ * non-numeric one leaves no element behind. `fresh: false` mutes the whole
+ * row — the date on it already says how old it is.
+ */
+function moneyOutRow(data) {
+  const mo = obj(data.money_out);
+  if (!mo) return null;
+  const label = words(mo.label);
+  const amount = money(mo.out_total);
+  const count = money(mo.count);
+  const pending = money(mo.pending_count);
+  if (!label && amount === null && count === null) return null;
+
+  const charges = count === null ? '' : `${count} ${count === 1 ? 'charge' : 'charges'}`;
+  const row = el('div', { cls: 'purser-out' }, [
+    el('span', { cls: 'purser-out-label', text: label ? `Money out ${label}` : 'Money out' }),
+    amount === null ? null : el('span', { cls: 'purser-out-amount', text: usd(amount) }),
+    charges
+      ? el('span', { cls: 'purser-out-count', text: pending !== null && pending > 0 ? `${charges} (${pending} pending)` : charges })
+      : null,
+  ]);
+  if (mo.fresh === false) row.classList.add('purser-out-old');
+  return row;
+}
+
+/** PM4: the bank feed's clock, under the ledger's. Only with a label to print. */
+function feedThroughLine(data) {
+  const mo = obj(data.money_out);
+  const through = mo ? words(mo.through_label) : '';
+  if (!through) return null;
+  return el('p', { cls: 'tile-foot', text: `bank feed through ${through}` });
 }
 
 // ------------------------------------------------------------------ the face
@@ -261,13 +407,19 @@ function sheetBody(data) {
   return (body) => {
     const chips = [urChip(data), streakChip(data.streak)].filter(Boolean);
     const parts = [
+      // PM: his notes lead, and only when there are any; the sheet as it
+      // always was follows, with the money-out row beside the totals.
+      notesSheet(data),
       totalsBlock(data.totals),
+      moneyOutRow(data),
       chips.length ? el('div', { cls: 'purser-chips' }, chips) : null,
       unscheduledSection(data),
     ].filter(Boolean);
 
     for (const p of parts) body.appendChild(p);
     body.appendChild(knownThroughLine(data));
+    const feedLine = feedThroughLine(data);
+    if (feedLine) body.appendChild(feedLine);
   };
 }
 
@@ -281,6 +433,13 @@ export function render(root, tile, ctx) {
 
   const face = el('div', { cls: 'purser-face' });
 
+  // PM1/PM6 — his notes, then a file the engine could not read. Both draw
+  // nothing when there is nothing to say.
+  const notes = notesFace(data);
+  if (notes) face.appendChild(notes);
+  const problem = problemRow(data);
+  if (problem) face.appendChild(problem);
+
   if (items.length) {
     const today = ctToday();
     // The order is already right — soonest first, ties by amount descending,
@@ -292,7 +451,13 @@ export function render(root, tile, ctx) {
   // An empty stack is legitimate and quiet: no "all clear", no "nothing due",
   // no green tick. Absence of rows is not news, and the ledger line below is
   // the only thing worth saying about it.
+  // PM3 — yesterday's money out sits under the stack, above the two clocks.
+  const out = moneyOutRow(data);
+  if (out) face.appendChild(out);
   face.appendChild(knownThroughLine(data));
+  // PM4 — the bank feed's clock, under the ledger's.
+  const feedLine = feedThroughLine(data);
+  if (feedLine) face.appendChild(feedLine);
 
   if (openPanel) {
     // The whole face is the tap target, not a <button> — a button here would

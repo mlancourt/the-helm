@@ -406,6 +406,49 @@ function wssApSnapshot(kind) {
   return snap;
 }
 
+/**
+ * The Due Stack with the Purser's notes and money out (Money Desk spec
+ * PM1–PM8). Every merchant, card and figure is invented. The default
+ * snapshot carries neither key — that IS the "notes absent" face, and it must
+ * render exactly as it did before v1.49.0.
+ */
+const PURSER_NOTES = {
+  quiet: { headline: 'Invented Streaming went up', kind: 'recurring', urgent: false, body: 'Pretend Flix billed a new amount on the Blue card this month. I would leave it unless you stopped watching.', evidence: [`${addDays(TODAY, -1)} · Blue card · PRETEND FLIX · -21.99 · posted`] },
+  urgent: { headline: 'Store card is due in two days, unpaid', kind: 'due', urgent: true, body: 'The made-up statement is still open and it pays manually. I would pay it today from checking.', evidence: [`stmt ${addDays(TODAY, -27)} · Store card · due ${addDays(TODAY, 2)} · 318.05 · unpaid`] },
+  pace: { headline: 'Dining is running ahead of its target', kind: 'pace', urgent: false, body: 'Two weeks in and the invented dining line is most of the way to its month.', evidence: [`${addDays(TODAY, -3)} · Blue card · CORNER BISTRO (FAKE) · -64.20 · posted`, `${addDays(TODAY, -2)} · Shop card · TACO STAND TEST · -18.75 · pending`] },
+  wrong: { headline: 'A pretend gym is billing the travel card', kind: 'wrong-card', urgent: false, body: 'It used to bill the Blue card.', evidence: [] },
+  account: { headline: 'A new account appeared in the feed', kind: 'account', urgent: false, body: '', evidence: [] },
+};
+function purserMoneyOut(over = {}) {
+  return { date: addDays(TODAY, -1), label: shortDayLabel(addDays(TODAY, -1)), out_total: 187.42, count: 9, pending_count: 2, through_label: `${shortDayLabel(TODAY)} 6:12 AM`, fresh: true, ...over };
+}
+function purserHeadsUp(notes, problem = null) {
+  return { date: TODAY, label: shortDayLabel(TODAY), notes, problem };
+}
+function purserSnapshot(kind) {
+  const snap = snapshot();
+  const d = snap.tiles.purser_due.data;
+  const N = PURSER_NOTES;
+  if (kind === 'quiet') d.heads_up = purserHeadsUp([N.quiet]);
+  if (kind === 'urgent') d.heads_up = purserHeadsUp([N.urgent, N.quiet, N.pace]);
+  if (kind === 'five') d.heads_up = purserHeadsUp([N.urgent, N.quiet, N.pace, N.wrong, N.account]);
+  if (kind === 'problem') d.heads_up = purserHeadsUp([], "today's note file has nothing the tile can read");
+  if (kind === 'out') d.money_out = purserMoneyOut();
+  if (kind === 'out-old') d.money_out = purserMoneyOut({ date: addDays(TODAY, -4), label: shortDayLabel(addDays(TODAY, -4)), through_label: `${shortDayLabel(addDays(TODAY, -3))} 11:40 PM`, fresh: false });
+  if (kind === 'out-bare') d.money_out = purserMoneyOut({ pending_count: 0, through_label: null });
+  if (kind === 'desk') {
+    d.heads_up = purserHeadsUp([N.urgent, N.quiet, N.pace]);
+    d.money_out = purserMoneyOut();
+  }
+  return snap;
+}
+/** 'Thu 11/12' off a Central YYYY-MM-DD, by calendar arithmetic on the parts (no clock). */
+function shortDayLabel(ymd) {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${wd} ${m}/${d}`;
+}
+
 function snapshot() {
   return {
     schema: 1,
@@ -2878,6 +2921,16 @@ const MODES = [
   ['--ap-older', () => wssApSnapshot('older')],
   ['--ap-empty', () => wssApSnapshot('empty')],
   ['--ap-error', () => wssApSnapshot('error')],
+  // The Due Stack with the Purser's notes + money out (PM1–PM8). The default
+  // snapshot carries neither key: that is the "notes absent" face.
+  ['--purser-quiet', () => purserSnapshot('quiet')],
+  ['--purser-urgent', () => purserSnapshot('urgent')],
+  ['--purser-five', () => purserSnapshot('five')],
+  ['--purser-problem', () => purserSnapshot('problem')],
+  ['--purser-out', () => purserSnapshot('out')],
+  ['--purser-out-old', () => purserSnapshot('out-old')],
+  ['--purser-out-bare', () => purserSnapshot('out-bare')],
+  ['--purser-desk', () => purserSnapshot('desk')],
   ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],
   ['--weather-clear', () => weatherSnapshot(weatherPayload({ alerts: [] }))],
   // Live gone AND no offline copy: the ONLY case allowed to say "feed

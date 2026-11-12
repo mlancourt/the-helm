@@ -1559,6 +1559,35 @@ button:active:not(:disabled) { opacity: 0.6; }
 /* A payload carrying neither tone. Not a third state — the absence of one. */
 .purser-dot-none { background: var(--line); }
 
+/* ---------------------------------- the Purser's notes + money out (PM1–PM8)
+
+   His notes lead the face; yesterday's money out sits under the stack. The
+   ONLY tone either one reaches for is the act dot's own --warn: an urgent
+   note's mark (PM5) and an unreadable file's line (PM6). No third colour, and
+   the test suite compares the tokens. */
+.purser-notes { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; margin-bottom: 2px; border-bottom: 1px solid var(--line-soft); }
+.purser-note { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.purser-note-mark { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: var(--line); }
+.purser-note-mark-urgent { background: var(--warn); }
+.purser-note-head {
+  font-size: 13px; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+.purser-note-more { font-size: 11px; color: var(--text-faint); padding-left: 15px; }
+.purser-problem { margin: 0 0 6px; font-size: 12px; color: var(--warn); overflow-wrap: anywhere; }
+
+.purser-out {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+  padding: 8px 0 2px; border-top: 1px solid var(--line-soft);
+}
+.purser-out-label { font-size: 12px; color: var(--text-dim); }
+.purser-out-amount { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text); }
+.purser-out-count { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+/* An old feed day: the row mutes, its own date says how old. */
+.purser-out-old .purser-out-label,
+.purser-out-old .purser-out-amount,
+.purser-out-old .purser-out-count { color: var(--text-faint); font-weight: 400; }
+
 /* --------------------------------------------------- the due stack sheet */
 
 .purser-totals { margin-bottom: 16px; }
@@ -1589,6 +1618,21 @@ button:active:not(:disabled) { opacity: 0.6; }
 }
 .purser-uns-row { display: flex; align-items: center; gap: 9px; padding: 6px 0; }
 .purser-why { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+
+/* From the Purser — his notes in full, first in the sheet. */
+.purser-from { margin-bottom: 18px; }
+.purser-from-note { padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+.purser-from-note:last-child { border-bottom: 0; }
+.purser-from-top { display: flex; align-items: center; gap: 8px; }
+.purser-from-head { flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.purser-note-kind {
+  flex: 0 0 auto; padding: 1px 7px; border-radius: 999px;
+  background: var(--bg-sink); font-size: 11px; color: var(--text-dim);
+}
+.purser-from-body { margin: 4px 0 0 15px; font-size: 13px; line-height: 1.4; color: var(--text-dim); overflow-wrap: anywhere; }
+.purser-from-evidence {
+  margin: 3px 0 0 15px; font-size: 11px; color: var(--text-faint); overflow-wrap: anywhere;
+}
 
 /* -------------------------------------------------------------- newsstand */
 
