@@ -2868,6 +2868,81 @@ button:active:not(:disabled) { opacity: 0.6; }
 .pulse-link { color: var(--text-dim); }
 /* ------------------------------------------------------------ /wss_traffic */
 
+/* ------------------------------------------------------------ wss_ap ("Vendor Bills")
+
+   The bill ledger's face (AP-Bills-Tile-Spec AP1–AP12). Rows, Site Pulse's
+   rhythm: a headline (last bill day · count · the total, big), then only the
+   rows with something to say — Today · held · not billed. The tone tokens
+   appear ONLY on the held marks (--warn) and the stuck not-billed marks
+   (--bad), scoped to this tile's card and its sheet; a waiting not-billed row
+   is neutral. Money is plain text (AP9). test-wss-ap scans this block. */
+
+.ap-face { display: flex; flex-direction: column; gap: 6px; }
+.ap-tappable { cursor: pointer; }
+.ap-tappable:focus-visible { outline: 1px solid var(--brass); outline-offset: 3px; border-radius: var(--r-sm); }
+.ap-quiet { margin: 4px 0; font-size: 13px; color: var(--text-faint); }
+
+.ap-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+.ap-head-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ap-head-total {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.ap-lines { display: flex; flex-direction: column; }
+.ap-line {
+  display: grid;
+  grid-template-columns: 8px auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 8px;
+  min-height: 30px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+.ap-line:last-child { border-bottom: 0; }
+.ap-lead { font-weight: 650; font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap; }
+.ap-rest { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ap-line-note { grid-column: 3; font-size: 12px; color: var(--text-faint); }
+
+.ap-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--text-faint); }
+
+.ap-sec { margin-bottom: 16px; }
+.ap-sec-head { margin: 0 0 4px; font-size: 13px; font-weight: 650; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.ap-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  column-gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.ap-row:last-child { border-bottom: 0; }
+.ap-row .ap-dot { margin-top: 6px; }
+.ap-row-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ap-row-main { display: flex; align-items: baseline; gap: 8px; min-width: 0; font-size: 14px; }
+.ap-vendor { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ap-inv { color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ap-amt { margin-left: auto; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ap-why { font-size: 13px; color: var(--text-dim); overflow-wrap: anywhere; }
+.ap-meta { font-size: 12px; color: var(--text-dim); overflow-wrap: anywhere; }
+.ap-faint { font-size: 12px; color: var(--text-faint); overflow-wrap: anywhere; }
+.ap-older { margin: 6px 0 0; }
+.ap-marks { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 2px; font-size: 12px; }
+.ap-chip { color: var(--text-dim); background: var(--bg-chip); border: 1px solid var(--edge); border-radius: 999px; padding: 1px 8px; }
+.ap-link { color: var(--text-dim); }
+
+/* The two tone hooks — and nowhere else. */
+.card[data-tile="wss_ap"] .ap-dot-held,
+.panel[data-tile="wss_ap"] .ap-dot-held { background: var(--warn); }
+.card[data-tile="wss_ap"] .ap-num-held { color: var(--warn); }
+.card[data-tile="wss_ap"] .ap-dot-stuck,
+.panel[data-tile="wss_ap"] .ap-dot-stuck { background: var(--bad); }
+.card[data-tile="wss_ap"] .ap-num-stuck { color: var(--bad); }
+/* ------------------------------------------------------------ /wss_ap */
+
 /* ---------------------------------------------------------------- yeoman
 
    The Yeoman (Y1–Y16): a face of two buttons and a sheet that is a form.

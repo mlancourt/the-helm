@@ -319,6 +319,93 @@ function wssTrafficSnapshot(kind) {
   return snap;
 }
 
+/**
+ * Vendor Bills (AP-Bills-Tile-Spec AP1–AP12) — the shape the engine's
+ * `wss_ap()` publishes, modelled on `_templates/test_wss_ap.py`. EVERY
+ * vendor, invoice, record, customer and amount below is invented. Totals and
+ * counts are the producer's (AP9): they are written here as the engine would
+ * have summed them, and the page adds nothing up.
+ *
+ * kinds: normal (the default board) · stuck · held · adopted · nulls ·
+ * older · empty · error.
+ */
+function wssApPayload(kind = 'normal') {
+  const d1 = addDays(TODAY, -1);
+  const d3 = addDays(TODAY, -3);
+  const bill = (o) => ({
+    state: 'created', vendor: 'Example Parts Co', invoice: 'EX-10021', total: 212.4, gl: '5030', record: 'P0101',
+    description: 'Fictional Foods - P0101', inv_date: addDays(TODAY, -2), inv_label: ctLabel(addDays(TODAY, -2)).split(' ')[1],
+    due: addDays(TODAY, 28), due_label: ctLabel(addDays(TODAY, 28)).split(' ')[1], note: '2 lines · tax 12.85',
+    qbo_url: 'https://qbo.example.invalid/app/bill?txnId=90001', ...o,
+  });
+  const dayOf = (date, bills, total) => ({ date, label: ctLabel(date), count: bills.length, total, bills });
+  const heldRow = (o) => ({
+    vendor: 'Sample Supply', invoice: 'SS-55120', total: 31.6, po: 'VERBAL-EXAMPLE',
+    why: 'no Tracker record on the PO field (PO VERBAL-EXAMPLE) — an AP-workflow invoice, enter it by hand',
+    since: d1, since_label: ctLabel(d1), days: 1, ...o,
+  });
+  const unbilledRow = (o) => ({
+    vendor: 'Demo Filters Inc', invoice: 'DF-3300', total: 84.25, landed_label: ctLabel(TODAY) + ' 6:30 AM',
+    why: 'not seen by the fleet engine yet', stuck: false, ...o,
+  });
+  const base = {
+    status: 'ok', today: TODAY, last_day: null, today_so_far: { count: 0, total: 0 }, days: [], held: [], held_older: 0,
+    unbilled: [], source: '01-WSS/Projects/WSS-Dashboard/_runtime/ap-seen.json',
+  };
+  if (kind === 'empty' || kind === 'error') return { ...base, status: 'empty' };
+  if (kind === 'held') return { ...base, held: [heldRow({}), heldRow({ vendor: 'Sample Supply', invoice: 'SS-55001', total: null, since: d3, since_label: ctLabel(d3), days: 3, why: 'no vendor match in QuickBooks for "SAMPLE SUPPLY"' })] };
+  if (kind === 'older') return { ...base, held_older: 4 };
+  if (kind === 'stuck') {
+    return {
+      ...base,
+      unbilled: [
+        unbilledRow({ invoice: 'DF-3291', landed_label: ctLabel(addDays(TODAY, -2)) + ' 6:30 PM', why: 'waiting for the bill pass', stuck: true }),
+        unbilledRow({}),
+      ],
+    };
+  }
+  if (kind === 'adopted') {
+    const b = [bill({ state: 'adopted', vendor: 'Example Parts Co', invoice: 'EX-10007', total: 55.5, note: '1 line · count 2 in QuickBooks', qbo_url: null })];
+    return { ...base, last_day: { date: d1, label: ctLabel(d1), count: 1, total: 55.5 }, days: [dayOf(d1, b, 55.5)] };
+  }
+  if (kind === 'nulls') {
+    const b = [bill({ vendor: null, invoice: null, total: null, gl: null, record: null, description: '', inv_date: null, inv_label: null, due: null, due_label: null, note: '', qbo_url: null, state: 'created' })];
+    return {
+      ...base,
+      last_day: { date: d1, label: ctLabel(d1), count: 1, total: 0 },
+      days: [dayOf(d1, b, 0)],
+      held: [heldRow({ vendor: null, invoice: null, total: null, po: null, why: '', since: null, since_label: null, days: null })],
+      unbilled: [unbilledRow({ vendor: null, invoice: null, total: null, landed_label: null, why: '' })],
+    };
+  }
+  // normal: yesterday's three bills headline the face, two more today, one held, one waiting.
+  const yday = [
+    bill({ vendor: 'Demo Filters Inc', invoice: 'DF-3288', total: 264.05, record: 'P0103', description: 'Imaginary Motors - P0103', note: '5 lines', qbo_url: 'https://qbo.example.invalid/app/bill?txnId=90002' }),
+    bill({}),
+    bill({ invoice: 'EX-10044', total: 301.77, record: 'P0099', description: 'Pretend Woodworks - P0099', note: '2 lines · freight 12.50 · other 3.00 (fuel surcharge)', qbo_url: 'javascript:alert(1)' }),
+  ];
+  const today = [
+    bill({ vendor: 'Sample Supply', invoice: 'SS-55190', total: 120.0, record: 'S0042', description: 'Make-Believe Dairy - S0042', inv_date: d1, inv_label: ctLabel(d1).split(' ')[1], note: '1 line', qbo_url: 'https://qbo.example.invalid/app/bill?txnId=90010' }),
+    bill({ state: 'adopted', vendor: 'Example Parts Co', invoice: 'EX-10050', total: 176.35, note: '3 lines · count 2 in QuickBooks', qbo_url: 'https://qbo.example.invalid/app/bill?txnId=90011' }),
+  ];
+  return {
+    ...base,
+    last_day: { date: d1, label: ctLabel(d1), count: 3, total: 778.22 },
+    today_so_far: { count: 2, total: 296.35 },
+    days: [dayOf(TODAY, today, 296.35), dayOf(d1, yday, 778.22)],
+    held: [heldRow({})],
+    unbilled: [unbilledRow({})],
+  };
+}
+
+function wssApSnapshot(kind) {
+  const snap = snapshot();
+  const t = tile('DAILY', wssApPayload(kind), kind === 'error' ? 'error' : 'ok');
+  if (kind === 'error') t.error = "ap-seen.json not found — the fleet engine's bill ledger is missing";
+  snap.tiles.wss_ap = t;
+  return snap;
+}
+
 function snapshot() {
   return {
     schema: 1,
@@ -909,6 +996,8 @@ function snapshot() {
       // has lost its customer (a closed ticket), and the intake bot appears
       // under its own name.
       wss_traffic: tile('DAILY', wssTrafficPayload()),
+      // Vendor Bills — invented vendors and amounts (wssApPayload above).
+      wss_ap: tile('DAILY', wssApPayload()),
       wss_tape: tile('DAILY', {
         title: 'Crew Tape',
         date: TODAY,
@@ -2781,6 +2870,14 @@ const MODES = [
   ['--pulse-gsc-down', () => wssTrafficSnapshot('gsc-down')],
   ['--pulse-stale', () => wssTrafficSnapshot('stale')],
   ['--pulse-empty', () => wssTrafficSnapshot('empty')],
+  // Vendor Bills' other faces (AP3–AP5, AP7). The default snapshot carries the normal day.
+  ['--ap-stuck', () => wssApSnapshot('stuck')],
+  ['--ap-held', () => wssApSnapshot('held')],
+  ['--ap-adopted', () => wssApSnapshot('adopted')],
+  ['--ap-nulls', () => wssApSnapshot('nulls')],
+  ['--ap-older', () => wssApSnapshot('older')],
+  ['--ap-empty', () => wssApSnapshot('empty')],
+  ['--ap-error', () => wssApSnapshot('error')],
   ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],
   ['--weather-clear', () => weatherSnapshot(weatherPayload({ alerts: [] }))],
   // Live gone AND no offline copy: the ONLY case allowed to say "feed

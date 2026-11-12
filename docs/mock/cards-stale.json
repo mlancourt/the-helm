@@ -1,25 +1,25 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-11T19:28:25.137Z",
-  "run_id": "run-mock-mwcihusx",
+  "generated_at": "2026-11-12T17:18:24.455Z",
+  "run_id": "run-mock-mwdtaifb",
   "tz": "America/Chicago",
   "tiles": {
     "yeoman": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.455Z",
       "status": "ok",
       "error": null,
       "data": {
         "pass": {
-          "last_at": "2026-11-11T18:28:25Z",
-          "last_label": "Wed 12:28 PM",
+          "last_at": "2026-11-12T16:18:24Z",
+          "last_label": "Thu 10:18 AM",
           "silent": false
         },
         "brief": {
-          "path": "06-AI-Stack/Wren/Briefs/2026-11/2026-11-11 0449 - Brief.md",
-          "date": "2026-11-11",
-          "generated_at": "2026-11-11T05:28:25Z",
-          "when_label": "Tue 11:28 PM",
+          "path": "06-AI-Stack/Wren/Briefs/2026-11/2026-11-12 0449 - Brief.md",
+          "date": "2026-11-12",
+          "generated_at": "2026-11-12T03:18:24Z",
+          "when_label": "Wed 9:18 PM",
           "carried": true,
           "title": "Wren — mock morning, 4:52 CDT",
           "opening": "Quiet-ish morning. Two things worth a minute; the rest can wait.",
@@ -50,12 +50,12 @@
         "questions": [
           {
             "qid": "3fa1c92b0e",
-            "date": "2026-11-11",
+            "date": "2026-11-12",
             "text": "Weekends: one morning sweep, or leave them quiet? (re: cadence)"
           },
           {
             "qid": "9b2e4d1c07",
-            "date": "2026-11-11",
+            "date": "2026-11-12",
             "text": "Aunt Example — a nudge when it’s been a few weeks, or leave her to you? (re: Aunt Example)"
           }
         ]
@@ -63,7 +63,7 @@
     },
     "bets_live": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.455Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -76,7 +76,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770114",
             "game": "Harbor Kestrels at Foundry Ironsides",
-            "kick_ct": "2026-11-11 15:25",
+            "kick_ct": "2026-11-12 15:25",
             "market": "spread",
             "side": "away",
             "line": -3.5,
@@ -94,7 +94,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770114",
             "game": "Harbor Kestrels at Foundry Ironsides",
-            "kick_ct": "2026-11-11 15:25",
+            "kick_ct": "2026-11-12 15:25",
             "market": "total_over",
             "side": null,
             "line": 44.5,
@@ -112,7 +112,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770119",
             "game": "Cedar Valley Drays at North Pike Sentinels",
-            "kick_ct": "2026-11-11 19:15",
+            "kick_ct": "2026-11-12 19:15",
             "market": "anytime_td",
             "side": null,
             "line": null,
@@ -130,7 +130,7 @@
             "league": "basketball/nba",
             "espn_event_id": "401810422",
             "game": "Lakeshore Current at Granite City Foremen",
-            "kick_ct": "2026-11-11 20:00",
+            "kick_ct": "2026-11-12 20:00",
             "market": "ml",
             "side": "home",
             "line": null,
@@ -148,7 +148,7 @@
             "league": "soccer/usa.1",
             "espn_event_id": "731204",
             "game": "Riverbend FC vs Cross Harbor SC",
-            "kick_ct": "2026-11-12 19:30",
+            "kick_ct": "2026-11-13 19:30",
             "market": "btts",
             "side": null,
             "line": null,
@@ -166,7 +166,7 @@
             "league": "basketball/nba",
             "espn_event_id": "401810422",
             "game": "Lakeshore Current at Granite City Foremen",
-            "kick_ct": "2026-11-11 20:00",
+            "kick_ct": "2026-11-12 20:00",
             "market": "spread",
             "side": "away",
             "line": 4.5,
@@ -184,7 +184,7 @@
             "league": "basketball/mens-college-basketball",
             "espn_event_id": "401999404",
             "game": "Hollow Creek Hawks at Ashfall State Embers",
-            "kick_ct": "2026-11-11 12:00",
+            "kick_ct": "2026-11-12 12:00",
             "market": "ml",
             "side": "away",
             "line": null,
@@ -202,7 +202,7 @@
             "league": "football/nfl",
             "espn_event_id": "401770114",
             "game": "Harbor Kestrels at Foundry Ironsides",
-            "kick_ct": "2026-11-11 15:25",
+            "kick_ct": "2026-11-12 15:25",
             "market": "team_total_over",
             "side": "home",
             "line": 20.5,
@@ -220,7 +220,7 @@
             "league": "soccer/usa.1",
             "espn_event_id": "731204",
             "game": "Riverbend FC vs Cross Harbor SC",
-            "kick_ct": "2026-11-12 19:30",
+            "kick_ct": "2026-11-13 19:30",
             "market": "draw",
             "side": null,
             "line": null,
@@ -238,7 +238,7 @@
             "league": "soccer/usa.1",
             "espn_event_id": "731204",
             "game": "Riverbend FC vs Cross Harbor SC",
-            "kick_ct": "2026-11-12 19:30",
+            "kick_ct": "2026-11-13 19:30",
             "market": "dc",
             "side": "home",
             "line": null,
@@ -262,7 +262,7 @@
             "to_win_u": 0.78,
             "sport": "🏈",
             "class": "flier",
-            "kick_ct": "2026-11-11 12:00",
+            "kick_ct": "2026-11-12 12:00",
             "league": "football/nfl",
             "espn_event_id": "401990501",
             "home": "FDI",
@@ -297,7 +297,7 @@
                 "espn_event_id": "401990501",
                 "home": "FDI",
                 "away": "HRK",
-                "kick_ct": "2026-11-11 12:00"
+                "kick_ct": "2026-11-12 12:00"
               },
               {
                 "game": "Foremen @ Drays",
@@ -305,7 +305,7 @@
                 "espn_event_id": "401990503",
                 "home": "CVD",
                 "away": "GCF",
-                "kick_ct": "2026-11-11 12:00"
+                "kick_ct": "2026-11-12 12:00"
               },
               {
                 "game": "Sentinels @ Loons",
@@ -313,7 +313,7 @@
                 "espn_event_id": "401990502",
                 "home": "LKL",
                 "away": "NPS",
-                "kick_ct": "2026-11-11 19:20"
+                "kick_ct": "2026-11-12 19:20"
               }
             ]
           },
@@ -328,7 +328,7 @@
             "to_win_u": 0.36,
             "sport": "🏈",
             "class": "flier",
-            "kick_ct": "2026-11-11 12:00",
+            "kick_ct": "2026-11-12 12:00",
             "league": "football/nfl",
             "espn_event_id": "401990501",
             "home": "FDI",
@@ -363,14 +363,14 @@
                 "espn_event_id": "401990501",
                 "home": "FDI",
                 "away": "HRK",
-                "kick_ct": "2026-11-11 12:00"
+                "kick_ct": "2026-11-12 12:00"
               }
             ]
           }
         ],
         "form": {
           "window_days": 7,
-          "since": "2026-11-05",
+          "since": "2026-11-06",
           "record": "14-9",
           "wins": 14,
           "losses": 9,
@@ -381,76 +381,76 @@
             {
               "r": "W",
               "u": 1.23,
-              "d": "2026-11-10",
+              "d": "2026-11-11",
               "s": "⚽",
               "label": "Cross Harbor ML (reg. time)"
             },
             {
               "r": "W",
               "u": 0.48,
-              "d": "2026-11-10",
+              "d": "2026-11-11",
               "s": "⚾",
               "label": "Drays -1.5 run line"
             },
             {
               "r": "W",
               "u": 0.91,
-              "d": "2026-11-09",
+              "d": "2026-11-10",
               "s": "🏈",
               "label": "Kestrels team total over 24.5"
             },
             {
               "r": "W",
               "u": 0.64,
-              "d": "2026-11-09",
+              "d": "2026-11-10",
               "s": "🏀",
               "label": "Foremen -6.5"
             },
             {
               "r": "W",
               "u": 0.71,
-              "d": "2026-11-08",
+              "d": "2026-11-09",
               "s": "⚽",
               "label": "Riverbend both teams to score"
             },
             {
               "r": "L",
               "u": -1,
-              "d": "2026-11-08",
+              "d": "2026-11-09",
               "s": "🏈",
               "label": "Sentinels +3 (1H)"
             },
             {
               "r": "W",
               "u": 0.45,
-              "d": "2026-11-07",
+              "d": "2026-11-08",
               "s": "⚾",
               "label": "Under 8.5"
             },
             {
               "r": "L",
               "u": -0.5,
-              "d": "2026-11-06",
+              "d": "2026-11-07",
               "s": "🏀",
               "label": "Current ML"
             },
             {
               "r": "L",
               "u": -0.75,
-              "d": "2026-11-06",
+              "d": "2026-11-07",
               "s": "🏈",
               "label": "Vasquez anytime TD"
             },
             {
               "r": "W",
               "u": 1.35,
-              "d": "2026-11-05",
+              "d": "2026-11-06",
               "s": "⚽",
               "label": "Harbor Rovers ML"
             }
           ],
           "last_card": {
-            "date": "2026-11-10",
+            "date": "2026-11-11",
             "record": "2-0",
             "net_u": 1.71,
             "tickets": [
@@ -498,12 +498,12 @@
     },
     "bets_ledger": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
-        "as_of": "2026-11-11",
-        "slate_day": "2026-10-11",
+        "as_of": "2026-11-12",
+        "slate_day": "2026-10-12",
         "net_u": 5.24,
         "streak": "L4",
         "windows": {
@@ -516,7 +516,7 @@
             "staked_u": 27,
             "roi_pct": 3.6,
             "win_pct": 47,
-            "since": "2026-11-05"
+            "since": "2026-11-06"
           },
           "30d": {
             "n": 65,
@@ -527,7 +527,7 @@
             "staked_u": 45.25,
             "roi_pct": 5.8,
             "win_pct": 49,
-            "since": "2026-10-13"
+            "since": "2026-10-14"
           },
           "slate": {
             "n": 66,
@@ -538,81 +538,81 @@
             "staked_u": 46.25,
             "roi_pct": 9.4,
             "win_pct": 50,
-            "since": "2026-10-11"
+            "since": "2026-10-12"
           }
         },
         "curve": [
           {
-            "d": "2026-10-26",
+            "d": "2026-10-27",
             "u": 1.72
           },
           {
-            "d": "2026-10-27",
+            "d": "2026-10-28",
             "u": 2.21
           },
           {
-            "d": "2026-10-28",
+            "d": "2026-10-29",
             "u": 0.64
           },
           {
-            "d": "2026-10-29",
+            "d": "2026-10-30",
             "u": -0.82
           },
           {
-            "d": "2026-10-30",
+            "d": "2026-10-31",
             "u": -1.95
           },
           {
-            "d": "2026-10-31",
+            "d": "2026-11-01",
             "u": -0.58
           },
           {
-            "d": "2026-11-01",
+            "d": "2026-11-02",
             "u": 1.1
           },
           {
-            "d": "2026-11-02",
+            "d": "2026-11-03",
             "u": 3.36
           },
           {
-            "d": "2026-11-03",
+            "d": "2026-11-04",
             "u": 2.48
           },
           {
-            "d": "2026-11-04",
+            "d": "2026-11-05",
             "u": 4.9
           },
           {
-            "d": "2026-11-05",
+            "d": "2026-11-06",
             "u": 6.11
           },
           {
-            "d": "2026-11-06",
+            "d": "2026-11-07",
             "u": 7.35
           },
           {
-            "d": "2026-11-07",
+            "d": "2026-11-08",
             "u": 5.02
           },
           {
-            "d": "2026-11-08",
+            "d": "2026-11-09",
             "u": 3.77
           },
           {
-            "d": "2026-11-09",
+            "d": "2026-11-10",
             "u": 4.58
           },
           {
-            "d": "2026-11-10",
+            "d": "2026-11-11",
             "u": 4.34
           }
         ],
         "hwm": {
-          "d": "2026-11-06",
+          "d": "2026-11-07",
           "u": 7.35
         },
         "lwm": {
-          "d": "2026-10-30",
+          "d": "2026-10-31",
           "u": -1.95
         },
         "by_sport": [
@@ -753,43 +753,43 @@
         },
         "receipts": {
           "best_ticket": {
-            "d": "2026-11-07",
+            "d": "2026-11-08",
             "s": "⚽",
             "label": "UNDER 2.5 goals (reg. time)",
             "game": "Cross Harbor SC at Riverbend FC",
             "u": 1.99
           },
           "worst_ticket": {
-            "d": "2026-11-09",
+            "d": "2026-11-10",
             "s": "🏈",
             "label": "Sentinels -3.5 (1H)",
             "game": "Cedar Valley Drays at North Pike Sentinels",
             "u": -1.5
           },
           "best_day": {
-            "d": "2026-11-07",
+            "d": "2026-11-08",
             "net_u": 4.87,
             "record": "4-0",
             "n": 4
           },
           "worst_day": {
-            "d": "2026-11-09",
+            "d": "2026-11-10",
             "net_u": -1.81,
             "record": "3-6",
             "n": 9
           },
           "longest_w": {
             "n": 6,
-            "from": "2026-10-30",
-            "to": "2026-11-03"
+            "from": "2026-10-31",
+            "to": "2026-11-04"
           },
           "longest_l": {
             "n": 5,
-            "from": "2026-11-08",
-            "to": "2026-11-08"
+            "from": "2026-11-09",
+            "to": "2026-11-09"
           },
           "biggest_stake": {
-            "d": "2026-11-02",
+            "d": "2026-11-03",
             "s": "🏀",
             "label": "Foremen ML",
             "game": "Lakeshore Current at Granite City Foremen",
@@ -815,13 +815,13 @@
     },
     "today_games": {
       "band": "LIVE",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
         "title": "Today's Games",
-        "date_ct": "2026-11-11",
-        "date_next_ct": "2026-11-12",
+        "date_ct": "2026-11-12",
+        "date_next_ct": "2026-11-13",
         "leagues": [
           {
             "id": "mlb",
@@ -902,7 +902,7 @@
     },
     "weather": {
       "band": "LIVE",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -936,7 +936,7 @@
           "behind_min": 4
         },
         "sun": {
-          "date": "2026-11-11",
+          "date": "2026-11-12",
           "sunrise_ct": "06:38",
           "sunset_ct": "18:57"
         },
@@ -978,7 +978,7 @@
           "forecast_s": 1800
         },
         "fallback": {
-          "as_of": "2026-11-11T18:54:25.138Z",
+          "as_of": "2026-11-12T16:44:24.456Z",
           "now": {
             "source": "KMCK",
             "temp_f": 61,
@@ -991,7 +991,7 @@
           },
           "days": [
             {
-              "date": "2026-11-11",
+              "date": "2026-11-12",
               "label": "Today",
               "glyph_token": "tsra",
               "hi_f": 69,
@@ -1001,8 +1001,8 @@
               "detail": "Showers and thunderstorms likely before 9am, then a chance of showers and thunderstorms. Cloudy, with a high near 69. Southeast wind 5 to 10 mph. Chance of precipitation is 80%."
             },
             {
-              "date": "2026-11-12",
-              "label": "Thu",
+              "date": "2026-11-13",
+              "label": "Fri",
               "glyph_token": "rain_showers",
               "hi_f": 66,
               "lo_f": 52,
@@ -1011,8 +1011,8 @@
               "detail": "A chance of rain showers before 10am. Cloudy, with a high near 66. Northeast wind 10 to 15 mph, with gusts as high as 30 mph."
             },
             {
-              "date": "2026-11-13",
-              "label": "Fri",
+              "date": "2026-11-14",
+              "label": "Sat",
               "glyph_token": "bkn",
               "hi_f": 62,
               "lo_f": 48,
@@ -1021,8 +1021,8 @@
               "detail": "Mostly cloudy, with a high near 62. Northeast wind 10 to 15 mph."
             },
             {
-              "date": "2026-11-14",
-              "label": "Sat",
+              "date": "2026-11-15",
+              "label": "Sun",
               "glyph_token": "bkn",
               "hi_f": 61,
               "lo_f": 47,
@@ -1031,8 +1031,8 @@
               "detail": "Partly sunny, with a high near 61. Northeast wind 5 to 15 mph."
             },
             {
-              "date": "2026-11-15",
-              "label": "Sun",
+              "date": "2026-11-16",
+              "label": "Mon",
               "glyph_token": "sct",
               "hi_f": 64,
               "lo_f": 48,
@@ -1041,8 +1041,8 @@
               "detail": "Mostly sunny, with a high near 64. Partly cloudy, with a low around 48."
             },
             {
-              "date": "2026-11-16",
-              "label": "Mon",
+              "date": "2026-11-17",
+              "label": "Tue",
               "glyph_token": "sct",
               "hi_f": 66,
               "lo_f": 49,
@@ -1051,8 +1051,8 @@
               "detail": "Mostly sunny, with a high near 66. Partly cloudy, with a low around 49."
             },
             {
-              "date": "2026-11-17",
-              "label": "Tue",
+              "date": "2026-11-18",
+              "label": "Wed",
               "glyph_token": "skc",
               "hi_f": 70,
               "lo_f": 50,
@@ -1071,8 +1071,8 @@
               "description": "* WHAT...Flooding caused by excessive rainfall is possible.\n\n* WHERE...Portions of invented county.\n\n* WHEN...Through this evening.\n\n* ADDITIONAL DETAILS...\n- This alert is fake. Every word of it was written by the mock generator.\n- http://example.com/mock/flood",
               "instruction": "You should monitor later forecasts and be alert for possible Flood Warnings.",
               "areaDesc": "Invented County, XX",
-              "onset": "2026-11-11T14:28:25.138Z",
-              "ends": "2026-11-12T00:28:25.138Z",
+              "onset": "2026-11-12T12:18:24.456Z",
+              "ends": "2026-11-12T22:18:24.456Z",
               "url": "https://api.weather.gov/alerts/urn:oid:0.0.0.0.mock.watch"
             }
           ]
@@ -1081,24 +1081,24 @@
     },
     "calendar": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
         "today": {
-          "date": "2026-11-11",
-          "weekday": "Wednesday",
-          "label": "November 11"
+          "date": "2026-11-12",
+          "weekday": "Thursday",
+          "label": "November 12"
         },
         "holiday": {
           "name": "Thanksgiving",
           "emoji": "🦃",
-          "date": "2026-11-23",
+          "date": "2026-11-24",
           "days_out": 12
         },
         "days": [
           {
-            "date": "2026-11-11",
+            "date": "2026-11-12",
             "events": [
               {
                 "time_ct": "08:30",
@@ -1118,7 +1118,7 @@
             ]
           },
           {
-            "date": "2026-11-12",
+            "date": "2026-11-13",
             "events": [
               {
                 "time_ct": "09:00",
@@ -1142,23 +1142,23 @@
     },
     "local_events": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
         "title": "Lake Country",
         "window": {
-          "from": "2026-11-11",
-          "to": "2026-11-18"
+          "from": "2026-11-12",
+          "to": "2026-11-19"
         },
         "count": 8,
         "days": [
           {
-            "date": "2026-11-11",
-            "label": "Wed 11/11",
+            "date": "2026-11-12",
+            "label": "Thu 11/12",
             "events": [
               {
-                "date": "2026-11-11",
+                "date": "2026-11-12",
                 "time": "05:30 PM - 08:30 PM",
                 "title": "Bands on the Mock Beach — The Invented Tides",
                 "venue": "Mock Lakefront Bandshell",
@@ -1169,7 +1169,7 @@
                 "multi_day": false
               },
               {
-                "date": "2026-11-11",
+                "date": "2026-11-12",
                 "time": "06:00 PM - 09:00 PM",
                 "title": "Village Green Beer Garden",
                 "venue": "Mock Village Green",
@@ -1182,11 +1182,11 @@
             ]
           },
           {
-            "date": "2026-11-12",
-            "label": "Thu 11/12",
+            "date": "2026-11-13",
+            "label": "Fri 11/13",
             "events": [
               {
-                "date": "2026-11-12",
+                "date": "2026-11-13",
                 "time": "10:00 AM - 10:00 PM",
                 "title": "Mock Harvest Fallfest",
                 "venue": "Invented County Fairgrounds",
@@ -1199,11 +1199,11 @@
             ]
           },
           {
-            "date": "2026-11-13",
-            "label": "Fri 11/13",
+            "date": "2026-11-14",
+            "label": "Sat 11/14",
             "events": [
               {
-                "date": "2026-11-13",
+                "date": "2026-11-14",
                 "time": "",
                 "title": "Summer Farmers Market",
                 "venue": "155 Fictional Ave",
@@ -1214,7 +1214,7 @@
                 "multi_day": false
               },
               {
-                "date": "2026-11-13",
+                "date": "2026-11-14",
                 "time": "10:00 AM - 10:00 PM",
                 "title": "Mock Harvest Fallfest",
                 "venue": "Invented County Fairgrounds",
@@ -1227,11 +1227,11 @@
             ]
           },
           {
-            "date": "2026-11-14",
-            "label": "Sat 11/14",
+            "date": "2026-11-15",
+            "label": "Sun 11/15",
             "events": [
               {
-                "date": "2026-11-14",
+                "date": "2026-11-15",
                 "time": "11:00 AM - 06:00 PM",
                 "title": "Mock Harvest Fallfest",
                 "venue": "Invented County Fairgrounds",
@@ -1242,7 +1242,7 @@
                 "multi_day": true
               },
               {
-                "date": "2026-11-14",
+                "date": "2026-11-15",
                 "time": "01:00 PM - 03:00 PM",
                 "title": "Rally for Made-Up Vets",
                 "venue": "Mock Memorial Park",
@@ -1255,11 +1255,11 @@
             ]
           },
           {
-            "date": "2026-11-17",
-            "label": "Tue 11/17",
+            "date": "2026-11-18",
+            "label": "Wed 11/18",
             "events": [
               {
-                "date": "2026-11-17",
+                "date": "2026-11-18",
                 "time": "07:00 PM - 09:00 PM",
                 "title": "Fireworks Over the Fictional Lake",
                 "venue": "Mock Lakefront Bandshell",
@@ -1282,7 +1282,7 @@
     },
     "reminders": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -1294,7 +1294,7 @@
           {
             "title": "Nearest due date, should sort under the misses",
             "list": "Shop",
-            "due": "2026-11-11",
+            "due": "2026-11-12",
             "due_time": "16:30",
             "days": 0,
             "overdue": false,
@@ -1314,7 +1314,7 @@
           {
             "title": "Badly overdue, high priority",
             "list": "Shop",
-            "due": "2026-11-02",
+            "due": "2026-11-03",
             "due_time": null,
             "days": -9,
             "overdue": true,
@@ -1324,7 +1324,7 @@
           {
             "title": "Due next week",
             "list": "Home",
-            "due": "2026-11-17",
+            "due": "2026-11-18",
             "due_time": null,
             "days": 6,
             "overdue": false,
@@ -1334,7 +1334,7 @@
           {
             "title": "Slipped yesterday",
             "list": "Home",
-            "due": "2026-11-10",
+            "due": "2026-11-11",
             "due_time": "08:00",
             "days": -1,
             "overdue": true,
@@ -1344,7 +1344,7 @@
           {
             "title": "Due tomorrow",
             "list": "Shop",
-            "due": "2026-11-12",
+            "due": "2026-11-13",
             "due_time": "09:15",
             "days": 1,
             "overdue": false,
@@ -1366,16 +1366,16 @@
     },
     "captains_log": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
-        "brief_date": "2026-11-11",
+        "brief_date": "2026-11-12",
         "is_today": true,
         "generated_at_ct": "06:11 CDT",
         "framework_version": "v2.9",
         "run_mode": "scheduled",
-        "weekday": "Wednesday",
+        "weekday": "Thursday",
         "live_count": 7,
         "sections": [
           {
@@ -1611,17 +1611,17 @@
           "label": null
         },
         "omitted": [],
-        "footer": "Generated by Captain's Log — Wednesday 11/11, 06:02 fire · framework v2.9 · 75th consecutive morning",
-        "source": "02-Personal/Daily/2026-11/2026-11-11-Brief.md"
+        "footer": "Generated by Captain's Log — Thursday 11/12, 06:02 fire · framework v2.9 · 75th consecutive morning",
+        "source": "02-Personal/Daily/2026-11/2026-11-12-Brief.md"
       }
     },
     "dinner": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
-        "date": "2026-11-11",
+        "date": "2026-11-12",
         "meal": "Sheet-pan sausage and peppers",
         "emoji": "🌭",
         "is_new": true,
@@ -1631,11 +1631,11 @@
         "verdict": null,
         "week": {
           "label": "This week",
-          "week_of": "2026-11-09",
+          "week_of": "2026-11-10",
           "status": "approved",
           "days": [
             {
-              "date": "2026-11-09",
+              "date": "2026-11-10",
               "day": "Mon",
               "meal": "Invented noodle bake",
               "emoji": "🍝",
@@ -1644,7 +1644,7 @@
               "is_new": false
             },
             {
-              "date": "2026-11-10",
+              "date": "2026-11-11",
               "day": "Tue",
               "meal": "Made-up taco night",
               "emoji": "🌮",
@@ -1653,7 +1653,7 @@
               "is_new": false
             },
             {
-              "date": "2026-11-11",
+              "date": "2026-11-12",
               "day": "Wed",
               "meal": "Sheet-pan sausage and peppers",
               "emoji": "🌭",
@@ -1662,7 +1662,7 @@
               "is_new": true
             },
             {
-              "date": "2026-11-12",
+              "date": "2026-11-13",
               "day": "Thu",
               "meal": "Pretend pot roast",
               "emoji": "🥩",
@@ -1671,7 +1671,7 @@
               "is_new": false
             },
             {
-              "date": "2026-11-13",
+              "date": "2026-11-14",
               "day": "Fri",
               "meal": "Placeholder pancakes",
               "emoji": "🥞",
@@ -1685,11 +1685,11 @@
     },
     "purser_due": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.138Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
-        "known_through": "2026-11-09",
+        "known_through": "2026-11-10",
         "items": [
           {
             "kind": "bill",
@@ -1698,7 +1698,7 @@
             "full_name": "Invented Savings Bank — mortgage",
             "amount": 2184,
             "amount_display": true,
-            "due": "2026-11-11",
+            "due": "2026-11-12",
             "days_out": 0,
             "tone": "fund",
             "pay_mode": "autopay",
@@ -1711,11 +1711,11 @@
             "full_name": "Made-Up Blue Cash (…6543)",
             "amount": 412.88,
             "amount_display": true,
-            "due": "2026-11-12",
+            "due": "2026-11-13",
             "days_out": 1,
             "tone": "act",
             "pay_mode": "manual",
-            "reminder": "2026-11-10"
+            "reminder": "2026-11-11"
           },
           {
             "kind": "bill",
@@ -1724,7 +1724,7 @@
             "full_name": "Nowhere Power & Light",
             "amount": 143.62,
             "amount_display": true,
-            "due": "2026-11-15",
+            "due": "2026-11-16",
             "days_out": 4,
             "tone": "fund",
             "pay_mode": "autopay",
@@ -1737,11 +1737,11 @@
             "full_name": "Pretend Rewards Visa (…2201)",
             "amount": 1290.4,
             "amount_display": false,
-            "due": "2026-11-20",
+            "due": "2026-11-21",
             "days_out": 9,
             "tone": "act",
             "pay_mode": "manual",
-            "reminder": "2026-11-17"
+            "reminder": "2026-11-18"
           },
           {
             "kind": "bill",
@@ -1750,7 +1750,7 @@
             "full_name": "Fictional Fiber",
             "amount": 89.99,
             "amount_display": true,
-            "due": "2026-11-23",
+            "due": "2026-11-24",
             "days_out": 12,
             "tone": "fund",
             "pay_mode": "autopay",
@@ -1763,7 +1763,7 @@
             "full_name": "Imaginary Skies Signature (…8812)",
             "amount": 76.12,
             "amount_display": true,
-            "due": "2026-12-04",
+            "due": "2026-12-05",
             "days_out": 23,
             "tone": "fund",
             "pay_mode": "autopay",
@@ -1776,7 +1776,7 @@
             "full_name": "Invented Hardware Co. card (…4470)",
             "amount": 318.05,
             "amount_display": true,
-            "due": "2026-12-22",
+            "due": "2026-12-23",
             "days_out": 41,
             "tone": "act",
             "pay_mode": "manual",
@@ -1812,17 +1812,17 @@
     },
     "wss_traffic": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.139Z",
+      "updated_at": "2026-11-12T17:18:24.456Z",
       "status": "ok",
       "error": null,
       "data": {
         "status": "ok",
-        "generated_at": "2026-11-11T06:17:03-06:00",
-        "run_today": "2026-11-11",
+        "generated_at": "2026-11-12T06:17:03-06:00",
+        "run_today": "2026-11-12",
         "latest": {
           "ga4": {
-            "date": "2026-11-10",
-            "pulled_at": "2026-11-11T19:28:25.138Z",
+            "date": "2026-11-11",
+            "pulled_at": "2026-11-12T17:18:24.456Z",
             "final": false,
             "sessions": {
               "value": 87,
@@ -1868,8 +1868,8 @@
             }
           },
           "gsc": {
-            "date": "2026-11-08",
-            "pulled_at": "2026-11-11T19:28:25.138Z",
+            "date": "2026-11-09",
+            "pulled_at": "2026-11-12T17:18:24.456Z",
             "clicks": {
               "value": 27,
               "dod": -21,
@@ -1896,8 +1896,8 @@
             }
           },
           "cf": {
-            "date": "2026-11-10",
-            "pulled_at": "2026-11-11T19:28:25.138Z",
+            "date": "2026-11-11",
+            "pulled_at": "2026-11-12T17:18:24.456Z",
             "day_basis": "UTC",
             "requests": {
               "value": 5400,
@@ -1927,10 +1927,10 @@
         },
         "days": [
           {
-            "date": "2026-11-10",
+            "date": "2026-11-11",
             "ga4": {
-              "date": "2026-11-10",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-11",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": false,
               "sessions": {
                 "value": 87,
@@ -1977,8 +1977,8 @@
             },
             "gsc": null,
             "cf": {
-              "date": "2026-11-10",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-11",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5400,
@@ -2007,10 +2007,10 @@
             }
           },
           {
-            "date": "2026-11-09",
+            "date": "2026-11-10",
             "ga4": {
-              "date": "2026-11-09",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-10",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": false,
               "sessions": {
                 "value": 128,
@@ -2057,8 +2057,8 @@
             },
             "gsc": null,
             "cf": {
-              "date": "2026-11-09",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-10",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5670,
@@ -2087,10 +2087,10 @@
             }
           },
           {
-            "date": "2026-11-08",
+            "date": "2026-11-09",
             "ga4": {
-              "date": "2026-11-08",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-09",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 114,
@@ -2136,8 +2136,8 @@
               }
             },
             "gsc": {
-              "date": "2026-11-08",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-09",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 27,
                 "dod": -21,
@@ -2164,8 +2164,8 @@
               }
             },
             "cf": {
-              "date": "2026-11-08",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-09",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5280,
@@ -2194,10 +2194,10 @@
             }
           },
           {
-            "date": "2026-11-07",
+            "date": "2026-11-08",
             "ga4": {
-              "date": "2026-11-07",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-08",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 123,
@@ -2243,8 +2243,8 @@
               }
             },
             "gsc": {
-              "date": "2026-11-07",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-08",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 54,
                 "dod": 6,
@@ -2271,8 +2271,8 @@
               }
             },
             "cf": {
-              "date": "2026-11-07",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-08",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5580,
@@ -2301,10 +2301,10 @@
             }
           },
           {
-            "date": "2026-11-06",
+            "date": "2026-11-07",
             "ga4": {
-              "date": "2026-11-06",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-07",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 105,
@@ -2350,8 +2350,8 @@
               }
             },
             "gsc": {
-              "date": "2026-11-06",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-07",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 37,
                 "dod": -11,
@@ -2378,8 +2378,8 @@
               }
             },
             "cf": {
-              "date": "2026-11-06",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-07",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5070,
@@ -2408,10 +2408,10 @@
             }
           },
           {
-            "date": "2026-11-05",
+            "date": "2026-11-06",
             "ga4": {
-              "date": "2026-11-05",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-06",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 123,
@@ -2457,8 +2457,8 @@
               }
             },
             "gsc": {
-              "date": "2026-11-05",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-06",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 51,
                 "dod": 3,
@@ -2485,8 +2485,8 @@
               }
             },
             "cf": {
-              "date": "2026-11-05",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-06",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5490,
@@ -2515,10 +2515,10 @@
             }
           },
           {
-            "date": "2026-11-04",
+            "date": "2026-11-05",
             "ga4": {
-              "date": "2026-11-04",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-05",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 133,
@@ -2564,8 +2564,8 @@
               }
             },
             "gsc": {
-              "date": "2026-11-04",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-05",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 62,
                 "dod": 14,
@@ -2592,8 +2592,8 @@
               }
             },
             "cf": {
-              "date": "2026-11-04",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-05",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5820,
@@ -2622,10 +2622,10 @@
             }
           },
           {
-            "date": "2026-11-03",
+            "date": "2026-11-04",
             "ga4": {
-              "date": "2026-11-03",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-04",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 118,
@@ -2671,8 +2671,8 @@
               }
             },
             "gsc": {
-              "date": "2026-11-03",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-04",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 48,
                 "dod": 0,
@@ -2699,8 +2699,8 @@
               }
             },
             "cf": {
-              "date": "2026-11-03",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-04",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5400,
@@ -2729,10 +2729,10 @@
             }
           },
           {
-            "date": "2026-11-02",
+            "date": "2026-11-03",
             "ga4": {
-              "date": "2026-11-02",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-03",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 126,
@@ -2778,8 +2778,8 @@
               }
             },
             "gsc": {
-              "date": "2026-11-02",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-03",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 57,
                 "dod": 9,
@@ -2806,8 +2806,8 @@
               }
             },
             "cf": {
-              "date": "2026-11-02",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-03",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5670,
@@ -2836,10 +2836,10 @@
             }
           },
           {
-            "date": "2026-11-01",
+            "date": "2026-11-02",
             "ga4": {
-              "date": "2026-11-01",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-02",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 112,
@@ -2885,8 +2885,8 @@
               }
             },
             "gsc": {
-              "date": "2026-11-01",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-02",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 44,
                 "dod": -4,
@@ -2913,8 +2913,8 @@
               }
             },
             "cf": {
-              "date": "2026-11-01",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-02",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5280,
@@ -2943,10 +2943,10 @@
             }
           },
           {
-            "date": "2026-10-31",
+            "date": "2026-11-01",
             "ga4": {
-              "date": "2026-10-31",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-01",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 126,
@@ -2992,8 +2992,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-31",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-01",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 54,
                 "dod": 6,
@@ -3020,8 +3020,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-31",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-11-01",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5580,
@@ -3050,10 +3050,10 @@
             }
           },
           {
-            "date": "2026-10-30",
+            "date": "2026-10-31",
             "ga4": {
-              "date": "2026-10-30",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-31",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 108,
@@ -3099,8 +3099,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-30",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-31",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 37,
                 "dod": -11,
@@ -3127,8 +3127,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-30",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-31",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5070,
@@ -3157,10 +3157,10 @@
             }
           },
           {
-            "date": "2026-10-29",
+            "date": "2026-10-30",
             "ga4": {
-              "date": "2026-10-29",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-30",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 121,
@@ -3206,8 +3206,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-29",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-30",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 51,
                 "dod": 3,
@@ -3234,8 +3234,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-29",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-30",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5490,
@@ -3264,10 +3264,10 @@
             }
           },
           {
-            "date": "2026-10-28",
+            "date": "2026-10-29",
             "ga4": {
-              "date": "2026-10-28",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-29",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 131,
@@ -3313,8 +3313,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-28",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-29",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 62,
                 "dod": 14,
@@ -3341,8 +3341,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-28",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-29",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5820,
@@ -3371,10 +3371,10 @@
             }
           },
           {
-            "date": "2026-10-27",
+            "date": "2026-10-28",
             "ga4": {
-              "date": "2026-10-27",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-28",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 116,
@@ -3420,8 +3420,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-27",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-28",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 48,
                 "dod": 0,
@@ -3448,8 +3448,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-27",
-              "pulled_at": "2026-11-11T19:28:25.138Z",
+              "date": "2026-10-28",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5400,
@@ -3478,10 +3478,10 @@
             }
           },
           {
-            "date": "2026-10-26",
+            "date": "2026-10-27",
             "ga4": {
-              "date": "2026-10-26",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-27",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 129,
@@ -3527,8 +3527,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-26",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-27",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 57,
                 "dod": 9,
@@ -3555,8 +3555,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-26",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-27",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5670,
@@ -3585,10 +3585,10 @@
             }
           },
           {
-            "date": "2026-10-25",
+            "date": "2026-10-26",
             "ga4": {
-              "date": "2026-10-25",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-26",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 115,
@@ -3634,8 +3634,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-25",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-26",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 44,
                 "dod": -4,
@@ -3662,8 +3662,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-25",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-26",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5280,
@@ -3692,10 +3692,10 @@
             }
           },
           {
-            "date": "2026-10-24",
+            "date": "2026-10-25",
             "ga4": {
-              "date": "2026-10-24",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-25",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 124,
@@ -3741,8 +3741,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-24",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-25",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 54,
                 "dod": 6,
@@ -3769,8 +3769,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-24",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-25",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5580,
@@ -3799,10 +3799,10 @@
             }
           },
           {
-            "date": "2026-10-23",
+            "date": "2026-10-24",
             "ga4": {
-              "date": "2026-10-23",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-24",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 106,
@@ -3848,8 +3848,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-23",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-24",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 37,
                 "dod": -11,
@@ -3876,8 +3876,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-23",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-24",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5070,
@@ -3906,10 +3906,10 @@
             }
           },
           {
-            "date": "2026-10-22",
+            "date": "2026-10-23",
             "ga4": {
-              "date": "2026-10-22",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-23",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 119,
@@ -3955,8 +3955,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-22",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-23",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 51,
                 "dod": 3,
@@ -3983,8 +3983,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-22",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-23",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5490,
@@ -4013,10 +4013,10 @@
             }
           },
           {
-            "date": "2026-10-21",
+            "date": "2026-10-22",
             "ga4": {
-              "date": "2026-10-21",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-22",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 134,
@@ -4062,8 +4062,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-21",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-22",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 62,
                 "dod": 14,
@@ -4090,8 +4090,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-21",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-22",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5820,
@@ -4120,10 +4120,10 @@
             }
           },
           {
-            "date": "2026-10-20",
+            "date": "2026-10-21",
             "ga4": {
-              "date": "2026-10-20",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-21",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 119,
@@ -4169,8 +4169,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-20",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-21",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 48,
                 "dod": 0,
@@ -4197,8 +4197,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-20",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-21",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5400,
@@ -4227,10 +4227,10 @@
             }
           },
           {
-            "date": "2026-10-19",
+            "date": "2026-10-20",
             "ga4": {
-              "date": "2026-10-19",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-20",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 127,
@@ -4276,8 +4276,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-19",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-20",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 57,
                 "dod": 9,
@@ -4304,8 +4304,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-19",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-20",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5670,
@@ -4334,10 +4334,10 @@
             }
           },
           {
-            "date": "2026-10-18",
+            "date": "2026-10-19",
             "ga4": {
-              "date": "2026-10-18",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-19",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 113,
@@ -4383,8 +4383,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-18",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-19",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 44,
                 "dod": -4,
@@ -4411,8 +4411,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-18",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-19",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5280,
@@ -4441,10 +4441,10 @@
             }
           },
           {
-            "date": "2026-10-17",
+            "date": "2026-10-18",
             "ga4": {
-              "date": "2026-10-17",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-18",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 122,
@@ -4490,8 +4490,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-17",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-18",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 54,
                 "dod": 6,
@@ -4518,8 +4518,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-17",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-18",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5580,
@@ -4548,10 +4548,10 @@
             }
           },
           {
-            "date": "2026-10-16",
+            "date": "2026-10-17",
             "ga4": {
-              "date": "2026-10-16",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-17",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 109,
@@ -4597,8 +4597,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-16",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-17",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 37,
                 "dod": -11,
@@ -4625,8 +4625,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-16",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-17",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5070,
@@ -4655,10 +4655,10 @@
             }
           },
           {
-            "date": "2026-10-15",
+            "date": "2026-10-16",
             "ga4": {
-              "date": "2026-10-15",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-16",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 122,
@@ -4704,8 +4704,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-15",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-16",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 51,
                 "dod": 3,
@@ -4732,8 +4732,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-15",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-16",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5490,
@@ -4762,10 +4762,10 @@
             }
           },
           {
-            "date": "2026-10-14",
+            "date": "2026-10-15",
             "ga4": {
-              "date": "2026-10-14",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-15",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "final": true,
               "sessions": {
                 "value": 132,
@@ -4811,8 +4811,8 @@
               }
             },
             "gsc": {
-              "date": "2026-10-14",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-15",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "clicks": {
                 "value": 62,
                 "dod": 14,
@@ -4839,8 +4839,8 @@
               }
             },
             "cf": {
-              "date": "2026-10-14",
-              "pulled_at": "2026-11-11T19:28:25.139Z",
+              "date": "2026-10-15",
+              "pulled_at": "2026-11-12T17:18:24.456Z",
               "day_basis": "UTC",
               "requests": {
                 "value": 5820,
@@ -4924,8 +4924,8 @@
           }
         ],
         "gsc_window": {
-          "start": "2026-11-02",
-          "end": "2026-11-08"
+          "start": "2026-11-03",
+          "end": "2026-11-09"
         },
         "gsc_site": "sc-domain:example.invalid",
         "channels_7d": {
@@ -4939,21 +4939,21 @@
         "sources_status": {
           "ga4": {
             "ok": true,
-            "last_good": "2026-11-10",
+            "last_good": "2026-11-11",
             "error": null,
             "failing_since": null,
             "fail_runs": 0
           },
           "gsc": {
             "ok": true,
-            "last_good": "2026-11-08",
+            "last_good": "2026-11-09",
             "error": null,
             "failing_since": null,
             "fail_runs": 0
           },
           "cf": {
             "ok": true,
-            "last_good": "2026-11-10",
+            "last_good": "2026-11-11",
             "error": null,
             "failing_since": null,
             "fail_runs": 0,
@@ -4978,14 +4978,151 @@
         "source": "01-WSS/Projects/Website-Migration/State/traffic-pulse.json"
       }
     },
+    "wss_ap": {
+      "band": "DAILY",
+      "updated_at": "2026-11-12T17:18:24.457Z",
+      "status": "ok",
+      "error": null,
+      "data": {
+        "status": "ok",
+        "today": "2026-11-12",
+        "last_day": {
+          "date": "2026-11-11",
+          "label": "Wed 11/11",
+          "count": 3,
+          "total": 778.22
+        },
+        "today_so_far": {
+          "count": 2,
+          "total": 296.35
+        },
+        "days": [
+          {
+            "date": "2026-11-12",
+            "label": "Thu 11/12",
+            "count": 2,
+            "total": 296.35,
+            "bills": [
+              {
+                "state": "created",
+                "vendor": "Sample Supply",
+                "invoice": "SS-55190",
+                "total": 120,
+                "gl": "5030",
+                "record": "S0042",
+                "description": "Make-Believe Dairy - S0042",
+                "inv_date": "2026-11-11",
+                "inv_label": "11/11",
+                "due": "2026-12-10",
+                "due_label": "12/10",
+                "note": "1 line",
+                "qbo_url": "https://qbo.example.invalid/app/bill?txnId=90010"
+              },
+              {
+                "state": "adopted",
+                "vendor": "Example Parts Co",
+                "invoice": "EX-10050",
+                "total": 176.35,
+                "gl": "5030",
+                "record": "P0101",
+                "description": "Fictional Foods - P0101",
+                "inv_date": "2026-11-10",
+                "inv_label": "11/10",
+                "due": "2026-12-10",
+                "due_label": "12/10",
+                "note": "3 lines · count 2 in QuickBooks",
+                "qbo_url": "https://qbo.example.invalid/app/bill?txnId=90011"
+              }
+            ]
+          },
+          {
+            "date": "2026-11-11",
+            "label": "Wed 11/11",
+            "count": 3,
+            "total": 778.22,
+            "bills": [
+              {
+                "state": "created",
+                "vendor": "Demo Filters Inc",
+                "invoice": "DF-3288",
+                "total": 264.05,
+                "gl": "5030",
+                "record": "P0103",
+                "description": "Imaginary Motors - P0103",
+                "inv_date": "2026-11-10",
+                "inv_label": "11/10",
+                "due": "2026-12-10",
+                "due_label": "12/10",
+                "note": "5 lines",
+                "qbo_url": "https://qbo.example.invalid/app/bill?txnId=90002"
+              },
+              {
+                "state": "created",
+                "vendor": "Example Parts Co",
+                "invoice": "EX-10021",
+                "total": 212.4,
+                "gl": "5030",
+                "record": "P0101",
+                "description": "Fictional Foods - P0101",
+                "inv_date": "2026-11-10",
+                "inv_label": "11/10",
+                "due": "2026-12-10",
+                "due_label": "12/10",
+                "note": "2 lines · tax 12.85",
+                "qbo_url": "https://qbo.example.invalid/app/bill?txnId=90001"
+              },
+              {
+                "state": "created",
+                "vendor": "Example Parts Co",
+                "invoice": "EX-10044",
+                "total": 301.77,
+                "gl": "5030",
+                "record": "P0099",
+                "description": "Pretend Woodworks - P0099",
+                "inv_date": "2026-11-10",
+                "inv_label": "11/10",
+                "due": "2026-12-10",
+                "due_label": "12/10",
+                "note": "2 lines · freight 12.50 · other 3.00 (fuel surcharge)",
+                "qbo_url": "javascript:alert(1)"
+              }
+            ]
+          }
+        ],
+        "held": [
+          {
+            "vendor": "Sample Supply",
+            "invoice": "SS-55120",
+            "total": 31.6,
+            "po": "VERBAL-EXAMPLE",
+            "why": "no Tracker record on the PO field (PO VERBAL-EXAMPLE) — an AP-workflow invoice, enter it by hand",
+            "since": "2026-11-11",
+            "since_label": "Wed 11/11",
+            "days": 1
+          }
+        ],
+        "held_older": 0,
+        "unbilled": [
+          {
+            "vendor": "Demo Filters Inc",
+            "invoice": "DF-3300",
+            "total": 84.25,
+            "landed_label": "Thu 11/12 6:30 AM",
+            "why": "not seen by the fleet engine yet",
+            "stuck": false
+          }
+        ],
+        "source": "01-WSS/Projects/WSS-Dashboard/_runtime/ap-seen.json"
+      }
+    },
     "wss_tape": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.139Z",
+      "updated_at": "2026-11-12T17:18:24.457Z",
       "status": "ok",
       "error": null,
       "data": {
         "title": "Crew Tape",
-        "date": "2026-11-11",
+        "date": "2026-11-12",
         "count": 12,
         "by_actor": [
           {
@@ -5003,7 +5140,7 @@
         ],
         "items": [
           {
-            "ts": "2026-11-11T19:10:25.139Z",
+            "ts": "2026-11-12T17:00:24.457Z",
             "time_ct": "15:42",
             "actor": "Rae",
             "action": "ticket_update",
@@ -5015,7 +5152,7 @@
             "evt": "mk1a2b"
           },
           {
-            "ts": "2026-11-11T18:33:25.139Z",
+            "ts": "2026-11-12T16:23:24.457Z",
             "time_ct": "15:05",
             "actor": "Kit",
             "action": "readiness",
@@ -5027,7 +5164,7 @@
             "evt": "mk3c4d"
           },
           {
-            "ts": "2026-11-11T18:25:25.139Z",
+            "ts": "2026-11-12T16:15:24.457Z",
             "time_ct": "14:57",
             "actor": "Rae",
             "action": "ticket_update",
@@ -5039,7 +5176,7 @@
             "evt": "mk5e6f"
           },
           {
-            "ts": "2026-11-11T16:58:25.139Z",
+            "ts": "2026-11-12T14:48:24.457Z",
             "time_ct": "13:30",
             "actor": "Odis",
             "action": "lead_update",
@@ -5051,7 +5188,7 @@
             "evt": "mk7g8h"
           },
           {
-            "ts": "2026-11-11T16:09:25.139Z",
+            "ts": "2026-11-12T13:59:24.457Z",
             "time_ct": "12:41",
             "actor": "Kit",
             "action": "ticket_update",
@@ -5063,7 +5200,7 @@
             "evt": "mk9i0j"
           },
           {
-            "ts": "2026-11-11T14:55:25.139Z",
+            "ts": "2026-11-12T12:45:24.457Z",
             "time_ct": "11:27",
             "actor": "Rae",
             "action": "ticket_close",
@@ -5075,7 +5212,7 @@
             "evt": "mkak1l"
           },
           {
-            "ts": "2026-11-11T14:26:25.139Z",
+            "ts": "2026-11-12T12:16:24.457Z",
             "time_ct": "10:58",
             "actor": "Odis",
             "action": "readiness",
@@ -5087,7 +5224,7 @@
             "evt": "mkbm2n"
           },
           {
-            "ts": "2026-11-11T13:40:25.139Z",
+            "ts": "2026-11-12T11:30:24.457Z",
             "time_ct": "10:12",
             "actor": "Kit",
             "action": "ticket_update",
@@ -5099,7 +5236,7 @@
             "evt": "mkco3p"
           },
           {
-            "ts": "2026-11-11T13:12:25.139Z",
+            "ts": "2026-11-12T11:02:24.457Z",
             "time_ct": "09:44",
             "actor": "Rae",
             "action": "lead_update",
@@ -5111,7 +5248,7 @@
             "evt": "mkdq4r"
           },
           {
-            "ts": "2026-11-11T12:31:25.139Z",
+            "ts": "2026-11-12T10:21:24.457Z",
             "time_ct": "09:03",
             "actor": "Odis",
             "action": "ticket_update",
@@ -5123,7 +5260,7 @@
             "evt": "mkes5t"
           },
           {
-            "ts": "2026-11-11T11:44:25.139Z",
+            "ts": "2026-11-12T09:34:24.457Z",
             "time_ct": "08:16",
             "actor": "Kit",
             "action": "ticket_open",
@@ -5135,7 +5272,7 @@
             "evt": "mkfu6v"
           },
           {
-            "ts": "2026-11-11T11:20:25.139Z",
+            "ts": "2026-11-12T09:10:24.457Z",
             "time_ct": "07:52",
             "actor": "Rae",
             "action": "other",
@@ -5148,7 +5285,7 @@
           }
         ],
         "yesterday": {
-          "date": "2026-11-10",
+          "date": "2026-11-11",
           "count": 9,
           "by_actor": [
             {
@@ -5171,13 +5308,13 @@
     },
     "cards": {
       "band": "HOURLY",
-      "updated_at": "2026-11-11T17:52:25.140Z",
+      "updated_at": "2026-11-12T15:42:24.458Z",
       "status": "stale",
       "error": "eBay Browse API rate-limited the 06:00 sweep — 118 of 121 player searches answered",
       "data": {
         "watch": null,
         "shop": {
-          "updated_at": "2026-11-11T19:06:25.140Z",
+          "updated_at": "2026-11-12T16:56:24.458Z",
           "seller": "mock_storefront",
           "active": 4,
           "calls": 1,
@@ -5188,7 +5325,7 @@
               "price": 179,
               "type": "OBO",
               "offers": true,
-              "listed": "2026-11-08",
+              "listed": "2026-11-09",
               "days_listed": 3,
               "url": "https://example.com/mock/shop/5512-0001",
               "image": "https://example.com/mock/shop/5512-0001.jpg"
@@ -5210,7 +5347,7 @@
               "price": 44,
               "type": "OBO",
               "offers": true,
-              "listed": "2026-04-11",
+              "listed": "2026-04-12",
               "days_listed": 214,
               "url": "https://example.com/mock/shop/5512-0003",
               "image": null
@@ -5221,7 +5358,7 @@
               "price": 22,
               "type": "BIN",
               "offers": false,
-              "listed": "2026-10-11",
+              "listed": "2026-10-12",
               "days_listed": 31,
               "url": "https://example.com/mock/shop/5512-0004",
               "image": "https://example.com/mock/shop/5512-0004.jpg"
@@ -5232,15 +5369,15 @@
               "item_id": "5512-0091",
               "title": "Ines Okafor Prism Foundry Gold Wave /10 BGS 9.5",
               "price": 410,
-              "listed": "2026-09-14",
-              "gone_since": "2026-11-09"
+              "listed": "2026-09-15",
+              "gone_since": "2026-11-10"
             },
             {
               "item_id": "5512-0092",
               "title": "Sable Nkemdi Ironsides Emerald Parallel PSA 10",
               "price": 96,
-              "listed": "2026-07-14",
-              "gone_since": "2026-11-05"
+              "listed": "2026-07-15",
+              "gone_since": "2026-11-06"
             }
           ],
           "errors": [],
@@ -5248,7 +5385,7 @@
         },
         "shop_footer": "Active listings and sold-detection. Watchers and pending offers live in the eBay app — see C6.",
         "pc": {
-          "updated_at": "2026-11-11T19:10:25.140Z",
+          "updated_at": "2026-11-12T17:00:24.458Z",
           "players": 26,
           "calls": 121,
           "total_found": 108,
@@ -5275,7 +5412,7 @@
               "ends_utc": null,
               "seller": "cardvault_mn",
               "seller_fb": 2410,
-              "listed": "2026-11-10",
+              "listed": "2026-11-11",
               "url": "https://example.com/mock/pc/7731-0001",
               "image": "https://example.com/mock/pc/7731-0001.jpg",
               "new": true
@@ -5297,7 +5434,7 @@
               "ends_utc": null,
               "seller": "lakeside_slabs",
               "seller_fb": 88,
-              "listed": "2026-11-07",
+              "listed": "2026-11-08",
               "url": "https://example.com/mock/pc/7731-0002",
               "image": "https://example.com/mock/pc/7731-0002.jpg",
               "new": false
@@ -5319,7 +5456,7 @@
               "ends_utc": null,
               "seller": "attic_finds_wi",
               "seller_fb": 41,
-              "listed": "2026-10-31",
+              "listed": "2026-11-01",
               "url": "https://example.com/mock/pc/7731-0003",
               "image": null,
               "new": false
@@ -5341,7 +5478,7 @@
               "ends_utc": null,
               "seller": "northport_cardworks",
               "seller_fb": 1204,
-              "listed": "2026-11-09",
+              "listed": "2026-11-10",
               "url": "https://example.com/mock/pc/7731-0101",
               "image": "https://example.com/mock/pc/7731-0101.jpg",
               "new": false
@@ -5359,11 +5496,11 @@
               "price": 920,
               "ship": 15,
               "all_in": 935,
-              "ends_ct": "2026-11-11T14:08",
-              "ends_utc": "2026-11-11T20:08:00.000Z",
+              "ends_ct": "2026-11-12T11:58",
+              "ends_utc": "2026-11-12T17:58:00.000Z",
               "seller": "bayfield_auctions",
               "seller_fb": 5310,
-              "listed": "2026-11-05",
+              "listed": "2026-11-06",
               "url": "https://example.com/mock/pc/7731-0102",
               "image": "https://example.com/mock/pc/7731-0102.jpg",
               "new": false
@@ -5385,7 +5522,7 @@
               "ends_utc": null,
               "seller": "cardvault_mn",
               "seller_fb": 2410,
-              "listed": "2026-11-03",
+              "listed": "2026-11-04",
               "url": "https://example.com/mock/pc/7731-0103",
               "image": "https://example.com/mock/pc/7731-0103.jpg",
               "new": false
@@ -5406,7 +5543,7 @@
     },
     "newsstand": {
       "band": "HOURLY",
-      "updated_at": "2026-11-11T19:05:25.140Z",
+      "updated_at": "2026-11-12T16:55:24.457Z",
       "status": "ok",
       "error": null,
       "data": {
@@ -5419,7 +5556,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-11T19:23:25.139Z"
+            "published_at": "2026-11-12T17:13:24.457Z"
           },
           {
             "title": "The Lakeshore Current take the conference opener in overtime",
@@ -5429,7 +5566,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-11T19:22:25.139Z"
+            "published_at": "2026-11-12T17:12:24.457Z"
           },
           {
             "title": "A fictional committee clears its first procedural hurdle",
@@ -5439,7 +5576,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-11T19:19:25.139Z"
+            "published_at": "2026-11-12T17:09:24.457Z"
           },
           {
             "title": "Small-shop automation is getting cheap faster than expected",
@@ -5449,7 +5586,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-11T19:15:25.139Z"
+            "published_at": "2026-11-12T17:05:24.457Z"
           },
           {
             "title": "A slow argument for keeping one analog habit",
@@ -5459,7 +5596,7 @@
             "lens": null,
             "category": null,
             "emoji": null,
-            "published_at": "2026-11-11T18:47:25.139Z"
+            "published_at": "2026-11-12T16:37:24.457Z"
           },
           {
             "title": "Regional freight rates flatten after a long climb",
@@ -5469,7 +5606,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-11T19:09:25.139Z"
+            "published_at": "2026-11-12T16:59:24.457Z"
           },
           {
             "title": "The invented index closes flat for a fourth straight week",
@@ -5479,7 +5616,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-11T19:02:25.139Z"
+            "published_at": "2026-11-12T16:52:24.457Z"
           },
           {
             "title": "A fictional second-division side goes down to ten and wins anyway",
@@ -5489,7 +5626,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-11T18:53:25.139Z"
+            "published_at": "2026-11-12T16:43:24.457Z"
           },
           {
             "title": "An invented survey finds rather less than the press release claimed",
@@ -5499,7 +5636,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-11-11T18:43:25.139Z"
+            "published_at": "2026-11-12T16:33:24.457Z"
           },
           {
             "title": "An invented launch window slips a fortnight for weather",
@@ -5509,7 +5646,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-11-11T18:31:25.139Z"
+            "published_at": "2026-11-12T16:21:24.457Z"
           },
           {
             "title": "An invented studio delays its sequel into next autumn",
@@ -5519,7 +5656,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-11-11T18:18:25.139Z"
+            "published_at": "2026-11-12T16:08:24.457Z"
           },
           {
             "title": "An invented novelist finishes a trilogy eleven years late",
@@ -5529,7 +5666,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-11-11T18:04:25.139Z"
+            "published_at": "2026-11-12T15:54:24.457Z"
           },
           {
             "title": "An invented auction house sells a filing cabinet for rather too much",
@@ -5549,7 +5686,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-11T17:31:25.139Z"
+            "published_at": "2026-11-12T15:21:24.457Z"
           },
           {
             "title": "Granite City Foremen lose their starting keeper for the season",
@@ -5559,7 +5696,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-11T17:12:25.139Z"
+            "published_at": "2026-11-12T15:02:24.457Z"
           },
           {
             "title": "The invented appropriations bill stalls over a single line item",
@@ -5569,7 +5706,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-11T16:52:25.139Z"
+            "published_at": "2026-11-12T14:42:24.457Z"
           },
           {
             "title": "An invented file format ships a release nobody asked for",
@@ -5579,7 +5716,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-11T16:31:25.139Z"
+            "published_at": "2026-11-12T14:21:24.457Z"
           },
           {
             "title": "An invented equipment dealer opens a third branch on a hunch",
@@ -5589,7 +5726,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-11T16:09:25.139Z"
+            "published_at": "2026-11-12T13:59:24.457Z"
           },
           {
             "title": "A fictional commodity gives back a month in an afternoon",
@@ -5599,7 +5736,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-11T15:45:25.139Z"
+            "published_at": "2026-11-12T13:35:24.457Z"
           },
           {
             "title": "The invented cup holders is decided by a goal in the ninth minute of added time",
@@ -5609,7 +5746,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-11T15:20:25.139Z"
+            "published_at": "2026-11-12T13:10:24.457Z"
           },
           {
             "title": "A made-up replication attempt holds up on the third try",
@@ -5619,7 +5756,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-11-11T14:54:25.139Z"
+            "published_at": "2026-11-12T12:44:24.457Z"
           },
           {
             "title": "A fictional lander phones home a day late",
@@ -5629,7 +5766,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-11-11T14:27:25.139Z"
+            "published_at": "2026-11-12T12:17:24.457Z"
           },
           {
             "title": "A made-up remaster runs better on the old hardware",
@@ -5639,7 +5776,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-11-11T13:58:25.139Z"
+            "published_at": "2026-11-12T11:48:24.457Z"
           },
           {
             "title": "A made-up translation is better than the original and says so",
@@ -5649,7 +5786,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-11-11T13:28:25.139Z"
+            "published_at": "2026-11-12T11:18:24.457Z"
           },
           {
             "title": "A made-up hobbyist catalogues nine thousand bottle caps",
@@ -5659,7 +5796,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-11-11T12:56:25.139Z"
+            "published_at": "2026-11-12T10:46:24.457Z"
           },
           {
             "title": "The fictional water utility signs off on a roundabout nobody wanted",
@@ -5669,7 +5806,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-11T12:24:25.139Z"
+            "published_at": "2026-11-12T10:14:24.457Z"
           },
           {
             "title": "Cedar Valley Drays name a first-year head coach",
@@ -5679,7 +5816,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-11T11:50:25.139Z"
+            "published_at": "2026-11-12T09:40:24.457Z"
           },
           {
             "title": "An imaginary caucus gets a markup date at last",
@@ -5689,7 +5826,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-11T11:15:25.139Z"
+            "published_at": "2026-11-12T09:05:24.457Z"
           },
           {
             "title": "A made-up scheduling library drops support for a decade-old runtime",
@@ -5699,7 +5836,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-11T10:39:25.139Z"
+            "published_at": "2026-11-12T08:29:24.457Z"
           },
           {
             "title": "The made-up parts distributor loses its largest account to a rival",
@@ -5709,7 +5846,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-11T10:01:25.139Z"
+            "published_at": "2026-11-12T07:51:24.457Z"
           },
           {
             "title": "The pretend bond desk finds a floor nobody trusts",
@@ -5719,7 +5856,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-11T09:22:25.139Z"
+            "published_at": "2026-11-12T07:12:24.457Z"
           },
           {
             "title": "An imaginary promotion chase ends goalless and nobody minds",
@@ -5729,7 +5866,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-11T08:42:25.139Z"
+            "published_at": "2026-11-12T06:32:24.457Z"
           },
           {
             "title": "The fictional field station loses a decade of data to a bad tape",
@@ -5739,7 +5876,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-11-11T08:01:25.139Z"
+            "published_at": "2026-11-12T05:51:24.457Z"
           },
           {
             "title": "The made-up ground station is retired after outliving its brief by years",
@@ -5749,7 +5886,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-11-11T07:19:25.139Z"
+            "published_at": "2026-11-12T05:09:24.457Z"
           },
           {
             "title": "The fictional handheld cuts its entry fee in half",
@@ -5759,7 +5896,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-11-11T06:35:25.139Z"
+            "published_at": "2026-11-12T04:25:24.457Z"
           },
           {
             "title": "The fictional prize jury shortlists nothing anyone expected",
@@ -5779,7 +5916,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-11-11T05:05:25.139Z"
+            "published_at": "2026-11-12T02:55:24.457Z"
           },
           {
             "title": "Mock County planners delays the budget vote a third time",
@@ -5789,7 +5926,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-11T04:17:25.139Z"
+            "published_at": "2026-11-12T02:07:24.457Z"
           },
           {
             "title": "North Pike Sentinels move their home dates to the new turf",
@@ -5799,7 +5936,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-11T03:29:25.139Z"
+            "published_at": "2026-11-12T01:19:24.457Z"
           },
           {
             "title": "The made-up rules panel loses two votes it was counting on",
@@ -5809,7 +5946,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-11T02:39:25.139Z"
+            "published_at": "2026-11-12T00:29:24.457Z"
           },
           {
             "title": "The fictional standards group wins an argument it started in 2019",
@@ -5819,7 +5956,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-11T01:49:25.139Z"
+            "published_at": "2026-11-11T23:39:24.457Z"
           },
           {
             "title": "A fictional leasing arm raises prices and says so plainly",
@@ -5829,7 +5966,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-11T00:57:25.139Z"
+            "published_at": "2026-11-11T22:47:24.457Z"
           },
           {
             "title": "An imaginary sector fund is being read as the top rather than a pause",
@@ -5839,7 +5976,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-11T00:03:25.139Z"
+            "published_at": "2026-11-11T21:53:24.457Z"
           },
           {
             "title": "The made-up derby gets a replay after a floodlight failure",
@@ -5849,7 +5986,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-10T23:09:25.139Z"
+            "published_at": "2026-11-11T20:59:24.457Z"
           },
           {
             "title": "An imaginary instrument is cheaper than the thing it replaces",
@@ -5859,7 +5996,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-11-10T22:14:25.139Z"
+            "published_at": "2026-11-11T20:04:24.457Z"
           },
           {
             "title": "An imaginary constellation operator files for a hundred more slots",
@@ -5869,7 +6006,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-11-10T21:17:25.139Z"
+            "published_at": "2026-11-11T19:07:24.457Z"
           },
           {
             "title": "An imaginary tournament ships without the mode it advertised",
@@ -5879,7 +6016,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-11-10T20:19:25.139Z"
+            "published_at": "2026-11-11T18:09:24.457Z"
           },
           {
             "title": "An imaginary backlist outsells the new releases again",
@@ -5889,7 +6026,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-11-10T19:20:25.139Z"
+            "published_at": "2026-11-11T17:10:24.457Z"
           },
           {
             "title": "An imaginary estate sale goes to a single bidder in four minutes",
@@ -5899,7 +6036,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-11-10T18:20:25.139Z"
+            "published_at": "2026-11-11T16:10:24.457Z"
           },
           {
             "title": "An imaginary school district buys the old mill site for a dollar",
@@ -5909,7 +6046,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-10T17:19:25.139Z"
+            "published_at": "2026-11-11T15:09:24.457Z"
           },
           {
             "title": "Foundry Ironsides run their unbeaten streak to nine",
@@ -5919,7 +6056,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-10T16:16:25.139Z"
+            "published_at": "2026-11-11T14:06:24.457Z"
           },
           {
             "title": "A nonexistent working group is rewritten a fourth time",
@@ -5929,7 +6066,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-10T15:12:25.139Z"
+            "published_at": "2026-11-11T13:02:24.457Z"
           },
           {
             "title": "An imaginary handset maker quietly doubles its storage tier",
@@ -5939,7 +6076,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-10T14:08:25.139Z"
+            "published_at": "2026-11-11T11:58:24.457Z"
           },
           {
             "title": "Nowhere Logistics buys back a warehouse it sold in 2021",
@@ -5949,7 +6086,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-10T13:02:25.139Z"
+            "published_at": "2026-11-11T10:52:24.457Z"
           },
           {
             "title": "Made-up spot pricing ends the quarter roughly where it started",
@@ -5959,7 +6096,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-10T11:54:25.139Z"
+            "published_at": "2026-11-11T09:44:24.457Z"
           },
           {
             "title": "A pretend academy graduate signs for a fee that is also invented",
@@ -5969,7 +6106,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-10T10:46:25.139Z"
+            "published_at": "2026-11-11T08:36:24.457Z"
           },
           {
             "title": "A pretend long-run study reaches its twentieth year quietly",
@@ -5979,7 +6116,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-11-10T09:37:25.139Z"
+            "published_at": "2026-11-11T07:27:24.457Z"
           },
           {
             "title": "A pretend sample return comes back with less than hoped",
@@ -5989,7 +6126,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-11-10T08:26:25.139Z"
+            "published_at": "2026-11-11T06:16:24.457Z"
           },
           {
             "title": "A pretend early-access title quietly becomes the best-selling thing they make",
@@ -6009,7 +6146,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-11-10T06:02:25.139Z"
+            "published_at": "2026-11-11T03:52:24.457Z"
           },
           {
             "title": "A pretend collector gives the lot away rather than split it",
@@ -6019,7 +6156,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-11-10T04:48:25.139Z"
+            "published_at": "2026-11-11T02:38:24.457Z"
           },
           {
             "title": "The invented county board puts the levy question back on the ballot",
@@ -6029,7 +6166,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-10T03:33:25.139Z"
+            "published_at": "2026-11-11T01:23:24.457Z"
           },
           {
             "title": "The Lakeshore Current lose their starting keeper for the season",
@@ -6039,7 +6176,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-10T02:16:25.139Z"
+            "published_at": "2026-11-11T00:06:24.457Z"
           },
           {
             "title": "A fictional committee stalls over a single line item",
@@ -6049,7 +6186,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-10T00:59:25.139Z"
+            "published_at": "2026-11-10T22:49:24.457Z"
           },
           {
             "title": "Small-shop automation ships a release nobody asked for",
@@ -6059,7 +6196,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-09T23:40:25.139Z"
+            "published_at": "2026-11-10T21:30:24.457Z"
           },
           {
             "title": "Regional freight rates opens a third branch on a hunch",
@@ -6069,7 +6206,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-09T22:21:25.139Z"
+            "published_at": "2026-11-10T20:11:24.457Z"
           },
           {
             "title": "The invented index gives back a month in an afternoon",
@@ -6079,7 +6216,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-09T21:00:25.139Z"
+            "published_at": "2026-11-10T18:50:24.457Z"
           },
           {
             "title": "A fictional second-division side is decided by a goal in the ninth minute of added time",
@@ -6089,7 +6226,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-09T19:38:25.139Z"
+            "published_at": "2026-11-10T17:28:24.457Z"
           },
           {
             "title": "An invented survey holds up on the third try",
@@ -6099,7 +6236,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-11-09T18:15:25.139Z"
+            "published_at": "2026-11-10T16:05:24.457Z"
           },
           {
             "title": "An invented launch window phones home a day late",
@@ -6109,7 +6246,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-11-09T16:51:25.139Z"
+            "published_at": "2026-11-10T14:41:24.457Z"
           },
           {
             "title": "An invented studio runs better on the old hardware",
@@ -6119,7 +6256,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-11-09T15:25:25.139Z"
+            "published_at": "2026-11-10T13:15:24.457Z"
           },
           {
             "title": "An invented novelist is better than the original and says so",
@@ -6129,7 +6266,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-11-09T13:59:25.139Z"
+            "published_at": "2026-11-10T11:49:24.457Z"
           },
           {
             "title": "An invented auction house catalogues nine thousand bottle caps",
@@ -6139,7 +6276,7 @@
             "lens": null,
             "category": "Odd Lots",
             "emoji": "🎩",
-            "published_at": "2026-11-09T12:32:25.139Z"
+            "published_at": "2026-11-10T10:22:24.457Z"
           },
           {
             "title": "A made-up village committee signs off on a roundabout nobody wanted",
@@ -6149,7 +6286,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-09T11:03:25.139Z"
+            "published_at": "2026-11-10T08:53:24.457Z"
           },
           {
             "title": "Granite City Foremen name a first-year head coach",
@@ -6159,7 +6296,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-09T09:33:25.139Z"
+            "published_at": "2026-11-10T07:23:24.457Z"
           },
           {
             "title": "The invented appropriations bill gets a markup date at last",
@@ -6169,7 +6306,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-09T08:02:25.139Z"
+            "published_at": "2026-11-10T05:52:24.457Z"
           },
           {
             "title": "An invented file format drops support for a decade-old runtime",
@@ -6179,7 +6316,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-09T06:30:25.139Z"
+            "published_at": "2026-11-10T04:20:24.457Z"
           },
           {
             "title": "An invented equipment dealer loses its largest account to a rival",
@@ -6189,7 +6326,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-09T04:57:25.139Z"
+            "published_at": "2026-11-10T02:47:24.457Z"
           },
           {
             "title": "A fictional commodity finds a floor nobody trusts",
@@ -6199,7 +6336,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-09T03:23:25.139Z"
+            "published_at": "2026-11-10T01:13:24.457Z"
           },
           {
             "title": "The invented cup holders ends goalless and nobody minds",
@@ -6209,7 +6346,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-09T01:48:25.139Z"
+            "published_at": "2026-11-09T23:38:24.457Z"
           },
           {
             "title": "A made-up replication attempt loses a decade of data to a bad tape",
@@ -6219,7 +6356,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-11-09T00:11:25.139Z"
+            "published_at": "2026-11-09T22:01:24.457Z"
           },
           {
             "title": "A fictional lander is retired after outliving its brief by years",
@@ -6239,7 +6376,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-11-08T20:55:25.139Z"
+            "published_at": "2026-11-09T18:45:24.457Z"
           },
           {
             "title": "A made-up translation shortlists nothing anyone expected",
@@ -6249,7 +6386,7 @@
             "lens": null,
             "category": "Books",
             "emoji": "📚",
-            "published_at": "2026-11-08T19:15:25.139Z"
+            "published_at": "2026-11-09T17:05:24.457Z"
           },
           {
             "title": "The fictional water utility delays the budget vote a third time",
@@ -6259,7 +6396,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-08T17:35:25.139Z"
+            "published_at": "2026-11-09T15:25:24.457Z"
           },
           {
             "title": "Cedar Valley Drays move their home dates to the new turf",
@@ -6269,7 +6406,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-08T15:53:25.139Z"
+            "published_at": "2026-11-09T13:43:24.457Z"
           },
           {
             "title": "An imaginary caucus loses two votes it was counting on",
@@ -6279,7 +6416,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-08T14:10:25.139Z"
+            "published_at": "2026-11-09T12:00:24.457Z"
           },
           {
             "title": "A made-up scheduling library wins an argument it started in 2019",
@@ -6289,7 +6426,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-08T12:26:25.139Z"
+            "published_at": "2026-11-09T10:16:24.457Z"
           },
           {
             "title": "The made-up parts distributor raises prices and says so plainly",
@@ -6299,7 +6436,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-08T10:40:25.139Z"
+            "published_at": "2026-11-09T08:30:24.457Z"
           },
           {
             "title": "The pretend bond desk is being read as the top rather than a pause",
@@ -6309,7 +6446,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-08T08:54:25.139Z"
+            "published_at": "2026-11-09T06:44:24.457Z"
           },
           {
             "title": "An imaginary promotion chase gets a replay after a floodlight failure",
@@ -6319,7 +6456,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-08T07:07:25.139Z"
+            "published_at": "2026-11-09T04:57:24.457Z"
           },
           {
             "title": "The fictional field station is cheaper than the thing it replaces",
@@ -6329,7 +6466,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-11-08T05:18:25.139Z"
+            "published_at": "2026-11-09T03:08:24.457Z"
           },
           {
             "title": "The made-up ground station files for a hundred more slots",
@@ -6339,7 +6476,7 @@
             "lens": null,
             "category": "Space",
             "emoji": "🚀",
-            "published_at": "2026-11-08T03:29:25.139Z"
+            "published_at": "2026-11-09T01:19:24.457Z"
           },
           {
             "title": "The fictional handheld ships without the mode it advertised",
@@ -6349,7 +6486,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-11-08T01:38:25.139Z"
+            "published_at": "2026-11-08T23:28:24.457Z"
           },
           {
             "title": "Mock County planners buys the old mill site for a dollar",
@@ -6359,7 +6496,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-07T23:46:25.139Z"
+            "published_at": "2026-11-08T21:36:24.457Z"
           },
           {
             "title": "North Pike Sentinels run their unbeaten streak to nine",
@@ -6369,7 +6506,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-07T21:53:25.139Z"
+            "published_at": "2026-11-08T19:43:24.457Z"
           },
           {
             "title": "The made-up rules panel is rewritten a fourth time",
@@ -6379,7 +6516,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-07T19:59:25.139Z"
+            "published_at": "2026-11-08T17:49:24.457Z"
           },
           {
             "title": "The fictional standards group quietly doubles its storage tier",
@@ -6389,7 +6526,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-07T18:04:25.139Z"
+            "published_at": "2026-11-08T15:54:24.457Z"
           },
           {
             "title": "A fictional leasing arm buys back a warehouse it sold in 2021",
@@ -6399,7 +6536,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-07T16:08:25.139Z"
+            "published_at": "2026-11-08T13:58:24.457Z"
           },
           {
             "title": "An imaginary sector fund ends the quarter roughly where it started",
@@ -6409,7 +6546,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-07T14:11:25.139Z"
+            "published_at": "2026-11-08T12:01:24.457Z"
           },
           {
             "title": "The made-up derby signs for a fee that is also invented",
@@ -6419,7 +6556,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-07T12:13:25.139Z"
+            "published_at": "2026-11-08T10:03:24.457Z"
           },
           {
             "title": "An imaginary instrument reaches its twentieth year quietly",
@@ -6429,7 +6566,7 @@
             "lens": null,
             "category": "Science",
             "emoji": "🔬",
-            "published_at": "2026-11-07T10:13:25.139Z"
+            "published_at": "2026-11-08T08:03:24.457Z"
           },
           {
             "title": "An imaginary tournament quietly becomes the best-selling thing they make",
@@ -6439,7 +6576,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-11-07T08:13:25.139Z"
+            "published_at": "2026-11-08T06:03:24.457Z"
           },
           {
             "title": "An imaginary school district approves the long-delayed riverfront plan",
@@ -6449,7 +6586,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-07T06:12:25.139Z"
+            "published_at": "2026-11-08T04:02:24.457Z"
           },
           {
             "title": "Foundry Ironsides take the conference opener in overtime",
@@ -6469,7 +6606,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-07T02:05:25.139Z"
+            "published_at": "2026-11-07T23:55:24.457Z"
           },
           {
             "title": "An imaginary handset maker is getting cheap faster than expected",
@@ -6479,7 +6616,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-07T00:01:25.139Z"
+            "published_at": "2026-11-07T21:51:24.457Z"
           },
           {
             "title": "Nowhere Logistics flatten after a long climb",
@@ -6489,7 +6626,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-06T21:55:25.139Z"
+            "published_at": "2026-11-07T19:45:24.457Z"
           },
           {
             "title": "Made-up spot pricing closes flat for a fourth straight week",
@@ -6499,7 +6636,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-06T19:48:25.139Z"
+            "published_at": "2026-11-07T17:38:24.457Z"
           },
           {
             "title": "A pretend academy graduate goes down to ten and wins anyway",
@@ -6509,7 +6646,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-06T17:40:25.139Z"
+            "published_at": "2026-11-07T15:30:24.457Z"
           },
           {
             "title": "A pretend early-access title delays its sequel into next autumn",
@@ -6519,7 +6656,7 @@
             "lens": null,
             "category": "Gaming",
             "emoji": "🎮",
-            "published_at": "2026-11-06T15:31:25.139Z"
+            "published_at": "2026-11-07T13:21:24.457Z"
           },
           {
             "title": "The invented county board signs off on a roundabout nobody wanted",
@@ -6529,7 +6666,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-06T13:21:25.139Z"
+            "published_at": "2026-11-07T11:11:24.457Z"
           },
           {
             "title": "The Lakeshore Current name a first-year head coach",
@@ -6539,7 +6676,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-06T11:10:25.139Z"
+            "published_at": "2026-11-07T09:00:24.457Z"
           },
           {
             "title": "A fictional committee gets a markup date at last",
@@ -6549,7 +6686,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-06T08:57:25.139Z"
+            "published_at": "2026-11-07T06:47:24.457Z"
           },
           {
             "title": "Small-shop automation drops support for a decade-old runtime",
@@ -6559,7 +6696,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-06T06:44:25.139Z"
+            "published_at": "2026-11-07T04:34:24.457Z"
           },
           {
             "title": "Regional freight rates loses its largest account to a rival",
@@ -6569,7 +6706,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-06T04:30:25.139Z"
+            "published_at": "2026-11-07T02:20:24.457Z"
           },
           {
             "title": "The invented index finds a floor nobody trusts",
@@ -6579,7 +6716,7 @@
             "lens": null,
             "category": "Markets",
             "emoji": "📈",
-            "published_at": "2026-11-06T02:14:25.139Z"
+            "published_at": "2026-11-07T00:04:24.457Z"
           },
           {
             "title": "A fictional second-division side ends goalless and nobody minds",
@@ -6589,7 +6726,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-05T23:58:25.139Z"
+            "published_at": "2026-11-06T21:48:24.457Z"
           },
           {
             "title": "A made-up village committee delays the budget vote a third time",
@@ -6599,7 +6736,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-05T21:40:25.139Z"
+            "published_at": "2026-11-06T19:30:24.457Z"
           },
           {
             "title": "Granite City Foremen move their home dates to the new turf",
@@ -6609,7 +6746,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-05T19:22:25.139Z"
+            "published_at": "2026-11-06T17:12:24.457Z"
           },
           {
             "title": "The invented appropriations bill loses two votes it was counting on",
@@ -6619,7 +6756,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-05T17:02:25.139Z"
+            "published_at": "2026-11-06T14:52:24.457Z"
           },
           {
             "title": "An invented file format wins an argument it started in 2019",
@@ -6629,7 +6766,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-05T14:41:25.139Z"
+            "published_at": "2026-11-06T12:31:24.457Z"
           },
           {
             "title": "An invented equipment dealer raises prices and says so plainly",
@@ -6639,7 +6776,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-05T12:20:25.139Z"
+            "published_at": "2026-11-06T10:10:24.457Z"
           },
           {
             "title": "The invented cup holders gets a replay after a floodlight failure",
@@ -6649,7 +6786,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-05T09:57:25.139Z"
+            "published_at": "2026-11-06T07:47:24.457Z"
           },
           {
             "title": "The fictional water utility buys the old mill site for a dollar",
@@ -6659,7 +6796,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-05T07:33:25.139Z"
+            "published_at": "2026-11-06T05:23:24.457Z"
           },
           {
             "title": "Cedar Valley Drays run their unbeaten streak to nine",
@@ -6669,7 +6806,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-05T05:08:25.139Z"
+            "published_at": "2026-11-06T02:58:24.457Z"
           },
           {
             "title": "An imaginary caucus is rewritten a fourth time",
@@ -6679,7 +6816,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-05T02:42:25.139Z"
+            "published_at": "2026-11-06T00:32:24.457Z"
           },
           {
             "title": "A made-up scheduling library quietly doubles its storage tier",
@@ -6699,7 +6836,7 @@
             "lens": null,
             "category": "Business",
             "emoji": "💼",
-            "published_at": "2026-11-04T21:47:25.139Z"
+            "published_at": "2026-11-05T19:37:24.457Z"
           },
           {
             "title": "An imaginary promotion chase signs for a fee that is also invented",
@@ -6709,7 +6846,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-04T19:17:25.139Z"
+            "published_at": "2026-11-05T17:07:24.457Z"
           },
           {
             "title": "Mock County planners approves the long-delayed riverfront plan",
@@ -6719,7 +6856,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-04T16:47:25.139Z"
+            "published_at": "2026-11-05T14:37:24.457Z"
           },
           {
             "title": "North Pike Sentinels take the conference opener in overtime",
@@ -6729,7 +6866,7 @@
             "lens": null,
             "category": "Local Sports",
             "emoji": "🏟️",
-            "published_at": "2026-11-04T14:16:25.139Z"
+            "published_at": "2026-11-05T12:06:24.457Z"
           },
           {
             "title": "The made-up rules panel clears its first procedural hurdle",
@@ -6739,7 +6876,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-04T11:44:25.139Z"
+            "published_at": "2026-11-05T09:34:24.457Z"
           },
           {
             "title": "The fictional standards group is getting cheap faster than expected",
@@ -6749,7 +6886,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-04T09:10:25.139Z"
+            "published_at": "2026-11-05T07:00:24.457Z"
           },
           {
             "title": "The made-up derby goes down to ten and wins anyway",
@@ -6759,7 +6896,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-04T06:36:25.139Z"
+            "published_at": "2026-11-05T04:26:24.457Z"
           },
           {
             "title": "An imaginary school district puts the levy question back on the ballot",
@@ -6769,7 +6906,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-04T04:00:25.139Z"
+            "published_at": "2026-11-05T01:50:24.457Z"
           },
           {
             "title": "A nonexistent working group stalls over a single line item",
@@ -6779,7 +6916,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-04T01:24:25.139Z"
+            "published_at": "2026-11-04T23:14:24.457Z"
           },
           {
             "title": "An imaginary handset maker ships a release nobody asked for",
@@ -6789,7 +6926,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-03T22:46:25.139Z"
+            "published_at": "2026-11-04T20:36:24.457Z"
           },
           {
             "title": "A pretend academy graduate is decided by a goal in the ninth minute of added time",
@@ -6799,7 +6936,7 @@
             "lens": null,
             "category": "Soccer",
             "emoji": "⚽",
-            "published_at": "2026-11-03T20:08:25.139Z"
+            "published_at": "2026-11-04T17:58:24.457Z"
           },
           {
             "title": "The invented county board delays the budget vote a third time",
@@ -6809,7 +6946,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-03T17:28:25.139Z"
+            "published_at": "2026-11-04T15:18:24.457Z"
           },
           {
             "title": "A fictional committee loses two votes it was counting on",
@@ -6819,7 +6956,7 @@
             "lens": null,
             "category": "National Politics",
             "emoji": "🏛️",
-            "published_at": "2026-11-03T14:47:25.139Z"
+            "published_at": "2026-11-04T12:37:24.457Z"
           },
           {
             "title": "Small-shop automation wins an argument it started in 2019",
@@ -6829,7 +6966,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-03T12:05:25.139Z"
+            "published_at": "2026-11-04T09:55:24.457Z"
           },
           {
             "title": "A made-up village committee buys the old mill site for a dollar",
@@ -6839,7 +6976,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-03T09:23:25.139Z"
+            "published_at": "2026-11-04T07:13:24.457Z"
           },
           {
             "title": "An invented file format quietly doubles its storage tier",
@@ -6849,7 +6986,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-03T06:39:25.139Z"
+            "published_at": "2026-11-04T04:29:24.457Z"
           },
           {
             "title": "The fictional water utility approves the long-delayed riverfront plan",
@@ -6859,7 +6996,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-03T03:54:25.139Z"
+            "published_at": "2026-11-04T01:44:24.457Z"
           },
           {
             "title": "A made-up scheduling library is getting cheap faster than expected",
@@ -6869,7 +7006,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-03T01:08:25.139Z"
+            "published_at": "2026-11-03T22:58:24.457Z"
           },
           {
             "title": "Mock County planners puts the levy question back on the ballot",
@@ -6879,7 +7016,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-02T22:21:25.139Z"
+            "published_at": "2026-11-03T20:11:24.457Z"
           },
           {
             "title": "The fictional standards group ships a release nobody asked for",
@@ -6889,7 +7026,7 @@
             "lens": null,
             "category": "Tech",
             "emoji": "💻",
-            "published_at": "2026-11-02T19:33:25.139Z"
+            "published_at": "2026-11-03T17:23:24.457Z"
           },
           {
             "title": "An imaginary school district signs off on a roundabout nobody wanted",
@@ -6899,7 +7036,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-02T16:44:25.139Z"
+            "published_at": "2026-11-03T14:34:24.457Z"
           },
           {
             "title": "The invented county board buys the old mill site for a dollar",
@@ -6909,7 +7046,7 @@
             "lens": null,
             "category": "Local News",
             "emoji": "🏙️",
-            "published_at": "2026-11-02T13:54:25.139Z"
+            "published_at": "2026-11-03T11:44:24.457Z"
           },
           {
             "title": "A made-up village committee approves the long-delayed riverfront plan",
@@ -6922,7 +7059,7 @@
             "published_at": null
           }
         ],
-        "as_of": "2026-11-11T19:05:25.140Z",
+        "as_of": "2026-11-12T16:55:24.457Z",
         "count": 151,
         "by_category": [
           {
@@ -6997,12 +7134,12 @@
     },
     "entertainment": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.140Z",
+      "updated_at": "2026-11-12T17:18:24.457Z",
       "status": "ok",
       "error": null,
       "data": {
         "watching": {
-          "updated_at": "2026-11-11T17:53:25.140Z",
+          "updated_at": "2026-11-12T15:43:24.457Z",
           "items": [
             {
               "title": "The Quiet Ledger",
@@ -7013,12 +7150,12 @@
                 "season": 3,
                 "episode": 4,
                 "name": "A Clerical Error",
-                "air_date": "2026-11-13"
+                "air_date": "2026-11-14"
               },
               "last": {
                 "season": 3,
                 "episode": 3,
-                "air_date": "2026-11-06"
+                "air_date": "2026-11-07"
               },
               "days": 2,
               "status_note": "airing weekly"
@@ -7032,12 +7169,12 @@
                 "season": 2,
                 "episode": 7,
                 "name": "Slack Water",
-                "air_date": "2026-11-11"
+                "air_date": "2026-11-12"
               },
               "last": {
                 "season": 2,
                 "episode": 6,
-                "air_date": "2026-11-04"
+                "air_date": "2026-11-05"
               },
               "days": 0,
               "status_note": null
@@ -7051,7 +7188,7 @@
               "last": {
                 "season": 1,
                 "episode": 8,
-                "air_date": "2026-11-10"
+                "air_date": "2026-11-11"
               },
               "days": null,
               "status_note": "schedule not published"
@@ -7065,12 +7202,12 @@
                 "season": 4,
                 "episode": 1,
                 "name": "Season premiere",
-                "air_date": "2027-01-24"
+                "air_date": "2027-01-25"
               },
               "last": {
                 "season": 3,
                 "episode": 10,
-                "air_date": "2026-05-05"
+                "air_date": "2026-05-06"
               },
               "days": 74,
               "status_note": null
@@ -7079,13 +7216,13 @@
           "errors": null
         },
         "podcasts": {
-          "updated_at": "2026-11-11T18:48:25.140Z",
+          "updated_at": "2026-11-12T16:38:24.457Z",
           "items": [
             {
               "show": "Mock Fork",
               "title": "The chatbot that filed its own taxes",
-              "published": "2026-11-11",
-              "published_at": "2026-11-11T16:28:25.140Z",
+              "published": "2026-11-12",
+              "published_at": "2026-11-12T14:18:24.457Z",
               "duration_min": 58,
               "url": "https://example.com/mock/pod/fork-1",
               "artwork": null
@@ -7093,8 +7230,8 @@
             {
               "show": "The Long Docket",
               "title": "Case 114: the disappearing deposition",
-              "published": "2026-11-10",
-              "published_at": "2026-11-10T17:28:25.140Z",
+              "published": "2026-11-11",
+              "published_at": "2026-11-11T15:18:24.457Z",
               "duration_min": 71,
               "url": "https://example.com/mock/pod/docket-1",
               "artwork": null
@@ -7102,8 +7239,8 @@
             {
               "show": "Ledger & Lamp",
               "title": "A very small bank in a very large hurry",
-              "published": "2026-11-09",
-              "published_at": "2026-11-09T16:28:25.140Z",
+              "published": "2026-11-10",
+              "published_at": "2026-11-10T14:18:24.457Z",
               "duration_min": 44,
               "url": "https://example.com/mock/pod/ledger-1",
               "artwork": null
@@ -7111,8 +7248,8 @@
             {
               "show": "Mock Fork",
               "title": "Everyone is building the same agent",
-              "published": "2026-11-08",
-              "published_at": "2026-11-08T17:58:25.140Z",
+              "published": "2026-11-09",
+              "published_at": "2026-11-09T15:48:24.457Z",
               "duration_min": 63,
               "url": "https://example.com/mock/pod/fork-2",
               "artwork": null
@@ -7120,8 +7257,8 @@
             {
               "show": "Ledger & Lamp",
               "title": "The audit nobody asked for",
-              "published": "2026-11-02",
-              "published_at": "2026-11-02T19:28:25.140Z",
+              "published": "2026-11-03",
+              "published_at": "2026-11-03T17:18:24.457Z",
               "duration_min": null,
               "url": "https://example.com/mock/pod/ledger-2",
               "artwork": null
@@ -7129,8 +7266,8 @@
             {
               "show": "Cold Open Radio",
               "title": "Twelve minutes of dead air, explained",
-              "published": "2026-10-30",
-              "published_at": "2026-10-30T19:28:25.140Z",
+              "published": "2026-10-31",
+              "published_at": "2026-10-31T17:18:24.457Z",
               "duration_min": 12,
               "url": "https://example.com/mock/pod/cold-1",
               "artwork": null
@@ -7139,7 +7276,7 @@
           "errors": null
         },
         "top5": {
-          "updated_at": "2026-11-11T08:28:25.140Z",
+          "updated_at": "2026-11-12T06:18:24.457Z",
           "week_of": "2026-11-09",
           "items": [
             {
@@ -7201,7 +7338,7 @@
           "errors": null
         },
         "listening": {
-          "updated_at": "2026-11-11T06:28:25.140Z",
+          "updated_at": "2026-11-12T04:18:24.457Z",
           "week_of": "2026-11-09",
           "status": "ok",
           "series_checked": 17,
@@ -7211,7 +7348,7 @@
               "sequence": "12",
               "title": "Deadweight Tonnage",
               "author": "R. J. Mockton",
-              "release_date": "2026-11-09",
+              "release_date": "2026-11-10",
               "days": -2,
               "just_out": true,
               "asin": "B0MOCK0001",
@@ -7223,7 +7360,7 @@
               "sequence": null,
               "title": "The Second Tuesday",
               "author": "Imogen Pell",
-              "release_date": "2026-11-15",
+              "release_date": "2026-11-16",
               "days": 4,
               "just_out": false,
               "asin": "B0MOCK0002",
@@ -7235,7 +7372,7 @@
               "sequence": "4.5",
               "title": "A Short Passage",
               "author": "Dana Q. Hollis",
-              "release_date": "2027-01-31",
+              "release_date": "2027-02-01",
               "days": 81,
               "just_out": false,
               "asin": "B0MOCK0003",
@@ -7247,7 +7384,7 @@
               "sequence": "3",
               "title": "Dark Union Station",
               "author": null,
-              "release_date": "2027-04-18",
+              "release_date": "2027-04-19",
               "days": 158,
               "just_out": false,
               "asin": "B0MOCK0004",
@@ -7268,18 +7405,18 @@
     },
     "ship_status": {
       "band": "DAILY",
-      "updated_at": "2026-11-11T19:28:25.140Z",
+      "updated_at": "2026-11-12T17:18:24.458Z",
       "status": "ok",
       "error": null,
       "data": {
         "captains_log_today": true,
         "captains_log_file": "mock-log-2026-01-01.md",
         "helm_last_run": "2026-01-01 06:00 CT (run-mock-0600)",
-        "drift_audit_updated": "2026-11-10T13:28:25.140Z",
+        "drift_audit_updated": "2026-11-11T11:18:24.457Z",
         "ask_today_usd": 0.0137,
         "ask_cap_usd": 3,
         "pending_count": 2,
-        "worker_published_at": "2026-11-11T19:20:25.140Z",
+        "worker_published_at": "2026-11-12T17:10:24.457Z",
         "spend": {
           "today_usd": 0.0137,
           "month_to_date_usd": 0.8421,
@@ -7305,24 +7442,24 @@
               "label": "Weekly · all models",
               "percent": 48,
               "severity": "normal",
-              "resets_at": "2026-11-15T19:28:25.140Z"
+              "resets_at": "2026-11-16T17:18:24.457Z"
             },
             {
               "kind": "weekly_scoped",
               "label": "Weekly · Fable",
               "percent": 81,
               "severity": "warning",
-              "resets_at": "2026-11-15T19:28:25.140Z"
+              "resets_at": "2026-11-16T17:18:24.457Z"
             }
           ],
-          "fetched_at": "2026-11-11T19:16:25.140Z",
+          "fetched_at": "2026-11-12T17:06:24.457Z",
           "note": null,
           "source": "mock generator — invented percentages, not a real plan"
         },
         "hull": {
           "state": "ok",
           "host": "mock-mini",
-          "fetched_at": "2026-11-11T19:22:25.140Z",
+          "fetched_at": "2026-11-12T17:12:24.457Z",
           "note": null,
           "crew": [
             {
@@ -7334,7 +7471,7 @@
               "every": "every 1h",
               "last_exit": 0,
               "pid": null,
-              "last_seen_at": "2026-11-11T18:42:25.140Z",
+              "last_seen_at": "2026-11-12T16:32:24.457Z",
               "last_secs": 47,
               "last_line": "helm: finished rc=0 in 47s (full)"
             },
@@ -7347,7 +7484,7 @@
               "every": "13×/day 07:05–19:05",
               "last_exit": 0,
               "pid": null,
-              "last_seen_at": "2026-11-11T19:08:25.140Z",
+              "last_seen_at": "2026-11-12T16:58:24.457Z",
               "last_secs": null,
               "last_line": "fleet: finished 18:05:11"
             },
@@ -7360,7 +7497,7 @@
               "every": "every 2h",
               "last_exit": 0,
               "pid": null,
-              "last_seen_at": "2026-11-11T19:08:25.140Z",
+              "last_seen_at": "2026-11-12T16:58:24.457Z",
               "last_secs": 112,
               "last_line": "newsstand: finished rc=0"
             },
@@ -7373,7 +7510,7 @@
               "every": "daily 06:30",
               "last_exit": 0,
               "pid": null,
-              "last_seen_at": "2026-11-11T19:08:25.140Z",
+              "last_seen_at": "2026-11-12T16:58:24.457Z",
               "last_secs": 9,
               "last_line": "bookie: finished rc=0"
             },
@@ -7386,7 +7523,7 @@
               "every": "every 10m",
               "last_exit": 0,
               "pid": null,
-              "last_seen_at": "2026-11-11T17:53:25.140Z",
+              "last_seen_at": "2026-11-12T15:43:24.457Z",
               "last_secs": null,
               "last_line": "purser: waiting on ledger lock"
             },
@@ -7423,7 +7560,7 @@
               "label": "Uptime",
               "value": "6h 54m",
               "tone": "neutral",
-              "since": "2026-11-11T12:34:25.140Z"
+              "since": "2026-11-12T10:24:24.458Z"
             },
             {
               "id": "load",
@@ -7443,7 +7580,7 @@
             {
               "id": "backup",
               "label": "Time Machine",
-              "value": "2026-11-11T18:41:25.140Z",
+              "value": "2026-11-12T16:31:24.458Z",
               "tone": "good"
             },
             {
@@ -7466,7 +7603,7 @@
     },
     "ask": {
       "band": "ASK",
-      "updated_at": "2026-11-11T17:58:25.140Z",
+      "updated_at": "2026-11-12T15:48:24.458Z",
       "status": "stale",
       "error": "no ask backend configured yet (M4)",
       "data": {}

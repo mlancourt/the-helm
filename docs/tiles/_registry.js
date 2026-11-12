@@ -57,6 +57,9 @@ export const REGISTRY = {
   // Site Pulse (S1): with the WSS cluster, straight after the tape — the tape
   // is what the crew did, the pulse is who showed up. 132, nothing moved.
   wss_traffic: { band: 'DAILY', position: 132, module: './tiles/wss_traffic.js', title: '📈 Site Pulse' },
+  // Vendor Bills (AP1): the bill ledger's face, straight after Site Pulse —
+  // the WSS cluster's third. 134, nothing moved.
+  wss_ap: { band: 'DAILY', position: 134, module: './tiles/wss_ap.js', title: '🧾 Vendor Bills' },
   ship_status: { band: 'DAILY', position: 140, module: './tiles/ship_status.js', title: 'Ship Status' },
   // Off-board: the shell skips `ask` by id (it is the sheet), not by band or position.
   ask: { band: 'ASK', position: 999, module: './tiles/ask.js', title: 'Ask' },
