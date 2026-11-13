@@ -65,35 +65,23 @@ const r = (state, label, why, margin = null) => ({ state, label, why, margin });
 /**
  * Soccer anytime-goal grading.
  *
- * VERIFIED 2026-09-17 against a completed eng.1 summary: soccer carries NO
- * scoringPlays. Goals live in keyEvents[] where scoringPlay === true and
- * type.text is "Goal - <kind>". Two reasons this is still off by default:
+ * Soccer carries NO scoringPlays. Goals live in keyEvents[] where
+ * scoringPlay === true. Off from 2026-09-17 to 2026-11-13 (A142) because two
+ * things drifted, both checked on finished usa.1 / eng.1 / esp.1 summaries:
  *
- *   1. The brief requires verification against a LIVE summary; only a
- *      completed one has been checked.
- *   2. Real spelling drift was observed between a goal's `text` and its
- *      `shortText` ("Charalampos" vs "Charalambos"), so surname matching here
- *      is less safe than it looks, and own goals must not count for the
- *      scorer. Grading someone's bet on a transliteration is not acceptable.
+ *   1. Penalties read "Penalty - Scored", with no "goal" in type.text, so a
+ *      text filter dropped them and a penalty scorer's ticket graded LOSS.
+ *      goalEvents() now keys off scoringPlay alone, minus own goals.
+ *   2. One goal spells its scorer two ways ("Cheikh" in `text`, "Cheick" in
+ *      `shortText` and `participants`; "Charalampos" / "Charalambos" in the
+ *      eng.1 fixture). The scorer is now read off participants[0] (the
+ *      scorer; [1] is the assister, never credited) and shortText, and either
+ *      one matching is a hit. `text` is never read: it names the assister.
  *
- * Flip this to true only after watching one live match grade correctly.
- *
- * RE-CHECKED 2026-11-11 (Lean spec B33) against finished summaries from the
- * board's three soccer leagues — usa.1 761934 / 761935, eng.1 401879240 /
- * 401879243, esp.1 401882816 — and left OFF, because two things drift:
- *
- *   1. Penalties never reach goalEvents(): their type.text is
- *      "Penalty - Scored", with no "goal" in it (Fernandes and McGinn in
- *      401879240, Nketiah in 401879243, Lewandowski twice in 761935). A
- *      penalty scorer's ticket would grade LOSS.
- *   2. The same spelling drift, again, in a third league: 761934's 50' goal
- *      reads "Cheikh Sabaly" in `text` and "Cheick Sabaly" in `shortText`
- *      and `participants`, and nameHits() rejects a first name that differs.
- *
- * Both need fixing (scoringPlay + not an own goal, and the scorer off
- * participants[0]) and one live match watched before the flag flips.
+ * Only regulation counts (periods 1–2): an anytime-scorer market settles on
+ * 90 minutes plus stoppage, so extra time and a shootout credit nobody.
  */
-export const ANYTIME_GOAL_ENABLED = false;
+export const ANYTIME_GOAL_ENABLED = true;
 
 // ------------------------------------------------------------------- names
 
@@ -236,14 +224,27 @@ export function touchdownPlays(scoringPlays) {
   return out;
 }
 
-/** Soccer goals from keyEvents. Own goals are excluded — they credit nobody. */
+/**
+ * Soccer goals from keyEvents: every scoring play in regulation, penalties
+ * included. Own goals are excluded — they credit nobody.
+ */
 export function goalEvents(keyEvents) {
   const evts = Array.isArray(keyEvents) ? keyEvents : [];
   return evts.filter((e) => {
     if (e?.scoringPlay !== true) return false;
-    const t = String(e?.type?.text || '');
-    return /goal/i.test(t) && !/own goal/i.test(t);
+    if (/own goal/i.test(String(e?.type?.text || ''))) return false;
+    const period = Number(e?.period?.number);
+    return !(period > 2);
   });
+}
+
+/** The names a goal credits: participants[0] (the scorer, never [1]), then shortText. */
+export function goalScorerNames(e) {
+  const out = [];
+  const first = e?.participants?.[0]?.athlete?.displayName;
+  if (first) out.push(String(first));
+  if (e?.shortText) out.push(String(e.shortText));
+  return out;
 }
 
 // ----------------------------------------------------------------- helpers
@@ -486,7 +487,7 @@ function gradeAnytimeGoal(ticket, game, extras) {
   if (game.state === 'pre') return r('pre', 'PRE', 'not started');
 
   const goals = goalEvents(extras?.keyEvents);
-  const hit = goals.find((g) => nameHits(g.shortText || g.text, ticket.player));
+  const hit = goals.find((g) => goalScorerNames(g).some((n) => nameHits(n, ticket.player)));
   // B3, as for the touchdown: a goal is not taken back.
   if (hit) {
     const when = hit.clock?.displayValue ? `${hit.clock.displayValue}` : 'in play';

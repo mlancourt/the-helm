@@ -15,7 +15,7 @@
  * Bump CACHE_VERSION to evict the old shell on deploy.
  */
 
-const CACHE_VERSION = 'helm-v76';
+const CACHE_VERSION = 'helm-v77';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 

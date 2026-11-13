@@ -218,15 +218,43 @@ function check(name, cond, detail) {
   check('names who has yet to score', /yet to score/.test(gradeTicket(btts, live(SOC)).why));
 
   // ------------------------------------------------- soccer anytime goal
-  console.log('\nanytime goal (feature-flagged)');
-  check('the flag is OFF by default', G.ANYTIME_GOAL_ENABLED === false);
+  console.log('\nanytime goal (A142, on since v1.49.1)');
+  check('the flag is ON', G.ANYTIME_GOAL_ENABLED === true);
   const goalT = { id: 'g', market: 'anytime_goal', player: 'Kostoulas' };
-  check('renders as unsupported while the flag is off', st(goalT, SOC, { keyEvents: FIX.soccer_key_events }) === 'unsupported');
-  check('says "grading unsupported"', gradeTicket(goalT, SOC, {}).why === 'grading unsupported');
-  // The parser itself is still exercised, so enabling it later is a one-line change.
+  const KE = { keyEvents: FIX.soccer_key_events };
   const goals = G.goalEvents(FIX.soccer_key_events);
-  check('goal events parse out of keyEvents', goals.length > 0, `found ${goals.length}`);
-  check('own goals are excluded', !goals.some((g) => /own goal/i.test(g.type?.text || '')));
+  check('every scoring play in the real fixture is a goal, penalty included', goals.length === 5, `found ${goals.length}`);
+  check('surname ticket WINS off the real fixture', st(goalT, SOC, KE) === 'win');
+  check('full-name ticket survives the Charalampos/Charalambos drift', st({ ...goalT, player: 'Charalambos Kostoulas' }, SOC, KE) === 'win');
+  check('a penalty scorer WINS (Pascal Gross, "Penalty - Scored")', st({ ...goalT, player: 'Pascal Gross' }, SOC, KE) === 'win');
+  check('a non-scorer LOSES at the whistle', st({ ...goalT, player: 'Danny Welbeck' }, SOC, KE) === 'lose');
+  check('a non-scorer TRAILS live', st({ ...goalT, player: 'Danny Welbeck' }, live(SOC), KE) === 'trail');
+  check('a scorer WINS live, locked on the goal (B3)', st(goalT, live(SOC), KE) === 'win');
+  check('no player: unsupported', st({ ...goalT, player: null }, SOC, KE) === 'unsupported');
+  // Shapes copied from finished summaries 401879240 (eng.1) and 761934 (usa.1).
+  const ev = (text, shortText, names, period = 1, scoringPlay = true) => ({
+    type: { text }, shortText, scoringPlay, period: { number: period },
+    participants: names.map((n) => ({ athlete: { displayName: n } })),
+  });
+  const MORE = { keyEvents: [
+    ev('Goal', 'Alysson Goal', ['Alysson', 'John McGinn']),
+    ev('Penalty - Scored', 'Bruno Fernandes Penalty - Scored', ['Bruno Fernandes'], 1),
+    ev('Goal', 'Cheick Sabaly Goal', ['Cheick Sabaly'], 2),
+    ev('Own Goal', 'Lewis Dunk Own Goal', ['Lewis Dunk'], 2),
+    ev('Goal', 'Yasin Ayari Goal', ['Yasin Ayari'], 3),
+    ev('Penalty - Scored', 'Joao Pedro Penalty - Scored', ['Joao Pedro'], 5),
+    ev('Penalty - Missed', 'Danny Welbeck Penalty - Missed', ['Danny Welbeck'], 2, false),
+  ] };
+  const ag = (player) => st({ ...goalT, player }, SOC, MORE);
+  check('participants[0] is credited', ag('Alysson') === 'win');
+  check('the assister, participants[1], is NOT credited', ag('John McGinn') === 'lose');
+  check('penalty scorer credited', ag('Bruno Fernandes') === 'win');
+  check('participants spelling credits the ESPN name', ag('Cheick Sabaly') === 'win');
+  check('own goal credits nobody', ag('Lewis Dunk') === 'lose');
+  check('extra time does not count', ag('Yasin Ayari') === 'lose');
+  check('a shootout penalty does not count', ag('Joao Pedro') === 'lose');
+  check('a missed penalty does not count', ag('Danny Welbeck') === 'lose');
+  check('goalScorerNames never reads text', G.goalScorerNames({ text: 'Assisted by X', shortText: 'A B Goal' }).join('|') === 'A B Goal');
 
   // -------------------------------------------------------- degradation
   console.log('\ndegradation');
@@ -289,10 +317,8 @@ function check(name, cond, detail) {
   check('full-game spread stays a lean too', st(sp('home', -5.5), live(NFL)) === 'lead');
   check('and only WINS at the whistle', st(sp('home', -5.5), NFL) === 'win');
 
-  // anytime_goal shares the touchdown's lock, but it cannot be exercised
-  // while the flag is off — it is verified the day the flag flips, against a
-  // live match, which is the same condition the flag itself carries.
-  check('anytime_goal is still unsupported, flag off', st(goalT, live(SOC), { keyEvents: FIX.soccer_key_events }) === 'unsupported');
+  // anytime_goal shares the touchdown's lock (B3): a goal is not taken back.
+  check('anytime_goal locks WIN in play', st(goalT, live(SOC), { keyEvents: FIX.soccer_key_events }) === 'win');
 
   // ------------------------------------------------------- B4: no odds math
   //
