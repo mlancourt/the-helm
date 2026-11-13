@@ -216,6 +216,12 @@ function check(name, cond, detail) {
   check('mid-game with both on the board WINS (B3)', lb(btts, live(MLB)) === 'WIN');
   check('mid-game 0-0 TRAILS', lb(btts, live(MLB, { home: { ...MLB.home, score: 0 }, away: { ...MLB.away, score: 0 } })) === 'TRAILING');
   check('names who has yet to score', /yet to score/.test(gradeTicket(btts, live(SOC)).why));
+  const bttsNo = { id: 'btn', market: 'btts', side: 'no' };
+  check('BTTS No: a shutout at the final is a WIN (BHA 5 - COV 0)', st(bttsNo, SOC) === 'win');
+  check('BTTS No: both scored at the final is a LOSS', st(bttsNo, MLB) === 'lose');
+  check('BTTS No: LOCKS to LOSS the moment both have scored (B3)', st(bttsNo, live(MLB)) === 'lose');
+  check('BTTS No: one side blanked mid-game LEADS', lb(bttsNo, live(SOC)) === 'LEADING');
+  check('BTTS No: 0-0 mid-game LEADS', lb(bttsNo, live(MLB, { home: { ...MLB.home, score: 0 }, away: { ...MLB.away, score: 0 } })) === 'LEADING');
 
   // ------------------------------------------------- soccer anytime goal
   console.log('\nanytime goal (A142, on since v1.49.1)');

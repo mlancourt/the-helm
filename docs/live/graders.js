@@ -16,6 +16,7 @@
  *   anytime_td    win   on the scoring play; LOSS only at the final whistle
  *   anytime_goal  same (still behind its flag)
  *   btts          win   as soon as both sides are on the board; LOSS at post
+ *                 (side 'no': LOSS as soon as both score; WIN at post)
  *   ml / spread   LEADING / TRAILING to the whistle — a lead is not a result
  *
  * Every lock above is one-way BY ARITHMETIC: a score cannot go down, so a
@@ -502,6 +503,15 @@ function gradeBtts(ticket, game) {
   const a = game.away.score;
   const both = h > 0 && a > 0;
   const score = `${game.away.abbr} ${a}–${h} ${game.home.abbr}`;
+  // BTTS "No" (side: 'no', v1.49.2): the mirror. It LOSES the moment both
+  // have scored (locked, B3) and wins only at the whistle. Before this, side
+  // was ignored and a 7–0 No graded as a LOSS (NED–GRE, 2026-11-13).
+  if (ticket.side === 'no') {
+    if (both) return r('lose', 'LOSS', game.state === 'post' ? `${score} final` : `${score}, both on the board`);
+    if (game.state === 'post') return r('win', 'WIN', `${score} final`);
+    const yet = h > 0 ? game.away.abbr : a > 0 ? game.home.abbr : 'neither side';
+    return r('lead', 'LEADING', `${score}, ${yet} yet to score`);
+  }
 
   if (game.state === 'post') {
     return both ? r('win', 'WIN', `${score} final`) : r('lose', 'LOSS', `${score} final`);
