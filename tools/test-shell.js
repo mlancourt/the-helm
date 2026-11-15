@@ -396,7 +396,7 @@ console.log('\nsubhead never contains me.name');
     const REG = read('docs', 'tiles', '_registry.js');
 
     const ORDER = [
-      'yeoman', 'calendar', 'reminders', 'captains_log', 'dinner', 'weather', 'newsstand',
+      'yeoman', 'calendar', 'reminders', 'captains_log', 'doc', 'dinner', 'weather', 'newsstand',
       'entertainment', 'local_events', 'today_games', 'bets_live', 'bets_ledger',
       'cards', 'purser_due', 'wss_tape', 'wss_traffic', 'wss_ap', 'ship_status',
     ];
@@ -413,7 +413,9 @@ console.log('\nsubhead never contains me.name');
     // Ship Status. (Watch Bill sat at 135 until it was retired, v1.46.2.)
     // Vendor Bills (2026-11-12, AP1) is the fifth, at 134 right after Site
     // Pulse — its left neighbour is itself an insert.
-    const INSERTS = { yeoman: 5, captains_log: 25, wss_traffic: 132, wss_ap: 134 };
+    // Doc (2026-11-15, Doc-Tile-Spec) is the sixth, at 27 between Captain's
+    // Log (25, an insert) and dinner (30).
+    const INSERTS = { yeoman: 5, captains_log: 25, doc: 27, wss_traffic: 132, wss_ap: 134 };
     const anchored = (id) => REGISTRY[id].position % 10 === 0 || id in INSERTS;
 
     // -- the registry ------------------------------------------------------

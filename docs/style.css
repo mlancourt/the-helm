@@ -2987,6 +2987,100 @@ button:active:not(:disabled) { opacity: 0.6; }
 .card[data-tile="wss_ap"] .ap-num-stuck { color: var(--bad); }
 /* ------------------------------------------------------------ /wss_ap */
 
+/* ------------------------------------------------------------ doc ("🩺 Doc")
+
+   Five watch stats, the day against the day before (Doc-Tile-Spec DT1–DT15).
+   Site Pulse's row grid and big-value style: dot · label · value · delta ·
+   🏆. The tone tokens appear ONLY on the delta text and the 7-day dot, scoped
+   to this tile's card and its sheet; the value is always the text colour
+   (DT14). A row with no reading is faint and wears nothing (DT10). The
+   paragraph is body text. test-doc scans this block. */
+
+.doc-face { display: flex; flex-direction: column; gap: 8px; }
+.doc-tappable { cursor: pointer; }
+.doc-tappable:focus-visible { outline: 1px solid var(--brass); outline-offset: 3px; border-radius: var(--r-sm); }
+.doc-quiet { margin: 4px 0; font-size: 13px; color: var(--text-faint); }
+
+.doc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+.doc-day { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.doc-record { font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap; }
+.doc-through { margin: -4px 0 0; font-size: 11px; color: var(--text-faint); }
+
+.doc-lines { display: flex; flex-direction: column; }
+.doc-line {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto 64px 22px;
+  align-items: center;
+  column-gap: 8px;
+  min-height: 34px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.doc-line:last-child { border-bottom: 0; }
+.doc-label-cell { display: flex; flex-direction: column; min-width: 0; }
+.doc-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.doc-when, .doc-avg { font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.doc-value {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--text);
+}
+.doc-noread { font-size: 13px; font-weight: 400; color: var(--text-faint); }
+.doc-line-none .doc-label { color: var(--text-faint); }
+.doc-delta-cell { text-align: right; white-space: nowrap; }
+.doc-delta { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+.doc-best-cell { text-align: center; font-size: 14px; line-height: 1; }
+
+.doc-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1.5px solid var(--text-faint);
+}
+
+@media (max-width: 380px) {
+  .doc-line { grid-template-columns: 8px minmax(0, 1fr) auto 56px 18px; column-gap: 6px; }
+}
+
+.doc-note { margin: 2px 0 0; font-size: 14px; line-height: 1.45; color: var(--text); overflow-wrap: anywhere; }
+.doc-problem { margin: 0; font-size: 12px; color: var(--text-faint); overflow-wrap: anywhere; }
+
+.doc-sec { margin-bottom: 16px; }
+.doc-sec-head { margin: 0 0 4px; font-size: 13px; font-weight: 650; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.doc-week-day {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.doc-week-day:last-child { border-bottom: 0; }
+.doc-week-label { color: var(--text-dim); }
+.doc-week-record { color: var(--text); }
+
+/* The tone hooks — the delta and the dot, and nowhere else. */
+.card[data-tile="doc"] .doc-delta-good,
+.panel[data-tile="doc"] .doc-delta-good { color: var(--good); }
+.card[data-tile="doc"] .doc-delta-warn,
+.panel[data-tile="doc"] .doc-delta-warn { color: var(--warn); }
+.card[data-tile="doc"] .doc-delta-bad,
+.panel[data-tile="doc"] .doc-delta-bad { color: var(--bad); }
+.card[data-tile="doc"] .doc-dot-good,
+.panel[data-tile="doc"] .doc-dot-good { background: var(--good); border-color: var(--good); }
+.card[data-tile="doc"] .doc-dot-warn,
+.panel[data-tile="doc"] .doc-dot-warn { background: var(--warn); border-color: var(--warn); }
+.card[data-tile="doc"] .doc-dot-bad,
+.panel[data-tile="doc"] .doc-dot-bad { background: var(--bad); border-color: var(--bad); }
+/* ------------------------------------------------------------ /doc */
+
 /* ---------------------------------------------------------------- yeoman
 
    The Yeoman (Y1–Y16): a face of two buttons and a sheet that is a form.

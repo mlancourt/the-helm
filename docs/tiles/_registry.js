@@ -42,6 +42,9 @@ export const REGISTRY = {
   // at 25 without touching a single other number — which is what the tens
   // were for (ruling, 2026-09-20).
   captains_log: { band: 'DAILY', position: 25, module: './tiles/captains_log.js', title: "⚓ Captain's Log" },
+  // Doc (Doc-Tile-Spec): the watch's day against the day before, after the
+  // morning brief and before dinner. 27, nothing moved.
+  doc: { band: 'DAILY', position: 27, module: './tiles/doc.js', title: '🩺 Doc' },
   dinner: { band: 'DAILY', position: 30, module: './tiles/dinner.js', title: 'Dinner' },
   weather: { band: 'LIVE', position: 40, module: './tiles/weather.js', title: 'Weather', feed: 'weather' },
   newsstand: { band: 'HOURLY', position: 50, module: './tiles/newsstand.js', title: '📰 Newsstand' },

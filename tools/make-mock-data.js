@@ -407,6 +407,74 @@ function wssApSnapshot(kind) {
 }
 
 /**
+ * 🩺 Doc (Doc-Tile-Spec DT1–DT15) — the shape the engine's `doc_watch()`
+ * publishes. EVERY reading below is invented: no number here is anyone's
+ * watch data, and the paragraph is made up. Every text field is already the
+ * engine's finished string (DT14) — the page prints them and adds nothing up.
+ *
+ * kinds: full (the default board — wins, losses, a push, a 🏆, one hollow
+ * dot, a note) · gaps (a row with no reading and a value with no prior) ·
+ * stale (fresh false) · quiet (note null) · problem (the note file had no
+ * text) · empty.
+ */
+function docPayload(kind = 'full') {
+  const day = addDays(TODAY, kind === 'stale' ? -3 : -1);
+  const label = ctLabel(day);
+  const night = `${label.split(' ')[0]} night`;
+  const M = '−';
+  const r = (o) => ({ when_label: label, value_text: null, delta_text: null, result: null, avg_result: null, avg_text: null, best: false, ...o });
+  const rows = [
+    r({ id: 'steps', label: 'Steps', value_text: '6,480', delta_text: '+512', result: 'win', avg_result: 'win', avg_text: '7-day avg 5,900', best: true }),
+    r({ id: 'energy', label: 'Active energy', value_text: '412', delta_text: M + '41', result: 'loss', avg_result: 'push', avg_text: '7-day avg 430' }),
+    r({ id: 'sleep', label: 'Sleep', when_label: night, value_text: '6h 50m', delta_text: M + '35m', result: 'loss', avg_result: 'push', avg_text: '7-day avg 7h 02m' }),
+    r({ id: 'rhr', label: 'Resting HR', value_text: '57', delta_text: M + '1', result: 'push', avg_result: null, avg_text: null }),
+    r({ id: 'hrv', label: 'HRV', value_text: '44', delta_text: '+5', result: 'win', avg_result: 'loss', avg_text: '7-day avg 49' }),
+  ];
+  if (kind === 'gaps') {
+    rows[3] = r({ id: 'rhr', label: 'Resting HR', value_text: '57', avg_result: 'win', avg_text: '7-day avg 59' });   // a value with no prior
+    rows[4] = r({ id: 'hrv', label: 'HRV' });                                                                         // no reading
+  }
+  const rec = (list) => ({
+    w: list.filter((x) => x.result === 'win').length,
+    l: list.filter((x) => x.result === 'loss').length,
+    p: list.filter((x) => x.result === 'push').length,
+  });
+  // The week as the engine writes it: newest first, a day with no scored row left out (the 4th day back here).
+  const days = [
+    { date: day, label, ...rec(rows) },
+    { date: addDays(day, -1), label: ctLabel(addDays(day, -1)), w: 3, l: 1, p: 1 },
+    { date: addDays(day, -2), label: ctLabel(addDays(day, -2)), w: 1, l: 3, p: 1 },
+    { date: addDays(day, -3), label: ctLabel(addDays(day, -3)), w: 2, l: 1, p: 2 },
+    { date: addDays(day, -5), label: ctLabel(addDays(day, -5)), w: 0, l: 4, p: 1 },
+    { date: addDays(day, -6), label: ctLabel(addDays(day, -6)), w: 2, l: 2, p: 0 },
+  ];
+  const week = { w: 0, l: 0, p: 0, days };
+  for (const d of days) for (const k of ['w', 'l', 'p']) week[k] += d[k];
+  const note = {
+    date: TODAY,
+    label: ctLabel(TODAY),
+    text:
+      'An invented paragraph for the mock board. The walk on the made-up Saturday was the longest in the file, and the ' +
+      'short night after it reads as one night, not a pattern. Nothing here needs doing; the numbers will say more by Friday.',
+    problem: null,
+  };
+  return {
+    day: { date: day, label, fresh: kind !== 'stale' },
+    through_label: kind === 'stale' ? `${ctLabel(addDays(TODAY, -2))} 9:40 PM` : `${ctLabel(TODAY)} 7:12 AM`,
+    record: rec(rows),
+    rows,
+    week,
+    note: kind === 'quiet' ? null : kind === 'problem' ? { date: TODAY, label: ctLabel(TODAY), text: '', problem: "today's note has nothing the tile can read" } : note,
+  };
+}
+
+function docSnapshot(kind) {
+  const snap = snapshot();
+  snap.tiles.doc = kind === 'empty' ? tile('DAILY', null, 'empty') : tile('DAILY', docPayload(kind));
+  return snap;
+}
+
+/**
  * The Due Stack with the Purser's notes and money out (Money Desk spec
  * PM1–PM8). Every merchant, card and figure is invented. The default
  * snapshot carries neither key — that IS the "notes absent" face, and it must
@@ -972,6 +1040,8 @@ function snapshot() {
       // — see its header for what each item in the default set is there to
       // exercise.
       captains_log: tile('DAILY', captainsLogPayload()),
+      // 🩺 Doc — invented readings (docPayload above).
+      doc: tile('DAILY', docPayload()),
 
       // Dinner (v1.22.0): tonight plus the plan's week. TODAY sits in the
       // middle of an invented Mon–Fri so the mock shows past, today and ahead
@@ -2931,6 +3001,12 @@ const MODES = [
   ['--purser-out-old', () => purserSnapshot('out-old')],
   ['--purser-out-bare', () => purserSnapshot('out-bare')],
   ['--purser-desk', () => purserSnapshot('desk')],
+  // 🩺 Doc's other faces (DT8, DT10, DT11). The default snapshot carries the full card with a note.
+  ['--doc-gaps', () => docSnapshot('gaps')],
+  ['--doc-stale', () => docSnapshot('stale')],
+  ['--doc-quiet', () => docSnapshot('quiet')],
+  ['--doc-problem', () => docSnapshot('problem')],
+  ['--doc-empty', () => docSnapshot('empty')],
   ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],
   ['--weather-clear', () => weatherSnapshot(weatherPayload({ alerts: [] }))],
   // Live gone AND no offline copy: the ONLY case allowed to say "feed
