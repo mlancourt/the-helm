@@ -269,6 +269,10 @@ const GOLDEN = {
     const r = draw(BARE.data);
     check('pending_count 0 → no parenthesis', text(r.face.querySelector('.purser-out-count')) === `${BARE.data.money_out.count} charges` && !/\(/.test(text(r.face.querySelector('.purser-out'))));
     check('through_label null → no feed line', count(r.face, 'tile-foot') === 1 && !/bank feed/.test(text(r.root)));
+    const feet = (mo) => draw({ money_out: mo }).face.querySelectorAll('.tile-foot').map(text);
+    check('through_note prints after the clock, verbatim', feet({ ...MO, through_note: 'stale · 1 bank needs attention' }).includes(`bank feed through ${MO.through_label} · stale · 1 bank needs attention`));
+    check('through_note null, missing or not text → the clock alone', [null, undefined, {}, ['x'], true].every((v) => feet({ ...MO, through_note: v }).includes(`bank feed through ${MO.through_label}`)));
+    check('a note with no clock draws no feed line', !/bank feed|stale/.test(text(draw({ money_out: { ...MO, through_label: null, through_note: 'stale' } }).root)));
     check('one charge reads singular', text(draw({ money_out: { ...MO, count: 1, pending_count: 0 } }).face.querySelector('.purser-out-count')) === '1 charge');
     check('count 0 prints as given', text(draw({ money_out: { ...MO, count: 0, pending_count: 0 } }).face.querySelector('.purser-out-count')) === '0 charges');
   }

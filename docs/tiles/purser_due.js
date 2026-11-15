@@ -60,7 +60,9 @@
  *              It carries its own date, so a stale feed shows an old date
  *              rather than a wrong number; `fresh: false` mutes the row. Its
  *              `through_label` is the second freshness line (PM4), under the
- *              ledger's own.
+ *              ledger's own; `through_note` (v1.49.3) is the engine's quiet
+ *              mark on that line when the feed is stale or a bank wants a
+ *              sign-in. Nothing pushes for either.
  *
  * PM8: every number and every label is the engine's. `out_total` goes through
  * `usd()` only when it is a real number (never `$NaN`, never `$0.00` for a
@@ -235,7 +237,8 @@ function feedThroughLine(data) {
   const mo = obj(data.money_out);
   const through = mo ? words(mo.through_label) : '';
   if (!through) return null;
-  return el('p', { cls: 'tile-foot', text: `bank feed through ${through}` });
+  const note = words(mo.through_note);   // v1.49.3: the engine's finished mark ("stale", "1 bank needs attention") or nothing
+  return el('p', { cls: 'tile-foot', text: `bank feed through ${through}${note ? ` · ${note}` : ''}` });
 }
 
 // ------------------------------------------------------------------ the face
