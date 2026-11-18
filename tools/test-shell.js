@@ -398,7 +398,7 @@ console.log('\nsubhead never contains me.name');
     const ORDER = [
       'yeoman', 'calendar', 'reminders', 'captains_log', 'doc', 'dinner', 'weather', 'newsstand',
       'entertainment', 'local_events', 'today_games', 'bets_live', 'bets_ledger',
-      'cards', 'purser_due', 'wss_tape', 'wss_traffic', 'wss_ap', 'ship_status',
+      'cards', 'purser_due', 'wss_tape', 'wss_traffic', 'wss_ap', 'wss_gm', 'ship_status',
     ];
 
     // The tens, and the first tile to cash them in. `captains_log` was slotted
@@ -415,7 +415,9 @@ console.log('\nsubhead never contains me.name');
     // Pulse — its left neighbour is itself an insert.
     // Doc (2026-11-15, Doc-Tile-Spec) is the sixth, at 27 between Captain's
     // Log (25, an insert) and dinner (30).
-    const INSERTS = { yeoman: 5, captains_log: 25, doc: 27, wss_traffic: 132, wss_ap: 134 };
+    // 📈 WSS (2026-11-17, WSS-GM-Tile-Spec) is the seventh, at 136 right after
+    // Vendor Bills (134, an insert) and before Ship Status (140).
+    const INSERTS = { yeoman: 5, captains_log: 25, doc: 27, wss_traffic: 132, wss_ap: 134, wss_gm: 136 };
     const anchored = (id) => REGISTRY[id].position % 10 === 0 || id in INSERTS;
 
     // -- the registry ------------------------------------------------------

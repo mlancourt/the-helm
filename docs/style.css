@@ -3081,6 +3081,84 @@ button:active:not(:disabled) { opacity: 0.6; }
 .panel[data-tile="doc"] .doc-dot-bad { background: var(--bad); border-color: var(--bad); }
 /* ------------------------------------------------------------ /doc */
 
+/* ------------------------------------------------------------ wss_gm ("📈 WSS")
+
+   The business's scorecard (WSS-GM-Tile-Spec K1–K14). Site Pulse's row and
+   big-value style: label · value over basis · vs. The tone tokens appear ONLY
+   on the vs text, scoped to this tile's card and its sheet; the value is
+   always the text colour (K11). The note is body text. test-wss-gm scans
+   this block. */
+
+.gm-face { display: flex; flex-direction: column; gap: 8px; }
+.gm-tappable { cursor: pointer; }
+.gm-tappable:focus-visible { outline: 1px solid var(--brass); outline-offset: 3px; border-radius: var(--r-sm); }
+.gm-quiet { margin: 4px 0; font-size: 13px; color: var(--text-faint); }
+
+.gm-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+.gm-asof { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.gm-basis-word { font-size: 12px; color: var(--text-faint); white-space: nowrap; }
+
+.gm-lines { display: flex; flex-direction: column; }
+.gm-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 8px;
+  row-gap: 1px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.gm-line:last-child { border-bottom: 0; }
+.gm-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.gm-value {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--text);
+}
+.gm-basis { font-size: 11px; line-height: 1.35; color: var(--text-faint); min-width: 0; overflow-wrap: anywhere; }
+.gm-vs-cell { text-align: right; white-space: nowrap; }
+.gm-vs { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+
+.gm-note-meta { margin: 2px 0 0; font-size: 11px; color: var(--text-faint); }
+.gm-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.gm-note-full { display: block; -webkit-line-clamp: unset; overflow: visible; }
+
+.gm-sec { margin-bottom: 16px; }
+.gm-more {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.gm-more:last-child { border-bottom: 0; }
+.gm-unmapped { margin: 0; font-size: 12px; color: var(--text-faint); overflow-wrap: anywhere; }
+
+/* The tone hooks — the vs text, and nowhere else. */
+.card[data-tile="wss_gm"] .gm-vs-good,
+.panel[data-tile="wss_gm"] .gm-vs-good { color: var(--good); }
+.card[data-tile="wss_gm"] .gm-vs-warn,
+.panel[data-tile="wss_gm"] .gm-vs-warn { color: var(--warn); }
+.card[data-tile="wss_gm"] .gm-vs-bad,
+.panel[data-tile="wss_gm"] .gm-vs-bad { color: var(--bad); }
+/* ------------------------------------------------------------ /wss_gm */
+
 /* ---------------------------------------------------------------- yeoman
 
    The Yeoman (Y1–Y16): a face of two buttons and a sheet that is a form.

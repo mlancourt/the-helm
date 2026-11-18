@@ -475,6 +475,84 @@ function docSnapshot(kind) {
 }
 
 /**
+ * 📈 WSS (WSS-GM-Tile-Spec K1–K14) — the shape the engine's `wss_gm()`
+ * publishes off the vault's kpi.json. EVERY figure, name and note below is
+ * invented: no number here is the company's books. Every text field is the
+ * engine's finished string (K11) — the page prints it and adds nothing up.
+ *
+ * kinds: plan (the default — a plan year mid-quarter, one row with nothing to
+ * grade against, a note) · noplan · nullrow (a row the script could not read)
+ * · stale · empty · longnote · unmapped.
+ */
+function wssGmPayload(kind = 'plan') {
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const asOf = kind === 'stale' ? addDays(TODAY, -2) : TODAY;
+  const prevMon = MON[(Number(TODAY.slice(5, 7)) + 10) % 12];
+  const M = '−';
+  const noplan = kind === 'noplan';
+  const row = (id, label, value_text, basis_text, vs_text, result) => ({ id, label, value_text, basis_text, vs_text, result });
+  const rows = noplan
+    ? [
+        row('revenue', 'Revenue', '$84K', 'quarter to date', '+6% vs last year', 'good'),
+        row('rental', 'Rental', '$21K', 'quarter to date · 25% of revenue · 13 of 28 on rent', '+12% vs last year', 'good'),
+        row('parts_service', 'Parts and service', '$9,412', 'quarter to date', M + '4% vs last year', 'warn'),
+        row('equipment', 'Equipment', '$96K', 'last 90 days', M + '18% vs last year', 'bad'),
+        row('profit', 'Profit', '$6,880', `${prevMon}, closed`, '+9% vs last year', 'good'),
+      ]
+    : [
+        row('revenue', 'Revenue', '$101K', 'quarter to date', '94% of plan pace', 'warn'),
+        row('rental', 'Rental', '$24K', 'quarter to date · 24% of revenue · 14 of 30 on rent', '111% of plan pace', 'good'),
+        row('parts_service', 'Parts and service', '$0', 'quarter to date', 'nothing to grade against', null),
+        row('equipment', 'Equipment', '$180K', 'last 90 days', '90% of target', 'warn'),
+        row('profit', 'Profit', '$11K', `closed through ${prevMon}`, '110% of plan', 'good'),
+      ];
+  if (kind === 'nullrow') rows[3] = row('equipment', 'Equipment', '—', 'not read today', null, null);
+  const more = [
+    ['ar_over_60', 'AR over 60 days $1,200 · target at most $5,000'],
+    ['cash_collected', 'Cash collected $30K this month · +7% vs last year'],
+    ['checking', `Checking $40K at ${prevMon} month-end · target at least $25K`],
+    ['line_of_credit', 'Line of credit $10K · peak $10K this year · peak at most $100K · year-end at most $20K'],
+    ['units_on_rent', 'Units on rent 14 of 30 · target at least 16 by 3/31'],
+    ['placements_new', 'New long-term placements 1 this year · target at least 3 by 3/31'],
+    ['contracted_base', 'Contracted base $15K per 28 days · 12 agreements · largest customer 40%'],
+    ['close_rate', 'Close rate rental 50% · new machines 70% · last 90 days · targets 55% / 75%'],
+    ['leads', 'Leads 70 · 80% quoted · last 90 days · targets 72 / 82% quoted'],
+    ['tickets_closed', 'Tickets closed 48 · last 90 days · target 50'],
+    ['tracker_as_of', `Fleet Tracker as of ${ctLabel(addDays(asOf, -1))} 9:10 PM`],
+  ].map(([id, text]) => ({ id, text }));
+  const note = {
+    date: addDays(TODAY, -2),
+    label: ctLabel(addDays(TODAY, -2)),
+    kind: 'Weekly Note',
+    text:
+      kind === 'longnote'
+        ? ('An invented weekly note for the mock board, long on purpose so the face clamps it and the sheet shows it whole. ' +
+            'Rental is ahead of pace on two made-up placements; equipment is the soft spot because one invented machine slid a month. ').repeat(5).trim()
+        : 'An invented weekly note. Rental is ahead of pace on two made-up placements; equipment is the soft spot because one invented machine slid a month. Nothing here needs doing before Friday.',
+  };
+  return {
+    as_of: asOf,
+    as_of_label: `${ctLabel(asOf)} 5:46 AM`,
+    plan_year: noplan ? null : Number(TODAY.slice(0, 4)),
+    rows,
+    more,
+    unmapped_text: kind === 'unmapped' ? 'Not in a bucket: 4045 Invented propane $120 · 4060 Invented freight income $2,310' : null,
+    note: kind === 'noplan' ? null : note,
+  };
+}
+
+function wssGmSnapshot(kind) {
+  const snap = snapshot();
+  if (kind === 'empty') snap.tiles.wss_gm = tile('DAILY', null, 'empty');
+  else if (kind === 'stale') {
+    const t = tile('DAILY', wssGmPayload('stale'), 'stale');
+    t.error = `kpi.json is 50 h old — last written ${wssGmPayload('stale').as_of_label}`;
+    snap.tiles.wss_gm = t;
+  } else snap.tiles.wss_gm = tile('DAILY', wssGmPayload(kind));
+  return snap;
+}
+
+/**
  * The Due Stack with the Purser's notes and money out (Money Desk spec
  * PM1–PM8). Every merchant, card and figure is invented. The default
  * snapshot carries neither key — that IS the "notes absent" face, and it must
@@ -1111,6 +1189,8 @@ function snapshot() {
       wss_traffic: tile('DAILY', wssTrafficPayload()),
       // Vendor Bills — invented vendors and amounts (wssApPayload above).
       wss_ap: tile('DAILY', wssApPayload()),
+      // 📈 WSS — invented figures (wssGmPayload above).
+      wss_gm: tile('DAILY', wssGmPayload()),
       wss_tape: tile('DAILY', {
         title: 'Crew Tape',
         date: TODAY,
@@ -3007,6 +3087,13 @@ const MODES = [
   ['--doc-quiet', () => docSnapshot('quiet')],
   ['--doc-problem', () => docSnapshot('problem')],
   ['--doc-empty', () => docSnapshot('empty')],
+  // 📈 WSS's other faces (K13, Page rules). The default snapshot carries a plan year mid-quarter with a note.
+  ['--gm-noplan', () => wssGmSnapshot('noplan')],
+  ['--gm-nullrow', () => wssGmSnapshot('nullrow')],
+  ['--gm-stale', () => wssGmSnapshot('stale')],
+  ['--gm-empty', () => wssGmSnapshot('empty')],
+  ['--gm-longnote', () => wssGmSnapshot('longnote')],
+  ['--gm-unmapped', () => wssGmSnapshot('unmapped')],
   ['--weather-warn', () => weatherSnapshot(weatherPayload({ alerts: [warnAlert(), advisoryAlert()] }))],
   ['--weather-clear', () => weatherSnapshot(weatherPayload({ alerts: [] }))],
   // Live gone AND no offline copy: the ONLY case allowed to say "feed

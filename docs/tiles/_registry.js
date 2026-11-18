@@ -63,6 +63,9 @@ export const REGISTRY = {
   // Vendor Bills (AP1): the bill ledger's face, straight after Site Pulse —
   // the WSS cluster's third. 134, nothing moved.
   wss_ap: { band: 'DAILY', position: 134, module: './tiles/wss_ap.js', title: '🧾 Vendor Bills' },
+  // 📈 WSS (WSS-GM-Tile-Spec): the business's scorecard, straight after
+  // Vendor Bills — the WSS cluster's fourth. 136, nothing moved.
+  wss_gm: { band: 'DAILY', position: 136, module: './tiles/wss_gm.js', title: '📈 WSS' },
   ship_status: { band: 'DAILY', position: 140, module: './tiles/ship_status.js', title: 'Ship Status' },
   // Off-board: the shell skips `ask` by id (it is the sheet), not by band or position.
   ask: { band: 'ASK', position: 999, module: './tiles/ask.js', title: 'Ask' },
