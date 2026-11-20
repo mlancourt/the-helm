@@ -1,42 +1,48 @@
 /**
  * wss_traffic — Site Pulse.
  *
- * The WSS website's previous day, as a glance. Vault spec
- * `Site-Pulse-Tile-Spec.md`, rulings S1–S14. The engine reads the daily
- * script's `traffic-pulse.json` into this payload; the page lays it out.
+ * The WSS website's search, a week at a time. Vault spec
+ * `Site-Pulse-Scoreboard-Spec.md` (SB1–SB12), amending `Site-Pulse-Tile-Spec.md`
+ * (S1–S15). The daily script builds the scoreboard (`weekly`), the engine
+ * passes it through, the page lays it out.
  *
- * THE FACE IS ROWS (S11–S14, v1.2). Two dated groups — GA4, then Search
- * Console — of one line per metric: dot · label · value · 28-day sparkline ·
- * arrow, every row the same five columns so the values share one right edge.
- * CTR, 5xx and Cloudflare's date ride one muted footer; 5xx earns a row only (at >= ERR_ROW_PCT)
- * on a day it is above zero. Leads and carts at 0 · 0 are one quiet row.
+ * THE FACE IS THE WEEKLY SCOREBOARD (SB1–SB3). One group, `Search · 7 days to
+ * Wed 11/18`, then six rows in the spec's order — Clicks · Clicks, net of
+ * flagged · Mobile clicks · Mobile impressions · Organic sessions · Leads.
+ * Each row: dot · label over `prev {P} · avg {4-week average}` (small, faint)
+ * · this 7 days (the big value, one shared right edge) · a faint arrow. No
+ * sparkline on the face. Under the rows, one faint line when GA4 is missing a
+ * day of the window (SB8), then one footer line — the flagged count,
+ * yesterday's sessions, 5xx and Cloudflare's date (SB9). "Yesterday" lives
+ * there now.
  *
- * TWO INDICATORS PER NUMBER, AND THEY HAVE DIFFERENT JOBS (S3, S12).
- *   - The ARROW is day-over-day, printed as given: movement, not meaning, so
- *     it carries no colour at all, sits last and faint, and a zero prints
- *     nothing. It is built in exactly one function, `arrow()`, and that
- *     function is the only place in this file that reads the day-over-day
- *     field (a source scan holds it).
- *   - The TONE is the engine's `ratio` — yesterday against the same-weekday
- *     baseline. `dotTone()` is the one function that chooses a colour, it
- *     chooses from `ratio` alone, and `toneOf()` is its one caller: the dot,
- *     the value and the sparkline's last point all wear what it returns.
- *     Against the day prior every Monday is green and every Saturday red;
- *     against the same weekday a red means something.
+ * TWO INDICATORS PER ROW, AND THEY HAVE DIFFERENT JOBS (SB4, SB5, S3).
+ *   - The TONE is this 7 days against the 4-week average: the script's
+ *     `ratio`. `weekTone()` is the one function that chooses a scoreboard
+ *     colour, it reads `ratio` alone, against one named constant pair
+ *     (WEEK_GOOD / WEEK_WARN — weekly bands, tighter than S3's daily ones on
+ *     purpose), and the dot and the value both wear what it returns. The
+ *     colour never reads the previous-7 figure.
+ *   - The ARROW is this 7 days against the previous 7: the script's change,
+ *     printed as given, faint and never coloured; ▲ always means better
+ *     (S15), a zero prints nothing (S14). `weekArrow()` is the only reader of
+ *     that field in this file (a source scan holds it).
  *
- * EACH BLOCK WEARS ITS OWN DATE (S4). GA4 and Cloudflare are yesterday;
- * Search Console lags 2–3 days. Each group head prints its block's own
- * `date` through `shortDay()`, plus `lags 2–3 days` when the two differ, and
- * nothing here relabels, averages or interpolates across the lag — a Thursday that reads as Thursday is the truth.
+ * THE PAGE COMPUTES NOTHING ON THE SCOREBOARD (SB12, S9/S10). W, P, the
+ * average, the ratio and the change are the script's; a null is `—` beside a
+ * hollow dot. The one date comparison — is the scoreboard more than six days
+ * older than the run (SB11)? — goes through `daysBetween()` in lib/fmt.js, on
+ * the two Central date strings. The sheet keeps its own arithmetic: the
+ * sparkline geometry, the 5xx bar heights, the channel bar widths and one
+ * subtraction — a query's position against its prior week.
  *
- * THE PAGE COMPUTES NO BASELINE (S10). No middle value, no ratio, no average: a null
- * ratio is a hollow dot with "no baseline yet". The arithmetic in this file is
- * the sparkline geometry (min/max to pixels, one function for face and
- * sheet), the 5xx bar heights, the channel bar widths and one subtraction — a query's position against its prior week.
- *
- * A FAILED SOURCE IS GREYED, DATED AND SAYS WHY (S6) — never a blank, never a
- * zero: a zero is a fact and a failure is not. Three or more of the newest
- * days with that block missing turns its dots black.
+ * A FAILED SOURCE IS GREYED, DATED AND SAYS WHY (S6, held by SB11) — never a
+ * blank, never a zero: its rows print `—` and under them
+ * `GSC · last good Thu 10/30 · 403 permission`. Three or more of the newest
+ * days with that block missing turns its dots black. No scoreboard at all,
+ * or one more than six days old, is one line in place of the rows:
+ * `Weekly scoreboard not available · last {window_end}` — and the footer
+ * still prints (SB11).
  *
  * NO MONEY, NO NAMES, NO BUTTONS (S8). Purchases is a count. The face is one
  * tap target (a role=button div, the Ledger's pattern, so long-press-to-Explain
@@ -50,7 +56,7 @@
  */
 
 import { el, svgEl, empty, extLink } from '../lib/dom.js';
-import { shortDay } from '../lib/fmt.js';
+import { shortDay, daysBetween } from '../lib/fmt.js';
 import { sparkGeometry } from '../lib/spark.js';
 
 const TITLE = '📈 Site Pulse';
@@ -58,8 +64,34 @@ const TITLE = '📈 Site Pulse';
 /** Used only when the producer does not publish its own list (it does, today). */
 const LOWER_DEFAULT = ['position', 'err5xx_pct'];
 
-/** S11 (amended 11/03): 5xx earns a face row only at or above this share of requests. 1 in 48,307 is not a story. */
+/** S11 (amended 11/03), kept by SB9: 5xx takes a tone in the footer only at or above this share of requests. */
 const ERR_ROW_PCT = 0.5;
+
+/** SB4: this 7 days ÷ the 4-week average. ≥ WEEK_GOOD good · ≥ WEEK_WARN warn · below, bad. */
+const WEEK_GOOD = 0.95;
+const WEEK_WARN = 0.8;
+
+/** SB11: a scoreboard whose window ended more than this many days before the run is not shown. */
+const WEEK_MAX_AGE = 6;
+
+/** SB2: the face's six rows, in order, with the source each one reads (S6) and its label if the payload has none. */
+const FACE_ROWS = [
+  ['clicks', 'gsc', 'Clicks'],
+  ['clicks_net', 'gsc', 'Clicks, net of flagged'],
+  ['mobile_clicks', 'gsc', 'Mobile clicks'],
+  ['mobile_impressions', 'gsc', 'Mobile impressions'],
+  ['organic_sessions', 'ga4', 'Organic sessions'],
+  ['leads', 'ga4', 'Leads'],
+];
+
+/** SB10: the sheet's table adds these three. The desktop rows wear no tone (rank-tracker impressions). */
+const SHEET_ROWS = [
+  ...FACE_ROWS,
+  ['mobile_position', 'gsc', 'Mobile average position'],
+  ['desktop_clicks', 'gsc', 'Desktop clicks'],
+  ['desktop_impressions', 'gsc', 'Desktop impressions'],
+];
+const UNTONED = ['desktop_clicks', 'desktop_impressions'];
 
 const SOURCES = ['ga4', 'gsc', 'cf'];
 const SOURCE_LABEL = { ga4: 'GA4', gsc: 'GSC', cf: 'CF' };
@@ -79,7 +111,6 @@ const LINKS = [
   ['Cloudflare', 'https://dash.cloudflare.com/'],
 ];
 
-const LAG_TIP = 'Search Console reports 2–3 days behind';
 const DEAD_AFTER = 3;
 
 const arr = (v) => (Array.isArray(v) ? v : []);
@@ -101,11 +132,11 @@ function metric(block, key) {
   return b ? obj(b[key]) : null;
 }
 
-/** 12345 -> '12,345'; 2.4 -> '2.4'; anything else -> '—'. */
+/** 12345 -> '12,345'; 4120.75 -> '4,120.75'; 2.4 -> '2.4'; anything else -> '—'. Digits as given, never rounded here. */
 function fmtNum(v) {
   const n = num(v);
   if (n === null) return '—';
-  return Number.isInteger(n) ? n.toLocaleString('en-US') : String(n);
+  return Number.isInteger(n) ? n.toLocaleString('en-US') : n.toLocaleString('en-US', { maximumFractionDigits: 20 });
 }
 
 /** A 'YYYY-MM-DD' through shortDay, or '' when there is none. */
@@ -118,15 +149,33 @@ function lowerList(data) {
   return list.length ? list : LOWER_DEFAULT;
 }
 
+/** A number with its unit, or '—' when it is not a number. */
+function withUnit(v, unit) {
+  return num(v) === null ? '—' : fmtNum(v) + unit;
+}
+
 // ------------------------------------------------------- the two indicators
 
 /**
- * THE ONE COLOUR DECISION, and it reads `ratio` only (S3).
+ * THE SCOREBOARD'S ONE COLOUR DECISION, and it reads `ratio` only (SB4).
  *
- * Higher-is-better: ≥ 0.8 good · 0.6–0.8 warn · < 0.6 bad. Lower-is-better
- * (position, 5xx): the same bands turned over — ≤ 1.25 good · 1.25–1.67 warn
- * · > 1.67 bad — because the engine's ratio stays value / baseline. A null
- * ratio is `none`, the hollow dot: the tile never invents a baseline (S10).
+ * The script's ratio is already turned the right way for a lower-is-better
+ * row (average ÷ this week), so one set of bands serves every row. A null
+ * ratio is `none`, the hollow dot: no baseline, no colour (SB7).
+ */
+export function weekTone(ratio) {
+  const r = num(ratio);
+  if (r === null) return 'none';
+  if (r >= WEEK_GOOD) return 'good';
+  if (r >= WEEK_WARN) return 'warn';
+  return 'bad';
+}
+
+/**
+ * S3's daily bands, kept for ONE thing: the footer's 5xx at or above
+ * ERR_ROW_PCT wears what S11's 5xx row wore (SB9). Higher-is-better ≥ 0.8
+ * good · 0.6–0.8 warn · < 0.6 bad; lower-is-better turned over — ≤ 1.25 ·
+ * ≤ 1.67 · above — because the engine's daily ratio stays value / baseline.
  */
 export function dotTone(metricKey, ratio, lowerIsBetter) {
   const r = num(ratio);
@@ -141,38 +190,30 @@ export function dotTone(metricKey, ratio, lowerIsBetter) {
   return 'bad';
 }
 
-/**
- * The row's tone — the dot's class AND the value's colour (S12). One call to
- * dotTone, off `ratio` alone; a dead source is `dead` whatever its ratio.
- */
-function toneOf(key, m, lower, dead) {
-  return dead ? 'dead' : dotTone(key, m ? m.ratio : null, lower.includes(key));
-}
-
-function dot(tone, m, tip) {
+function dot(tone, tip) {
   const title =
     tip ||
     (tone === 'dead'
       ? 'no data ' + DEAD_AFTER + '+ days'
       : tone === 'none'
-        ? 'no baseline yet'
-        : 'usual for this weekday: ' + fmtNum(m && m.baseline));
+        ? 'no 4-week average'
+        : 'vs the 4-week average');
   return el('span', { cls: 'pulse-dot pulse-dot-' + tone, attrs: { title, 'aria-label': title } });
 }
 
 /**
- * The arrow and its delta — day-over-day, printed as given, no colour (S3).
- * A zero delta prints nothing (S14): `– 0` is not news.
+ * The arrow and its change — this 7 days against the previous 7, printed as
+ * given, no colour (SB5). A zero prints nothing (S14).
  */
-function arrow(m, lowerIsBetter) {
-  // The ONLY reader of `dod` in this module: the dot and the value never see it.
-  const d = num(m ? m.dod : null);
+function weekArrow(row) {
+  // The ONLY reader of `delta` in this module: the dot and the value never see it.
+  const d = num(row ? row.delta : null);
   if (d === null || d === 0) return null;
-  // ▲ always means better (v1.44.2): on a lower-is-better row (position, 5xx)
-  // the glyph turns over, the magnitude and the no-colour rule do not.
-  const up = lowerIsBetter ? d < 0 : d > 0;
-  const text = (up ? '▲ ' : '▼ ') + String(Math.abs(d));
-  const title = lowerIsBetter ? 'vs the day before · lower is better, ▲ = improved' : 'vs the day before';
+  // ▲ always means better (S15): on a lower-is-better row the glyph turns over.
+  const lower = !!(row && row.lower_is_better === true);
+  const up = lower ? d < 0 : d > 0;
+  const text = (up ? '▲ ' : '▼ ') + fmtNum(Math.abs(d));
+  const title = lower ? 'vs the previous 7 days · lower is better, ▲ = improved' : 'vs the previous 7 days';
   return el('span', { cls: 'pulse-arrow', text, attrs: { title } });
 }
 
@@ -201,125 +242,147 @@ function statusLine(src, s) {
   return el('p', { cls: 'pulse-src-down', text: parts.join(' · ') });
 }
 
-// --------------------------------------------------------------- sparklines
-
-const round = (n) => Math.round(n * 10) / 10;
-
-/** The series for one metric, oldest → newest, a gap (null) where the block is missing. */
-function series(chrono, src, key) {
-  return chrono.map((row) => num(metric(obj(row)?.[src], key)?.value));
-}
-
-// The one sparkline geometry, shared by the face and the sheet (S13), lives in
-// lib/spark.js — `bets_live`'s sweat line draws through it too (B30).
-
-// ------------------------------------------------------------------ the face
-
-const FACE = { w: 96, h: 22, px: 3, py: 3 };
-
-/** The row's 28 days: a faint line, the last point in the row's tone. < 2 points → nothing. */
-function faceSpark(vals, tone, invert) {
-  if (vals.filter((v) => v !== null).length < 2) return null;
-  const g = sparkGeometry(vals, FACE, null, invert);
-  return svgEl('svg', { cls: 'pulse-face-spark', attrs: { viewBox: '0 0 ' + FACE.w + ' ' + FACE.h, 'aria-hidden': 'true' } }, [
-    svgEl('path', { cls: 'pulse-face-line', attrs: { d: g.d } }),
-    svgEl('circle', { cls: 'pulse-face-now pulse-spark-now-' + tone, attrs: { cx: round(g.x), cy: round(g.y), r: 2.6 } }),
-  ]);
-}
-
-/** One row: dot · label · value · sparkline · arrow — every row the same five columns. */
-function line(key, label, valueText, tone, dotNode, sparkNode, arrowNode) {
-  return el('div', { cls: 'pulse-line pulse-line-' + key }, [
-    dotNode,
-    el('span', { cls: 'pulse-label', text: label }),
-    el('span', { cls: 'pulse-value pulse-value-' + tone, text: valueText }),
-    el('span', { cls: 'pulse-spark-cell' }, [sparkNode]),
-    el('span', { cls: 'pulse-arrow-cell' }, [arrowNode]),
-  ]);
-}
-
-/** A number with its unit, or '—' when it is not a number. */
-function withUnit(v, unit) {
-  return num(v) === null ? '—' : fmtNum(v) + unit;
-}
-
-function face(data, days, lower) {
-  const latest = obj(data.latest) || {};
-  const ga4 = obj(latest.ga4);
-  const gsc = obj(latest.gsc);
-  const cf = obj(latest.cf);
-  const blocks = { ga4, gsc, cf };
-  const chrono = days.slice().reverse();
-
+function sourceStates(data, days) {
   const state = {};
   for (const src of SOURCES) {
     const s = failed(data, src);
     state[src] = { down: s, dead: !!s && nullRun(days, src) >= DEAD_AFTER };
   }
+  return state;
+}
 
-  // S6: a down source greys in place — '—', its dot hollow or black, no line, no arrow.
-  const row = (src, key, label, unit) => {
+// --------------------------------------------------------- the weekly block
+
+/**
+ * The scoreboard when it can be shown, else null (SB11): no `weekly` object,
+ * no readable window end, or a window that ended more than WEEK_MAX_AGE days
+ * before the run. Without a `run_today` there is nothing to judge age by, and
+ * the page has no clock of its own — the block is shown as dated.
+ */
+function liveWeekly(data) {
+  const w = obj(data.weekly);
+  if (!w) return null;
+  const end = obj(w.window)?.end;
+  if (typeof end !== 'string' || !end) return null;
+  const age = typeof data.run_today === 'string' ? daysBetween(end, data.run_today) : null;
+  if (age !== null && age > WEEK_MAX_AGE) return null;
+  return w;
+}
+
+/** The weekly rows by key; a row that is not an object is not there. */
+function rowsByKey(w) {
+  const by = {};
+  for (const r of arr(w && w.rows)) {
+    const o = obj(r);
+    if (o && typeof o.key === 'string' && !(o.key in by)) by[o.key] = o;
+  }
+  return by;
+}
+
+/** SB11: `Weekly scoreboard not available · last Wed 11/18` (or `last never`). */
+function notAvailable(data) {
+  const end = obj(obj(data.weekly)?.window)?.end;
+  const last = typeof end === 'string' && end ? day(end) : 'never';
+  return el('p', { cls: 'pulse-weekly-na', text: 'Weekly scoreboard not available · last ' + last });
+}
+
+// ------------------------------------------------------------------ the face
+
+/** One row: dot · (label over prev · avg) · this 7 days · arrow. */
+function scoreLine(key, label, row, tone, dotNode, grey) {
+  const sub = grey
+    ? null
+    : el('span', { cls: 'pulse-sub7', text: 'prev ' + fmtNum(row ? row.p : null) + ' · avg ' + fmtNum(row ? row.avg : null) });
+  return el('div', { cls: 'pulse-line pulse-line-' + key + (grey ? ' pulse-line-grey' : '') }, [
+    dotNode,
+    el('span', { cls: 'pulse-name' }, [el('span', { cls: 'pulse-label', text: label }), sub]),
+    el('span', { cls: 'pulse-value pulse-value-' + tone, text: grey ? '—' : fmtNum(row ? row.w : null) }),
+    el('span', { cls: 'pulse-arrow-cell' }, [grey ? null : weekArrow(row)]),
+  ]);
+}
+
+/** The rows for `spec` off one weekly block: S6 greys a down source in place, SB11 `—` + hollow for a missing row. */
+function scoreRows(spec, w, state, toned) {
+  const by = rowsByKey(w);
+  return spec.map(([key, src, fallback]) => {
+    const row = by[key] || null;
+    const label = row && typeof row.label === 'string' && row.label ? row.label : fallback;
     const st = state[src];
-    const m = st.down ? null : metric(blocks[src], key);
-    const tone = toneOf(key, m, lower, st.dead);
-    return line(
-      key,
-      label,
-      st.down ? '—' : withUnit(m?.value, unit),
-      tone,
-      dot(tone, m),
-      st.down ? null : faceSpark(series(chrono, src, key), tone, key === 'position'),
-      st.down ? null : arrow(m, lower.includes(key))
-    );
+    if (st.down) {
+      const tone = st.dead ? 'dead' : 'none';
+      return scoreLine(key, label, null, tone, dot(tone), true);
+    }
+    if (!toned(key)) return scoreLine(key, label, row, 'plain', el('span', { cls: 'pulse-dot pulse-dot-blank', attrs: { 'aria-hidden': 'true' } }), false);
+    const tone = weekTone(row ? row.ratio : null);
+    return scoreLine(key, label, row, tone, dot(tone), false);
+  });
+}
+
+/** SB8: `GA4 missing 1 day in this window`. */
+function gapLine(w) {
+  const n = num(w && w.ga4_gap_days);
+  if (n === null || n <= 0) return null;
+  return el('p', { cls: 'pulse-gap', text: 'GA4 missing ' + fmtNum(n) + (n === 1 ? ' day' : ' days') + ' in this window' });
+}
+
+/** SB9: `{n} search(es) flagged · Yesterday Wed 11/19: 87 sessions · 5xx 0% · CF Wed 11/19`. */
+function footer(data, w, state, lower) {
+  const latest = obj(data.latest) || {};
+  const ga4 = obj(latest.ga4);
+  const cf = obj(latest.cf);
+  const kids = [];
+  const add = (node) => {
+    if (kids.length) kids.push(' · ');
+    kids.push(node);
   };
 
-  const ga4Rows = [row('ga4', 'sessions', 'Sessions', '')];
-  // S14: zero is quiet — both at 0 is one row with nothing to watch.
-  const leads = num(metric(ga4, 'leads')?.value);
-  const carts = num(metric(ga4, 'carts')?.value);
-  if (!state.ga4.down && leads === 0 && carts === 0) {
-    ga4Rows.push(line('leads-carts', 'Leads · Carts', '0 · 0', 'none', dot('none', null, 'none on this day'), null, null));
+  const n = w && Array.isArray(w.flagged) ? w.flagged.length : 0;
+  if (n > 0) add(n + (n === 1 ? ' search flagged' : ' searches flagged'));
+
+  if (!state.ga4.down && ga4 && typeof ga4.date === 'string') {
+    add('Yesterday ' + day(ga4.date) + ': ' + fmtNum(metric(ga4, 'sessions')?.value) + ' sessions');
   } else {
-    ga4Rows.push(row('ga4', 'leads', 'Leads', ''), row('ga4', 'carts', 'Carts', ''));
+    add('Yesterday: — sessions');
   }
-  // S11: 5xx earns a row only on a day it reaches ERR_ROW_PCT; below that it lives in the footer.
-  const err = num(metric(cf, 'err5xx_pct')?.value);
-  if (!state.cf.down && err !== null && err >= ERR_ROW_PCT) ga4Rows.push(row('cf', 'err5xx_pct', '5xx', '%'));
 
-  const gscRows = [
-    row('gsc', 'clicks', 'Organic clicks', ''),
-    row('gsc', 'impressions', 'Impressions', ''),
-    row('gsc', 'position', 'Avg position', ''),
-  ];
+  // S11's threshold, kept: at or above ERR_ROW_PCT the 5xx part wears the tone S11's 5xx row wore.
+  const em = state.cf.down ? null : metric(cf, 'err5xx_pct');
+  const err = num(em?.value);
+  const hot = err !== null && err >= ERR_ROW_PCT ? dotTone('err5xx_pct', em.ratio, lower.includes('err5xx_pct')) : 'none';
+  add(el('span', { cls: 'pulse-foot-5xx' + (hot === 'none' ? '' : ' pulse-value-' + hot), text: '5xx ' + (state.cf.down ? '—' : withUnit(err, '%')) }));
 
-  // S4: the GSC head explains itself only when the two dates actually differ.
-  const lag = ga4 && gsc && typeof ga4.date === 'string' && ga4.date !== gsc.date;
+  if (!state.cf.down && cf && typeof cf.date === 'string') add('CF ' + day(cf.date));
+  return el('p', { cls: 'pulse-footline' }, kids);
+}
 
-  const group = (src, name, rows, note) =>
-    el('div', { cls: 'pulse-group pulse-group-' + src + (state[src].down ? ' pulse-group-grey' : '') }, [
-      el('div', { cls: 'pulse-group-head' }, [
-        el('span', { cls: 'pulse-group-name', text: name }),
-        blocks[src] && typeof blocks[src].date === 'string'
-          ? el('span', { cls: 'pulse-date', text: day(blocks[src].date) + (note ? ' · lags 2–3 days' : ''), attrs: { title: note } })
-          : null,
-      ]),
-      el('div', { cls: 'pulse-lines' }, rows),
-      state[src].down ? statusLine(src, state[src].down) : null,
-    ]);
+function face(data, days, lower) {
+  const state = sourceStates(data, days);
+  const w = liveWeekly(data);
+  const parts = [];
 
-  // The footer: CTR · 5xx · Cloudflare's own date.
-  const foot = [
-    'CTR ' + (state.gsc.down ? '—' : withUnit(metric(gsc, 'ctr')?.value, '%')),
-    '5xx ' + (state.cf.down ? '—' : withUnit(err, '%')),
-  ];
-  if (cf && typeof cf.date === 'string') foot.push('CF ' + day(cf.date));
+  if (w) {
+    const end = obj(w.window).end;
+    parts.push(
+      el('div', { cls: 'pulse-group pulse-group-weekly' }, [
+        el('div', { cls: 'pulse-group-head' }, [
+          el('span', { cls: 'pulse-group-name', text: 'Search' }),
+          el('span', { cls: 'pulse-date', text: '7 days to ' + day(end) }),
+        ]),
+        el('div', { cls: 'pulse-lines' }, scoreRows(FACE_ROWS, w, state, () => true)),
+        gapLine(w),
+        state.gsc.down ? statusLine('gsc', state.gsc.down) : null,
+        state.ga4.down ? statusLine('ga4', state.ga4.down) : null,
+      ])
+    );
+  } else {
+    parts.push(notAvailable(data));
+    if (state.gsc.down) parts.push(statusLine('gsc', state.gsc.down));
+    if (state.ga4.down) parts.push(statusLine('ga4', state.ga4.down));
+  }
 
-  return [
-    group('ga4', 'GA4', ga4Rows, null),
-    group('gsc', 'Search Console', gscRows, lag ? LAG_TIP : null),
-    el('p', { cls: 'pulse-footline', text: foot.join(' · ') }),
-    state.cf.down ? statusLine('cf', state.cf.down) : null,
-  ];
+  parts.push(footer(data, w, state, lower));
+  if (state.cf.down) parts.push(statusLine('cf', state.cf.down));
+  return parts;
 }
 
 // ----------------------------------------------------------------- the sheet
@@ -329,6 +392,13 @@ const SPARK_H = 54;
 const PAD_X = 4;
 const SHEET = { w: SPARK_W, h: SPARK_H, px: PAD_X, py: 10 };
 
+const round = (n) => Math.round(n * 10) / 10;
+
+/** The series for one metric, oldest → newest, a gap (null) where the block is missing. */
+function series(chrono, src, key) {
+  return chrono.map((row) => num(metric(obj(row)?.[src], key)?.value));
+}
+
 const SPARKS = [
   ['ga4', 'sessions', 'Sessions'],
   ['gsc', 'clicks', 'Organic clicks'],
@@ -336,7 +406,7 @@ const SPARKS = [
   ['gsc', 'position', 'Avg position · up is better'],
 ];
 
-/** One sheet sparkline, drawn by hand (rule 3 — no chart library), off the shared geometry. */
+/** One sheet sparkline, drawn by hand (rule 3 — no chart library), off the shared geometry in lib/spark.js. */
 function spark(vals, base, label, invert) {
   const g = sparkGeometry(vals, SHEET, base, invert);
   if (!g) return null;
@@ -379,6 +449,69 @@ function section(key, title, kids) {
   return el('section', { cls: 'pulse-sec pulse-sec-' + key }, [el('h3', { cls: 'pulse-sec-head', text: title }), ...body]);
 }
 
+/** 'Thu 11/12–Wed 11/18', or '' when either end is missing. */
+function span(win) {
+  const o = obj(win);
+  return o && typeof o.start === 'string' && typeof o.end === 'string' ? day(o.start) + '–' + day(o.end) : '';
+}
+
+/** SB10: the whole scoreboard as a table, its windows, and the desktop caveat. */
+function scoreboardSection(data, days) {
+  const w = liveWeekly(data);
+  if (!w) return section('scoreboard', 'Scoreboard · 7 days', [notAvailable(data)]);
+  const state = sourceStates(data, days);
+  const windows = [
+    span(w.window) ? 'this 7 ' + span(w.window) : '',
+    span(w.prev_window) ? 'prev ' + span(w.prev_window) : '',
+    span(w.avg_window) ? 'avg ' + span(w.avg_window) + ' ÷ 4' : '',
+  ].filter(Boolean);
+  return section('scoreboard', 'Scoreboard · 7 days', [
+    windows.length ? el('p', { cls: 'pulse-windows', text: windows.join(' · ') }) : null,
+    el('div', { cls: 'pulse-lines' }, scoreRows(SHEET_ROWS, w, state, (k) => !UNTONED.includes(k))),
+    gapLine(w),
+    el('p', { cls: 'pulse-foot', text: 'Desktop impressions include rank-tracker traffic' }),
+  ]);
+}
+
+/** One week of a flagged search: '58 · 160 · 36.2%', or '—' when it has no row that week. */
+function weekNums(o) {
+  const s = obj(o);
+  if (!s) return '—';
+  return fmtNum(s.clicks) + ' · ' + fmtNum(s.impressions) + ' · ' + withUnit(s.ctr, '%');
+}
+
+/** SB10: the flagged searches with clicks, impressions and CTR for both weeks. */
+function flaggedSection(data) {
+  const w = liveWeekly(data);
+  if (!w) return null;
+  if (!Array.isArray(w.flagged)) {
+    return section('flagged', 'Flagged searches', [el('p', { cls: 'pulse-foot', text: 'not available' })]);
+  }
+  const rows = w.flagged
+    .map(obj)
+    .filter((f) => f && f.query)
+    .map((f) =>
+      el('div', { cls: 'pulse-flag' }, [
+        el('div', { cls: 'pulse-row' }, [
+          el('span', { cls: 'pulse-row-name', text: str(f.query) }),
+          el('span', { cls: 'pulse-row-nums', text: weekNums(f.w) }),
+        ]),
+        el('div', { cls: 'pulse-row pulse-flag-before' }, [
+          el('span', { cls: 'pulse-row-name', text: 'prev 7' }),
+          el('span', { cls: 'pulse-row-nums', text: weekNums(f.p) }),
+        ]),
+      ])
+    );
+  if (!rows.length) return section('flagged', 'Flagged searches', [el('p', { cls: 'pulse-foot', text: 'None flagged.' })]);
+  return section('flagged', 'Flagged searches', [
+    el('div', { cls: 'pulse-row pulse-row-head' }, [
+      el('span', { cls: 'pulse-row-name', text: 'search' }),
+      el('span', { cls: 'pulse-row-nums', text: 'clicks · impr · ctr' }),
+    ]),
+    ...rows,
+  ]);
+}
+
 function sparksSection(data, chrono) {
   const latest = obj(data.latest) || {};
   return section(
@@ -419,11 +552,11 @@ function posChip(q) {
   const now = num(q.position);
   const prev = num(q.position_prev);
   if (now === null || prev === null) return null;
-  const delta = Math.round((now - prev) * 10) / 10;
-  if (Math.abs(delta) < 0.5) return null;
+  const change = Math.round((now - prev) * 10) / 10;
+  if (Math.abs(change) < 0.5) return null;
   return el('span', {
     cls: 'pulse-pos-chip',
-    text: (delta < 0 ? '▲ ' : '▼ ') + Math.abs(delta).toFixed(1),
+    text: (change < 0 ? '▲ ' : '▼ ') + Math.abs(change).toFixed(1),
     attrs: { title: 'was ' + fmtNum(prev) },
   });
 }
@@ -555,6 +688,8 @@ function sheetBody(data, days) {
     const chrono = days.slice().reverse();
     const parts = [
       tripwireLine(data),
+      scoreboardSection(data, days),
+      flaggedSection(data),
       sparksSection(data, chrono),
       errSection(chrono),
       queriesSection(data),
@@ -562,7 +697,6 @@ function sheetBody(data, days) {
       channelsSection(data),
       lastSevenSection(data, days),
     ].filter(Boolean);
-    if (!parts.length) body.appendChild(empty('Nothing to chart yet.'));
     for (const p of parts) body.appendChild(p);
     const links = [];
     LINKS.forEach(([label, href], i) => {
@@ -579,7 +713,7 @@ export function render(root, tile, ctx) {
   const data = obj(tile && tile.data) || {};
   const days = arr(data.days).filter((r) => obj(r));
   const latest = obj(data.latest) || {};
-  const hasAny = SOURCES.some((s) => obj(latest[s]));
+  const hasAny = SOURCES.some((s) => obj(latest[s])) || !!obj(data.weekly);
 
   if (data.status === 'empty' || (!days.length && !hasAny)) {
     root.appendChild(empty('No pulse yet — first run 6:15 AM.'));

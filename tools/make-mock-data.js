@@ -204,7 +204,62 @@ function wrenTile() {
  * `ga4.checkouts` and `cf.threats` are metrics the contract does not name,
  * there so S9's "surfaced, never dropped" has something to surface.
  */
-function wssTrafficPayload({ gscDown = false, status = 'ok' } = {}) {
+/**
+ * Site Pulse's weekly scoreboard (Site-Pulse-Scoreboard-Spec SB1–SB11) — the
+ * `weekly` block site-pulse.py writes and the engine passes through. Every
+ * number and query below is invented. The window ends on Search Console's
+ * newest day (three days back, as in the days[] above).
+ *
+ *   toned     all six face rows wear a tone (good / warn / bad), leads' change
+ *             is 0 (no arrow), two searches flagged
+ *   null-row  SB7: leads and net clicks have no 4-week average (hollow dots)
+ *   ga4-gap   SB8: GA4 missing a day — its two rows print, untoned, no arrow
+ */
+function wssTrafficWeekly(kind = 'toned') {
+  const end = addDays(TODAY, -3);
+  const ratio = (w, avg, lower) => (w === null || avg === null || !avg || (lower && !w) ? null : Math.round((lower ? avg / w : w / avg) * 100) / 100);
+  const row = (key, label, w, p, avg, lower = false) => ({
+    key, label, w, p, avg, ratio: ratio(w, avg, lower), delta: w === null || p === null ? null : Math.round((w - p) * 10) / 10, lower_is_better: lower,
+  });
+  const rows = [
+    row('clicks', 'Clicks', 212, 198, 224.5),                         // 0.94 warn
+    row('clicks_net', 'Clicks, net of flagged', 171, 180, 168.25),    // 1.02 good
+    row('mobile_clicks', 'Mobile clicks', 88, 91, 101.5),             // 0.87 warn
+    row('mobile_impressions', 'Mobile impressions', 2610, 3950, 4120.75), // 0.63 bad
+    row('organic_sessions', 'Organic sessions', 301, 287, 296.25),    // 1.02 good
+    row('leads', 'Leads', 6, 6, 4.75),                                // 1.26 good, no change
+    row('mobile_position', 'Mobile average position', 12.4, 11.8, 10.9, true), // 0.88 warn, slid 0.6
+    row('desktop_clicks', 'Desktop clicks', 124, 107, 123),
+    row('desktop_impressions', 'Desktop impressions', 8800, 9120, 30410.5),
+  ];
+  const by = Object.fromEntries(rows.map((r) => [r.key, r]));
+  let flagged = [
+    { query: 'example rank checker query', w: { clicks: 31, impressions: 84, ctr: 36.9 }, p: { clicks: 19, impressions: 52, ctr: 36.5 } },
+    { query: 'sample scrubber parts lookup', w: { clicks: 4, impressions: 30, ctr: 13.3 }, p: { clicks: 11, impressions: 28, ctr: 39.3 } },
+  ];
+  let gap = 0;
+  if (kind === 'null-row') {
+    Object.assign(by.leads, { avg: null, ratio: null });
+    Object.assign(by.clicks_net, { avg: null, ratio: null });
+    flagged = flagged.slice(0, 1);
+  }
+  if (kind === 'ga4-gap') {
+    gap = 1;
+    Object.assign(by.organic_sessions, { w: 254, ratio: null, delta: null });
+    Object.assign(by.leads, { w: 5, ratio: null, delta: null });
+  }
+  return {
+    window: { start: addDays(end, -6), end },
+    prev_window: { start: addDays(end, -13), end: addDays(end, -7) },
+    avg_window: { start: addDays(end, -41), end: addDays(end, -14), weeks: 4 },
+    rows,
+    flagged,
+    ga4_gap_days: gap,
+    sections_failed: [],
+  };
+}
+
+function wssTrafficPayload({ gscDown = false, status = 'ok', weekly = 'toned' } = {}) {
   const m = (value, dod, baseline) => ({
     value,
     dod,
@@ -294,6 +349,7 @@ function wssTrafficPayload({ gscDown = false, status = 'ok' } = {}) {
     tripwire: { tag_gone: false, since: null },
     units: { ctr: '%', err5xx_pct: '%', position: 'rank' },
     lower_is_better: ['position', 'err5xx', 'err5xx_pct', 'threats'],
+    weekly: weekly ? wssTrafficWeekly(weekly) : null,
     source: '01-WSS/Projects/Website-Migration/State/traffic-pulse.json',
     ...(status === 'stale' ? { stale_since: addDays(TODAY, -2) } : {}),
   };
@@ -302,6 +358,10 @@ function wssTrafficPayload({ gscDown = false, status = 'ok' } = {}) {
 function wssTrafficSnapshot(kind) {
   const snap = snapshot();
   if (kind === 'gsc-down') snap.tiles.wss_traffic = tile('DAILY', wssTrafficPayload({ gscDown: true }));
+  if (kind === 'null-row') snap.tiles.wss_traffic = tile('DAILY', wssTrafficPayload({ weekly: 'null-row' }));
+  if (kind === 'ga4-gap') snap.tiles.wss_traffic = tile('DAILY', wssTrafficPayload({ weekly: 'ga4-gap' }));
+  // SB11: an older file with no `weekly` — the engine passes None.
+  if (kind === 'no-weekly') snap.tiles.wss_traffic = tile('DAILY', wssTrafficPayload({ weekly: null }));
   if (kind === 'stale') {
     const t = tile('DAILY', { ...wssTrafficPayload({ status: 'stale' }), generated_at: `${addDays(TODAY, -2)}T06:17:03-06:00` }, 'stale');
     t.error = `site-pulse last wrote ${addDays(TODAY, -2)}T06:17 — stale since ${addDays(TODAY, -2)}`;
@@ -3063,6 +3123,10 @@ const MODES = [
   ['--pulse-gsc-down', () => wssTrafficSnapshot('gsc-down')],
   ['--pulse-stale', () => wssTrafficSnapshot('stale')],
   ['--pulse-empty', () => wssTrafficSnapshot('empty')],
+  // The weekly scoreboard's other faces (SB7, SB8, SB11). The default carries all six rows toned.
+  ['--pulse-null-row', () => wssTrafficSnapshot('null-row')],
+  ['--pulse-ga4-gap', () => wssTrafficSnapshot('ga4-gap')],
+  ['--pulse-no-weekly', () => wssTrafficSnapshot('no-weekly')],
   // Vendor Bills' other faces (AP3–AP5, AP7). The default snapshot carries the normal day.
   ['--ap-stuck', () => wssApSnapshot('stuck')],
   ['--ap-held', () => wssApSnapshot('held')],
